@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#042434" />
+    <title>LavaPrime App</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/brand/lavaprime-icon.png" type="image/png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="splash-screen" id="splashScreen" aria-label="Carregando LavaPrime">
+      <img class="splash-logo" src="./assets/brand/lavaprime-lockup.png" alt="LavaPrime" />
+    </div>
+
+    <main class="login-screen" aria-labelledby="loginTitle">
+      <section class="login-panel">
+        <img class="login-logo" src="./assets/brand/lavaprime-lockup.png" alt="LavaPrime" />
+
+        <form class="login-form" id="loginForm">
+          <div class="login-copy">
+            <p class="eyebrow">Acesso seguro</p>
+            <h1 id="loginTitle">Autenticação</h1>
+          </div>
+
+          <div class="login-fields">
+            <label class="login-field" for="loginUser">
+              <span>Usuário</span>
+              <input id="loginUser" name="usuario" type="text" placeholder="Digite seu usuário" autocomplete="username" required />
+            </label>
+            <label class="login-field" for="loginPassword">
+              <span>Senha</span>
+              <input
+                id="loginPassword"
+                name="senha"
+                type="password"
+                placeholder="Digite sua senha"
+                autocomplete="current-password"
+                required
+              />
+            </label>
+          </div>
+
+          <div class="profile-choice" aria-label="Escolha o perfil de usuario">
+            <button class="profile-button" type="button" data-profile="Administrador" aria-pressed="false">
+              <span data-icon="shield"></span>
+              <span>Administrador</span>
+            </button>
+            <button class="profile-button" type="button" data-profile="Operador" aria-pressed="false">
+              <span data-icon="user"></span>
+              <span>Operador</span>
+            </button>
+          </div>
+
+          <div class="login-actions">
+            <button class="primary-button" id="confirmLogin" type="submit">
+              <span data-icon="login"></span>
+              <span>Confirmar login</span>
+            </button>
+            <button class="exit-button" id="exitTool" type="button">
+              <span data-icon="power"></span>
+              <span>Sair</span>
+            </button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <main class="patio-screen" id="patioScreen" aria-labelledby="patioTitle" hidden>
+      <header class="patio-topbar">
+        <img class="patio-logo" src="./assets/brand/lavaprime-lockup.png" alt="LavaPrime" />
+        <div class="patio-title">
+          <p class="eyebrow">Operador <span id="activeOperatorName"></span></p>
+          <h1 id="patioTitle">Pátio</h1>
+        </div>
+        <button class="exit-button compact" id="patioLogout" type="button">
+          <span data-icon="power"></span>
+          <span>Sair</span>
+        </button>
+      </header>
+
+      <section class="patio-summary" id="patioSummary" aria-label="Resumo do patio"></section>
+
+      <section class="patio-board" aria-labelledby="vehiclesTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Veículos</p>
+            <h2 id="vehiclesTitle">Status em tempo real</h2>
+          </div>
+          <div class="section-actions">
+            <button class="new-vehicle-button" id="newVehicleButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Novo veículo</span>
+            </button>
+          </div>
+        </div>
+        <div class="vehicle-grid" id="vehicleGrid"></div>
+      </section>
+    </main>
+
+    <main class="admin-shell" id="adminShell" hidden>
+      <aside class="admin-sidebar" aria-label="Menu do administrador">
+        <div class="admin-brand">
+          <img class="admin-logo" src="./assets/brand/lavaprime-lockup.png" alt="LavaPrime" />
+          <div class="admin-user">
+            <p class="eyebrow">Administrador</p>
+            <strong id="activeAdminName"></strong>
+          </div>
+        </div>
+
+        <nav class="admin-nav" aria-label="Navegação principal">
+          <div class="admin-nav-group">
+            <p>Operação</p>
+            <button class="admin-nav-button is-active" type="button" data-admin-view="dashboard">
+              <span data-icon="dashboard"></span>
+              <span>Dashboard</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="patio">
+              <span data-icon="carFront"></span>
+              <span>Pátio</span>
+            </button>
+          </div>
+
+          <div class="admin-nav-group">
+            <p>Cadastros</p>
+            <button class="admin-nav-button" type="button" data-admin-view="clients">
+              <span data-icon="users"></span>
+              <span>Clientes</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="vehicles">
+              <span data-icon="carFront"></span>
+              <span>Veículos</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="services">
+              <span data-icon="service"></span>
+              <span>Serviços</span>
+            </button>
+          </div>
+
+          <div class="admin-nav-group">
+            <p>Meu Negócio</p>
+            <button class="admin-nav-button" type="button" data-admin-view="business">
+              <span data-icon="shield"></span>
+              <span>Dados do Negócio</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="businessFinance">
+              <span data-icon="wallet"></span>
+              <span>Informações Financeiras</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="businessSocial">
+              <span data-icon="users"></span>
+              <span>Comunicação</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="operators">
+              <span data-icon="badge"></span>
+              <span>Operadores</span>
+            </button>
+          </div>
+
+          <div class="admin-nav-group">
+            <p>Financeiro</p>
+            <button class="admin-nav-button" type="button" data-admin-view="cashflow">
+              <span data-icon="cashflow"></span>
+              <span>Fluxo de caixa</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="payables">
+              <span data-icon="payable"></span>
+              <span>Contas a Pagar</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="invoices">
+              <span data-icon="invoice"></span>
+              <span>Central de Faturas</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="wallet">
+              <span data-icon="wallet"></span>
+              <span>Carteira</span>
+            </button>
+          </div>
+        </nav>
+
+        <button class="exit-button admin-logout" id="adminLogout" type="button">
+          <span data-icon="power"></span>
+          <span>Sair</span>
+        </button>
+      </aside>
+
+      <section class="admin-workspace">
+        <section class="admin-view is-active" id="adminDashboardView" aria-labelledby="adminDashboardTitle">
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Painel do dia</p>
+              <h1 id="adminDashboardTitle">Dashboard</h1>
+            </div>
+          </header>
+
+          <section class="admin-metrics" id="adminMetrics" aria-label="Métricas operacionais"></section>
+
+          <section class="admin-dashboard-grid">
+            <article class="admin-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Operação</p>
+                  <h2>Fluxo do pátio</h2>
+                </div>
+              </div>
+              <div class="status-flow" id="adminStatusFlow"></div>
+            </article>
+
+            <article class="admin-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Atenção</p>
+                  <h2>Prioridades</h2>
+                </div>
+              </div>
+              <div class="admin-alerts" id="adminAlerts"></div>
+            </article>
+          </section>
+        </section>
+
+        <section class="admin-view" id="adminPatioView" aria-labelledby="adminPatioTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Veículos</p>
+              <h1 id="adminPatioTitle">Pátio</h1>
+            </div>
+          </header>
+
+          <section class="patio-summary admin-patio-summary" id="adminPatioSummary" aria-label="Resumo do patio"></section>
+
+          <section class="patio-board admin-patio-board" aria-labelledby="adminVehiclesTitle">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Veículos</p>
+                <h2 id="adminVehiclesTitle">Status em tempo real</h2>
+              </div>
+              <div class="section-actions">
+                <button class="new-vehicle-button" id="adminNewVehicleButton" type="button">
+                  <span data-icon="plus"></span>
+                  <span>Novo veículo</span>
+                </button>
+              </div>
+            </div>
+            <div class="vehicle-grid" id="adminVehicleGrid"></div>
+          </section>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminClientsView" aria-labelledby="adminClientsTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Cadastros</p>
+              <h1 id="adminClientsTitle">Clientes</h1>
+            </div>
+            <button class="new-vehicle-button" id="startClientFormButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Novo cliente</span>
+            </button>
+          </header>
+          <div class="admin-screen-content" id="adminClientsContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminVehiclesView" aria-labelledby="adminVehiclesRegistryTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Cadastros</p>
+              <h1 id="adminVehiclesRegistryTitle">Veículos</h1>
+            </div>
+            <button class="new-vehicle-button" id="startVehicleRegistryButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Novo veículo</span>
+            </button>
+          </header>
+          <div class="admin-screen-content" id="adminVehiclesContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminBusinessView" aria-labelledby="adminBusinessTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Meu Negócio</p>
+              <h1 id="adminBusinessTitle">Dados do Negócio</h1>
+            </div>
+          </header>
+          <div class="admin-screen-content" id="adminBusinessContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminBusinessFinanceView" aria-labelledby="adminBusinessFinanceTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Meu Negócio</p>
+              <h1 id="adminBusinessFinanceTitle">Informações Financeiras</h1>
+            </div>
+          </header>
+          <div class="admin-screen-content" id="adminBusinessFinanceContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminBusinessSocialView" aria-labelledby="adminBusinessSocialTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Meu Negócio</p>
+              <h1 id="adminBusinessSocialTitle">Comunicação</h1>
+            </div>
+          </header>
+          <div class="admin-screen-content" id="adminBusinessSocialContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminOperatorsView" aria-labelledby="adminOperatorsTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Meu Negócio</p>
+              <h1 id="adminOperatorsTitle">Operadores</h1>
+            </div>
+            <button class="new-vehicle-button" id="startOperatorFormButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Novo operador</span>
+            </button>
+          </header>
+          <div class="admin-screen-content" id="adminOperatorsContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminServicesView" aria-labelledby="adminServicesTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Cadastros</p>
+              <h1 id="adminServicesTitle">Serviços</h1>
+            </div>
+            <button class="new-vehicle-button" id="startServiceFormButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Novo serviço</span>
+            </button>
+          </header>
+          <div class="admin-screen-content" id="adminServicesContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminCashflowView" aria-labelledby="adminCashflowTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Financeiro</p>
+              <h1 id="adminCashflowTitle">Fluxo de caixa</h1>
+            </div>
+          </header>
+          <div class="admin-screen-content" id="adminCashflowContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminPayablesView" aria-labelledby="adminPayablesTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Financeiro</p>
+              <h1 id="adminPayablesTitle">Contas a Pagar</h1>
+            </div>
+            <button class="new-vehicle-button admin-action-button" type="button">
+              <span data-icon="plus"></span>
+              <span>Nova conta</span>
+            </button>
+          </header>
+          <div class="admin-screen-content" id="adminPayablesContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminInvoicesView" aria-labelledby="adminInvoicesTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Financeiro</p>
+              <h1 id="adminInvoicesTitle">Central de Faturas</h1>
+            </div>
+            <button class="new-vehicle-button admin-action-button" type="button">
+              <span data-icon="plus"></span>
+              <span>Abrir fatura</span>
+            </button>
+          </header>
+          <div class="admin-screen-content" id="adminInvoicesContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminWalletView" aria-labelledby="adminWalletTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Financeiro</p>
+              <h1 id="adminWalletTitle">Carteira</h1>
+            </div>
+            <button class="new-vehicle-button admin-action-button" type="button">
+              <span data-icon="plus"></span>
+              <span>Nova forma</span>
+            </button>
+          </header>
+          <div class="admin-screen-content" id="adminWalletContent"></div>
+        </section>
+      </section>
+    </main>
+
+    <dialog class="operator-dialog" id="operatorDialog"></dialog>
+    <dialog class="client-dialog" id="clientDialog"></dialog>
+    <dialog class="schedule-dialog" id="scheduleDialog"></dialog>
+    <dialog class="service-dialog" id="serviceDialog"></dialog>
+    <dialog class="cashflow-dialog" id="cashflowDialog"></dialog>
+
+    <dialog class="vehicle-dialog" id="vehicleDialog">
+      <form class="vehicle-box" id="vehicleForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow" id="vehicleDialogEyebrow">Entrada no pátio</p>
+            <h2 id="vehicleDialogTitle">Novo veículo</h2>
+          </div>
+          <button class="icon-button" id="closeVehicleDialog" type="button" aria-label="Fechar">
+            <span data-icon="x"></span>
+          </button>
+        </div>
+
+        <section class="vehicle-step is-active" data-vehicle-step="entry">
+          <p class="step-copy" id="vehicleEntryStepCopy">Dados do veículo</p>
+          <label class="switch-field vehicle-schedule-switch" for="vehicleScheduleToggle">
+            <input id="vehicleScheduleToggle" type="checkbox" />
+            <span class="switch-control"></span>
+            <span>Agendamento</span>
+          </label>
+          <div class="vehicle-form-grid">
+            <div class="plate-lookup-field">
+              <label class="login-field" for="vehiclePlate">
+                <span>Placa</span>
+                <input id="vehiclePlate" name="plate" type="text" placeholder="ABC1D23" maxlength="8" autocomplete="off" required />
+              </label>
+              <div class="entry-plate-results" id="vehiclePlateResults" hidden></div>
+            </div>
+            <label class="login-field" for="vehicleModel">
+              <span>Modelo</span>
+              <input id="vehicleModel" name="model" type="text" placeholder="Onix" required />
+            </label>
+            <div class="color-field">
+              <span>Cor</span>
+              <input id="vehicleColor" name="color" type="hidden" value="Branco" required />
+              <div class="color-grid" aria-label="Escolha a cor do veículo">
+                <button class="color-swatch is-selected" type="button" data-color="Branco" aria-pressed="true">
+                  <span class="swatch swatch-white"></span>
+                  <span>Branco</span>
+                </button>
+                <button class="color-swatch" type="button" data-color="Preto" aria-pressed="false">
+                  <span class="swatch swatch-black"></span>
+                  <span>Preto</span>
+                </button>
+                <button class="color-swatch" type="button" data-color="Prata" aria-pressed="false">
+                  <span class="swatch swatch-silver"></span>
+                  <span>Prata</span>
+                </button>
+                <button class="color-swatch" type="button" data-color="Cinza" aria-pressed="false">
+                  <span class="swatch swatch-gray"></span>
+                  <span>Cinza</span>
+                </button>
+                <button class="color-swatch" type="button" data-color="Vermelho" aria-pressed="false">
+                  <span class="swatch swatch-red"></span>
+                  <span>Vermelho</span>
+                </button>
+                <button class="color-swatch" type="button" data-color="Azul" aria-pressed="false">
+                  <span class="swatch swatch-blue"></span>
+                  <span>Azul</span>
+                </button>
+                <button class="color-swatch" type="button" data-color="Marrom" aria-pressed="false">
+                  <span class="swatch swatch-brown"></span>
+                  <span>Marrom</span>
+                </button>
+                <button class="color-swatch" type="button" data-color="Outra" aria-pressed="false">
+                  <span class="swatch swatch-other"></span>
+                  <span>Outra</span>
+                </button>
+              </div>
+            </div>
+            <label class="login-field other-color-field" for="vehicleOtherColor" hidden>
+              <span>Informe a cor</span>
+              <input id="vehicleOtherColor" name="otherColor" type="text" placeholder="Digite a cor" disabled />
+            </label>
+            <label class="login-field" for="vehicleType">
+              <span>Tipo de veículo</span>
+              <select id="vehicleType" name="type" required></select>
+            </label>
+            <label class="login-field" for="vehicleCategory">
+              <span>Categoria de veículo</span>
+              <select id="vehicleCategory" name="category" required></select>
+            </label>
+            <div class="services-field">
+              <span>Serviços contratados</span>
+              <div class="service-dropdown-row">
+                <select id="vehicleServiceSelect" aria-label="Selecionar serviço contratado"></select>
+                <button class="ghost-action" id="addEntryServiceButton" type="button">
+                  <span data-icon="plus"></span>
+                  <span>Adicionar serviço</span>
+                </button>
+              </div>
+              <div class="selected-services-list" id="vehicleServicesList" aria-label="Serviços contratados"></div>
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button class="exit-button" id="cancelVehicleEntry" type="button">Cancelar</button>
+            <button class="primary-button" id="nextVehicleEntryButton" type="button">
+              <span data-icon="login"></span>
+              <span>Próximo</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="vehicle-step" data-vehicle-step="client" hidden>
+          <p class="step-copy">Dados do cliente</p>
+
+          <div class="vehicle-form-grid">
+            <label class="login-field" for="vehiclePhone">
+              <span>Telefone com DDD</span>
+              <input id="vehiclePhone" name="phone" type="tel" inputmode="tel" placeholder="(11) 99999-9999" maxlength="15" required />
+            </label>
+            <label class="login-field" for="vehicleOwner">
+              <span>Nome do cliente</span>
+              <input id="vehicleOwner" name="owner" type="text" placeholder="Nome completo" required />
+            </label>
+            <label class="login-field" for="vehiclePayment">
+              <span>Forma de pagamento</span>
+              <select id="vehiclePayment" name="payment" required>
+                <option value="">Selecione</option>
+                <option value="Pix">Pix</option>
+                <option value="Cartão de crédito">Cartão de crédito</option>
+                <option value="Cartão de débito">Cartão de débito</option>
+                <option value="Dinheiro">Dinheiro</option>
+                <option value="Transferência">Transferência</option>
+                <option value="Faturado">Faturado</option>
+              </select>
+            </label>
+          </div>
+          <div id="vehicleClientChecklistMount"></div>
+
+          <div class="dialog-actions">
+            <button class="exit-button" id="backToVehicleDataButton" type="button">Voltar</button>
+            <button class="primary-button" id="vehiclePrimaryAction" type="submit">
+              <span id="vehiclePrimaryIcon" data-icon="plus"></span>
+              <span id="vehiclePrimaryLabel">Adicionar</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="vehicle-step" data-vehicle-step="schedule" hidden>
+          <p class="step-copy">Data e hora do agendamento</p>
+
+          <div class="vehicle-form-grid">
+            <label class="login-field schedule-field" for="vehicleScheduleDate">
+              <span>Data do agendamento</span>
+              <input id="vehicleScheduleDate" name="scheduleDate" type="date" disabled />
+            </label>
+            <label class="login-field schedule-field" for="vehicleScheduleTime">
+              <span>Hora do agendamento</span>
+              <select id="vehicleScheduleTime" name="scheduleTime" disabled></select>
+            </label>
+          </div>
+          <div id="vehicleScheduleChecklistMount"></div>
+
+          <div class="dialog-actions">
+            <button class="exit-button" id="backToVehicleClientFromScheduleButton" type="button">Voltar</button>
+            <button class="primary-button" id="finishScheduleButton" type="button">
+              <span data-icon="check"></span>
+              <span>Agendar</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="vehicle-step" data-vehicle-step="billing" hidden>
+          <p class="step-copy">Selecione o cliente faturado e a fatura onde esta lavagem será incluída.</p>
+
+          <div class="vehicle-form-grid">
+            <label class="login-field" for="billingClientSelect">
+              <span>Cliente faturado</span>
+              <select id="billingClientSelect"></select>
+            </label>
+            <label class="login-field" for="billingInvoiceSelect">
+              <span>Fatura</span>
+              <select id="billingInvoiceSelect"></select>
+            </label>
+          </div>
+
+          <div class="support-actions">
+            <button class="ghost-action" id="newBillingClientButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Novo cliente</span>
+            </button>
+            <button class="ghost-action" id="newInvoiceButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Abrir nova fatura</span>
+            </button>
+          </div>
+          <div id="vehicleBillingChecklistMount"></div>
+
+          <div class="dialog-actions">
+            <button class="exit-button" id="backToEntryButton" type="button">Voltar</button>
+            <button class="primary-button" id="finishBilledEntryButton" type="button" disabled>
+              <span data-icon="plus"></span>
+              <span>Adicionar</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="vehicle-step" data-vehicle-step="new-client" hidden>
+          <p class="step-copy">Cadastre um cliente para faturamento e ele ficará selecionado para esta entrada.</p>
+
+          <div class="vehicle-form-grid">
+            <label class="login-field" for="billingClientName">
+              <span>Nome ou razão social</span>
+              <input id="billingClientName" type="text" placeholder="Cliente faturado" />
+            </label>
+            <label class="login-field" for="billingClientDocument">
+              <span>CPF/CNPJ</span>
+              <input id="billingClientDocument" type="text" placeholder="Opcional" />
+            </label>
+            <label class="login-field" for="billingClientPhone">
+              <span>Telefone com DDD</span>
+              <input id="billingClientPhone" type="tel" inputmode="tel" placeholder="(11) 99999-9999" maxlength="15" />
+            </label>
+          </div>
+
+          <div class="dialog-actions">
+            <button class="exit-button" id="backToBillingFromClientButton" type="button">Voltar</button>
+            <button class="primary-button" id="saveBillingClientButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Salvar cliente</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="vehicle-step" data-vehicle-step="invoice" hidden>
+          <p class="step-copy">Central de faturas: selecione o cliente e o vencimento para abrir uma nova fatura.</p>
+
+          <div class="vehicle-form-grid">
+            <label class="login-field" for="invoiceClientSelect">
+              <span>Cliente</span>
+              <select id="invoiceClientSelect"></select>
+            </label>
+            <label class="login-field" for="invoiceDueDate">
+              <span>Vencimento</span>
+              <input id="invoiceDueDate" type="date" />
+            </label>
+          </div>
+
+          <div class="dialog-actions">
+            <button class="exit-button" id="backToBillingFromInvoiceButton" type="button">Voltar</button>
+            <button class="primary-button" id="openInvoiceButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Abrir fatura</span>
+            </button>
+          </div>
+        </section>
+      </form>
+    </dialog>
+
+    <dialog class="status-dialog" id="statusDialog">
+      <div class="status-box">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow" id="statusDialogEyebrow">Alterar status</p>
+            <h2 id="statusVehicleTitle">Veículo</h2>
+          </div>
+          <button class="icon-button" id="closeStatusDialog" type="button" aria-label="Fechar">
+            <span data-icon="x"></span>
+          </button>
+        </div>
+
+        <div class="status-options" id="statusOptions"></div>
+      </div>
+    </dialog>
+
+    <dialog class="message-dialog" id="messageDialog">
+      <div class="message-box">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow" id="messageDialogEyebrow">Atenção</p>
+            <h2 id="messageDialogTitle">Mensagem</h2>
+          </div>
+        </div>
+        <p class="message-copy" id="messageDialogText"></p>
+        <div class="dialog-actions" id="messageDialogActions">
+          <button class="exit-button" id="messageCancelButton" type="button">Não</button>
+          <button class="primary-button" id="messageConfirmButton" type="button">
+            <span data-icon="check"></span>
+            <span id="messageConfirmLabel">Sim</span>
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="./main.js" defer></script>
+  </body>
+</html>

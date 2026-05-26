@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LavaPrime - Papel timbrado para PDF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --petrol: #0b1f2a;
+      --cyan: #00b8d9;
+      --ice: #f4fafc;
+      --lime: #b7f000;
+      --border: #d7e5eb;
+      --muted: #64748b;
+      --soft: #eef7fa;
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--petrol);
+      background: #eef2f4;
+      font-family: "Roboto", Arial, Helvetica, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.35;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 18mm 16mm;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: #ffffff;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .page {
+        margin: 0;
+      }
+    }
+
+    .letterhead {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--cyan);
+    }
+
+    .letterhead img {
+      width: 168px;
+      height: auto;
+      display: block;
+    }
+
+    .document-meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 8.5pt;
+      line-height: 1.25;
+    }
+
+    .document-meta strong {
+      display: block;
+      color: var(--cyan);
+      font-size: 8pt;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .title-box {
+      display: grid;
+      grid-template-columns: 1fr 128px;
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--cyan);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--ice);
+    }
+
+    .title-box > div {
+      padding: 12px 14px;
+    }
+
+    .title-box h1 {
+      margin: 0 0 4px;
+      font-size: 18pt;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .title-box p {
+      margin: 0;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .document-number {
+      border-left: 1px solid var(--border);
+      text-align: right;
+      align-content: center;
+    }
+
+    .document-number span {
+      display: block;
+      color: var(--cyan);
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .document-number strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 13pt;
+    }
+
+    .section-title {
+      margin: 0;
+      padding: 8px 14px;
+      color: #ffffff;
+      background: var(--petrol);
+      border: 1px solid var(--petrol);
+      border-radius: 8px;
+      font-size: 9.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .section-title.cyan {
+      color: var(--petrol);
+      background: var(--cyan);
+      border-color: var(--cyan);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr 1fr 1.6fr;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .meta-grid div {
+      min-height: 30px;
+      padding: 8px 10px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .meta-grid div:nth-child(4n) {
+      border-right: 0;
+    }
+
+    .meta-grid div:nth-last-child(-n + 4) {
+      border-bottom: 0;
+    }
+
+    .meta-grid .label {
+      color: var(--cyan);
+      background: var(--soft);
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .summary {
+      margin: 0;
+      color: var(--petrol);
+      font-style: italic;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 9pt;
+    }
+
+    th {
+      color: #ffffff;
+      background: var(--petrol);
+      padding: 8px 10px;
+      text-align: left;
+      text-transform: uppercase;
+      font-size: 8pt;
+    }
+
+    td {
+      padding: 8px 10px;
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    td:last-child,
+    th:last-child {
+      border-right: 0;
+      text-align: right;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f8fbfc;
+    }
+
+    .note-box {
+      padding: 10px 14px;
+      color: var(--muted);
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-style: italic;
+    }
+
+    .signatures {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-top: 24px;
+    }
+
+    .signature {
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      text-align: center;
+      font-size: 8.5pt;
+    }
+
+    .footer {
+      margin-top: auto;
+      padding-top: 8px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 8pt;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="letterhead">
+      <img src="../brand/lavaprime-lockup.png" alt="LavaPrime" />
+      <div class="document-meta">
+        <strong>Modelo padrao para PDF</strong>
+        {{tipo_documento}} | {{data_emissao}}
+      </div>
+    </header>
+
+    <section class="title-box">
+      <div>
+        <h1>{{TITULO_DO_DOCUMENTO}}</h1>
+        <p>Fatura, relatorio, recibo ou controle operacional</p>
+      </div>
+      <div class="document-number">
+        <span>Documento</span>
+        <strong>{{numero}}</strong>
+      </div>
+    </section>
+
+    <h2 class="section-title">Dados do documento</h2>
+    <section class="meta-grid">
+      <div class="label">Cliente / favorecido</div>
+      <div>{{cliente}}</div>
+      <div class="label">Periodo</div>
+      <div>{{periodo}}</div>
+      <div class="label">Emissao</div>
+      <div>{{data_emissao}}</div>
+      <div class="label">Responsavel</div>
+      <div>{{responsavel}}</div>
+      <div class="label">Unidade</div>
+      <div>{{unidade}}</div>
+      <div class="label">Categoria</div>
+      <div>{{categoria}}</div>
+    </section>
+
+    <h2 class="section-title cyan">Resumo</h2>
+    <p class="summary">{{resumo_do_documento}}</p>
+
+    <h2 class="section-title">Itens / lancamentos</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Descricao</th>
+          <th>Categoria</th>
+          <th>Valor / status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{data}}</td>
+          <td>{{descricao_do_item}}</td>
+          <td>{{categoria}}</td>
+          <td>{{valor_status}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="section-title">Observacoes</h2>
+    <section class="note-box">{{observacoes}}</section>
+
+    <section class="signatures">
+      <div class="signature">Responsavel LavaPrime</div>
+      <div class="signature">Cliente / conferente</div>
+    </section>
+
+    <footer class="footer">
+      LavaPrime | Relatorios, recibos, faturas e controles operacionais | Pagina {{pagina}}
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,10 @@
+.tmp.*
+.codex_spreadsheet_work/
+outputs/
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.*
+.codex-downloads/

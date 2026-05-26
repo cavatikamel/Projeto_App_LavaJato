@@ -1,0 +1,16 @@
+{
+  "name": "LavaPrime",
+  "short_name": "LavaPrime",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f6fbfd",
+  "theme_color": "#042434",
+  "icons": [
+    {
+      "src": "./assets/brand/lavaprime-icon.png",
+      "sizes": "265x265",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

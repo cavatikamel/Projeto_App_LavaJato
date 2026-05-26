@@ -1,0 +1,11 @@
+.git
+.github
+node_modules
+.codex_spreadsheet_work
+.tmp.*
+outputs
+Github
+projetolavaprime
+*.log
+.DS_Store
+Thumbs.db
