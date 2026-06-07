@@ -13,6 +13,7 @@ const icons = {
   cancel: '<svg viewBox="0 0 24 24"><rect x="4.5" y="7" width="15" height="10" rx="2"/><path d="M7.5 16.5l9-9"/></svg>',
   dashboard: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.4"/><rect x="13" y="4" width="7" height="4.8" rx="1.4"/><rect x="13" y="10.8" width="7" height="9.2" rx="1.4"/><rect x="4" y="13" width="7" height="7" rx="1.4"/></svg>',
   carFront: '<svg viewBox="0 0 24 24"><path d="M7 17h10"/><path d="M6.5 17.5V13l1.7-5.1A2.8 2.8 0 0 1 10.9 6h2.2a2.8 2.8 0 0 1 2.7 1.9l1.7 5.1v4.5"/><path d="M8 13h8"/><path d="M8.2 18.4v1.1M15.8 18.4v1.1"/><circle cx="8.8" cy="15" r=".8"/><circle cx="15.2" cy="15" r=".8"/></svg>',
+  chevronDown: '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
   wallet: '<svg viewBox="0 0 24 24"><path d="M4.5 7.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-14a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2h12"/><path d="M16.5 13.5h4"/><circle cx="16.5" cy="13.5" r=".8"/></svg>',
   alert: '<svg viewBox="0 0 24 24"><path d="M12 4l9 16H3L12 4z"/><path d="M12 9v4M12 17h.01"/></svg>',
   users: '<svg viewBox="0 0 24 24"><path d="M16 19a4 4 0 0 0-8 0"/><circle cx="12" cy="9" r="3"/><path d="M20 18a3.3 3.3 0 0 0-3-3.1"/><path d="M4 18a3.3 3.3 0 0 1 3-3.1"/><path d="M18 8.5a2.2 2.2 0 0 1 .2 4.2"/><path d="M6 8.5a2.2 2.2 0 0 0-.2 4.2"/></svg>',
@@ -21,7 +22,8 @@ const icons = {
   cashflow: '<svg viewBox="0 0 24 24"><path d="M4 7h11a3 3 0 0 1 0 6H8"/><path d="M8 10l-4 3 4 3"/><path d="M20 17H9a3 3 0 0 1 0-6h7"/><path d="M16 8l4 3-4 3"/></svg>',
   payable: '<svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>',
   invoice: '<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-1.8-3 1.8-3-1.8L6 21V3z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',
-  card: '<svg viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10h17"/><path d="M7 15h3"/></svg>'
+  card: '<svg viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10h17"/><path d="M7 15h3"/></svg>',
+  message: '<svg viewBox="0 0 24 24"><path d="M4.5 5.5h15v10.8h-9L6.7 19.5v-3.2H4.5z"/><path d="M8 9.5h8M8 12.5h5"/></svg>'
 };
 
 let selectedProfile = "";
@@ -38,6 +40,8 @@ let selectedOperatorId = null;
 let selectedReportOperatorId = null;
 let selectedServiceIndex = null;
 let selectedCashEntryId = null;
+let cashflowDialogDraft = null;
+let cashflowRegistryReturnToEntry = false;
 let activeSessionUser = "";
 let lastOpenInvoiceNoticePlate = "";
 let messageDialogResolver = null;
@@ -46,10 +50,15 @@ let statusBillingMode = "";
 let selectedStatusBillingClientId = "";
 let selectedStatusBillingInvoiceId = "";
 let vehicleEntryMode = "entry";
+let selectedEntryVehicleId = null;
+let entryRegistryEditContext = null;
+let clientVehicleRegistrationContext = null;
 let selectedScheduleVehicleId = null;
 let pdfLogoImageCache = null;
 let pdfLogoImageSourceCache = "";
 let pdfLogoImagePromise = null;
+let selectedMessageTemplateKey = "";
+let selectedMessageCategory = "";
 
 const billingClients = [
   { id: 1, name: "Frota Prime Ltda", document: "12.345.678/0001-90", phone: "(11) 91111-0001" },
@@ -76,9 +85,18 @@ const invoiceLineItems = [
 ];
 
 const billingCycles = ["Mensal", "Bimestral", "Trimestral", "Semestral"];
-const paymentMethods = ["Pix", "Cartão de crédito", "Cartão de débito", "Dinheiro", "Transferência", "Faturado"];
+const paymentMethods = ["Pix", "Cartão de crédito", "Cartão de débito", "Dinheiro", "Transferência", "Faturado", "Carteira", "Boleto"];
 const checklistUnverifiedCondition = "Não Verificado";
 const checklistConditions = ["Conforme", "Arranhado", "Amassado", "Quebrado", "Faltando", "Não Aplicável"];
+const checklistConditionIconMap = {
+  [checklistUnverifiedCondition]: "assets/checklist-icons/nao-verificado.svg",
+  Conforme: "assets/checklist-icons/conforme.svg",
+  Arranhado: "assets/checklist-icons/arranhado.svg",
+  Amassado: "assets/checklist-icons/amassado.svg",
+  Quebrado: "assets/checklist-icons/quebrado.svg",
+  Faltando: "assets/checklist-icons/faltando.svg",
+  "Não Aplicável": "assets/checklist-icons/nao-aplicavel.svg"
+};
 const pdfDocumentStandard = {
   templateReference: "assets/templates/lavaprime-papel-timbrado.html",
   page: { width: 595, height: 842, marginX: 45, bottomY: 82, contentTopY: 488 },
@@ -92,11 +110,21 @@ const pdfDocumentStandard = {
     white: "#FFFFFF"
   }
 };
+const pdfLogoSizing = {
+  minPercent: 45,
+  maxPercent: 100,
+  defaultPercent: 100,
+  headerMaxWidth: 156,
+  headerMaxHeight: 52,
+  sourceMaxSide: 320,
+  jpegQuality: 0.82
+};
 const businessStorageKeys = {
   profile: "lavaprime-business-profile-v1",
   bankAccounts: "lavaprime-business-bank-accounts-v1",
   pix: "lavaprime-business-pix-v1",
-  social: "lavaprime-business-social-v1"
+  social: "lavaprime-business-social-v1",
+  messages: "lavaprime-business-message-templates-v1"
 };
 const businessSocialChannels = [
   { key: "whatsapp", label: "WhatsApp", placeholder: "(11) 99999-9999" },
@@ -106,10 +134,166 @@ const businessSocialChannels = [
   { key: "linkedin", label: "LinkedIn", placeholder: "linkedin.com/company/perfil" },
   { key: "site", label: "Site", placeholder: "https://site.com.br" }
 ];
-let businessProfile = loadBusinessStorageItem(businessStorageKeys.profile, getDefaultBusinessProfile());
+const businessSocialReportTargets = [
+  { key: "all", label: "Todos os relatórios" },
+  { key: "financial", label: "Financeiro geral" },
+  { key: "cashflow", label: "Fluxo de caixa" },
+  { key: "openPayments", label: "Pagamentos em aberto" },
+  { key: "invoices", label: "Faturas" },
+  { key: "receipts", label: "Recibos" },
+  { key: "checklists", label: "Check-list veicular" },
+  { key: "operatorProduction", label: "Produção do operador" },
+  { key: "operatorCommission", label: "Comissão do operador" },
+  { key: "operatorAttendance", label: "Frequência do operador" }
+];
+const businessProfileReportFieldKeys = ["cnpj", "legalName", "tradeName", "phone", "email", "address"];
+let businessProfile = normalizeBusinessProfile(loadBusinessStorageItem(businessStorageKeys.profile, getDefaultBusinessProfile()));
 let businessBankAccounts = loadBusinessStorageItem(businessStorageKeys.bankAccounts, []);
 let businessPixInfo = loadBusinessStorageItem(businessStorageKeys.pix, getDefaultBusinessPixInfo());
-let businessSocialLinks = loadBusinessStorageItem(businessStorageKeys.social, getDefaultBusinessSocialLinks());
+let businessSocialLinks = normalizeBusinessSocialLinks(loadBusinessStorageItem(businessStorageKeys.social, getDefaultBusinessSocialLinks()));
+let businessMessageTemplates = loadBusinessStorageItem(businessStorageKeys.messages, getDefaultMessageTemplates());
+
+function getDefaultMessageTemplates() {
+  return [
+    {
+      key: "schedule-confirmation",
+      category: "Serviço",
+      title: "Confirmação de agendamento",
+      text: "Olá, {cliente}. Seu agendamento na {empresa} para o veículo {placa} está confirmado para {data} às {hora}. Serviço: {servico}."
+    },
+    {
+      key: "yard-entry",
+      category: "Serviço",
+      title: "Entrada do veículo no pátio",
+      text: "Olá, {cliente}. Seu veículo {placa} deu entrada no pátio da {empresa}. Vamos iniciar o acompanhamento do serviço: {servico}."
+    },
+    {
+      key: "vehicle-ready",
+      category: "Serviço",
+      title: "Veículo pronto",
+      text: "Olá, {cliente}. Seu veículo {placa} está pronto para retirada na {empresa}. Valor: {valor}. Forma de pagamento: {pagamento}."
+    },
+    {
+      key: "schedule-canceled",
+      category: "Serviço",
+      title: "Cancelamento de agendamento",
+      text: "Olá, {cliente}. Seu agendamento para o veículo {placa} foi cancelado. Se desejar, podemos remarcar para outro horário."
+    },
+    {
+      key: "service-canceled",
+      category: "Serviço",
+      title: "Cancelamento de serviço",
+      text: "Olá, {cliente}. O serviço do veículo {placa} foi cancelado. A equipe da {empresa} permanece à disposição."
+    },
+    {
+      key: "payment-confirmation",
+      category: "Serviço",
+      title: "Confirmação de pagamento",
+      text: "Olá, {cliente}. Confirmamos o pagamento do serviço {servico} do veículo {placa}, no valor de {valor}. Forma de pagamento: {pagamento}. Obrigado pela preferência."
+    },
+    {
+      key: "partial-yard-payment",
+      category: "Financeiro",
+      title: "Pagamento parcial no pátio",
+      text: "Olá, {cliente}. Registramos o pagamento parcial do serviço {servico}, veículo {placa}, na {empresa}. Valor pago: {valor_pago}. Saldo em aberto: {saldo}. Forma de pagamento: {pagamento}."
+    },
+    {
+      key: "open-invoice",
+      category: "Financeiro",
+      title: "Aviso de fatura em aberto",
+      text: "Olá, {cliente}. Identificamos uma fatura em aberto na {empresa}. Valor: {valor}. Vencimento: {vencimento}. Podemos ajudar com os dados para pagamento?"
+    },
+    {
+      key: "partial-invoice-payment",
+      category: "Financeiro",
+      title: "Pagamento parcial de fatura",
+      text: "Olá, {cliente}. Registramos a baixa parcial da fatura {fatura} na {empresa}. Valor pago: {valor_pago}. Saldo remanescente: {saldo}. Destino do saldo: {destino}."
+    },
+    {
+      key: "open-service-payment",
+      category: "Financeiro",
+      title: "Aviso de serviço com pagamento em aberto",
+      text: "Olá, {cliente}. Consta um pagamento em aberto referente ao serviço {servico}, veículo {placa}, no valor de {valor}. Podemos confirmar a melhor forma de pagamento?"
+    },
+    {
+      key: "partial-open-payment",
+      category: "Financeiro",
+      title: "Baixa parcial de pagamento em aberto",
+      text: "Olá, {cliente}. Recebemos um pagamento parcial referente a {servico}. Valor pago: {valor_pago}. Saldo em aberto: {saldo}. Forma de pagamento: {pagamento}."
+    },
+    {
+      key: "loyalty-client",
+      category: "Relacionamento com o cliente",
+      title: "Cliente fidelidade",
+      text: "Olá, {cliente}. Você faz parte dos clientes especiais da {empresa}. Temos condições exclusivas para seu próximo serviço."
+    },
+    {
+      key: "inactive-client",
+      category: "Relacionamento com o cliente",
+      title: "Cliente há muito tempo sem realizar novos serviços",
+      text: "Olá, {cliente}. Sentimos sua falta na {empresa}. Quando quiser, podemos agendar uma nova lavagem para o veículo {placa}."
+    },
+    {
+      key: "promotion",
+      category: "Relacionamento com o cliente",
+      title: "Promoções",
+      text: "Olá, {cliente}. A {empresa} está com uma condição especial: {promocao}. Posso reservar um horário para você?"
+    },
+    {
+      key: "satisfaction",
+      category: "Relacionamento com o cliente",
+      title: "Pesquisa de satisfação",
+      text: "Olá, {cliente}. Como foi sua experiência com o serviço {servico} na {empresa}? Sua avaliação ajuda nossa equipe a melhorar."
+    },
+    {
+      key: "maintenance-reminder",
+      category: "Relacionamento com o cliente",
+      title: "Lembrete de manutenção estética",
+      text: "Olá, {cliente}. Já faz um tempo desde o último cuidado no veículo {placa}. Podemos sugerir um novo serviço de conservação?"
+    }
+  ];
+}
+
+businessMessageTemplates = normalizeBusinessMessageTemplates(businessMessageTemplates);
+
+function normalizeBusinessMessageTemplates(templates) {
+  const defaults = getDefaultMessageTemplates();
+  const current = Array.isArray(templates) ? templates : [];
+  const merged = defaults.map((defaultTemplate) => {
+    const savedTemplate = current.find((template) => template.key === defaultTemplate.key) || {};
+    return {
+      ...defaultTemplate,
+      ...savedTemplate,
+      active: Boolean(savedTemplate.active)
+    };
+  });
+  const customTemplates = current
+    .filter((template) => template.key && !merged.some((item) => item.key === template.key))
+    .map((template) => ({ ...template, active: Boolean(template.active) }));
+  return [...merged, ...customTemplates];
+}
+
+function getMessageTriggerLabel(key) {
+  const labels = {
+    "schedule-confirmation": "Ao salvar agendamento",
+    "yard-entry": "Ao registrar entrada no pátio",
+    "vehicle-ready": "Ao mover para Pronto",
+    "schedule-canceled": "Ao cancelar agendamento",
+    "service-canceled": "Ao cancelar serviço",
+    "payment-confirmation": "Ao confirmar/baixar pagamento",
+    "partial-yard-payment": "Ao registrar pagamento parcial no pátio",
+    "open-invoice": "Ao enviar lembrete de fatura",
+    "partial-invoice-payment": "Ao baixar fatura parcialmente",
+    "open-service-payment": "Ao lançar ou lembrar pagamento em aberto",
+    "partial-open-payment": "Ao baixar pagamento em aberto parcialmente",
+    "loyalty-client": "Relacionamento manual no cadastro",
+    "inactive-client": "Relacionamento manual no cadastro",
+    promotion: "Relacionamento manual no cadastro",
+    satisfaction: "Após atendimento ou manual",
+    "maintenance-reminder": "Relacionamento manual no cadastro"
+  };
+  return labels[key] || "Gatilho manual";
+}
 
 const vehicleChecklistTemplates = {
   default: [
@@ -189,6 +373,11 @@ const statusMeta = {
 
 const statusOrder = ["agendado", "aguardando", "lavando", "pronto", "finalizado"];
 const statusActionOrder = ["aguardando", "lavando", "pronto", "cancelado"];
+const localVehicleDatabaseUrl = "./assets/data/fipe-veiculos.json";
+const localVehicleAutocompleteMinLength = 2;
+const localVehicleAutocompleteLimit = 8;
+let localVehicleDatabasePromise = null;
+let localVehicleDatabase = null;
 
 const patioVehicles = [
   {
@@ -449,8 +638,35 @@ const adminOperators = [
       { date: "2026-05-21", login: "08:02", logout: "17:04", device: "Mobile", result: "Autenticado" }
     ],
     production: [
-      { date: "2026-05-22", services: 6, revenue: 520, attendance: "Presente" },
-      { date: "2026-05-21", services: 7, revenue: 610, attendance: "Presente" }
+      {
+        date: "2026-05-22",
+        services: 6,
+        revenue: 520,
+        attendance: "Presente",
+        items: [
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Higienização interna", duration: "1h20", value: 140 },
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Lavagem com cera", duration: "50 min", value: 95 },
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Polimento técnico parcial", duration: "1h10", value: 90 }
+        ]
+      },
+      {
+        date: "2026-05-21",
+        services: 7,
+        revenue: 610,
+        attendance: "Presente",
+        items: [
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Higienização interna", duration: "1h20", value: 140 },
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Lavagem de motor", duration: "45 min", value: 60 },
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Cristalização rápida", duration: "1h30", value: 155 },
+          { service: "Lavagem técnica externa", duration: "40 min", value: 60 }
+        ]
+      }
     ]
   },
   {
@@ -472,8 +688,31 @@ const adminOperators = [
       { date: "2026-05-20", login: "09:04", logout: "18:01", device: "Mobile", result: "Autenticado" }
     ],
     production: [
-      { date: "2026-05-22", services: 4, revenue: 460, attendance: "Presente" },
-      { date: "2026-05-20", services: 5, revenue: 530, attendance: "Presente" }
+      {
+        date: "2026-05-22",
+        services: 4,
+        revenue: 460,
+        attendance: "Presente",
+        items: [
+          { service: "Detailing completo", duration: "3h00", value: 320 },
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Lavagem técnica externa", duration: "40 min", value: 45 },
+          { service: "Acabamento final", duration: "25 min", value: 30 }
+        ]
+      },
+      {
+        date: "2026-05-20",
+        services: 5,
+        revenue: 530,
+        attendance: "Presente",
+        items: [
+          { service: "Higienização interna", duration: "1h20", value: 140 },
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Detailing parcial", duration: "2h00", value: 180 },
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Revitalização de plásticos", duration: "50 min", value: 80 }
+        ]
+      }
     ]
   },
   {
@@ -495,8 +734,27 @@ const adminOperators = [
       { date: "2026-05-19", login: "10:01", logout: "19:00", device: "Web", result: "Autenticado" }
     ],
     production: [
-      { date: "2026-05-22", services: 2, revenue: 180, attendance: "Presente" },
-      { date: "2026-05-19", services: 3, revenue: 260, attendance: "Presente" }
+      {
+        date: "2026-05-22",
+        services: 2,
+        revenue: 180,
+        attendance: "Presente",
+        items: [
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Higienização leve", duration: "55 min", value: 115 }
+        ]
+      },
+      {
+        date: "2026-05-19",
+        services: 3,
+        revenue: 260,
+        attendance: "Presente",
+        items: [
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Lavagem Prime", duration: "35 min", value: 65 },
+          { service: "Preparação de veículo", duration: "1h00", value: 130 }
+        ]
+      }
     ]
   }
 ];
@@ -581,6 +839,27 @@ const cashEntries = [
     scheduledDate: "2026-05-25",
     scheduledTime: "16:00",
     attachment: null
+  }
+];
+
+const openPayments = [
+  {
+    id: 1,
+    clientId: 5,
+    clientName: "Rafael Nunes",
+    phone: "(21) 97777-2041",
+    plate: "BRT8C41",
+    service: "Higienização interna",
+    value: 140,
+    paymentMethod: "Pix",
+    createdAt: "2026-05-25 10:30",
+    dueDate: "2026-05-26",
+    status: "Aberto",
+    reminderFrequency: "Diário",
+    lastReminderAt: "",
+    operator: "Carlos",
+    vehicleId: 2,
+    cashEntryId: 3
   }
 ];
 
@@ -669,12 +948,12 @@ function confirmLogin() {
 
   if (!user || !password) {
     showToast("Preencha Usuario e Senha para continuar.");
-    return;
+    return null;
   }
 
   if (!selectedProfile) {
     showToast("Escolha Administrador ou Operador para continuar.");
-    return;
+    return null;
   }
 
   if (selectedProfile === "Administrador") showAdmin(user);
@@ -737,6 +1016,12 @@ function bindEvents() {
   $("#finishScheduleButton").addEventListener("click", finishVehicleScheduleFromDialog);
   $("#addEntryServiceButton").addEventListener("click", addEntryServiceFromDropdown);
   $("#vehicleScheduleToggle").addEventListener("change", handleVehicleScheduleToggle);
+  bindLocalVehicleModelLookup({
+    modelSelector: "#vehicleModel",
+    brandSelector: "#vehicleBrand",
+    resultsSelector: "#vehicleModelResults",
+    typeSelector: "#vehicleType"
+  });
   $("#vehicleForm").addEventListener("submit", (event) => {
     event.preventDefault();
     handleVehicleEntrySubmit();
@@ -776,7 +1061,7 @@ function bindEvents() {
     selectedBillingInvoiceId = $("#billingInvoiceSelect").value;
     updateBillingReadyState();
   });
-  $("#newBillingClientButton").addEventListener("click", handleNewBillingClientFromEntry);
+  $("#newBillingClientButton")?.addEventListener("click", handleNewBillingClientFromEntry);
   $("#newInvoiceButton").addEventListener("click", () => {
     renderInvoiceClientSelect();
     showVehicleStep("invoice");
@@ -888,11 +1173,13 @@ function openVehicleDialog(mode = "entry") {
   $("#vehiclePlate").focus();
 }
 
-function closeVehicleDialog() {
+function closeVehicleDialog(options = {}) {
+  const shouldReturnToClient = vehicleEntryMode === "client-registration" && Boolean(clientVehicleRegistrationContext);
   const dialog = $("#vehicleDialog");
   if (typeof dialog.close === "function") dialog.close();
   else dialog.removeAttribute("open");
   resetVehicleForm();
+  if (shouldReturnToClient) reopenClientDialogAfterVehicleRegistration(options.completedClientPlate || "");
 }
 
 function openScheduleDialog() {
@@ -1262,6 +1549,7 @@ function buildScheduledVehicleFromRegistry(registryVehicle, scheduledDate, sched
   return {
     id: getNextPatioVehicleId(),
     plate: registryVehicle.plate,
+    brand: registryVehicle.brand || "",
     model: registryVehicle.model || registryVehicle.brand || "Veículo",
     color: registryVehicle.color || "Não informada",
     type: registryVehicle.type || "",
@@ -1292,6 +1580,187 @@ function renderVehicleEntryOptions() {
   renderVehicleServiceOptions();
 }
 
+function bindLocalVehicleModelLookup({ container = document, modelSelector, brandSelector = "", resultsSelector, typeSelector }) {
+  const modelInput = $(modelSelector, container);
+  const results = $(resultsSelector, container);
+  if (!modelInput || !results || modelInput.dataset.localVehicleLookupBound === "true") return;
+
+  const brandInput = brandSelector ? $(brandSelector, container) : null;
+  const typeInput = $(typeSelector, container);
+  let debounceTimer = 0;
+  let requestId = 0;
+
+  modelInput.dataset.localVehicleLookupBound = "true";
+  modelInput.setAttribute("autocomplete", "off");
+  modelInput.setAttribute("aria-autocomplete", "list");
+  modelInput.setAttribute("aria-controls", results.id || "");
+
+  const runLookup = () => {
+    window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(async () => {
+      const query = modelInput.value.trim();
+      const currentRequestId = ++requestId;
+
+      if (brandInput && normalizeText(modelInput.dataset.selectedVehicleModel || "") !== normalizeText(query)) {
+        brandInput.value = "";
+      }
+
+      if (query.length < localVehicleAutocompleteMinLength) {
+        clearLocalVehicleResults(results);
+        return;
+      }
+
+      renderLocalVehicleMessage(results, "Buscando no banco local de veículos...");
+
+      try {
+        const typeKey = getLocalVehicleTypeKey(typeInput?.value);
+        const matches = await searchLocalVehicleModels(query, typeKey);
+        if (currentRequestId !== requestId) return;
+        renderLocalVehicleResults(results, matches, query);
+      } catch (error) {
+        if (currentRequestId !== requestId) return;
+        renderLocalVehicleMessage(results, "Banco local indisponível. Continue preenchendo manualmente.");
+      }
+    }, 180);
+  };
+
+  modelInput.addEventListener("input", runLookup);
+  modelInput.addEventListener("focus", () => {
+    if (modelInput.value.trim().length >= localVehicleAutocompleteMinLength && results.innerHTML.trim()) {
+      results.hidden = false;
+    }
+  });
+  modelInput.addEventListener("blur", () => {
+    window.setTimeout(() => {
+      results.hidden = true;
+    }, 140);
+  });
+
+  typeInput?.addEventListener("change", () => {
+    clearLocalVehicleResults(results);
+    runLookup();
+  });
+
+  results.addEventListener("mousedown", (event) => {
+    if (event.target.closest("[data-local-vehicle-model]")) event.preventDefault();
+  });
+
+  results.addEventListener("click", (event) => {
+    const option = event.target.closest("[data-local-vehicle-model]");
+    if (!option) return;
+    modelInput.value = option.dataset.localVehicleModel || "";
+    modelInput.dataset.selectedVehicleModel = modelInput.value;
+    modelInput.dataset.selectedVehicleBrand = option.dataset.localVehicleBrand || "";
+    if (brandInput) brandInput.value = option.dataset.localVehicleBrand || "";
+    clearLocalVehicleResults(results);
+  });
+}
+
+function clearLocalVehicleResults(results) {
+  if (!results) return;
+  results.innerHTML = "";
+  results.hidden = true;
+}
+
+function renderLocalVehicleMessage(results, message) {
+  results.innerHTML = `<p class="vehicle-model-message">${escapeHtml(message)}</p>`;
+  results.hidden = false;
+}
+
+function renderLocalVehicleResults(results, matches, query) {
+  if (!matches.length) {
+    renderLocalVehicleMessage(results, `Nenhum modelo encontrado para "${query}".`);
+    return;
+  }
+
+  results.innerHTML = matches
+    .map(
+      (vehicle) => `
+        <button
+          class="vehicle-model-option"
+          type="button"
+          data-local-vehicle-model="${escapeHtml(vehicle.model)}"
+          data-local-vehicle-brand="${escapeHtml(vehicle.brand)}"
+        >
+          <strong>${escapeHtml(vehicle.model)}</strong>
+          <span>${escapeHtml(vehicle.brand)} · ${escapeHtml(vehicle.typeLabel || "Veículo")}</span>
+        </button>
+      `
+    )
+    .join("");
+  results.hidden = false;
+}
+
+async function searchLocalVehicleModels(query, typeKey) {
+  const database = await loadLocalVehicleDatabase();
+  const normalizedQuery = normalizeSearchText(query);
+  const terms = normalizedQuery.split(/\s+/).filter(Boolean);
+  return database.vehicles
+    .filter((vehicle) => !typeKey || vehicle.type === typeKey)
+    .map((vehicle) => ({
+      ...vehicle,
+      score: getLocalVehicleMatchScore(vehicle, normalizedQuery, terms)
+    }))
+    .filter((vehicle) => vehicle.score > 0)
+    .sort((first, second) => second.score - first.score || first.label.localeCompare(second.label, "pt-BR"))
+    .slice(0, localVehicleAutocompleteLimit);
+}
+
+function getLocalVehicleMatchScore(vehicle, normalizedQuery, terms) {
+  const searchable = vehicle.search || normalizeSearchText(`${vehicle.brand} ${vehicle.model}`);
+  if (!terms.every((term) => searchable.includes(term))) return 0;
+
+  const normalizedModel = normalizeSearchText(vehicle.model);
+  const normalizedBrand = normalizeSearchText(vehicle.brand);
+  let score = 10;
+  if (normalizedModel === normalizedQuery) score += 120;
+  else if (normalizedModel.startsWith(normalizedQuery)) score += 90;
+  else if (normalizedModel.includes(normalizedQuery)) score += 55;
+  if (normalizedBrand.startsWith(normalizedQuery)) score += 25;
+  score += Math.max(0, 30 - normalizedModel.length / 5);
+  return score;
+}
+
+async function loadLocalVehicleDatabase() {
+  if (localVehicleDatabase) return localVehicleDatabase;
+  if (window.localFipeVehicleDatabase) {
+    localVehicleDatabase = {
+      ...window.localFipeVehicleDatabase,
+      vehicles: Array.isArray(window.localFipeVehicleDatabase.vehicles) ? window.localFipeVehicleDatabase.vehicles : []
+    };
+    return localVehicleDatabase;
+  }
+  if (!localVehicleDatabasePromise) {
+    localVehicleDatabasePromise = fetch(localVehicleDatabaseUrl, { headers: { Accept: "application/json" } })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Banco local HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((data) => ({
+        ...data,
+        vehicles: Array.isArray(data.vehicles) ? data.vehicles : []
+      }));
+  }
+  localVehicleDatabase = await localVehicleDatabasePromise;
+  return localVehicleDatabase;
+}
+
+function getLocalVehicleTypeKey(vehicleType) {
+  const normalizedType = normalizeText(vehicleType);
+  if (normalizedType.includes("moto")) return "motorcycles";
+  if (normalizedType.includes("caminhao")) return "trucks";
+  return "cars";
+}
+
+function normalizeSearchText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .toLowerCase()
+    .trim();
+}
+
 function updateVehicleEntryCategoryState() {
   const type = $("#vehicleType")?.value || "";
   const categorySelect = $("#vehicleCategory");
@@ -1307,7 +1776,8 @@ function updateVehicleEntryCategoryState() {
 }
 
 function getCurrentEntryVehicleType() {
-  return $("#vehicleType")?.value || pendingVehicle?.type || "Carro";
+  const selectedVehicle = getSelectedEntryRegistryVehicle();
+  return selectedVehicle?.type || $("#vehicleType")?.value || pendingVehicle?.type || "Carro";
 }
 
 function getChecklistScopeForVehicleStep(step) {
@@ -1417,11 +1887,26 @@ function validateScheduleSlot(plate, date, time, ignoredVehicleId = null) {
 
 function updateVehicleDialogMode() {
   const isSchedule = vehicleEntryMode === "schedule";
+  const isClientRegistration = vehicleEntryMode === "client-registration";
   const toggle = $("#vehicleScheduleToggle");
-  if (toggle) toggle.checked = isSchedule;
-  $("#vehicleDialogEyebrow").textContent = isSchedule ? "Agendamento" : "Entrada no pátio";
-  $("#vehicleDialogTitle").textContent = isSchedule ? "Novo veículo para agendamento" : "Novo veículo";
+  const scheduleField = toggle?.closest(".vehicle-schedule-switch");
+  if (toggle) {
+    toggle.checked = isSchedule;
+    toggle.disabled = isClientRegistration;
+  }
+  if (scheduleField) scheduleField.hidden = isClientRegistration;
+  $("#vehicleDialogEyebrow").textContent = isClientRegistration ? "Cadastro de cliente" : isSchedule ? "Agendamento" : "Entrada no pátio";
+  $("#vehicleDialogTitle").textContent = isClientRegistration ? "Novo veículo do cliente" : isSchedule ? "Novo veículo para agendamento" : "Novo veículo";
   $("#vehicleEntryStepCopy").textContent = "Dados do veículo";
+  $("#vehicleDialog .services-field")?.toggleAttribute("hidden", isClientRegistration);
+  $("#cancelVehicleEntry").textContent = isClientRegistration ? "Voltar ao cliente" : "Cancelar";
+  const nextIcon = $("#nextVehicleEntryButton [data-icon]");
+  const nextLabel = $("#nextVehicleEntryButton span:last-child");
+  if (nextIcon) {
+    nextIcon.dataset.icon = isClientRegistration ? "check" : "login";
+    nextIcon.innerHTML = icons[nextIcon.dataset.icon] || nextIcon.innerHTML;
+  }
+  if (nextLabel) nextLabel.textContent = isClientRegistration ? "Salvar veículo" : "Próximo";
 
   setScheduleDateMin("#vehicleScheduleDate");
   renderScheduleTimeOptions();
@@ -1429,7 +1914,7 @@ function updateVehicleDialogMode() {
 
 function handleVehicleScheduleToggle(event) {
   vehicleEntryMode = event.currentTarget.checked ? "schedule" : "entry";
-  pendingVehicle = null;
+  pendingVehicle = selectedEntryVehicleId ? pendingVehicle : null;
   updateVehicleDialogMode();
   updatePaymentAction();
 
@@ -1440,8 +1925,9 @@ function handleVehicleScheduleToggle(event) {
 }
 
 function getEntryServiceOptions() {
-  const vehicleType = $("#vehicleType")?.value || "";
-  const vehicleCategory = $("#vehicleCategory")?.value || "";
+  const selectedVehicle = getSelectedEntryRegistryVehicle();
+  const vehicleType = selectedVehicle?.type || $("#vehicleType")?.value || "";
+  const vehicleCategory = selectedVehicle?.category || $("#vehicleCategory")?.value || "";
   return getServicesForVehicleTypeAndCategory(vehicleType, vehicleCategory);
 }
 
@@ -1512,9 +1998,15 @@ function renderSelectedEntryServices(services) {
 }
 
 function goToVehicleClientStep() {
-  const requiredFields = ["#vehiclePlate", "#vehicleModel", "#vehicleType"].concat(
-    shouldUseVehicleCategory($("#vehicleType").value) ? ["#vehicleCategory"] : []
-  );
+  if (vehicleEntryMode === "client-registration") {
+    saveClientVehicleRegistrationFromDialog();
+    return;
+  }
+
+  const selectedVehicle = getSelectedEntryRegistryVehicle();
+  const requiredFields = selectedVehicle
+    ? ["#vehiclePlate"]
+    : ["#vehiclePlate", "#vehicleModel", "#vehicleType"].concat(shouldUseVehicleCategory($("#vehicleType").value) ? ["#vehicleCategory"] : []);
   const isValid = requiredFields.every((selector) => $(selector).reportValidity());
   if (!isValid) return;
 
@@ -1527,13 +2019,74 @@ function goToVehicleClientStep() {
   $("#vehiclePhone").focus();
 }
 
+function saveClientVehicleRegistrationFromDialog() {
+  const selectedVehicle = getSelectedEntryRegistryVehicle();
+  const requiredFields = selectedVehicle
+    ? ["#vehiclePlate"]
+    : ["#vehiclePlate", "#vehicleModel", "#vehicleType"].concat(shouldUseVehicleCategory($("#vehicleType").value) ? ["#vehicleCategory"] : []);
+  const isValid = requiredFields.every((selector) => $(selector).reportValidity());
+  if (!isValid) return;
+
+  const form = $("#vehicleForm");
+  const data = new FormData(form);
+  const plate = formatPlate(data.get("plate"));
+  const linkedClient = getClientLinkedToPlate(plate);
+  if (linkedClient && linkedClient.id !== selectedClientId) {
+    showToast(`${plate} já está vinculada a ${getClientDisplayName(linkedClient)}.`);
+    $("#vehiclePlate").focus();
+    return;
+  }
+
+  const existingVehicle = findVehicleByPlate(plate);
+  if (!existingVehicle) {
+    const selectedColor = String(data.get("color") || "").trim();
+    const otherColor = String(data.get("otherColor") || "").trim();
+    const color = selectedColor === "Outra" ? otherColor : selectedColor;
+    const type = String(data.get("type") || "").trim() || "Carro";
+
+    if (!color) {
+      showToast("Informe a cor do veículo.");
+      $("#vehicleOtherColor").focus();
+      return;
+    }
+
+    vehicleRegistry.unshift({
+      id: getNextVehicleId(),
+      plate,
+      brand: String(data.get("brand") || $("#vehicleModel").dataset.selectedVehicleBrand || "").trim(),
+      model: String(data.get("model") || "").trim(),
+      year: "",
+      color,
+      type,
+      category: getVehicleCategoryValue(type, String(data.get("category") || "").trim()),
+      fuel: "Outro",
+      currentClientId: null,
+      notes: "Criado a partir do cadastro de clientes.",
+      ownerHistory: [],
+      serviceHistory: [],
+      checklistHistory: []
+    });
+    renderAdminDashboard();
+  }
+
+  if (!pendingClientPlates.includes(plate)) pendingClientPlates.push(plate);
+  closeVehicleDialog({ completedClientPlate: plate });
+}
+
 async function handleVehicleEntrySubmit() {
+  if (vehicleEntryMode === "client-registration") {
+    saveClientVehicleRegistrationFromDialog();
+    return;
+  }
+
   const form = $("#vehicleForm");
   if (!form.reportValidity()) return;
 
   const data = new FormData(form);
   const vehicle = buildVehicleFromForm(data, { requireSchedule: false });
   if (!vehicle) return;
+
+  if (!(await confirmOpenPaymentsForEntry(vehicle))) return;
 
   if (vehicle.payment !== "Faturado" && vehicleEntryMode !== "schedule" && !attachChecklistFromPanel(vehicle, form, "vehicleClient")) {
     return;
@@ -1577,13 +2130,22 @@ function buildVehicleFromForm(data, { requireSchedule = vehicleEntryMode === "sc
     hour: "2-digit",
     minute: "2-digit"
   });
+  const selectedRegistryVehicle = getSelectedEntryRegistryVehicle();
+  const selectedRegistryClient = selectedRegistryVehicle
+    ? selectedRegistryVehicle.currentClientId
+      ? getClientById(selectedRegistryVehicle.currentClientId)
+      : findClientByPlate(selectedRegistryVehicle.plate)
+    : null;
   const isSchedule = vehicleEntryMode === "schedule";
   const scheduledDate = String(data.get("scheduleDate") || "").trim();
   const scheduledTime = String(data.get("scheduleTime") || "").trim();
   const selectedColor = String(data.get("color")).trim();
   const otherColor = String(data.get("otherColor")).trim();
-  const color = selectedColor === "Outra" ? otherColor : selectedColor;
+  const color = selectedRegistryVehicle ? selectedRegistryVehicle.color || "Não informada" : selectedColor === "Outra" ? otherColor : selectedColor;
   const services = data.getAll("services").map((service) => String(service).trim()).filter(Boolean);
+  const type = selectedRegistryVehicle?.type || String(data.get("type") || "").trim();
+  const category = selectedRegistryVehicle?.category || String(data.get("category") || "").trim();
+  const brand = selectedRegistryVehicle?.brand || String(data.get("brand") || "").trim();
 
   if (!color) {
     showToast("Informe a cor do veículo.");
@@ -1606,13 +2168,14 @@ function buildVehicleFromForm(data, { requireSchedule = vehicleEntryMode === "sc
 
   return {
     id: getNextPatioVehicleId(),
-    plate: String(data.get("plate")).trim().toUpperCase(),
-    model: String(data.get("model")).trim(),
+    plate: selectedRegistryVehicle?.plate || String(data.get("plate")).trim().toUpperCase(),
+    brand,
+    model: selectedRegistryVehicle?.model || selectedRegistryVehicle?.brand || String(data.get("model")).trim(),
     color,
-    type: String(data.get("type")).trim(),
-    category: getVehicleCategoryValue(String(data.get("type")).trim(), String(data.get("category")).trim()),
-    owner: String(data.get("owner")).trim(),
-    phone: String(data.get("phone")).trim(),
+    type,
+    category: getVehicleCategoryValue(type, category),
+    owner: selectedRegistryClient ? getClientDisplayName(selectedRegistryClient) : String(data.get("owner")).trim(),
+    phone: selectedRegistryClient?.phone || String(data.get("phone")).trim(),
     services,
     service: formatServices(services),
     payment: String(data.get("payment")).trim(),
@@ -1720,10 +2283,37 @@ async function resolveEntryOwnership(vehicle) {
   return true;
 }
 
+async function confirmOpenPaymentsForEntry(vehicle) {
+  const registeredVehicle = findVehicleByPlate(vehicle.plate);
+  const client =
+    (registeredVehicle?.currentClientId ? getClientById(registeredVehicle.currentClientId) : null) ||
+    findClientByPlate(vehicle.plate) ||
+    findClientByPhone(vehicle.phone);
+  if (!client) return true;
+
+  const pendingPayments = getOpenPaymentsByClientId(client.id);
+  if (!pendingPayments.length) return true;
+
+  const total = pendingPayments.reduce((sum, payment) => sum + Number(payment.value || 0), 0);
+  return showMessageBox({
+    title: "Cliente com pagamento em aberto",
+    message: `${getClientDisplayName(client)} possui ${pendingPayments.length} pagamento(s) em aberto, totalizando ${formatCurrency(total)}. Deseja continuar com a entrada deste novo serviço?`,
+    eyebrow: "Financeiro",
+    confirmLabel: "Continuar",
+    cancelLabel: "Cancelar entrada",
+    confirmOnly: false
+  });
+}
+
 function handleEntryPlateLookup(plateValue) {
   const plate = formatPlate(plateValue);
   const list = $("#vehiclePlateResults");
   if (!list) return;
+
+  const selectedVehicle = getSelectedEntryRegistryVehicle();
+  if (selectedVehicle && selectedVehicle.plate !== plate) {
+    clearSelectedEntryRegistration();
+  }
 
   if (!plate) {
     clearEntryPlateResults();
@@ -1732,6 +2322,16 @@ function handleEntryPlateLookup(plateValue) {
 
   const matches = vehicleRegistry.filter((vehicle) => vehicle.plate.startsWith(plate)).slice(0, 6);
   if (!matches.length) {
+    if (vehicleEntryMode === "client-registration") {
+      clearEntryPlateResults();
+      return;
+    }
+    if (plate.length >= 7) {
+      list.hidden = false;
+      list.innerHTML = renderEntryNewClientOption(plate);
+      $("#entryNewClientButton", list)?.addEventListener("click", () => handleEntryNewClientAction());
+      return;
+    }
     clearEntryPlateResults();
     return;
   }
@@ -1741,6 +2341,22 @@ function handleEntryPlateLookup(plateValue) {
   $$("[data-entry-vehicle-id]", list).forEach((button) => {
     button.addEventListener("click", () => selectEntryVehicle(Number(button.dataset.entryVehicleId)));
   });
+}
+
+function renderEntryNewClientOption(plate) {
+  return `
+    <button class="schedule-plate-option entry-plate-option" type="button" id="entryNewClientButton">
+      <strong>${escapeHtml(plate)}</strong>
+      <span>Cadastrar novo cliente</span>
+      <small>Complete os dados do veículo e avance para o cadastro do cliente.</small>
+    </button>
+  `;
+}
+
+function handleEntryNewClientAction() {
+  clearEntryPlateResults();
+  showToast("Complete os dados do veículo e avance para cadastrar o cliente.");
+  $("#vehicleModel").focus();
 }
 
 function renderEntryVehicleOption(vehicle) {
@@ -1755,14 +2371,26 @@ function renderEntryVehicleOption(vehicle) {
   `;
 }
 
-function selectEntryVehicle(vehicleId) {
+async function selectEntryVehicle(vehicleId) {
   const vehicle = findVehicleById(vehicleId);
   if (!vehicle) return;
 
   $("#vehiclePlate").value = vehicle.plate;
   clearEntryPlateResults();
+  selectedEntryVehicleId = vehicle.id;
   fillEntryFromVehicle(vehicle);
-  notifyOpenInvoicesForVehicle(vehicle);
+  renderEntryLinkedRegistration(vehicle);
+  setEntryRegistrationReadonly(true);
+  await notifyOpenInvoicesForVehicle(vehicle);
+  const canContinue = await confirmOpenPaymentsForEntry({
+    plate: vehicle.plate,
+    phone: getClientById(vehicle.currentClientId)?.phone || ""
+  });
+  if (!canContinue) {
+    clearSelectedEntryRegistration();
+    $("#vehiclePlate").value = "";
+    $("#vehiclePlate").focus();
+  }
 }
 
 function clearEntryPlateResults() {
@@ -1772,7 +2400,29 @@ function clearEntryPlateResults() {
   list.hidden = true;
 }
 
+function getSelectedEntryRegistryVehicle() {
+  return selectedEntryVehicleId ? findVehicleById(selectedEntryVehicleId) : null;
+}
+
+function clearSelectedEntryRegistration() {
+  selectedEntryVehicleId = null;
+  setEntryRegistrationReadonly(false);
+  renderEntryLinkedRegistration(null);
+  $("#vehicleBrand").value = "";
+  $("#vehicleModel").value = "";
+  delete $("#vehicleModel").dataset.selectedVehicleModel;
+  delete $("#vehicleModel").dataset.selectedVehicleBrand;
+  clearLocalVehicleResults($("#vehicleModelResults"));
+  $("#vehicleOwner").value = "";
+  $("#vehiclePhone").value = "";
+  if ($("#vehicleType option").length) $("#vehicleType").value = vehicleTypes[0] || "";
+  updateVehicleEntryCategoryState();
+  resetVehicleColor();
+  renderVehicleServiceOptions();
+}
+
 function fillEntryFromVehicle(vehicle) {
+  $("#vehicleBrand").value = vehicle.brand || "";
   $("#vehicleModel").value = vehicle.model || $("#vehicleModel").value;
   if (vehicle.color) setEntryVehicleColor(vehicle.color);
   if (vehicle.type && vehicleTypes.includes(vehicle.type)) $("#vehicleType").value = vehicle.type;
@@ -1783,6 +2433,268 @@ function fillEntryFromVehicle(vehicle) {
   const client = vehicle.currentClientId ? getClientById(vehicle.currentClientId) : findClientByPlate(vehicle.plate);
   if (!client) return;
   fillEntryOwnerFromClient(client);
+}
+
+function renderEntryLinkedRegistration(vehicle) {
+  const panel = $("#entryLinkedRecord");
+  if (!panel) return;
+
+  if (!vehicle) {
+    panel.innerHTML = "";
+    panel.hidden = true;
+    return;
+  }
+
+  const client = vehicle.currentClientId ? getClientById(vehicle.currentClientId) : findClientByPlate(vehicle.plate);
+  const owner = client ? getClientDisplayName(client) : "Cliente não vinculado";
+  panel.hidden = false;
+  panel.innerHTML = `
+    <div>
+      <strong>Cadastro localizado</strong>
+      <span>${escapeHtml(vehicle.plate)} - ${escapeHtml(formatEntryLinkedVehicleDetails(vehicle))}</span>
+      <small>${escapeHtml(owner)}${client?.phone ? ` / ${escapeHtml(client.phone)}` : ""}</small>
+    </div>
+    <div class="entry-linked-actions">
+      <button class="ghost-action" type="button" data-edit-entry-vehicle="${vehicle.id}">
+        <span data-icon="carFront"></span>
+        <span>Editar veículo</span>
+      </button>
+      ${
+        client
+          ? `<button class="ghost-action" type="button" data-edit-entry-client="${client.id}">
+              <span data-icon="users"></span>
+              <span>Editar cliente</span>
+            </button>`
+          : ""
+      }
+    </div>
+  `;
+  initIcons();
+  $("[data-edit-entry-vehicle]", panel)?.addEventListener("click", () => openEntryVehicleRegistryEditor(vehicle.id));
+  $("[data-edit-entry-client]", panel)?.addEventListener("click", () => openEntryClientRegistryEditor(client.id));
+}
+
+function formatEntryLinkedVehicleDetails(vehicle) {
+  const vehicleDescription = formatVehicleDisplayName(vehicle);
+  return [
+    vehicleDescription,
+    vehicle.color ? `Cor: ${vehicle.color}` : "Cor não informada",
+    formatVehicleScope(vehicle.type, vehicle.category)
+  ]
+    .filter(Boolean)
+    .join(" / ");
+}
+
+function formatVehicleDisplayName(vehicle) {
+  const brand = vehicle?.brand || "";
+  const model = vehicle?.model || "";
+  if (brand && model && normalizeText(brand) !== normalizeText(model)) return `${brand} ${model}`;
+  return model || brand || "Veículo";
+}
+
+function setEntryRegistrationReadonly(isReadonly) {
+  ["#vehicleModel", "#vehicleOtherColor", "#vehicleOwner", "#vehiclePhone"].forEach((selector) => {
+    const input = $(selector);
+    if (!input) return;
+    input.readOnly = isReadonly;
+    input.classList.toggle("is-readonly", isReadonly);
+  });
+
+  ["#vehicleType", "#vehicleCategory"].forEach((selector) => {
+    const input = $(selector);
+    if (!input) return;
+    input.disabled = isReadonly || (selector === "#vehicleCategory" && !shouldUseVehicleCategory(getCurrentEntryVehicleType()));
+    input.classList.toggle("is-readonly", isReadonly);
+  });
+
+  $$(".color-swatch").forEach((button) => {
+    button.disabled = isReadonly;
+    button.classList.toggle("is-readonly", isReadonly);
+  });
+
+  $(".entry-model-field")?.toggleAttribute("hidden", isReadonly);
+  $(".entry-color-field")?.toggleAttribute("hidden", isReadonly);
+  $(".other-color-field")?.toggleAttribute("hidden", isReadonly || $("#vehicleColor")?.value !== "Outra");
+  $("#vehicleModel").required = !isReadonly;
+}
+
+function openEntryVehicleRegistryEditor(vehicleId) {
+  if (!$("#adminShell").hidden) {
+    openEntryVehicleRegistryDialog(vehicleId);
+    return;
+  }
+
+  showMessageBox({
+    title: "Edição restrita",
+    message: "A edição do cadastro do veículo deve ser feita por um administrador em Cadastros > Veículos.",
+    confirmLabel: "Entendi"
+  });
+}
+
+function openEntryClientRegistryEditor(clientId) {
+  if (!$("#adminShell").hidden) {
+    entryRegistryEditContext = { type: "client", vehicleId: selectedEntryVehicleId, clientId };
+    openClientDialog(clientId);
+    return;
+  }
+
+  showMessageBox({
+    title: "Edição restrita",
+    message: "A edição do cadastro do cliente deve ser feita por um administrador em Cadastros > Clientes.",
+    confirmLabel: "Entendi"
+  });
+}
+
+function refreshEntryRegistrationAfterEdit() {
+  const vehicleId = entryRegistryEditContext?.vehicleId || selectedEntryVehicleId;
+  const vehicle = vehicleId ? findVehicleById(vehicleId) : null;
+  if (!vehicle || !$("#vehicleDialog")?.open) return;
+
+  selectedEntryVehicleId = vehicle.id;
+  $("#vehiclePlate").value = vehicle.plate;
+  fillEntryFromVehicle(vehicle);
+  renderEntryLinkedRegistration(vehicle);
+  setEntryRegistrationReadonly(true);
+  renderVehicleServiceOptions({ preserveSelected: true });
+}
+
+function openEntryVehicleRegistryDialog(vehicleId) {
+  const vehicle = findVehicleById(vehicleId);
+  if (!vehicle) {
+    showToast("Veículo não localizado.");
+    return;
+  }
+
+  entryRegistryEditContext = { type: "vehicle", vehicleId };
+  selectedVehicleId = vehicleId;
+  const dialog = $("#vehicleRegistryDialog");
+  dialog.innerHTML = renderVehicleRegistryDialogForm(vehicle);
+  initIcons();
+  bindEntryVehicleRegistryDialogControls(dialog);
+
+  if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+  else dialog.setAttribute("open", "");
+
+  window.setTimeout(() => $("#vehicleRegistryBrand", dialog)?.focus(), 0);
+}
+
+function closeEntryVehicleRegistryDialog() {
+  const dialog = $("#vehicleRegistryDialog");
+  if (typeof dialog.close === "function" && dialog.open) dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+  selectedVehicleId = null;
+  refreshEntryRegistrationAfterEdit();
+  entryRegistryEditContext = null;
+}
+
+function renderVehicleRegistryDialogForm(vehicle) {
+  return `
+    <form class="vehicle-box vehicle-registry-dialog-box" id="vehicleRegistryForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Edição</p>
+          <h2>${escapeHtml(vehicle.plate)}</h2>
+        </div>
+        <span class="client-status-label">Veículo</span>
+        <button class="icon-button" id="closeVehicleRegistryDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+
+      <div class="vehicle-form-grid client-form-grid">
+        <label class="login-field" for="vehicleRegistryPlate">
+          <span>Placa</span>
+          <input id="vehicleRegistryPlate" type="text" maxlength="8" value="${escapeHtml(vehicle.plate)}" disabled required />
+        </label>
+        <label class="login-field" for="vehicleRegistryBrand">
+          <span>Marca</span>
+          <input id="vehicleRegistryBrand" type="text" placeholder="Chevrolet" value="${escapeHtml(vehicle.brand || "")}" />
+        </label>
+        <div class="vehicle-model-lookup-field">
+          <label class="login-field" for="vehicleRegistryModel">
+            <span>Modelo</span>
+            <input id="vehicleRegistryModel" type="text" placeholder="Onix" value="${escapeHtml(vehicle.model || "")}" autocomplete="off" required />
+          </label>
+          <div class="vehicle-model-results" id="vehicleRegistryModelResults" hidden></div>
+        </div>
+        <label class="login-field" for="vehicleRegistryYear">
+          <span>Ano</span>
+          <input id="vehicleRegistryYear" type="text" inputmode="numeric" placeholder="2024" maxlength="4" value="${escapeHtml(vehicle.year || "")}" />
+        </label>
+        <label class="login-field" for="vehicleRegistryColor">
+          <span>Cor</span>
+          <input id="vehicleRegistryColor" type="text" placeholder="Branco" value="${escapeHtml(vehicle.color || "")}" />
+        </label>
+        <label class="login-field" for="vehicleRegistryType">
+          <span>Tipo de veículo</span>
+          <select id="vehicleRegistryType">
+            ${renderSelectOptions(vehicleTypes, vehicle.type || "")}
+          </select>
+        </label>
+        <label class="login-field" for="vehicleRegistryCategory">
+          <span>Categoria</span>
+          <select id="vehicleRegistryCategory">
+            ${renderSelectOptions(vehicleCategories, vehicle.category || "")}
+          </select>
+        </label>
+        <label class="login-field" for="vehicleRegistryFuel">
+          <span>Combustível</span>
+          <select id="vehicleRegistryFuel">
+            ${renderSelectOptions(["Flex", "Gasolina", "Etanol", "Diesel", "Híbrido", "Elétrico", "Outro"], vehicle.fuel || "")}
+          </select>
+        </label>
+        <label class="login-field" for="vehicleRegistryClient">
+          <span>Proprietário atual</span>
+          <select id="vehicleRegistryClient">
+            ${renderVehicleOwnerOptions(vehicle.currentClientId || "")}
+          </select>
+        </label>
+        <label class="login-field vehicle-notes-field" for="vehicleRegistryNotes">
+          <span>Observações do veículo</span>
+          <input id="vehicleRegistryNotes" type="text" placeholder="Preferências, restrições, histórico relevante" value="${escapeHtml(vehicle.notes || "")}" />
+        </label>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="exit-button" id="cancelVehicleRegistryDialog" type="button">Cancelar</button>
+        <button class="primary-button" type="submit">
+          <span data-icon="check"></span>
+          <span>Atualizar veículo</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function bindEntryVehicleRegistryDialogControls(container) {
+  updateVehicleRegistryCategoryState(container);
+  bindLocalVehicleModelLookup({
+    container,
+    modelSelector: "#vehicleRegistryModel",
+    brandSelector: "#vehicleRegistryBrand",
+    resultsSelector: "#vehicleRegistryModelResults",
+    typeSelector: "#vehicleRegistryType"
+  });
+  $("#closeVehicleRegistryDialog", container).addEventListener("click", closeEntryVehicleRegistryDialog);
+  $("#cancelVehicleRegistryDialog", container).addEventListener("click", closeEntryVehicleRegistryDialog);
+  $("#vehicleRegistryType", container).addEventListener("change", () => updateVehicleRegistryCategoryState(container));
+  $("#vehicleRegistryYear", container).addEventListener("input", (event) => {
+    event.currentTarget.value = event.currentTarget.value.replace(/\D/g, "").slice(0, 4);
+  });
+  $("#vehicleRegistryForm", container).addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveEntryVehicleRegistryDialog(container);
+  });
+}
+
+function saveEntryVehicleRegistryDialog(container) {
+  const form = $("#vehicleRegistryForm", container);
+  if (!form.reportValidity()) return;
+  const editedVehicleId = selectedVehicleId;
+  persistVehicleRegistration(container);
+  selectedVehicleId = editedVehicleId;
+  closeEntryVehicleRegistryDialog();
 }
 
 function fillEntryOwnerFromClient(client) {
@@ -1824,6 +2736,7 @@ function addVehicleToPatio(vehicle) {
   syncVehicleFromPatioEntry(vehicle);
   closeVehicleDialog();
   renderPatio();
+  triggerAutomatedMessage(vehicle.status === "agendado" ? "schedule-confirmation" : "yard-entry", getMessageContextFromVehicle(vehicle));
   showToast(vehicle.status === "agendado" ? `Agendamento de ${vehicle.plate} criado.` : `${vehicle.plate} entrou no pátio.`);
 }
 
@@ -1855,11 +2768,17 @@ function resetVehicleColor() {
 function resetVehicleForm() {
   $("#vehicleForm").reset();
   pendingVehicle = null;
+  selectedEntryVehicleId = null;
   selectedBillingClientId = "";
   selectedBillingInvoiceId = "";
   lastOpenInvoiceNoticePlate = "";
   vehicleEntryMode = "entry";
   clearEntryPlateResults();
+  clearLocalVehicleResults($("#vehicleModelResults"));
+  delete $("#vehicleModel").dataset.selectedVehicleModel;
+  delete $("#vehicleModel").dataset.selectedVehicleBrand;
+  renderEntryLinkedRegistration(null);
+  setEntryRegistrationReadonly(false);
   resetVehicleColor();
   updateVehicleDialogMode();
   showVehicleStep("entry");
@@ -1868,6 +2787,13 @@ function resetVehicleForm() {
 }
 
 function updatePaymentAction() {
+  if (vehicleEntryMode === "client-registration") {
+    $("#vehiclePrimaryIcon").hidden = false;
+    $("#vehiclePrimaryIcon").dataset.icon = "check";
+    $("#vehiclePrimaryIcon").innerHTML = icons.check || $("#vehiclePrimaryIcon").innerHTML;
+    $("#vehiclePrimaryLabel").textContent = "Salvar veículo";
+    return;
+  }
   const isBilled = $("#vehiclePayment").value === "Faturado";
   $("#vehiclePrimaryIcon").hidden = isBilled;
   $("#vehiclePrimaryLabel").textContent = isBilled ? "Avançar >>" : vehicleEntryMode === "schedule" ? "Próximo" : "Adicionar";
@@ -1906,23 +2832,20 @@ function renderBillingSelectors() {
 }
 
 function renderBillingClientSelect() {
-  const select = $("#billingClientSelect");
-  const approvedClients = billingClients.filter((client) => isBillingClientApproved(client.id));
-  select.innerHTML = [
-    '<option value="">Selecione o cliente</option>',
-    ...approvedClients.map((client) => `<option value="${client.id}">${client.name}</option>`)
-  ].join("");
-  select.value = selectedBillingClientId;
+  const input = $("#billingClientSelect");
+  const billingClient = pendingVehicle ? getApprovedBillingClientForEntry(pendingVehicle) : null;
+  selectedBillingClientId = selectedBillingClientId || (billingClient?.billingClientId ? String(billingClient.billingClientId) : "");
+  input.value = selectedBillingClientId;
 }
 
 function renderInvoiceSelect() {
   const select = $("#billingInvoiceSelect");
   const invoices = billingInvoices.filter((invoice) => String(invoice.clientId) === String(selectedBillingClientId));
-  const emptyLabel = selectedBillingClientId ? "Selecione a fatura" : "Selecione o cliente primeiro";
+  const emptyLabel = selectedBillingClientId ? "Selecione a fatura" : "Cliente faturado sem fatura aberta";
   select.innerHTML = [`<option value="">${emptyLabel}</option>`]
     .concat(
       invoices.map(
-        (invoice) => `<option value="${invoice.id}">${invoice.code} - vence ${formatDateBR(invoice.dueDate)}</option>`
+        (invoice) => `<option value="${invoice.id}">${invoice.code} | ${formatDateBR(invoice.dueDate)}</option>`
       )
     )
     .join("");
@@ -2253,10 +3176,64 @@ function getDefaultBusinessProfile() {
     tradeName: "",
     displayNameMode: "tradeName",
     phone: "",
+    additionalPhones: [],
     email: "",
     address: "",
-    logoDataUrl: ""
+    logoDataUrl: "",
+    logoSizePercent: pdfLogoSizing.defaultPercent,
+    reportFields: getDefaultBusinessProfileReportFields()
   };
+}
+
+function getDefaultBusinessProfileReportFields(displayNameMode = "tradeName") {
+  return {
+    cnpj: { showInReports: true, reportTarget: "all" },
+    legalName: { showInReports: displayNameMode === "legalName", reportTarget: "all" },
+    tradeName: { showInReports: displayNameMode !== "legalName", reportTarget: "all" },
+    phone: { showInReports: true, reportTarget: "all" },
+    email: { showInReports: true, reportTarget: "all" },
+    address: { showInReports: true, reportTarget: "all" }
+  };
+}
+
+function normalizeBusinessProfile(profile = {}) {
+  const fallback = getDefaultBusinessProfile();
+  const mergedProfile = { ...fallback, ...profile };
+  return {
+    ...mergedProfile,
+    logoSizePercent: getBusinessLogoSizePercent(mergedProfile.logoSizePercent),
+    additionalPhones: normalizeBusinessAdditionalPhones(mergedProfile.additionalPhones),
+    reportFields: normalizeBusinessProfileReportFields(mergedProfile.reportFields, mergedProfile.displayNameMode)
+  };
+}
+
+function getBusinessLogoSizePercent(value = businessProfile.logoSizePercent) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return pdfLogoSizing.defaultPercent;
+  return Math.min(pdfLogoSizing.maxPercent, Math.max(pdfLogoSizing.minPercent, Math.round(numericValue)));
+}
+
+function normalizeBusinessProfileReportFields(fields = {}, displayNameMode = "tradeName") {
+  const defaults = getDefaultBusinessProfileReportFields(displayNameMode);
+  return businessProfileReportFieldKeys.reduce((normalized, key) => {
+    const field = fields?.[key] || {};
+    normalized[key] = {
+      showInReports: Object.prototype.hasOwnProperty.call(field, "showInReports") ? Boolean(field.showInReports) : defaults[key].showInReports,
+      reportTarget: "all"
+    };
+    return normalized;
+  }, {});
+}
+
+function normalizeBusinessAdditionalPhones(phones = []) {
+  return (Array.isArray(phones) ? phones : [])
+    .map((phone, index) => ({
+      id: phone.id || `phone-${Date.now()}-${index}`,
+      value: phone.value || "",
+      showInReports: Object.prototype.hasOwnProperty.call(phone, "showInReports") ? Boolean(phone.showInReports) : true,
+      reportTarget: "all"
+    }))
+    .filter((phone) => phone.value || phone.id);
 }
 
 function getDefaultBusinessPixInfo() {
@@ -2273,8 +3250,20 @@ function getDefaultBusinessPixInfo() {
 
 function getDefaultBusinessSocialLinks() {
   return businessSocialChannels.reduce((links, channel) => {
-    links[channel.key] = { value: "", showInFooter: false };
+    links[channel.key] = { value: "", showInFooter: false, reportTarget: "all" };
     return links;
+  }, {});
+}
+
+function normalizeBusinessSocialLinks(links = {}) {
+  return businessSocialChannels.reduce((normalized, channel) => {
+    const item = links?.[channel.key] || {};
+    normalized[channel.key] = {
+      value: item.value || "",
+      showInFooter: Boolean(item.showInFooter || item.includeInReport),
+      reportTarget: getBusinessSocialReportTarget(item.reportTarget)
+    };
+    return normalized;
   }, {});
 }
 
@@ -2303,18 +3292,93 @@ function getBusinessDocumentName() {
   return preferred || businessProfile.tradeName || businessProfile.legalName || "LavaPrime";
 }
 
-function getBusinessDocumentContactLine() {
-  return [businessProfile.cnpj, businessProfile.phone, businessProfile.email, businessProfile.address].filter(Boolean).join(" | ");
+function getBusinessMessageCompanyName() {
+  return businessProfile.tradeName || getBusinessDocumentName();
 }
 
-function getBusinessDocumentFooterDetails() {
+function getBusinessDocumentContactLine(reportTarget = "all") {
+  const items = [];
+  const reportName = getBusinessReportDocumentName(reportTarget);
+  items.push(...getBusinessReportIdentityDetails(reportTarget, reportName));
+  if (shouldIncludeBusinessProfileFieldInReport("cnpj", reportTarget) && businessProfile.cnpj) items.push(`CNPJ: ${businessProfile.cnpj}`);
+  if (shouldIncludeBusinessProfileFieldInReport("phone", reportTarget) && businessProfile.phone) items.push(`Telefone: ${businessProfile.phone}`);
+  getVisibleBusinessAdditionalPhones(reportTarget).forEach((phone, index) => {
+    items.push(`Telefone ${index + 2}: ${phone.value}`);
+  });
+  if (shouldIncludeBusinessProfileFieldInReport("email", reportTarget) && businessProfile.email) items.push(`E-mail: ${businessProfile.email}`);
+  if (shouldIncludeBusinessProfileFieldInReport("address", reportTarget) && businessProfile.address) items.push(`Endereço: ${businessProfile.address}`);
+  return items.join(" | ");
+}
+
+function getBusinessReportDocumentName(reportTarget = "all") {
+  const preferredKey = businessProfile.displayNameMode === "legalName" ? "legalName" : "tradeName";
+  const fallbackKey = preferredKey === "legalName" ? "tradeName" : "legalName";
+  if (shouldIncludeBusinessProfileFieldInReport(preferredKey, reportTarget) && businessProfile[preferredKey]) return businessProfile[preferredKey];
+  if (shouldIncludeBusinessProfileFieldInReport(fallbackKey, reportTarget) && businessProfile[fallbackKey]) return businessProfile[fallbackKey];
+  return getBusinessDocumentName();
+}
+
+function getBusinessReportIdentityDetails(reportTarget = "all", primaryName = "") {
+  const details = [];
+  if (shouldIncludeBusinessProfileFieldInReport("tradeName", reportTarget) && businessProfile.tradeName && businessProfile.tradeName !== primaryName) {
+    details.push(`Nome Fantasia: ${businessProfile.tradeName}`);
+  }
+  if (shouldIncludeBusinessProfileFieldInReport("legalName", reportTarget) && businessProfile.legalName && businessProfile.legalName !== primaryName) {
+    details.push(`Razão Social: ${businessProfile.legalName}`);
+  }
+  return details;
+}
+
+function shouldIncludeBusinessProfileFieldInReport(fieldKey, reportTarget = "all") {
+  const config = businessProfile.reportFields?.[fieldKey] || getDefaultBusinessProfileReportFields(businessProfile.displayNameMode)[fieldKey];
+  return Boolean(config?.showInReports);
+}
+
+function getVisibleBusinessAdditionalPhones(reportTarget = "all") {
+  return normalizeBusinessAdditionalPhones(businessProfile.additionalPhones).filter((phone) => phone.value && phone.showInReports);
+}
+
+function getBusinessSocialReportTarget(value) {
+  return businessSocialReportTargets.some((target) => target.key === value) ? value : "all";
+}
+
+function getBusinessSocialReportTargetLabel(value) {
+  return businessSocialReportTargets.find((target) => target.key === getBusinessSocialReportTarget(value))?.label || "Todos os relatórios";
+}
+
+function shouldIncludeReportTarget(selectedTarget, reportTarget) {
+  const selected = getBusinessSocialReportTarget(selectedTarget);
+  const target = getBusinessSocialReportTarget(reportTarget);
+  if (selected === "all") return true;
+  if (selected === target) return true;
+  if (selected === "financial") return ["financial", "cashflow", "openPayments", "invoices", "receipts"].includes(target);
+  return false;
+}
+
+function renderBusinessSocialReportTargetOptions(selectedTarget = "all") {
+  const selected = getBusinessSocialReportTarget(selectedTarget);
+  return businessSocialReportTargets
+    .map(
+      (target) =>
+        `<option value="${escapeHtml(target.key)}" ${target.key === selected ? "selected" : ""}>${escapeHtml(target.label)}</option>`
+    )
+    .join("");
+}
+
+function getBusinessDocumentFooterDetails(reportTarget = "all") {
+  const target = getBusinessSocialReportTarget(reportTarget);
   return businessSocialChannels
     .map((channel) => {
       const item = businessSocialLinks[channel.key];
-      return item?.showInFooter && item.value ? `${channel.label}: ${item.value}` : "";
+      return shouldIncludeBusinessSocialInReport(item, target) && item.value ? `${channel.label}: ${item.value}` : "";
     })
     .filter(Boolean)
     .join(" | ");
+}
+
+function shouldIncludeBusinessSocialInReport(item, reportTarget) {
+  if (!item?.showInFooter) return false;
+  return shouldIncludeReportTarget(item.reportTarget, reportTarget);
 }
 
 function shouldAddInvoicePaymentData(document) {
@@ -2551,6 +3615,9 @@ function renderAdminAlerts(billedOpen) {
     countByStatus("pronto") ? `${countByStatus("pronto")} veículo(s) pronto(s) para entrega.` : "",
     countByStatus("lavando") ? `${countByStatus("lavando")} serviço(s) em execução agora.` : "",
     billedOpen ? `${formatCurrency(billedOpen)} em lançamentos faturados abertos.` : "",
+    getActiveOpenPayments().length
+      ? `${getActiveOpenPayments().length} pagamento(s) em aberto exigem lembrete diário ao gestor.`
+      : "",
     countByStatus("finalizado") ? `${countByStatus("finalizado")} atendimento(s) em Finalizados.` : ""
   ].filter(Boolean);
 
@@ -2599,6 +3666,11 @@ function renderAdminScreen(view) {
     return;
   }
 
+  if (view === "businessMessages") {
+    renderBusinessMessagesScreen(container);
+    return;
+  }
+
   if (view === "operators") {
     renderOperatorsScreen(container);
     return;
@@ -2611,6 +3683,16 @@ function renderAdminScreen(view) {
 
   if (view === "cashflow") {
     renderCashflowScreen(container);
+    return;
+  }
+
+  if (view === "openPayments") {
+    renderOpenPaymentsScreen(container);
+    return;
+  }
+
+  if (view === "invoices") {
+    renderInvoicesScreen(container);
     return;
   }
 
@@ -2675,16 +3757,89 @@ function bindAdminScreenControls(container) {
   });
 }
 
+function renderBusinessProfileReportField({ fieldKey, label, inputId, controlHtml, fullWidth = false }) {
+  return `
+    <div class="business-report-field ${fullWidth ? "business-address-field" : ""}">
+      <label class="login-field" for="${escapeHtml(inputId)}">
+        <span>${escapeHtml(label)}</span>
+        ${controlHtml}
+      </label>
+      ${renderBusinessReportControls({
+        id: `business${capitalize(fieldKey)}Report`,
+        checked: getBusinessProfileReportFieldConfig(fieldKey).showInReports,
+        switchData: `data-business-report-toggle="${escapeHtml(fieldKey)}"`
+      })}
+    </div>
+  `;
+}
+
+function getBusinessProfileReportFieldConfig(fieldKey) {
+  return businessProfile.reportFields?.[fieldKey] || getDefaultBusinessProfileReportFields(businessProfile.displayNameMode)[fieldKey];
+}
+
+function renderBusinessReportControls({ id, checked = false, switchData = "" }) {
+  const switchId = `${id}Switch`;
+  return `
+    <div class="business-report-controls">
+      <label class="switch-field business-report-switch" for="${escapeHtml(switchId)}">
+        <input id="${escapeHtml(switchId)}" type="checkbox" ${switchData} ${checked ? "checked" : ""} />
+        <span class="switch-control"></span>
+        <span>Exibir em relatórios</span>
+      </label>
+    </div>
+  `;
+}
+
+function renderBusinessAdditionalPhones() {
+  const phones = normalizeBusinessAdditionalPhones(businessProfile.additionalPhones);
+  return `
+    <section class="business-phone-panel business-address-field">
+      <div class="business-phone-panel-head">
+        <h3>Telefones adicionais</h3>
+        <button class="ghost-action compact" type="button" id="addBusinessPhoneButton">
+          <span data-icon="plus"></span>
+          <span>Adicionar telefone</span>
+        </button>
+      </div>
+      <div class="business-extra-phone-list">
+        ${phones.map((phone, index) => renderBusinessAdditionalPhoneRow(phone, index)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderBusinessAdditionalPhoneRow(phone, index) {
+  const rowId = `businessAdditionalPhone${index}`;
+  return `
+    <div class="business-extra-phone-row" data-business-extra-phone-row data-business-extra-phone-id="${escapeHtml(phone.id || "")}">
+      <label class="login-field" for="${escapeHtml(rowId)}">
+        <span>Telefone de contato ${index + 2}</span>
+        <input id="${escapeHtml(rowId)}" data-business-extra-phone type="text" value="${escapeHtml(phone.value || "")}" placeholder="(11) 99999-9999" />
+      </label>
+      ${renderBusinessReportControls({
+        id: `${rowId}Report`,
+        checked: phone.showInReports,
+        switchData: "data-business-extra-phone-toggle"
+      })}
+      <button class="ghost-action compact business-extra-phone-remove" type="button" data-remove-business-phone="${index}">
+        <span data-icon="x"></span>
+        <span>Remover</span>
+      </button>
+    </div>
+  `;
+}
+
 function renderBusinessScreen(container) {
   const displayName = getBusinessDocumentName();
   const completeness = getBusinessProfileCompleteness();
   const logoSource = businessProfile.logoDataUrl || "./assets/brand/lavaprime-lockup.png";
+  const logoSizePercent = getBusinessLogoSizePercent();
 
   container.innerHTML = `
     <section class="screen-metrics business-metrics" aria-label="Resumo do negócio">
       ${[
         { label: "Cadastro", value: `${completeness}%`, icon: "shield" },
-        { label: "Nome em documentos", value: displayName, icon: "invoice" },
+        { label: "Nome em relatórios", value: displayName, icon: "invoice" },
         { label: "Logomarca", value: businessProfile.logoDataUrl ? "Personalizada" : "Padrão", icon: "badge" }
       ]
         .map(renderScreenMetric)
@@ -2700,37 +3855,44 @@ function renderBusinessScreen(container) {
           </div>
         </div>
         <form class="business-form-grid" id="businessProfileForm">
-          <label class="login-field" for="businessCnpj">
-            <span>CNPJ</span>
-            <input id="businessCnpj" type="text" value="${escapeHtml(businessProfile.cnpj)}" placeholder="00.000.000/0000-00" />
-          </label>
-          <label class="login-field" for="businessLegalName">
-            <span>Razão Social</span>
-            <input id="businessLegalName" type="text" value="${escapeHtml(businessProfile.legalName)}" placeholder="Razão social" />
-          </label>
-          <label class="login-field" for="businessTradeName">
-            <span>Nome Fantasia</span>
-            <input id="businessTradeName" type="text" value="${escapeHtml(businessProfile.tradeName)}" placeholder="Nome fantasia" />
-          </label>
-          <label class="login-field" for="businessDisplayNameMode">
-            <span>Exibir nos documentos</span>
-            <select id="businessDisplayNameMode">
-              <option value="tradeName" ${businessProfile.displayNameMode === "tradeName" ? "selected" : ""}>Nome Fantasia</option>
-              <option value="legalName" ${businessProfile.displayNameMode === "legalName" ? "selected" : ""}>Razão Social</option>
-            </select>
-          </label>
-          <label class="login-field" for="businessPhone">
-            <span>Telefone de contato</span>
-            <input id="businessPhone" type="text" value="${escapeHtml(businessProfile.phone)}" placeholder="(11) 99999-9999" />
-          </label>
-          <label class="login-field" for="businessEmail">
-            <span>E-mail</span>
-            <input id="businessEmail" type="email" value="${escapeHtml(businessProfile.email || "")}" placeholder="contato@empresa.com.br" />
-          </label>
-          <label class="login-field business-address-field" for="businessAddress">
-            <span>Endereço</span>
-            <textarea id="businessAddress" rows="3" placeholder="Rua, número, bairro, cidade">${escapeHtml(businessProfile.address)}</textarea>
-          </label>
+          ${renderBusinessProfileReportField({
+            fieldKey: "cnpj",
+            label: "CNPJ",
+            inputId: "businessCnpj",
+            controlHtml: `<input id="businessCnpj" type="text" value="${escapeHtml(businessProfile.cnpj)}" placeholder="00.000.000/0000-00" />`
+          })}
+          ${renderBusinessProfileReportField({
+            fieldKey: "legalName",
+            label: "Razão Social",
+            inputId: "businessLegalName",
+            controlHtml: `<input id="businessLegalName" type="text" value="${escapeHtml(businessProfile.legalName)}" placeholder="Razão social" />`
+          })}
+          ${renderBusinessProfileReportField({
+            fieldKey: "tradeName",
+            label: "Nome Fantasia",
+            inputId: "businessTradeName",
+            controlHtml: `<input id="businessTradeName" type="text" value="${escapeHtml(businessProfile.tradeName)}" placeholder="Nome fantasia" />`
+          })}
+          ${renderBusinessProfileReportField({
+            fieldKey: "phone",
+            label: "Telefone de contato",
+            inputId: "businessPhone",
+            controlHtml: `<input id="businessPhone" type="text" value="${escapeHtml(businessProfile.phone)}" placeholder="(11) 99999-9999" />`
+          })}
+          ${renderBusinessProfileReportField({
+            fieldKey: "email",
+            label: "E-mail",
+            inputId: "businessEmail",
+            controlHtml: `<input id="businessEmail" type="email" value="${escapeHtml(businessProfile.email || "")}" placeholder="contato@empresa.com.br" />`
+          })}
+          ${renderBusinessProfileReportField({
+            fieldKey: "address",
+            label: "Endereço",
+            inputId: "businessAddress",
+            fullWidth: true,
+            controlHtml: `<textarea id="businessAddress" rows="3" placeholder="Rua, número, bairro, cidade">${escapeHtml(businessProfile.address)}</textarea>`
+          })}
+          ${renderBusinessAdditionalPhones()}
           <div class="dialog-actions business-form-actions">
             <button class="primary-button" type="submit">
               <span data-icon="check"></span>
@@ -2754,6 +3916,13 @@ function renderBusinessScreen(container) {
           <span>Arquivo PNG ou JPG</span>
           <input id="businessLogoFile" type="file" accept="image/png,image/jpeg" />
         </label>
+        <label class="login-field business-logo-size-field" for="businessLogoSize">
+          <span>Tamanho nos relatórios</span>
+          <input id="businessLogoSize" type="range" min="${pdfLogoSizing.minPercent}" max="${pdfLogoSizing.maxPercent}" step="5" value="${logoSizePercent}" />
+        </label>
+        <div class="business-logo-size-meta">
+          <strong id="businessLogoSizeValue">${logoSizePercent}%</strong>
+        </div>
         <div class="dialog-actions business-logo-actions">
           <button class="ghost-action" type="button" id="removeBusinessLogoButton" ${businessProfile.logoDataUrl ? "" : "disabled"}>
             <span data-icon="x"></span>
@@ -2775,6 +3944,26 @@ function bindBusinessScreenControls(container) {
   $("#businessPhone", container).addEventListener("input", (event) => {
     event.currentTarget.value = formatPhone(event.currentTarget.value);
   });
+  $$("[data-business-extra-phone]", container).forEach((input) => {
+    input.addEventListener("input", (event) => {
+      event.currentTarget.value = formatPhone(event.currentTarget.value);
+    });
+  });
+  $("#addBusinessPhoneButton", container)?.addEventListener("click", () => {
+    const currentProfile = getBusinessProfileFormValues(container);
+    currentProfile.additionalPhones.push({ id: createBusinessContactPhoneId(), value: "", showInReports: true });
+    businessProfile = currentProfile;
+    renderBusinessScreen(container);
+  });
+  $$("[data-remove-business-phone]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.removeBusinessPhone);
+      const currentProfile = getBusinessProfileFormValues(container);
+      currentProfile.additionalPhones.splice(index, 1);
+      businessProfile = currentProfile;
+      renderBusinessScreen(container);
+    });
+  });
   $("#businessProfileForm", container).addEventListener("submit", (event) => {
     event.preventDefault();
     businessProfile = getBusinessProfileFormValues(container);
@@ -2782,6 +3971,13 @@ function bindBusinessScreenControls(container) {
     resetPdfLogoCache();
     renderBusinessScreen(container);
     showToast("Dados do negócio salvos.");
+  });
+  $("#businessLogoSize", container)?.addEventListener("input", () => updateBusinessLogoSizeDisplay(container));
+  $("#businessLogoSize", container)?.addEventListener("change", () => {
+    businessProfile = getBusinessProfileFormValues(container);
+    saveBusinessStorageItem(businessStorageKeys.profile, businessProfile);
+    updateBusinessLogoSizeDisplay(container);
+    showToast("Tamanho da logomarca salvo.");
   });
   $("#businessLogoFile", container).addEventListener("change", (event) => handleBusinessLogoUpload(event, container));
   $("#removeBusinessLogoButton", container)?.addEventListener("click", () => {
@@ -2791,6 +3987,14 @@ function bindBusinessScreenControls(container) {
     renderBusinessScreen(container);
     showToast("Logomarca padrão LavaPrime restaurada.");
   });
+}
+
+function updateBusinessLogoSizeDisplay(container) {
+  const input = $("#businessLogoSize", container);
+  const value = getBusinessLogoSizePercent(input?.value);
+  if (input) input.value = String(value);
+  const output = $("#businessLogoSizeValue", container);
+  if (output) output.textContent = `${value}%`;
 }
 
 function handleBusinessLogoUpload(event, container) {
@@ -2818,16 +4022,53 @@ function handleBusinessLogoUpload(event, container) {
 }
 
 function getBusinessProfileFormValues(container) {
+  const reportFields = getBusinessProfileReportFieldsFromForm(container);
   return {
     ...businessProfile,
     cnpj: $("#businessCnpj", container).value.trim(),
     legalName: $("#businessLegalName", container).value.trim(),
     tradeName: $("#businessTradeName", container).value.trim(),
-    displayNameMode: $("#businessDisplayNameMode", container).value,
+    displayNameMode: getBusinessProfileDisplayNameMode(reportFields),
     phone: $("#businessPhone", container).value.trim(),
+    additionalPhones: getBusinessAdditionalPhonesFormValues(container),
     email: $("#businessEmail", container).value.trim(),
-    address: $("#businessAddress", container).value.trim()
+    address: $("#businessAddress", container).value.trim(),
+    logoSizePercent: getBusinessLogoSizePercent($("#businessLogoSize", container)?.value),
+    reportFields
   };
+}
+
+function getBusinessProfileReportFieldsFromForm(container) {
+  return businessProfileReportFieldKeys.reduce((fields, key) => {
+    fields[key] = {
+      showInReports: Boolean($(`[data-business-report-toggle="${key}"]`, container)?.checked),
+      reportTarget: "all"
+    };
+    return fields;
+  }, {});
+}
+
+function getBusinessProfileDisplayNameMode(reportFields) {
+  const currentMode = businessProfile.displayNameMode === "legalName" ? "legalName" : "tradeName";
+  if (reportFields[currentMode]?.showInReports) return currentMode;
+  if (reportFields.tradeName?.showInReports) return "tradeName";
+  if (reportFields.legalName?.showInReports) return "legalName";
+  return currentMode;
+}
+
+function getBusinessAdditionalPhonesFormValues(container) {
+  return $$("[data-business-extra-phone-row]", container)
+    .map((row) => ({
+      id: row.dataset.businessExtraPhoneId || createBusinessContactPhoneId(),
+      value: $("[data-business-extra-phone]", row)?.value.trim() || "",
+      showInReports: Boolean($("[data-business-extra-phone-toggle]", row)?.checked),
+      reportTarget: "all"
+    }))
+    .filter((phone) => phone.value);
+}
+
+function createBusinessContactPhoneId() {
+  return `phone-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function renderBusinessFinanceScreen(container) {
@@ -3078,7 +4319,7 @@ function renderBusinessSocialScreen(container) {
     <section class="screen-metrics business-metrics" aria-label="Resumo de comunicação">
       ${[
         { label: "Canais", value: businessSocialChannels.length, icon: "users" },
-        { label: "No rodapé", value: visibleChannels, icon: "invoice" },
+        { label: "No relatório", value: visibleChannels, icon: "invoice" },
         { label: "WhatsApp", value: businessSocialLinks.whatsapp?.value ? "Configurado" : "Pendente", icon: "card" }
       ]
         .map(renderScreenMetric)
@@ -3095,17 +4336,24 @@ function renderBusinessSocialScreen(container) {
       <form class="business-social-grid" id="businessSocialForm">
         ${businessSocialChannels
           .map((channel) => {
-            const item = businessSocialLinks[channel.key] || { value: "", showInFooter: false };
+            const item = businessSocialLinks[channel.key] || { value: "", showInFooter: false, reportTarget: "all" };
+            const socialId = capitalize(channel.key);
             return `
               <section class="business-social-card">
-                <label class="login-field" for="businessSocial${capitalize(channel.key)}">
+                <label class="login-field" for="businessSocial${socialId}">
                   <span>${escapeHtml(channel.label)}</span>
-                  <input id="businessSocial${capitalize(channel.key)}" data-social-value="${channel.key}" type="text" value="${escapeHtml(item.value)}" placeholder="${escapeHtml(channel.placeholder)}" />
+                  <input id="businessSocial${socialId}" data-social-value="${channel.key}" type="text" value="${escapeHtml(item.value)}" placeholder="${escapeHtml(channel.placeholder)}" />
                 </label>
-                <label class="switch-field" for="businessSocialShow${capitalize(channel.key)}">
-                  <input id="businessSocialShow${capitalize(channel.key)}" data-social-footer="${channel.key}" type="checkbox" ${item.showInFooter ? "checked" : ""} />
+                <label class="switch-field" for="businessSocialShow${socialId}">
+                  <input id="businessSocialShow${socialId}" data-social-report="${channel.key}" type="checkbox" ${item.showInFooter ? "checked" : ""} />
                   <span class="switch-control"></span>
-                  <span>Exibir no rodapé</span>
+                  <span>Inserir no relatório</span>
+                </label>
+                <label class="login-field business-social-report-field" for="businessSocialReport${socialId}">
+                  <span>Relatório</span>
+                  <select id="businessSocialReport${socialId}" data-social-report-target="${channel.key}" ${item.showInFooter ? "" : "disabled"}>
+                    ${renderBusinessSocialReportTargetOptions(item.reportTarget)}
+                  </select>
                 </label>
               </section>
             `;
@@ -3129,18 +4377,498 @@ function bindBusinessSocialControls(container) {
   $("#businessSocialWhatsapp", container)?.addEventListener("input", (event) => {
     event.currentTarget.value = formatPhone(event.currentTarget.value);
   });
+  $$("[data-social-report]", container).forEach((checkbox) => {
+    checkbox.addEventListener("change", (event) => {
+      const targetSelect = $(`[data-social-report-target="${event.currentTarget.dataset.socialReport}"]`, container);
+      if (targetSelect) targetSelect.disabled = !event.currentTarget.checked;
+    });
+  });
   $("#businessSocialForm", container).addEventListener("submit", (event) => {
     event.preventDefault();
     businessSocialChannels.forEach((channel) => {
+      const reportTargetSelect = $(`[data-social-report-target="${channel.key}"]`, container);
       businessSocialLinks[channel.key] = {
         value: $(`[data-social-value="${channel.key}"]`, container).value.trim(),
-        showInFooter: $(`[data-social-footer="${channel.key}"]`, container).checked
+        showInFooter: $(`[data-social-report="${channel.key}"]`, container).checked,
+        reportTarget: getBusinessSocialReportTarget(reportTargetSelect?.value || "all")
       };
     });
     saveBusinessStorageItem(businessStorageKeys.social, businessSocialLinks);
     renderBusinessSocialScreen(container);
     showToast("Comunicação salva.");
   });
+}
+
+function renderBusinessMessagesScreen(container) {
+  const selectedTemplate = getSelectedMessageTemplate();
+  const sample = getMessageSampleContext();
+  const categories = [...new Set(businessMessageTemplates.map((template) => template.category))];
+  if (!selectedMessageCategory || !categories.includes(selectedMessageCategory)) selectedMessageCategory = selectedTemplate.category || categories[0] || "";
+  const categoryTemplates = businessMessageTemplates.filter((template) => template.category === selectedMessageCategory);
+  if (!categoryTemplates.some((template) => template.key === selectedTemplate.key) && categoryTemplates.length) {
+    selectedMessageTemplateKey = categoryTemplates[0].key;
+    renderBusinessMessagesScreen(container);
+    return;
+  }
+
+  container.innerHTML = `
+    <section class="screen-metrics business-metrics" aria-label="Resumo da central de mensagens">
+      ${[
+        { label: "Modelos", value: businessMessageTemplates.length, icon: "message" },
+        { label: "Ativos", value: businessMessageTemplates.filter((template) => template.active).length, icon: "check" },
+        { label: "Naturezas", value: categories.length, icon: "dashboard" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+
+    <section class="message-center-layout">
+      <article class="admin-panel message-template-list-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Natureza</p>
+            <h2>Modelos configurados</h2>
+          </div>
+        </div>
+        <label class="login-field" for="messageCategorySelect">
+          <span>Natureza da mensagem</span>
+          <select id="messageCategorySelect">
+            ${categories.map((category) => `<option value="${escapeHtml(category)}" ${category === selectedMessageCategory ? "selected" : ""}>${escapeHtml(category)}</option>`).join("")}
+          </select>
+        </label>
+        <div class="message-template-list">
+          ${categoryTemplates
+            .map(
+              (template) => `
+                <button class="message-template-button ${template.key === selectedTemplate.key ? "is-active" : ""}" type="button" data-message-template="${escapeHtml(template.key)}">
+                  <strong>${escapeHtml(template.title)}</strong>
+                  <small>${escapeHtml(getMessageTriggerLabel(template.key))}</small>
+                  <span class="message-template-status ${template.active ? "is-active" : ""}">${template.active ? "Ativa" : "Inativa"}</span>
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+      </article>
+
+      <article class="admin-panel message-editor-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">${escapeHtml(getMessageTriggerLabel(selectedTemplate.key))}</p>
+            <h2>${escapeHtml(selectedTemplate.title)}</h2>
+          </div>
+        </div>
+        <form class="business-form-grid message-editor-form" id="messageTemplateForm">
+          <label class="switch-field message-active-switch" for="messageTemplateActive">
+            <input id="messageTemplateActive" type="checkbox" ${selectedTemplate.active ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Mensagem ativa para envio automático</span>
+          </label>
+          <label class="login-field" for="messageTemplateTitle">
+            <span>Título interno</span>
+            <input id="messageTemplateTitle" type="text" value="${escapeHtml(selectedTemplate.title)}" required />
+          </label>
+          <label class="login-field message-template-text-field" for="messageTemplateText">
+            <span>Mensagem</span>
+            <textarea id="messageTemplateText" rows="7" required>${escapeHtml(selectedTemplate.text)}</textarea>
+          </label>
+          <div class="message-format-toolbar" aria-label="Formatação WhatsApp">
+            <button class="icon-button message-format-button" type="button" data-message-format="bold" title="Negrito">B</button>
+            <button class="icon-button message-format-button" type="button" data-message-format="italic" title="Itálico">I</button>
+            <button class="icon-button message-format-button" type="button" data-message-format="strike" title="Riscado">S</button>
+            <button class="ghost-action message-format-mono" type="button" data-message-format="mono">Mono</button>
+          </div>
+          <section class="message-token-panel" aria-label="Dados disponiveis para a mensagem">
+            <div class="message-token-header">
+              <strong>Dados disponíveis</strong>
+              <div class="message-token-picker">
+                <select id="messageTokenSelect" aria-label="Adicionar outro dado">
+                  ${getMessageTokenOptions()
+                    .map((token) => `<option value="${escapeHtml(token.key)}">${escapeHtml(token.label)} - {${escapeHtml(token.key)}}</option>`)
+                    .join("")}
+                </select>
+                <button class="ghost-action compact" id="insertSelectedMessageToken" type="button">
+                  <span data-icon="plus"></span>
+                  <span>Adicionar</span>
+                </button>
+              </div>
+            </div>
+            <div class="message-token-help">
+              ${getMessageTokenOptions()
+                .map(
+                  (token) => `
+                    <button class="message-token-chip" type="button" data-message-token="${escapeHtml(token.key)}" title="${escapeHtml(token.description)}">
+                      <span>${escapeHtml(token.label)}</span>
+                      <code>{${escapeHtml(token.key)}}</code>
+                    </button>
+                  `
+                )
+                .join("")}
+            </div>
+          </section>
+          <article class="message-preview-card">
+            <span>Prévia</span>
+            <p id="messagePreviewText">${renderWhatsappPreview(applyMessageTemplateTokens(selectedTemplate.text, sample))}</p>
+          </article>
+          <div class="dialog-actions message-actions">
+            <button class="primary-button" type="submit">
+              <span data-icon="check"></span>
+              <span>Salvar modelo</span>
+            </button>
+          </div>
+        </form>
+      </article>
+    </section>
+  `;
+
+  initIcons();
+  bindBusinessMessagesControls(container);
+}
+
+function bindBusinessMessagesControls(container) {
+  $("#messageCategorySelect", container)?.addEventListener("change", (event) => {
+    selectedMessageCategory = event.currentTarget.value;
+    selectedMessageTemplateKey = businessMessageTemplates.find((template) => template.category === selectedMessageCategory)?.key || "";
+    renderBusinessMessagesScreen(container);
+  });
+  $$("[data-message-template]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedMessageTemplateKey = button.dataset.messageTemplate;
+      renderBusinessMessagesScreen(container);
+    });
+  });
+
+  $("#messageTemplateText", container)?.addEventListener("input", () => updateMessagePreview(container));
+  $("#messageTemplateTitle", container)?.addEventListener("input", () => updateMessagePreview(container));
+  $$("[data-message-token]", container).forEach((button) => {
+    button.addEventListener("click", () => insertMessageToken(container, button.dataset.messageToken));
+  });
+  $("#insertSelectedMessageToken", container)?.addEventListener("click", () => {
+    insertMessageToken(container, $("#messageTokenSelect", container)?.value || "");
+  });
+  $$("[data-message-format]", container).forEach((button) => {
+    button.addEventListener("click", () => applyWhatsappFormattingToEditor(container, button.dataset.messageFormat));
+  });
+  $("#messageTemplateForm", container)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const template = getSelectedMessageTemplate();
+    template.title = $("#messageTemplateTitle", container).value.trim();
+    template.text = $("#messageTemplateText", container).value.trim();
+    template.active = $("#messageTemplateActive", container).checked;
+    saveBusinessStorageItem(businessStorageKeys.messages, businessMessageTemplates);
+    renderBusinessMessagesScreen(container);
+    showToast("Modelo de mensagem salvo.");
+  });
+}
+
+function getMessageTokenOptions() {
+  return [
+    { key: "cliente", label: "Cliente", description: "Nome do cliente do atendimento, fatura ou cadastro." },
+    { key: "telefone", label: "Telefone", description: "Telefone do cliente." },
+    { key: "documento", label: "Documento", description: "CPF, CNPJ ou documento cadastrado." },
+    { key: "email", label: "Email", description: "Email cadastrado para o cliente." },
+    { key: "empresa", label: "Empresa", description: "Nome Fantasia cadastrado em Dados do Negócio." },
+    { key: "placa", label: "Placa", description: "Placa do veículo." },
+    { key: "veiculo", label: "Veículo", description: "Marca e modelo do veículo." },
+    { key: "modelo", label: "Modelo", description: "Modelo do veículo." },
+    { key: "cor", label: "Cor", description: "Cor do veículo." },
+    { key: "tipo_veiculo", label: "Tipo", description: "Tipo do veículo." },
+    { key: "categoria_veiculo", label: "Categoria", description: "Categoria do veículo." },
+    { key: "servico", label: "Serviço", description: "Serviço ou descrição financeira." },
+    { key: "valor", label: "Valor", description: "Valor principal da operação." },
+    { key: "valor_pago", label: "Valor pago", description: "Valor recebido em pagamentos parciais." },
+    { key: "saldo", label: "Saldo", description: "Saldo remanescente em aberto." },
+    { key: "pagamento", label: "Forma de pagamento", description: "Meio de pagamento usado ou previsto." },
+    { key: "fatura", label: "Fatura", description: "Código da fatura." },
+    { key: "destino", label: "Destino do saldo", description: "Destino escolhido para saldo remanescente." },
+    { key: "data", label: "Data", description: "Data do evento ou agendamento." },
+    { key: "hora", label: "Hora", description: "Hora do evento ou agendamento." },
+    { key: "vencimento", label: "Vencimento", description: "Data de vencimento quando houver." },
+    { key: "operador", label: "Operador", description: "Operador ou administrador responsável." },
+    { key: "promocao", label: "Promoção", description: "Texto de promoção configurado para relacionamento." }
+  ];
+}
+
+function getSelectedMessageTemplate() {
+  if (!businessMessageTemplates.length) {
+    businessMessageTemplates = getDefaultMessageTemplates();
+    saveBusinessStorageItem(businessStorageKeys.messages, businessMessageTemplates);
+  }
+  if (!selectedMessageTemplateKey || !businessMessageTemplates.some((template) => template.key === selectedMessageTemplateKey)) {
+    selectedMessageTemplateKey = businessMessageTemplates[0]?.key || "";
+  }
+  return businessMessageTemplates.find((template) => template.key === selectedMessageTemplateKey) || businessMessageTemplates[0];
+}
+
+function updateMessagePreview(container) {
+  const sample = getMessageSampleContext();
+  $("#messagePreviewText", container).innerHTML = renderWhatsappPreview(applyMessageTemplateTokens($("#messageTemplateText", container)?.value || "", sample));
+}
+
+function insertMessageToken(container, key) {
+  const textarea = $("#messageTemplateText", container);
+  if (!textarea || !key) return;
+  const token = `{${key}}`;
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? textarea.value.length;
+  const before = textarea.value.slice(0, start);
+  const after = textarea.value.slice(end);
+  const prefix = before && !/[\s\n([{]$/.test(before) ? " " : "";
+  const suffix = after && !/^[\s\n,.;:!?)}\]]/.test(after) ? " " : "";
+  const insertion = `${prefix}${token}${suffix}`;
+  textarea.value = `${before}${insertion}${after}`;
+  const nextPosition = start + insertion.length;
+  textarea.focus();
+  textarea.setSelectionRange(nextPosition, nextPosition);
+  updateMessagePreview(container);
+}
+
+function applyWhatsappFormattingToEditor(container, format) {
+  const textarea = $("#messageTemplateText", container);
+  if (!textarea) return;
+  const wrappers = {
+    bold: ["*", "*"],
+    italic: ["_", "_"],
+    strike: ["~", "~"],
+    mono: ["```", "```"]
+  };
+  const [prefix, suffix] = wrappers[format] || ["", ""];
+  const start = textarea.selectionStart || 0;
+  const end = textarea.selectionEnd || 0;
+  const selected = textarea.value.slice(start, end) || "texto";
+  const replacement = `${prefix}${selected}${suffix}`;
+  textarea.value = `${textarea.value.slice(0, start)}${replacement}${textarea.value.slice(end)}`;
+  textarea.focus();
+  textarea.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
+  updateMessagePreview(container);
+}
+
+function renderWhatsappPreview(text) {
+  let html = escapeHtml(text);
+  html = html.replace(/```([^`]+)```/g, "<code>$1</code>");
+  html = html.replace(/\*([^*\n]+)\*/g, "<strong>$1</strong>");
+  html = html.replace(/_([^_\n]+)_/g, "<em>$1</em>");
+  html = html.replace(/~([^~\n]+)~/g, "<s>$1</s>");
+  return html.replace(/\n/g, "<br />");
+}
+
+function getMessageSampleContext(phone = "") {
+  const vehicle = patioVehicles.find((item) => ["aguardando", "lavando", "pronto"].includes(item.status)) || patioVehicles[0] || {};
+  const sampleClient = clientRegistry[0] || {};
+  return {
+    cliente: vehicle.owner || "Cliente",
+    telefone: phone || vehicle.phone || businessSocialLinks.whatsapp?.value || "",
+    documento: sampleClient.document || "000.000.000-00",
+    email: sampleClient.email || businessProfile.email || "",
+    empresa: getBusinessMessageCompanyName(),
+    placa: vehicle.plate || "ABC1D23",
+    veiculo: formatVehicleDisplayName(vehicle),
+    modelo: vehicle.model || "Modelo",
+    cor: vehicle.color || "Branco",
+    tipo_veiculo: vehicle.type || "Carro",
+    categoria_veiculo: vehicle.category || "Hatch",
+    servico: vehicle.service || "Lavagem Prime",
+    valor: formatCurrency(getVehiclePaymentTotal(vehicle) || getServicePrice(vehicle) || 0),
+    valor_pago: formatCurrency(vehicle.partialPaidAmount || 100),
+    saldo: formatCurrency(vehicle.partialBalance || 80),
+    fatura: "FAT-0626-001",
+    destino: "pagamento em aberto",
+    pagamento: vehicle.payment || "Pix",
+    data: vehicle.scheduledDate ? formatDateBR(vehicle.scheduledDate) : formatDateBR(getTodayISO()),
+    hora: vehicle.scheduledTime || vehicle.entry || getCurrentShortTime(),
+    vencimento: formatDateBR(getTodayISO()),
+    operador: activeSessionUser || "Administrador",
+    promocao: "promoção vigente",
+    phone: phone || vehicle.phone || businessSocialLinks.whatsapp?.value || ""
+  };
+}
+
+function getMessageContextFromVehicle(vehicle) {
+  const registryVehicle = findVehicleByPlate(vehicle.plate);
+  const linkedClient = registryVehicle?.currentClientId ? getClientById(registryVehicle.currentClientId) : findClientByPlate(vehicle.plate);
+  return {
+    cliente: vehicle.owner || "Cliente",
+    telefone: vehicle.phone || linkedClient?.phone || "",
+    documento: linkedClient?.document || "",
+    email: linkedClient?.email || "",
+    empresa: getBusinessMessageCompanyName(),
+    placa: vehicle.plate || "",
+    veiculo: formatVehicleDisplayName(vehicle),
+    modelo: vehicle.model || registryVehicle?.model || "",
+    cor: vehicle.color || registryVehicle?.color || "",
+    tipo_veiculo: vehicle.type || registryVehicle?.type || "",
+    categoria_veiculo: vehicle.category || registryVehicle?.category || "",
+    servico: vehicle.service || "",
+    valor: formatCurrency(getVehiclePaymentTotal(vehicle)),
+    valor_pago: formatCurrency(vehicle.partialPaidAmount || 0),
+    saldo: formatCurrency(vehicle.partialBalance || 0),
+    fatura: vehicle.billing?.invoiceCode || "",
+    destino: vehicle.partialPaymentOpen ? "pagamento em aberto" : "",
+    pagamento: vehicle.payment || "",
+    data: vehicle.scheduledDate ? formatDateBR(vehicle.scheduledDate) : formatDateBR(getTodayISO()),
+    hora: vehicle.scheduledTime || vehicle.entry || getCurrentShortTime(),
+    vencimento: vehicle.billing?.dueDate ? formatDateBR(vehicle.billing.dueDate) : formatDateBR(getTodayISO()),
+    operador: vehicle.operator || activeSessionUser || "",
+    promocao: "promoção vigente",
+    phone: vehicle.phone || ""
+  };
+}
+
+function getMessageContextFromOpenPayment(payment) {
+  const registryClient = payment.clientId ? getClientById(payment.clientId) : null;
+  const registryVehicle = payment.plate ? findVehicleByPlate(payment.plate) : null;
+  return {
+    cliente: payment.clientName || "Cliente",
+    telefone: payment.phone || registryClient?.phone || "",
+    documento: registryClient?.document || "",
+    email: registryClient?.email || "",
+    empresa: getBusinessMessageCompanyName(),
+    placa: payment.plate || "",
+    veiculo: registryVehicle ? formatVehicleDisplayName(registryVehicle) : "",
+    modelo: registryVehicle?.model || "",
+    cor: registryVehicle?.color || "",
+    tipo_veiculo: registryVehicle?.type || "",
+    categoria_veiculo: registryVehicle?.category || "",
+    servico: payment.description || payment.service || "",
+    valor: formatCurrency(payment.value || 0),
+    valor_pago: formatCurrency(payment.settledAmount || payment.paidAmount || 0),
+    saldo: formatCurrency(payment.remainingBalance || payment.value || 0),
+    fatura: getOpenPaymentInvoiceCode(payment),
+    destino: payment.partialSettlement ? "novo pagamento em aberto" : "pagamento em aberto",
+    pagamento: formatSettlementPaymentLabel(payment),
+    data: formatDateBR(getTodayISO()),
+    hora: getCurrentShortTime(),
+    vencimento: payment.dueDate ? formatDateBR(payment.dueDate) : formatDateBR(getTodayISO()),
+    operador: payment.operator || payment.settledBy || activeSessionUser || "",
+    promocao: "promoção vigente",
+    phone: payment.phone || ""
+  };
+}
+
+function getMessageContextFromInvoice(invoice) {
+  const billingClient = billingClients.find((client) => client.id === Number(invoice.clientId));
+  const registryClient = getRegistryClientByBillingClientId(invoice.clientId);
+  const primaryLine = invoiceLineItems.find((item) => item.invoiceId === invoice.id);
+  const registryVehicle = primaryLine?.plate ? findVehicleByPlate(primaryLine.plate) : null;
+  return {
+    cliente: billingClient?.name || "Cliente",
+    telefone: billingClient?.phone || registryClient?.phone || "",
+    documento: billingClient?.document || registryClient?.document || "",
+    email: registryClient?.email || "",
+    empresa: getBusinessMessageCompanyName(),
+    placa: primaryLine?.plate || "",
+    veiculo: registryVehicle ? formatVehicleDisplayName(registryVehicle) : "",
+    modelo: registryVehicle?.model || "",
+    cor: registryVehicle?.color || "",
+    tipo_veiculo: registryVehicle?.type || "",
+    categoria_veiculo: registryVehicle?.category || "",
+    servico: "Fatura",
+    valor: formatCurrency(getInvoiceDisplayAmount(invoice)),
+    valor_pago: formatCurrency(invoice.settledAmount || getInvoiceDisplayAmount(invoice)),
+    saldo: formatCurrency(invoice.remainingBalance || 0),
+    fatura: invoice.code || "",
+    destino: getInvoiceRemainingDestinationLabel(invoice),
+    pagamento: formatSettlementPaymentLabel(invoice) || "Faturado",
+    data: formatDateBR(getTodayISO()),
+    hora: getCurrentShortTime(),
+    vencimento: formatDateBR(invoice.dueDate),
+    operador: invoice.settledBy || invoice.approvedBy || activeSessionUser || "",
+    promocao: "promoção vigente",
+    phone: billingClient?.phone || ""
+  };
+}
+
+function getOpenPaymentInvoiceCode(payment) {
+  if (payment?.invoiceCode) return payment.invoiceCode;
+  const invoice = payment?.invoiceId ? billingInvoices.find((item) => item.id === Number(payment.invoiceId)) : null;
+  return invoice?.code || "";
+}
+
+function getInvoiceRemainingDestinationLabel(invoice) {
+  if (!invoice?.partialSettlement) return "";
+  if (invoice.remainingDestinationLabel) return invoice.remainingDestinationLabel;
+  const labels = {
+    "new-invoice": "nova fatura",
+    "existing-invoice": "fatura em aberto",
+    "open-payment": "pagamento em aberto"
+  };
+  return labels[invoice.remainingDestination] || "destino escolhido";
+}
+
+function getMessageContextFromClient(client) {
+  const primaryPlate = client.plates?.[0] || "";
+  const vehicle = primaryPlate ? findVehicleByPlate(primaryPlate) : null;
+  const lastService = vehicle?.serviceHistory?.[vehicle.serviceHistory.length - 1];
+  return {
+    cliente: getClientDisplayName(client),
+    telefone: client.phone || "",
+    documento: client.document || "",
+    email: client.email || "",
+    empresa: getBusinessMessageCompanyName(),
+    placa: primaryPlate,
+    veiculo: vehicle ? formatVehicleDisplayName(vehicle) : "",
+    modelo: vehicle?.model || "",
+    cor: vehicle?.color || "",
+    tipo_veiculo: vehicle?.type || "",
+    categoria_veiculo: vehicle?.category || "",
+    servico: lastService?.service || "serviço",
+    valor: lastService?.value ? formatCurrency(lastService.value) : formatCurrency(0),
+    valor_pago: "",
+    saldo: "",
+    fatura: "",
+    destino: "",
+    pagamento: "",
+    data: formatDateBR(getTodayISO()),
+    hora: getCurrentShortTime(),
+    vencimento: formatDateBR(getTodayISO()),
+    operador: activeSessionUser || "",
+    promocao: "promoção vigente",
+    phone: client.phone || ""
+  };
+}
+
+function formatSettlementPaymentLabel(record) {
+  const method = record?.settlementMethod || record?.paymentMethod || record?.payment || "";
+  const bankAccount = record?.settlementBankAccountName || record?.bankAccountName || "";
+  if (!method) return "";
+  return bankAccount ? `${method} - ${bankAccount}` : method;
+}
+
+function applyMessageTemplateTokens(text, context) {
+  return String(text || "").replace(/\{(\w+)\}/g, (_, key) => context[key] || "");
+}
+
+function getMessageTemplateByKey(key) {
+  return businessMessageTemplates.find((template) => template.key === key);
+}
+
+function triggerAutomatedMessage(key, context) {
+  const template = getMessageTemplateByKey(key);
+  if (!template?.active) return false;
+  return openWhatsappTemplateMessage(template, context);
+}
+
+function sendManualMessage(key, context) {
+  const template = getMessageTemplateByKey(key);
+  if (!template) return false;
+  return openWhatsappTemplateMessage(template, context);
+}
+
+function openWhatsappTemplateMessage(template, context) {
+  const phone = normalizeWhatsappPhone(context?.phone || "");
+  if (!phone) {
+    showToast("Mensagem ativa, mas o cliente não possui telefone cadastrado.");
+    return false;
+  }
+  const text = applyMessageTemplateTokens(template.text || "", context || {});
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank", "noreferrer");
+  return true;
+}
+
+function normalizeWhatsappPhone(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return "";
+  return digits.startsWith("55") ? digits : `55${digits}`;
 }
 
 function renderClientsScreen(container) {
@@ -3208,12 +4936,21 @@ function bindClientsScreenControls(container) {
   $$("[data-edit-client]", container).forEach((button) => {
     button.addEventListener("click", () => editClientRegistration(container, Number(button.dataset.editClient)));
   });
+  $$("[data-send-client-message]", container).forEach((button) => {
+    button.addEventListener("click", () => sendClientRelationshipMessage(button.dataset.sendClientMessage, Number(button.dataset.clientId)));
+  });
   $$("[data-client-filter]", container).forEach((button) => {
     button.addEventListener("click", () => {
       $$("[data-client-filter]", container).forEach((item) => item.classList.toggle("is-active", item === button));
       applyClientTableFilter(container);
     });
   });
+}
+
+function sendClientRelationshipMessage(key, clientId) {
+  const client = getClientById(clientId);
+  if (!client) return;
+  sendManualMessage(key, getMessageContextFromClient(client));
 }
 
 function bindClientDialogControls(container) {
@@ -3294,6 +5031,10 @@ function closeClientDialog() {
   selectedClientId = null;
   selectedClientPersonType = "PF";
   pendingClientPlates = [];
+  if (entryRegistryEditContext?.type === "client") {
+    refreshEntryRegistrationAfterEdit();
+    entryRegistryEditContext = null;
+  }
 }
 
 function renderClientDialogForm(client) {
@@ -3454,10 +5195,15 @@ function addClientPlate(container) {
     return;
   }
 
-  const existingClient = findClientByPlate(plate);
-  if (existingClient && existingClient.id !== selectedClientId) {
-    showToast(`${plate} já está vinculada a ${getClientDisplayName(existingClient)}.`);
+  const linkedClient = getClientLinkedToPlate(plate);
+  if (linkedClient && linkedClient.id !== selectedClientId) {
+    showToast(`${plate} já está vinculada a ${getClientDisplayName(linkedClient)}.`);
     input.focus();
+    return;
+  }
+
+  if (!findVehicleByPlate(plate)) {
+    startClientVehicleRegistration(container, plate);
     return;
   }
 
@@ -3465,6 +5211,40 @@ function addClientPlate(container) {
   input.value = "";
   renderClientPlateTags(container);
   input.focus();
+}
+
+function startClientVehicleRegistration(container, plate) {
+  clientVehicleRegistrationContext = { plate };
+  resetVehicleForm();
+  const dialog = $("#clientDialog");
+  if (typeof dialog.close === "function" && dialog.open) dialog.close();
+  else dialog.removeAttribute("open");
+
+  openVehicleDialog("client-registration");
+  $("#vehiclePlate").value = plate;
+  handleEntryPlateLookup(plate);
+  $("#vehicleModel").focus();
+  showToast("Cadastre os dados do veículo para vincular a placa ao cliente.");
+}
+
+function reopenClientDialogAfterVehicleRegistration(completedPlate = "") {
+  const dialog = $("#clientDialog");
+  if (!dialog) {
+    clientVehicleRegistrationContext = null;
+    return;
+  }
+
+  renderClientPlateTags(dialog);
+  if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+  else dialog.setAttribute("open", "");
+
+  const input = $("#clientPlateInput", dialog);
+  if (input) {
+    input.value = "";
+    input.focus();
+  }
+  if (completedPlate) showToast(`${completedPlate} cadastrado e vinculado ao cliente.`);
+  clientVehicleRegistrationContext = null;
 }
 
 function renderClientPlateTags(container) {
@@ -3680,6 +5460,11 @@ function renderClientRows() {
           <td data-label="Ações">
             <span class="table-actions">
               <button type="button" data-edit-client="${client.id}">Editar</button>
+              <button type="button" data-send-client-message="loyalty-client" data-client-id="${client.id}">Fidelidade</button>
+              <button type="button" data-send-client-message="inactive-client" data-client-id="${client.id}">Retorno</button>
+              <button type="button" data-send-client-message="maintenance-reminder" data-client-id="${client.id}">Manutenção</button>
+              <button type="button" data-send-client-message="promotion" data-client-id="${client.id}">Promoção</button>
+              <button type="button" data-send-client-message="satisfaction" data-client-id="${client.id}">Satisfação</button>
             </span>
           </td>
         </tr>
@@ -3708,6 +5493,14 @@ function getRegisteredPlates() {
 
 function findClientByPlate(plate) {
   return clientRegistry.find((client) => client.plates.includes(plate));
+}
+
+function getClientLinkedToPlate(plate) {
+  const normalizedPlate = formatPlate(plate);
+  const client = findClientByPlate(normalizedPlate);
+  if (client) return client;
+  const vehicle = findVehicleByPlate(normalizedPlate);
+  return vehicle?.currentClientId ? getClientById(vehicle.currentClientId) : null;
 }
 
 function getClientDisplayName(client) {
@@ -3801,7 +5594,7 @@ function transferPlateToClient(plate, nextClientId) {
     const newVehicle = {
       id: getNextVehicleId(),
       plate,
-      brand: "",
+      brand: $("#vehicleBrand")?.value.trim() || "",
       model: $("#vehicleModel")?.value.trim() || "",
       year: "",
       color: getCurrentEntryColor(),
@@ -3895,10 +5688,13 @@ function renderVehiclesScreen(container) {
             <span>Marca</span>
             <input id="vehicleRegistryBrand" type="text" placeholder="Chevrolet" value="${escapeHtml(selectedVehicle?.brand || "")}" />
           </label>
-          <label class="login-field" for="vehicleRegistryModel">
-            <span>Modelo</span>
-            <input id="vehicleRegistryModel" type="text" placeholder="Onix" value="${escapeHtml(selectedVehicle?.model || "")}" required />
-          </label>
+          <div class="vehicle-model-lookup-field">
+            <label class="login-field" for="vehicleRegistryModel">
+              <span>Modelo</span>
+              <input id="vehicleRegistryModel" type="text" placeholder="Onix" value="${escapeHtml(selectedVehicle?.model || "")}" autocomplete="off" required />
+            </label>
+            <div class="vehicle-model-results" id="vehicleRegistryModelResults" hidden></div>
+          </div>
           <label class="login-field" for="vehicleRegistryYear">
             <span>Ano</span>
             <input id="vehicleRegistryYear" type="text" inputmode="numeric" placeholder="2024" maxlength="4" value="${escapeHtml(selectedVehicle?.year || "")}" />
@@ -3998,6 +5794,13 @@ function renderVehiclesScreen(container) {
 
 function bindVehiclesScreenControls(container) {
   updateVehicleRegistryCategoryState(container);
+  bindLocalVehicleModelLookup({
+    container,
+    modelSelector: "#vehicleRegistryModel",
+    brandSelector: "#vehicleRegistryBrand",
+    resultsSelector: "#vehicleRegistryModelResults",
+    typeSelector: "#vehicleRegistryType"
+  });
   $("#vehicleRegistryType", container).addEventListener("change", () => updateVehicleRegistryCategoryState(container));
   $("#vehicleRegistryPlate", container)?.addEventListener("input", (event) => {
     event.currentTarget.value = formatPlate(event.currentTarget.value);
@@ -4011,7 +5814,6 @@ function bindVehiclesScreenControls(container) {
   });
   $("#clearVehicleRegistryButton", container).addEventListener("click", () => {
     selectedVehicleId = null;
-    renderVehiclesScreen(container);
     focusVehicleForm();
   });
   $("#vehicleSearchInput", container).addEventListener("input", () => applyVehicleTableFilter(container));
@@ -4040,16 +5842,16 @@ function bindVehiclesScreenControls(container) {
   });
 }
 
-function saveVehicleRegistration(container) {
+function persistVehicleRegistration(container) {
   const form = $("#vehicleRegistryForm", container);
-  if (!form.reportValidity()) return;
+  if (!form.reportValidity()) return null;
 
   const selectedVehicle = selectedVehicleId ? findVehicleById(selectedVehicleId) : null;
   const plate = selectedVehicle ? selectedVehicle.plate : formatPlate($("#vehicleRegistryPlate", container).value);
   if (!plate) {
     showToast("Informe a placa do veículo.");
     $("#vehicleRegistryPlate", container).focus();
-    return;
+    return null;
   }
 
   const duplicate = vehicleRegistry.find((vehicle) => vehicle.plate === plate && vehicle.id !== selectedVehicleId);
@@ -4094,6 +5896,10 @@ function saveVehicleRegistration(container) {
   renderVehiclesScreen(container);
   renderAdminDashboard();
   showToast(`${vehicle.plate} salvo no cadastro de veículos.`);
+}
+
+function saveVehicleRegistration(container) {
+  persistVehicleRegistration(container);
 }
 
 function updateVehicleRegistryCategoryState(container) {
@@ -4269,7 +6075,11 @@ function getChecklistPdfLines(vehicle, checklist) {
   Object.entries(groupedItems).forEach(([area, items]) => {
     lines.push(area);
     items.forEach((item) => {
-      lines.push(`- ${item.part}: ${item.condition || checklistUnverifiedCondition}`);
+      lines.push({
+        type: "checklistItem",
+        part: item.part,
+        condition: item.condition || checklistUnverifiedCondition
+      });
     });
     lines.push("");
   });
@@ -4352,7 +6162,7 @@ function syncVehicleFromPatioEntry(vehicleEntry) {
     vehicle = {
       id: getNextVehicleId(),
       plate: vehicleEntry.plate,
-      brand: "",
+      brand: vehicleEntry.brand || "",
       model: vehicleEntry.model,
       year: "",
       color: vehicleEntry.color,
@@ -4368,6 +6178,7 @@ function syncVehicleFromPatioEntry(vehicleEntry) {
     vehicleRegistry.unshift(vehicle);
     recordVehicleOwnerChange(vehicle, null, vehicle.currentClientId);
   } else {
+    vehicle.brand = vehicle.brand || vehicleEntry.brand || "";
     vehicle.model = vehicle.model || vehicleEntry.model;
     vehicle.color = vehicle.color || vehicleEntry.color;
     vehicle.type = vehicle.type || vehicleEntry.type;
@@ -4869,6 +6680,37 @@ function emitOperatorReport(type) {
     commission: "Relatório de comissão",
     attendance: "Relatório de frequência"
   };
+
+  if (type === "production") {
+    const fileName = `producao-${createReportFileSlug(operator.name)}-${getTodayISO()}.pdf`;
+    downloadPdfFile(fileName, "RELATÓRIO DE PRODUÇÃO", [], {
+      reportLayout: "operatorProduction",
+      operator,
+      subtitle: "",
+      documentNumber: `PROD-${String(operator.id).padStart(3, "0")}-${getTodayISO().replace(/-/g, "")}`,
+      category: "Relatório",
+      responsible: activeSessionUser || "Sistema LavaPrime",
+      summary: `Produção individual de ${operator.name}, com valores líquidos descontando comissão.`
+    });
+    showToast("Relatório de produção emitido.");
+    return;
+  }
+
+  if (type === "commission") {
+    const fileName = `comissao-${createReportFileSlug(operator.name)}-${getTodayISO()}.pdf`;
+    downloadPdfFile(fileName, "RELATÓRIO DE COMISSÃO", [], {
+      reportLayout: "operatorCommission",
+      operator,
+      subtitle: "",
+      documentNumber: `COM-${String(operator.id).padStart(3, "0")}-${getTodayISO().replace(/-/g, "")}`,
+      category: "Relatório",
+      responsible: activeSessionUser || "Sistema LavaPrime",
+      summary: `Comissões de ${operator.name} por serviços executados.`
+    });
+    showToast("Relatório de comissão emitido.");
+    return;
+  }
+
   const totals = getOperatorProductionTotals(operator);
   const lines = [
     "LavaPrime",
@@ -4904,20 +6746,156 @@ function emitOperatorReport(type) {
   showToast(`${reportMap[type]} emitido.`);
 }
 
+function getOperatorProductionRows(operator) {
+  if (!operator) return [];
+
+  const productionRows = (operator.production || []).flatMap((entry) => {
+    if (Array.isArray(entry.items) && entry.items.length) {
+      return entry.items.map((item, index) =>
+        normalizeOperatorProductionRow(operator, {
+          id: `${operator.id}-${entry.date}-${index}`,
+          date: entry.date,
+          service: item.service,
+          duration: item.duration,
+          value: item.value
+        })
+      );
+    }
+    return expandOperatorAggregateProduction(operator, entry);
+  });
+
+  const cashRows = getCashEntryOperatorProductionRows(operator);
+  const rows = [...cashRows, ...productionRows];
+  const uniqueRows = [];
+  const seenKeys = new Set();
+
+  rows.forEach((row) => {
+    const key = [row.date, normalizeText(row.service), row.value.toFixed(2), row.sourceId || ""].join("|");
+    if (seenKeys.has(key)) return;
+    seenKeys.add(key);
+    uniqueRows.push(row);
+  });
+
+  return uniqueRows.sort((a, b) => `${b.date} ${b.sourceId || ""}`.localeCompare(`${a.date} ${a.sourceId || ""}`));
+}
+
+function expandOperatorAggregateProduction(operator, entry) {
+  const serviceCount = Math.max(0, Number(entry?.services || 0));
+  const revenue = Math.max(0, Number(entry?.revenue || 0));
+  if (!serviceCount) return [];
+
+  const averageValue = serviceCount ? revenue / serviceCount : 0;
+  return Array.from({ length: serviceCount }, (_, index) =>
+    normalizeOperatorProductionRow(operator, {
+      id: `${operator.id}-${entry.date}-aggregate-${index}`,
+      date: entry.date,
+      service: "Produção registrada",
+      duration: "A definir",
+      value: averageValue
+    })
+  );
+}
+
+function getCashEntryOperatorProductionRows(operator) {
+  return cashEntries
+    .filter((entry) => {
+      if (entry.deleted || entry.type !== "Entrada") return false;
+      const entryOperator = normalizeText(entry.operator || "");
+      if (!entryOperator) return false;
+      return [operator.name, operator.username].some((value) => normalizeText(value) === entryOperator);
+    })
+    .map((entry) => {
+      const service = extractServiceNameFromProductionEntry(entry.description);
+      return normalizeOperatorProductionRow(operator, {
+        id: `cash-${entry.id}`,
+        sourceId: `cash-${entry.id}`,
+        date: entry.date || getTodayISO(),
+        service,
+        duration: entry.duration || getProductionServiceDuration(service),
+        value: Math.abs(Number(entry.value || 0))
+      });
+    });
+}
+
+function extractServiceNameFromProductionEntry(description) {
+  const text = String(description || "").trim();
+  if (!text) return "Serviço registrado";
+  const parts = text.split(" - ").map((part) => part.trim()).filter(Boolean);
+  return parts.length > 1 ? parts.slice(1).join(" - ") : text;
+}
+
+function normalizeOperatorProductionRow(operator, row) {
+  const value = Number(row.value || 0);
+  const commission = getOperatorCommissionForServiceValue(operator, value);
+  return {
+    id: row.id || `${operator.id}-${row.date}-${row.service}`,
+    sourceId: row.sourceId || row.id || "",
+    date: row.date || getTodayISO(),
+    service: row.service || "Serviço registrado",
+    duration: row.duration || getProductionServiceDuration(row.service),
+    value,
+    commission,
+    netValue: value - commission
+  };
+}
+
+function getProductionServiceDuration(serviceName) {
+  const service = serviceCatalog.find((item) => normalizeText(item.name) === normalizeText(serviceName));
+  return service?.duration || "A definir";
+}
+
 function getOperatorProductionTotals(operator) {
-  return operator.production.reduce(
+  const rows = getOperatorProductionRows(operator);
+  return rows.reduce(
     (totals, item) => ({
-      services: totals.services + item.services,
-      revenue: totals.revenue + item.revenue
+      services: totals.services + 1,
+      revenue: totals.revenue + item.value,
+      commission: totals.commission + item.commission,
+      netRevenue: totals.netRevenue + item.netValue,
+      minutes: totals.minutes + parseServiceDurationMinutes(item.duration)
     }),
-    { services: 0, revenue: 0 }
+    { services: 0, revenue: 0, commission: 0, netRevenue: 0, minutes: 0 }
   );
 }
 
 function getOperatorCommission(operator) {
-  const totals = getOperatorProductionTotals(operator);
-  if (operator.commissionType === "percent") return totals.revenue * (operator.commissionValue / 100);
-  return totals.services * operator.commissionValue;
+  return getOperatorProductionTotals(operator).commission;
+}
+
+function getOperatorCommissionForServiceValue(operator, value) {
+  const serviceValue = Number(value || 0);
+  if (!operator) return 0;
+  if (operator.commissionType === "percent") return serviceValue * (Number(operator.commissionValue || 0) / 100);
+  return Number(operator.commissionValue || 0);
+}
+
+function parseServiceDurationMinutes(duration) {
+  const text = normalizeText(duration);
+  if (!text || text === "a definir") return 0;
+  const hourMatch = text.match(/(\d+)\s*h/);
+  const minuteMatch = text.match(/(\d+)\s*min/);
+  if (hourMatch || minuteMatch) {
+    return (hourMatch ? Number(hourMatch[1]) * 60 : 0) + (minuteMatch ? Number(minuteMatch[1]) : 0);
+  }
+  const number = Number(text.replace(/[^\d.]/g, ""));
+  return Number.isFinite(number) ? number : 0;
+}
+
+function formatServiceDurationMinutes(minutes) {
+  const total = Math.round(Number(minutes || 0));
+  if (!total) return "A definir";
+  const hours = Math.floor(total / 60);
+  const remainingMinutes = total % 60;
+  if (!hours) return `${remainingMinutes} min`;
+  return remainingMinutes ? `${hours}h${String(remainingMinutes).padStart(2, "0")}` : `${hours}h`;
+}
+
+function createReportFileSlug(value) {
+  return removeDiacritics(value || "relatorio")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 42) || "relatorio";
 }
 
 function getOperatorsCommissionTotal() {
@@ -5304,6 +7282,37 @@ function emitOperatorReport(type) {
     commission: "Relatório de comissão",
     attendance: "Relatório de frequência"
   };
+
+  if (type === "production") {
+    const fileName = `producao-${createReportFileSlug(operator.name)}-${getTodayISO()}.pdf`;
+    downloadPdfFile(fileName, "RELATÓRIO DE PRODUÇÃO", [], {
+      reportLayout: "operatorProduction",
+      operator,
+      subtitle: "",
+      documentNumber: `PROD-${String(operator.id).padStart(3, "0")}-${getTodayISO().replace(/-/g, "")}`,
+      category: "Relatório",
+      responsible: activeSessionUser || "Sistema LavaPrime",
+      summary: `Produção individual de ${operator.name}, com valores líquidos descontando comissão.`
+    });
+    showToast("Relatório de produção emitido.");
+    return;
+  }
+
+  if (type === "commission") {
+    const fileName = `comissao-${createReportFileSlug(operator.name)}-${getTodayISO()}.pdf`;
+    downloadPdfFile(fileName, "RELATÓRIO DE COMISSÃO", [], {
+      reportLayout: "operatorCommission",
+      operator,
+      subtitle: "",
+      documentNumber: `COM-${String(operator.id).padStart(3, "0")}-${getTodayISO().replace(/-/g, "")}`,
+      category: "Relatório",
+      responsible: activeSessionUser || "Sistema LavaPrime",
+      summary: `Comissões de ${operator.name} por serviços executados.`
+    });
+    showToast("Relatório de comissão emitido.");
+    return;
+  }
+
   const totals = getOperatorProductionTotals(operator);
   const lines = [
     "LavaPrime",
@@ -5751,7 +7760,9 @@ function getAdminScreenContent(view) {
 function getClientsScreenContent() {
   const rows = billingClients.map((client) => {
     const invoices = billingInvoices.filter((invoice) => invoice.clientId === client.id);
-    const openValue = invoices.reduce((total, invoice) => total + getInvoiceAmount(invoice.id), 0);
+    const openValue = invoices
+      .filter((invoice) => invoice.status !== "Paga")
+      .reduce((total, invoice) => total + getInvoiceAmount(invoice.id), 0);
     return [client.name, client.document || "-", client.phone || "-", `${invoices.length} fatura(s)`, formatCurrency(openValue)];
   });
 
@@ -5832,6 +7843,574 @@ function getServicesScreenContent() {
   };
 }
 
+function renderOpenPaymentsScreen(container) {
+  const active = getActiveOpenPayments();
+  const overdue = active.filter((payment) => isOpenPaymentOverdue(payment));
+  const total = active.reduce((sum, payment) => sum + Number(payment.value || 0), 0);
+
+  container.innerHTML = `
+    <section class="screen-metrics cashflow-metrics" aria-label="Resumo dos pagamentos em aberto">
+      ${[
+        { label: "Em aberto", value: active.length, icon: "alert" },
+        { label: "Valor pendente", value: formatCurrency(total), icon: "wallet" },
+        { label: "Lembretes diários", value: overdue.length || active.length, icon: "clock" },
+        { label: "Baixados", value: openPayments.filter((payment) => payment.status === "Baixado").length, icon: "check" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+
+    <section class="cashflow-pending-panel open-payment-reminder-panel" aria-label="Lembretes de pagamento">
+      <div>
+        <p class="eyebrow">Pendências</p>
+        <h2>Lembretes diários ao gestor</h2>
+      </div>
+      ${
+        active.length
+          ? `<div class="cashflow-pending-list">
+              ${active
+                .map(
+                  (payment) => `
+                    <article class="cashflow-pending-item">
+                      <span>${escapeHtml(payment.clientName)}</span>
+                      <strong>${formatCurrency(payment.value)}</strong>
+                      <small>${escapeHtml(payment.plate)} / ${escapeHtml(payment.service)} / ${escapeHtml(payment.reminderFrequency || "Diário")}</small>
+                    </article>
+                  `
+                )
+                .join("")}
+            </div>`
+          : '<p class="empty-alert">Nenhum pagamento em aberto para lembrar hoje.</p>'
+      }
+    </section>
+
+    <section class="screen-toolbar cashflow-toolbar" aria-label="Filtros de pagamentos em aberto">
+      <label class="screen-search">
+        <span class="screen-search-icon">${icons.alert}</span>
+        <input id="openPaymentSearchInput" type="search" placeholder="Buscar cliente, placa ou serviço" />
+      </label>
+      <div class="screen-filters" id="openPaymentFilters">
+        ${["Todos", "Aberto", "Baixado"]
+          .map((filter, index) => `<button class="${index === 0 ? "is-active" : ""}" type="button" data-open-payment-filter="${filter.toLowerCase()}">${filter}</button>`)
+          .join("")}
+      </div>
+      <div class="cashflow-export-actions">
+        <button class="ghost-action" id="exportOpenPaymentsPdfButton" type="button">
+          <span data-icon="invoice"></span>
+          <span>Relatório PDF</span>
+        </button>
+      </div>
+    </section>
+
+    <article class="admin-panel screen-table-panel cashflow-table-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Financeiro</p>
+          <h2>Serviços com pagamento em aberto</h2>
+        </div>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table cashflow-table open-payments-table">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Telefone</th>
+              <th>Placa</th>
+              <th>Serviço</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th>Lembrete</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${openPayments.map(renderOpenPaymentRow).join("")}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  `;
+
+  initIcons();
+  bindOpenPaymentsScreenControls(container);
+}
+
+function renderOpenPaymentRow(payment) {
+  const isOpen = payment.status !== "Baixado";
+  const description = payment.description && payment.description !== payment.service ? payment.description : "";
+  const displayValue = payment.partialSettlement ? Number(payment.settledAmount || 0) : payment.value;
+  return `
+    <tr class="cashflow-row ${isOpen ? "is-outstanding" : "is-in"}" data-open-payment-row data-open-payment-status="${escapeHtml(payment.status.toLowerCase())}">
+      <td data-label="Cliente">${escapeHtml(payment.clientName)}</td>
+      <td data-label="Telefone">${escapeHtml(payment.phone || "-")}</td>
+      <td data-label="Placa">${escapeHtml(payment.plate || "-")}</td>
+      <td data-label="Serviço">
+        <span>${escapeHtml(payment.service || "-")}</span>
+        ${description ? `<small class="open-payment-description">${escapeHtml(description)}</small>` : ""}
+      </td>
+      <td data-label="Valor">${formatCurrency(displayValue)}</td>
+      <td data-label="Status">${escapeHtml(payment.status)}</td>
+      <td data-label="Lembrete">${escapeHtml(payment.reminderFrequency || "Diário")}${payment.lastReminderAt ? ` · ${escapeHtml(payment.lastReminderAt)}` : ""}</td>
+      <td data-label="Ações">
+        <div class="cashflow-row-actions">
+          ${
+            isOpen
+              ? `<button class="ghost-action" type="button" data-send-open-payment-message="${payment.id}">WhatsApp</button>
+                 <button class="primary-button compact-action" type="button" data-settle-open-payment="${payment.id}">Baixar</button>`
+              : `<span class="table-plate-chip">Baixado em ${escapeHtml(payment.paidAt || "-")}</span>`
+          }
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function bindOpenPaymentsScreenControls(container) {
+  $("#openPaymentSearchInput", container)?.addEventListener("input", () => applyOpenPaymentFilters(container));
+  $$("[data-open-payment-filter]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      $$("[data-open-payment-filter]", container).forEach((item) => item.classList.toggle("is-active", item === button));
+      applyOpenPaymentFilters(container);
+    });
+  });
+  $("#exportOpenPaymentsPdfButton", container)?.addEventListener("click", exportOpenPaymentsPdf);
+  $$("[data-settle-open-payment]", container).forEach((button) => {
+    button.addEventListener("click", () => settleOpenPayment(Number(button.dataset.settleOpenPayment)));
+  });
+  $$("[data-send-open-payment-message]", container).forEach((button) => {
+    button.addEventListener("click", () => sendOpenPaymentWhatsapp(Number(button.dataset.sendOpenPaymentMessage)));
+  });
+}
+
+function applyOpenPaymentFilters(container) {
+  const query = normalizeText($("#openPaymentSearchInput", container)?.value || "");
+  const activeFilter = $("#openPaymentFilters .is-active", container)?.dataset.openPaymentFilter || "todos";
+  $$("[data-open-payment-row]", container).forEach((row) => {
+    const textMatch = !query || normalizeText(row.textContent).includes(query);
+    const filterMatch = activeFilter === "todos" || row.dataset.openPaymentStatus === activeFilter;
+    row.hidden = !textMatch || !filterMatch;
+  });
+}
+
+function getActiveOpenPayments() {
+  return openPayments.filter((payment) => payment.status !== "Baixado");
+}
+
+function isOpenPaymentOverdue(payment) {
+  return payment.status !== "Baixado" && (!payment.dueDate || payment.dueDate <= getTodayISO());
+}
+
+function getOpenPaymentsByClientId(clientId) {
+  return getActiveOpenPayments().filter((payment) => Number(payment.clientId) === Number(clientId));
+}
+
+function getOpenPaymentById(id) {
+  return openPayments.find((payment) => payment.id === Number(id));
+}
+
+function getOpenPaymentForCashEntry(entry) {
+  if (!entry?.id) return null;
+  const payment = getActiveOpenPayments().find((item) => Number(item.cashEntryId) === Number(entry.id));
+  if (!payment) return null;
+  const sameService = payment.service && normalizeText(entry.description || "").includes(normalizeText(payment.service));
+  const samePlate = payment.plate && entry.plate && normalizeText(payment.plate) === normalizeText(entry.plate);
+  return entry.openPayment || sameService || samePlate ? payment : null;
+}
+
+function getNextOpenPaymentId() {
+  return Math.max(0, ...openPayments.map((payment) => payment.id || 0)) + 1;
+}
+
+function requestSettlementPaymentInfo({
+  title,
+  description,
+  defaultMethod = "Pix",
+  totalValue = 0,
+  allowPartial = false,
+  partialDestinations = null
+}) {
+  const dialog = $("#cashflowDialog");
+  const hasBankAccounts = businessBankAccounts.length > 0;
+  const settlementTotal = Math.max(0, Number(totalValue || 0));
+  const canUsePartial = allowPartial && settlementTotal > 0;
+  const canRoutePartialBalance = canUsePartial && Boolean(partialDestinations);
+  const existingInvoices = partialDestinations?.existingInvoices || [];
+  const requestedPartialDestination = partialDestinations?.defaultDestination || "new-invoice";
+  const defaultPartialDestination = requestedPartialDestination === "existing-invoice" && !existingInvoices.length ? "new-invoice" : requestedPartialDestination;
+  const defaultNewInvoiceDueDate = partialDestinations?.defaultDueDate || getTodayISO();
+  dialog.innerHTML = `
+    <form class="vehicle-box cashflow-box settlement-box" id="settlementPaymentForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Baixa financeira</p>
+          <h2>${escapeHtml(title)}</h2>
+        </div>
+        <button class="icon-button" id="closeSettlementDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+      <p class="step-copy">${escapeHtml(description)}</p>
+      <div class="vehicle-form-grid settlement-dialog-grid">
+        <label class="login-field" for="settlementPaymentMethod">
+          <span>Meio de pagamento</span>
+          <select id="settlementPaymentMethod" required>
+            ${renderSelectOptions(getSettlementPaymentMethods(), defaultMethod)}
+          </select>
+        </label>
+        <label class="login-field settlement-bank-field" for="settlementBankAccount" hidden>
+          <span>Conta bancária</span>
+          <select id="settlementBankAccount" ${hasBankAccounts ? "" : "disabled"}>
+            ${
+              hasBankAccounts
+                ? businessBankAccounts.map((account) => `<option value="${account.id}">${escapeHtml(getBusinessBankAccountLabel(account))}</option>`).join("")
+                : '<option value="">Cadastre uma conta bancária</option>'
+            }
+          </select>
+        </label>
+        ${
+          canUsePartial
+            ? `
+              <label class="switch-field settlement-partial-switch" for="settlementPartialEnabled">
+                <input id="settlementPartialEnabled" type="checkbox" />
+                <span class="switch-control"></span>
+                <span>Pagamento parcial</span>
+              </label>
+              <label class="login-field settlement-partial-field" for="settlementPartialAmount" hidden>
+                <span>Valor pago agora</span>
+                <input id="settlementPartialAmount" type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" />
+              </label>
+              <article class="cash-change-card partial-balance-card settlement-balance-card" id="settlementPartialBalanceField" hidden>
+                <span>Saldo remanescente</span>
+                <strong id="settlementPartialBalance">${formatCurrency(settlementTotal)}</strong>
+              </article>
+              ${
+                canRoutePartialBalance
+                  ? `
+                    <label class="login-field settlement-destination-field" for="settlementPartialDestination" hidden>
+                      <span>Destino do saldo</span>
+                      <select id="settlementPartialDestination">
+                        <option value="new-invoice" ${defaultPartialDestination === "new-invoice" ? "selected" : ""}>Nova fatura</option>
+                        <option value="existing-invoice" ${defaultPartialDestination === "existing-invoice" ? "selected" : ""} ${existingInvoices.length ? "" : "disabled"}>Fatura em aberto</option>
+                        <option value="open-payment" ${defaultPartialDestination === "open-payment" ? "selected" : ""}>Pagamento em aberto</option>
+                      </select>
+                    </label>
+                    <label class="login-field settlement-target-invoice-field" for="settlementTargetInvoice" hidden>
+                      <span>Fatura em aberto</span>
+                      <select id="settlementTargetInvoice">
+                        <option value="">Selecione a fatura</option>
+                        ${existingInvoices
+                          .map(
+                            (invoice) =>
+                              `<option value="${escapeHtml(invoice.id)}">${escapeHtml(invoice.code)} - ${formatDateBR(invoice.dueDate)} - ${formatCurrency(getInvoiceAmount(invoice.id))}</option>`
+                          )
+                          .join("")}
+                      </select>
+                    </label>
+                    <label class="login-field settlement-new-invoice-field" for="settlementNewInvoiceDueDate" hidden>
+                      <span>Vencimento da nova fatura</span>
+                      <input id="settlementNewInvoiceDueDate" type="date" value="${escapeHtml(defaultNewInvoiceDueDate)}" min="${escapeHtml(getTodayISO())}" />
+                    </label>
+                  `
+                  : ""
+              }
+            `
+            : ""
+        }
+      </div>
+      <div class="dialog-actions cashflow-dialog-actions">
+        <button class="exit-button" id="cancelSettlementDialog" type="button">Cancelar</button>
+        <button class="primary-button" type="submit">
+          <span data-icon="check"></span>
+          <span>Baixar</span>
+        </button>
+      </div>
+    </form>
+  `;
+  initIcons();
+  bindCurrencyInputs(dialog);
+
+  return new Promise((resolve) => {
+    let isSettled = false;
+    const close = (value) => {
+      if (isSettled) return;
+      isSettled = true;
+      if (typeof dialog.close === "function" && dialog.open) dialog.close();
+      else dialog.removeAttribute("open");
+      dialog.innerHTML = "";
+      resolve(value);
+    };
+    const updateBankField = () => {
+      const isBankDeposit = $("#settlementPaymentMethod", dialog).value === "Depósito bancário";
+      const field = $(".settlement-bank-field", dialog);
+      const select = $("#settlementBankAccount", dialog);
+      field.hidden = !isBankDeposit;
+      if (select) select.required = isBankDeposit;
+    };
+    const updatePartialField = () => {
+      if (!canUsePartial) return;
+      const isPartial = $("#settlementPartialEnabled", dialog)?.checked || false;
+      const partialField = $(".settlement-partial-field", dialog);
+      const balanceField = $("#settlementPartialBalanceField", dialog);
+      const destinationField = $(".settlement-destination-field", dialog);
+      const targetInvoiceField = $(".settlement-target-invoice-field", dialog);
+      const newInvoiceField = $(".settlement-new-invoice-field", dialog);
+      const destination = $("#settlementPartialDestination", dialog)?.value || defaultPartialDestination;
+      const amount = getCurrencyInputValue("#settlementPartialAmount", dialog);
+      const balance = Math.max(0, settlementTotal - amount);
+      if (partialField) partialField.hidden = !isPartial;
+      if (balanceField) balanceField.hidden = !isPartial;
+      if (destinationField) destinationField.hidden = !isPartial;
+      if (targetInvoiceField) targetInvoiceField.hidden = !isPartial || destination !== "existing-invoice";
+      if (newInvoiceField) newInvoiceField.hidden = !isPartial || destination !== "new-invoice";
+      if ($("#settlementPartialBalance", dialog)) {
+        $("#settlementPartialBalance", dialog).textContent = formatCurrency(balance);
+      }
+    };
+
+    $("#settlementPaymentMethod", dialog).addEventListener("change", updateBankField);
+    $("#settlementPartialEnabled", dialog)?.addEventListener("change", updatePartialField);
+    $("#settlementPartialAmount", dialog)?.addEventListener("input", updatePartialField);
+    $("#settlementPartialDestination", dialog)?.addEventListener("change", updatePartialField);
+    $("#closeSettlementDialog", dialog).addEventListener("click", () => close(null));
+    $("#cancelSettlementDialog", dialog).addEventListener("click", () => close(null));
+    dialog.addEventListener("cancel", () => close(null), { once: true });
+    $("#settlementPaymentForm", dialog).addEventListener("submit", (event) => {
+      event.preventDefault();
+      const method = $("#settlementPaymentMethod", dialog).value;
+      const isBankDeposit = method === "Depósito bancário";
+      const bankAccountId = isBankDeposit ? Number($("#settlementBankAccount", dialog).value || 0) : null;
+      const bankAccount = bankAccountId ? businessBankAccounts.find((account) => account.id === bankAccountId) : null;
+      const partial = canUsePartial && ($("#settlementPartialEnabled", dialog)?.checked || false);
+      const amount = partial ? getCurrencyInputValue("#settlementPartialAmount", dialog) : settlementTotal;
+      const balance = Math.max(0, settlementTotal - amount);
+      const destination = partial && canRoutePartialBalance ? $("#settlementPartialDestination", dialog)?.value || "new-invoice" : "";
+      const targetInvoiceId = destination === "existing-invoice" ? Number($("#settlementTargetInvoice", dialog)?.value || 0) : null;
+      const newInvoiceDueDate = destination === "new-invoice" ? $("#settlementNewInvoiceDueDate", dialog)?.value || "" : "";
+      if (isBankDeposit && !bankAccount) {
+        showToast("Cadastre e selecione uma conta bancária para depósito.");
+        return;
+      }
+      if (partial && amount <= 0) {
+        showToast("Informe o valor pago agora.");
+        $("#settlementPartialAmount", dialog)?.focus();
+        return;
+      }
+      if (partial && amount >= settlementTotal) {
+        showToast("Para pagamento parcial, o valor pago agora deve ser menor que o saldo em aberto.");
+        $("#settlementPartialAmount", dialog)?.focus();
+        return;
+      }
+      if (partial && canRoutePartialBalance && destination === "existing-invoice" && !targetInvoiceId) {
+        showToast("Selecione a fatura em aberto para receber o saldo.");
+        $("#settlementTargetInvoice", dialog)?.focus();
+        return;
+      }
+      if (partial && canRoutePartialBalance && destination === "new-invoice" && !newInvoiceDueDate) {
+        showToast("Informe o vencimento da nova fatura.");
+        $("#settlementNewInvoiceDueDate", dialog)?.focus();
+        return;
+      }
+      close({
+        method,
+        bankAccountId: bankAccount?.id || null,
+        bankAccountName: bankAccount ? getBusinessBankAccountLabel(bankAccount) : "",
+        partial,
+        amount,
+        balance,
+        destination,
+        targetInvoiceId,
+        newInvoiceDueDate
+      });
+    });
+
+    updateBankField();
+    updatePartialField();
+    if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+    else dialog.setAttribute("open", "");
+    $("#settlementPaymentMethod", dialog).focus();
+  });
+}
+
+function getBusinessBankAccountLabel(account) {
+  return `${account.bank} / ${account.type} / Ag. ${account.agency} / Conta ${account.account}`;
+}
+
+async function settleOpenPayment(paymentId) {
+  const payment = getOpenPaymentById(paymentId);
+  if (!payment || payment.status === "Baixado") return;
+  const settlement = await requestSettlementPaymentInfo({
+    title: "Baixar pagamento em aberto",
+    description: `${payment.clientName} / ${formatCurrency(payment.value)}`,
+    defaultMethod: payment.paymentMethod || "Pix",
+    totalValue: payment.value,
+    allowPartial: true
+  });
+  if (!settlement) return;
+
+  payment.status = "Baixado";
+  payment.paidAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+  payment.settledBy = activeSessionUser || "Administrador";
+  payment.settlementMethod = settlement.method;
+  payment.paymentMethod = settlement.method;
+  payment.settlementBankAccountId = settlement.bankAccountId;
+  payment.settlementBankAccountName = settlement.bankAccountName;
+  payment.partialSettlement = Boolean(settlement.partial);
+  payment.settledAmount = settlement.partial ? settlement.amount : payment.value;
+  payment.remainingBalance = settlement.partial ? settlement.balance : 0;
+
+  const entry = payment.cashEntryId ? getCashEntryById(payment.cashEntryId) : null;
+  if (entry) {
+    entry.status = "Confirmado";
+    entry.date = getTodayISO();
+    entry.time = getCurrentShortTime();
+    entry.method = settlement.method;
+    entry.value = settlement.partial ? settlement.amount : payment.value;
+    entry.description = settlement.partial ? `Baixa parcial pagamento em aberto - ${payment.clientName}` : entry.description;
+    entry.bankAccountId = settlement.bankAccountId;
+    entry.bankAccountName = settlement.bankAccountName;
+  } else {
+    cashEntries.unshift({
+      id: getNextCashEntryId(),
+      date: getTodayISO(),
+      time: getCurrentShortTime(),
+      type: "Entrada",
+      description: `Baixa pagamento em aberto - ${payment.clientName}`,
+      method: settlement.method,
+      value: settlement.partial ? settlement.amount : payment.value,
+      status: "Confirmado",
+      category: "Serviços",
+      costCenter: "Lavagem",
+      bankAccountId: settlement.bankAccountId,
+      bankAccountName: settlement.bankAccountName,
+      openPaymentId: payment.id,
+      operator: activeSessionUser || "Administrador"
+    });
+  }
+
+  let remainingPayment = null;
+  if (settlement.partial) {
+    const pendingEntry = createRemainingOpenPaymentCashEntry(payment, settlement);
+    remainingPayment = createRemainingOpenPayment(payment, settlement, pendingEntry);
+  }
+
+  const vehicle = getPatioVehicleById(payment.vehicleId);
+  if (vehicle) {
+    if (settlement.partial) {
+      vehicle.partialPaymentOpen = true;
+      vehicle.partialPaidAmount = Number(vehicle.partialPaidAmount || payment.paidAmount || 0) + settlement.amount;
+      vehicle.partialBalance = settlement.balance;
+      vehicle.paymentOpen = true;
+      vehicle.paymentStatus = "Parcial";
+      vehicle.paymentConfirmed = false;
+    } else if (payment.partialPayment || payment.vehicleId) {
+      vehicle.partialPaymentOpen = false;
+      vehicle.partialBalance = 0;
+      vehicle.paymentOpen = false;
+      vehicle.paymentStatus = "Confirmado";
+      vehicle.paymentConfirmed = true;
+      vehicle.paymentConfirmedAt = getCurrentShortTime();
+    }
+  }
+
+  renderAdminScreen("openPayments");
+  refreshCashflowScreen();
+  renderAdminDashboard();
+  if (remainingPayment) {
+    triggerAutomatedMessage("partial-open-payment", getMessageContextFromOpenPayment(payment));
+    showToast(`Baixa parcial registrada. Saldo em aberto: ${formatCurrency(settlement.balance)}.`);
+  } else {
+    triggerAutomatedMessage("payment-confirmation", getMessageContextFromOpenPayment(payment));
+    showToast("Pagamento em aberto baixado.");
+  }
+}
+
+function createRemainingOpenPaymentCashEntry(payment, settlement) {
+  const description = getRemainingOpenPaymentDescription(payment);
+  const entry = {
+    id: getNextCashEntryId(),
+    date: getTodayISO(),
+    time: getCurrentShortTime(),
+    type: "Entrada",
+    description,
+    method: settlement.method,
+    value: settlement.balance,
+    status: "Pendente",
+    category: "Serviços",
+    costCenter: "Lavagem",
+    plate: payment.plate || "",
+    vehicleId: payment.vehicleId || null,
+    openPayment: true,
+    partialPayment: true,
+    partialPaidAmount: Number(payment.paidAmount || 0) + settlement.amount,
+    partialBalance: settlement.balance,
+    previousOpenPaymentId: payment.id,
+    operator: activeSessionUser || "Administrador"
+  };
+  cashEntries.unshift(entry);
+  return entry;
+}
+
+function createRemainingOpenPayment(payment, settlement, cashEntry) {
+  const paidAmount = Number(payment.paidAmount || 0) + settlement.amount;
+  const remainingPayment = {
+    id: getNextOpenPaymentId(),
+    clientId: payment.clientId || null,
+    clientName: payment.clientName || "Cliente avulso",
+    phone: payment.phone || "",
+    plate: payment.plate || "",
+    service: payment.service || "",
+    description: getRemainingOpenPaymentDescription(payment),
+    value: settlement.balance,
+    paymentMethod: settlement.method || payment.paymentMethod || "Pix",
+    createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
+    dueDate: getTodayISO(),
+    status: "Aberto",
+    reminderFrequency: payment.reminderFrequency || "Diário",
+    lastReminderAt: "",
+    operator: activeSessionUser || payment.operator || "Administrador",
+    vehicleId: payment.vehicleId || null,
+    cashEntryId: cashEntry?.id || null,
+    invoiceId: payment.invoiceId || null,
+    invoiceCode: payment.invoiceCode || getOpenPaymentInvoiceCode(payment),
+    partialPayment: true,
+    paidAmount,
+    previousOpenPaymentId: payment.id
+  };
+  openPayments.unshift(remainingPayment);
+  return remainingPayment;
+}
+
+function getRemainingOpenPaymentDescription(payment) {
+  return `Saldo remanescente referente ao pagamento em aberto de ${payment.service || payment.description || "serviço"} em ${formatDateBR(getTodayISO())}.`;
+}
+
+function sendOpenPaymentWhatsapp(paymentId) {
+  const payment = getOpenPaymentById(paymentId);
+  if (!payment) return;
+  payment.lastReminderAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+  sendManualMessage("open-service-payment", getMessageContextFromOpenPayment(payment));
+  renderAdminScreen("openPayments");
+}
+
+function exportOpenPaymentsPdf() {
+  const active = getActiveOpenPayments();
+  const total = active.reduce((sum, payment) => sum + Number(payment.value || 0), 0);
+  const lines = [
+    `Total em aberto: ${formatCurrency(total)}`,
+    `Quantidade: ${active.length}`,
+    "",
+    ...active.map(
+      (payment) =>
+        `${payment.clientName} | ${payment.phone || "-"} | ${payment.plate || "-"} | ${payment.description || payment.service || "-"} | ${formatCurrency(payment.value)} | ${payment.status}`
+    )
+  ];
+  downloadPdfFile(`pagamentos-em-aberto-${getTodayISO()}.pdf`, "Relatório de pagamentos em aberto", lines, {
+    subtitle: "Controle financeiro",
+    category: "Financeiro",
+    summary: `${active.length} pagamento(s) em aberto somando ${formatCurrency(total)}.`
+  });
+}
+
 function renderCashflowScreen(container) {
   const activeEntries = getCashflowActiveEntries();
   const totalIn = activeEntries
@@ -5854,13 +8433,6 @@ function renderCashflowScreen(container) {
         .map(renderScreenMetric)
         .join("")}
     </section>
-
-    <div class="cashflow-action-row">
-      <button class="new-vehicle-button" id="startCashEntryButton" type="button">
-        <span data-icon="plus"></span>
-        <span>Novo lançamento</span>
-      </button>
-    </div>
 
     ${
       scheduledToday.length
@@ -5897,20 +8469,14 @@ function renderCashflowScreen(container) {
         <span class="screen-search-icon">${icons.cashflow}</span>
         <input id="cashflowSearchInput" type="search" placeholder="Buscar lançamento" />
       </label>
-      <div class="screen-filters" id="cashflowFilters">
-        ${["Todos", "Entradas", "Saídas", "Agendados", "Pendentes", "Confirmados", "Excluídos"]
-          .map((filter, index) => `<button class="${index === 0 ? "is-active" : ""}" type="button" data-cashflow-filter="${filter.toLowerCase()}">${filter}</button>`)
-          .join("")}
-      </div>
-      <div class="cashflow-export-actions">
-        <button class="ghost-action" id="exportCashflowCsvButton" type="button">Exportar CSV</button>
-        <button class="ghost-action" id="exportCashflowPdfButton" type="button">Exportar PDF</button>
-      </div>
-    </section>
-
-    <section class="cashflow-registry-grid">
-      ${renderCashflowRegistryPanel("category", "Categorias de lançamento", cashflowCategories)}
-      ${renderCashflowRegistryPanel("costCenter", "Centros de custo", cashflowCostCenters)}
+      <label class="login-field cashflow-filter-select" for="cashflowFilterSelect">
+        <span>Filtro</span>
+        <select id="cashflowFilterSelect">
+          ${["Todos", "Entradas", "Saídas", "Agendados", "Pendentes", "Confirmados", "Excluídos"]
+            .map((filter) => `<option value="${escapeHtml(filter.toLowerCase())}">${escapeHtml(filter)}</option>`)
+            .join("")}
+        </select>
+      </label>
     </section>
 
     <article class="admin-panel screen-table-panel cashflow-table-panel">
@@ -5918,6 +8484,16 @@ function renderCashflowScreen(container) {
         <div>
           <p class="eyebrow">Movimento</p>
           <h2>Lançamentos do caixa</h2>
+        </div>
+        <div class="cashflow-panel-actions">
+          <button class="ghost-action" id="openCashflowExportButton" type="button">
+            <span data-icon="cashflow"></span>
+            <span>Exportar</span>
+          </button>
+          <button class="new-vehicle-button" id="startCashEntryButton" type="button">
+            <span data-icon="plus"></span>
+            <span>Novo lançamento</span>
+          </button>
         </div>
       </div>
       ${renderCashflowTable()}
@@ -5932,43 +8508,232 @@ function renderCashflowScreen(container) {
   bindCashflowScreenControls(container);
 }
 
-function renderCashflowRegistryPanel(kind, title, list) {
-  const placeholder = kind === "category" ? "Nova categoria" : "Novo centro";
-  const buttonLabel = kind === "category" ? "Adicionar categoria" : "Adicionar centro";
+function openCashflowRegistryDialog(kind, options = {}) {
+  cashflowRegistryReturnToEntry = Boolean(options.returnToEntry);
+  const dialog = $("#cashflowDialog");
+  dialog.innerHTML = renderCashflowRegistryDialog(kind);
+  initIcons();
+  bindCashflowRegistryDialogControls(dialog, kind);
+
+  if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+  else dialog.setAttribute("open", "");
+
+  $(`#cashflow${capitalize(kind)}Input`, dialog)?.focus();
+}
+
+function closeCashflowRegistryDialog() {
+  if (cashflowRegistryReturnToEntry) {
+    const draft = cashflowDialogDraft;
+    cashflowRegistryReturnToEntry = false;
+    openCashflowDialog(selectedCashEntryId, draft);
+    return;
+  }
+  const dialog = $("#cashflowDialog");
+  if (typeof dialog.close === "function" && dialog.open) dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+}
+
+function openCashflowExportDialog() {
+  const dialog = $("#cashflowDialog");
+  dialog.innerHTML = renderCashflowExportDialog();
+  initIcons();
+  bindCashflowExportDialogControls(dialog);
+
+  if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+  else dialog.setAttribute("open", "");
+
+  $("#cashflowExportStartDate", dialog)?.focus();
+}
+
+function closeCashflowExportDialog() {
+  const dialog = $("#cashflowDialog");
+  if (typeof dialog.close === "function" && dialog.open) dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+}
+
+function renderCashflowExportDialog() {
+  const today = getTodayISO();
+  const monthStart = `${today.slice(0, 8)}01`;
+  const movementOptions = [
+    ["todos", "Todos os movimentos"],
+    ["entradas", "Entradas"],
+    ["saidas", "Saídas"],
+    ["pendentes", "Pendentes"],
+    ["confirmados", "Confirmados"],
+    ["agendados", "Agendados"],
+    ["excluidos", "Excluídos"]
+  ];
   return `
-    <article class="admin-panel cashflow-registry-panel">
-      <div class="panel-heading">
+    <form class="vehicle-box cashflow-box cashflow-export-dialog-box" id="cashflowExportForm" novalidate>
+      <div class="dialog-head">
         <div>
-          <p class="eyebrow">Cadastro</p>
-          <h2>${escapeHtml(title)}</h2>
+          <p class="eyebrow">Relatório</p>
+          <h2>Exportar fluxo de caixa</h2>
         </div>
-      </div>
-      <div class="cashflow-registry-row">
-        <input id="cashflow${capitalize(kind)}Input" type="text" placeholder="${escapeHtml(placeholder)}" />
-        <button class="ghost-action" type="button" data-add-cashflow-option="${kind}">
-          <span data-icon="plus"></span>
-          <span>${escapeHtml(buttonLabel)}</span>
+        <button class="icon-button" id="closeCashflowExportDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
         </button>
       </div>
-      <div class="client-plate-tags">
-        ${renderCashflowOptionChips(list, kind)}
+
+      <div class="vehicle-form-grid cashflow-export-grid">
+        <label class="login-field" for="cashflowExportStartDate">
+          <span>Data inicial</span>
+          <input id="cashflowExportStartDate" type="date" value="${escapeHtml(monthStart)}" required />
+        </label>
+        <label class="login-field" for="cashflowExportEndDate">
+          <span>Data final</span>
+          <input id="cashflowExportEndDate" type="date" value="${escapeHtml(today)}" required />
+        </label>
+        <label class="login-field" for="cashflowExportMovement">
+          <span>Movimentos</span>
+          <select id="cashflowExportMovement" required>
+            ${movementOptions.map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join("")}
+          </select>
+        </label>
+        <label class="login-field" for="cashflowExportFormat">
+          <span>Formato</span>
+          <select id="cashflowExportFormat" required>
+            <option value="pdf">PDF</option>
+            <option value="csv">CSV</option>
+          </select>
+        </label>
       </div>
-    </article>
+
+      <div class="dialog-actions cashflow-dialog-actions">
+        <button class="exit-button" id="cancelCashflowExportDialog" type="button">Cancelar</button>
+        <button class="primary-button" type="submit">
+          <span data-icon="check"></span>
+          <span>Exportar</span>
+        </button>
+      </div>
+    </form>
   `;
 }
 
-function renderCashflowOptionChips(list, kind) {
+function bindCashflowExportDialogControls(dialog) {
+  $("#closeCashflowExportDialog", dialog).addEventListener("click", closeCashflowExportDialog);
+  $("#cancelCashflowExportDialog", dialog).addEventListener("click", closeCashflowExportDialog);
+  $("#cashflowExportForm", dialog).addEventListener("submit", (event) => {
+    event.preventDefault();
+    exportCashflowReport(dialog);
+  });
+}
+
+function renderCashflowRegistryDialog(kind) {
+  const config = getCashflowRegistryConfig(kind);
+  return `
+    <form class="vehicle-box cashflow-box cashflow-registry-dialog-box" id="cashflowRegistryForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Cadastro</p>
+          <h2>${escapeHtml(config.title)}</h2>
+        </div>
+        <button class="icon-button" id="closeCashflowRegistryDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+
+      <div class="cashflow-registry-row">
+        <input id="cashflow${capitalize(kind)}Input" type="text" placeholder="${escapeHtml(config.placeholder)}" required />
+        <button class="ghost-action" type="submit">
+          <span data-icon="plus"></span>
+          <span>${escapeHtml(config.buttonLabel)}</span>
+        </button>
+      </div>
+
+      <section class="cashflow-registry-list-panel">
+        <div>
+          <p class="eyebrow">Itens cadastrados</p>
+          <h3>${escapeHtml(config.title)}</h3>
+        </div>
+        <div class="cashflow-registry-options">
+          ${renderCashflowOptionRows(config.list, kind)}
+        </div>
+      </section>
+
+      ${
+        cashflowRegistryReturnToEntry
+          ? `
+            <div class="dialog-actions cashflow-dialog-actions">
+              <button class="primary-button" id="returnCashflowEntryDialog" type="button">
+                <span data-icon="check"></span>
+                <span>Voltar ao lançamento</span>
+              </button>
+            </div>
+          `
+          : ""
+      }
+    </form>
+  `;
+}
+
+function bindCashflowRegistryDialogControls(dialog, kind) {
+  $("#closeCashflowRegistryDialog", dialog).addEventListener("click", closeCashflowRegistryDialog);
+  dialog.addEventListener("cancel", closeCashflowRegistryDialog, { once: true });
+  $("#returnCashflowEntryDialog", dialog)?.addEventListener("click", closeCashflowRegistryDialog);
+  $("#cashflowRegistryForm", dialog).addEventListener("submit", (event) => {
+    event.preventDefault();
+    addCashflowOption(dialog, kind);
+  });
+  $$("[data-update-cashflow-option]", dialog).forEach((button) => {
+    button.addEventListener("click", () => updateCashflowOption(dialog, button.dataset.updateCashflowOption, Number(button.dataset.optionIndex)));
+  });
+  $$("[data-delete-cashflow-option]", dialog).forEach((button) => {
+    button.addEventListener("click", () => deleteCashflowOption(dialog, button.dataset.deleteCashflowOption, button.dataset.optionValue));
+  });
+}
+
+function getCashflowRegistryConfig(kind) {
+  const configs = {
+    category: {
+      title: "Categorias de lançamento",
+      label: "categoria",
+      list: cashflowCategories,
+      placeholder: "Nova categoria",
+      buttonLabel: "Adicionar categoria",
+      protectedValues: []
+    },
+    costCenter: {
+      title: "Centros de custo",
+      label: "centro de custo",
+      list: cashflowCostCenters,
+      placeholder: "Novo centro de custo",
+      buttonLabel: "Adicionar centro",
+      protectedValues: []
+    },
+    paymentMethod: {
+      title: "Formas de pagamento",
+      label: "forma de pagamento",
+      list: paymentMethods,
+      placeholder: "Nova forma de pagamento",
+      buttonLabel: "Adicionar forma",
+      protectedValues: ["Dinheiro", "Faturado"]
+    }
+  };
+  return configs[kind] || configs.category;
+}
+
+function renderCashflowOptionRows(list, kind) {
+  const protectedValues = getCashflowRegistryConfig(kind).protectedValues || [];
   return list
-    .map(
-      (item) => `
-        <span class="table-plate-chip registry-option-chip">
-          <span>${escapeHtml(item)}</span>
-          <button type="button" aria-label="Excluir ${escapeHtml(item)}" data-delete-cashflow-option="${kind}" data-option-value="${escapeHtml(item)}">
-            ${icons.x}
-          </button>
-        </span>
-      `
-    )
+    .map((item, index) => {
+      const isProtected = protectedValues.includes(item);
+      return `
+        <div class="cashflow-registry-option-row">
+          <input id="cashflowOption${index}" type="text" value="${escapeHtml(item)}" ${isProtected ? "disabled" : ""} />
+          <div class="cashflow-registry-option-actions">
+            <button class="ghost-action compact" type="button" data-update-cashflow-option="${kind}" data-option-index="${index}" ${isProtected ? "disabled" : ""}>
+              Salvar
+            </button>
+            <button class="exit-button compact" type="button" aria-label="Excluir ${escapeHtml(item)}" data-delete-cashflow-option="${kind}" data-option-value="${escapeHtml(item)}" ${isProtected ? "disabled" : ""}>
+              Excluir
+            </button>
+          </div>
+        </div>
+      `;
+    })
     .join("");
 }
 
@@ -6000,6 +8765,7 @@ function renderCashflowTable() {
 function renderCashflowTableRow(entry) {
   const isDeleted = Boolean(entry.deleted);
   const isScheduled = Boolean(entry.scheduledDate);
+  const openPayment = isDeleted ? null : getOpenPaymentForCashEntry(entry);
   const statusClass = normalizeText(getCashEntryStatus(entry)).replace(/\s+/g, "-");
   return `
     <tr class="cashflow-row ${entry.value < 0 ? "is-out" : "is-in"} ${isDeleted ? "is-deleted" : ""}" data-cash-row data-cash-type="${entry.value < 0 ? "saídas" : "entradas"}" data-cash-status="${escapeHtml(statusClass)}" data-cash-scheduled="${String(isScheduled)}" data-cash-deleted="${String(isDeleted)}">
@@ -6014,6 +8780,11 @@ function renderCashflowTableRow(entry) {
       <td data-label="Ações">
         <div class="cashflow-row-actions">
           <button class="ghost-action" type="button" data-open-cash-entry="${entry.id}">Abrir</button>
+          ${
+            openPayment
+              ? `<button class="primary-button compact-action" type="button" data-settle-open-payment="${openPayment.id}">Baixar</button>`
+              : ""
+          }
           ${
             isScheduled && !isDeleted
               ? `<button class="ghost-action" type="button" data-cancel-cash-entry="${entry.id}">Cancelar agendamento</button>`
@@ -6118,23 +8889,14 @@ function getCashflowGroupedTotals(key) {
 
 function bindCashflowScreenControls(container) {
   $("#startCashEntryButton", container)?.addEventListener("click", () => openCashflowDialog());
+  $("#openCashflowExportButton", container)?.addEventListener("click", openCashflowExportDialog);
   $("#cashflowSearchInput", container)?.addEventListener("input", () => applyCashflowFilters(container));
-  $$("#cashflowFilters button", container).forEach((button) => {
-    button.addEventListener("click", () => {
-      $$("#cashflowFilters button", container).forEach((item) => item.classList.toggle("is-active", item === button));
-      applyCashflowFilters(container);
-    });
-  });
-  $("#exportCashflowCsvButton", container)?.addEventListener("click", exportCashflowCsv);
-  $("#exportCashflowPdfButton", container)?.addEventListener("click", exportCashflowPdf);
-  $$("[data-add-cashflow-option]", container).forEach((button) => {
-    button.addEventListener("click", () => addCashflowOption(container, button.dataset.addCashflowOption));
-  });
-  $$("[data-delete-cashflow-option]", container).forEach((button) => {
-    button.addEventListener("click", () => deleteCashflowOption(container, button.dataset.deleteCashflowOption, button.dataset.optionValue));
-  });
+  $("#cashflowFilterSelect", container)?.addEventListener("change", () => applyCashflowFilters(container));
   $$("[data-open-cash-entry]", container).forEach((button) => {
     button.addEventListener("click", () => openCashflowDialog(Number(button.dataset.openCashEntry)));
+  });
+  $$("[data-settle-open-payment]", container).forEach((button) => {
+    button.addEventListener("click", () => settleOpenPayment(Number(button.dataset.settleOpenPayment)));
   });
   $$("[data-delete-cash-entry]", container).forEach((button) => {
     button.addEventListener("click", () => deleteCashEntry(Number(button.dataset.deleteCashEntry)));
@@ -6149,7 +8911,7 @@ function bindCashflowScreenControls(container) {
 
 function applyCashflowFilters(container) {
   const query = normalizeText($("#cashflowSearchInput", container)?.value || "");
-  const activeFilter = $("#cashflowFilters .is-active", container)?.dataset.cashflowFilter || "todos";
+  const activeFilter = $("#cashflowFilterSelect", container)?.value || "todos";
   $$("[data-cash-row]", container).forEach((row) => {
     const textMatch = !query || normalizeText(row.textContent).includes(query);
     const filterMatch =
@@ -6165,7 +8927,8 @@ function applyCashflowFilters(container) {
 }
 
 function addCashflowOption(container, kind) {
-  const list = kind === "category" ? cashflowCategories : cashflowCostCenters;
+  const config = getCashflowRegistryConfig(kind);
+  const list = config.list;
   const input = $(`#cashflow${capitalize(kind)}Input`, container);
   const value = input.value.trim();
   if (!value) {
@@ -6178,14 +8941,50 @@ function addCashflowOption(container, kind) {
     return;
   }
   list.push(value);
-  renderCashflowScreen(container);
-  showToast(kind === "category" ? "Categoria cadastrada." : "Centro de custo cadastrado.");
+  openCashflowRegistryDialog(kind, { returnToEntry: cashflowRegistryReturnToEntry });
+  showToast(`${capitalize(config.label)} cadastrada.`);
+}
+
+function updateCashflowOption(container, kind, index) {
+  const config = getCashflowRegistryConfig(kind);
+  const list = config.list;
+  const currentValue = list[index];
+  const input = $(`#cashflowOption${index}`, container);
+  const nextValue = input?.value.trim();
+  if (!currentValue || !nextValue) {
+    showToast("Informe um nome válido.");
+    input?.focus();
+    return;
+  }
+  if (currentValue === nextValue) return;
+  if ((config.protectedValues || []).includes(currentValue)) {
+    showToast("Esta forma é essencial para rotinas do sistema e não pode ser alterada.");
+    return;
+  }
+  if (list.some((item, itemIndex) => itemIndex !== index && normalizeText(item) === normalizeText(nextValue))) {
+    showToast("Item já cadastrado.");
+    input.focus();
+    return;
+  }
+  list[index] = nextValue;
+  updateCashflowOptionReferences(kind, currentValue, nextValue);
+  openCashflowRegistryDialog(kind, { returnToEntry: cashflowRegistryReturnToEntry });
+  showToast(`${capitalize(config.label)} atualizada.`);
 }
 
 async function deleteCashflowOption(container, kind, value) {
-  const list = kind === "category" ? cashflowCategories : cashflowCostCenters;
-  const label = kind === "category" ? "categoria" : "centro de custo";
-  const used = cashEntries.some((entry) => !entry.deleted && (kind === "category" ? entry.category : entry.costCenter) === value);
+  const config = getCashflowRegistryConfig(kind);
+  const list = config.list;
+  const label = config.label;
+  if ((config.protectedValues || []).includes(value)) {
+    await showMessageBox({
+      title: "Item protegido",
+      message: `Esta ${label} é usada em rotinas essenciais do sistema e não pode ser excluída.`,
+      confirmLabel: "Entendi"
+    });
+    return;
+  }
+  const used = isCashflowOptionInUse(kind, value);
   if (used) {
     await showMessageBox({
       title: "Item em uso",
@@ -6196,8 +8995,51 @@ async function deleteCashflowOption(container, kind, value) {
   }
   const index = list.findIndex((item) => item === value);
   if (index >= 0) list.splice(index, 1);
-  renderCashflowScreen(container);
+  openCashflowRegistryDialog(kind, { returnToEntry: cashflowRegistryReturnToEntry });
   showToast(`${capitalize(label)} removido.`);
+}
+
+function isCashflowOptionInUse(kind, value) {
+  if (kind === "category") return cashEntries.some((entry) => !entry.deleted && entry.category === value);
+  if (kind === "costCenter") return cashEntries.some((entry) => !entry.deleted && entry.costCenter === value);
+  if (kind === "paymentMethod") {
+    return (
+      cashEntries.some((entry) => !entry.deleted && entry.method === value) ||
+      patioVehicles.some((vehicle) => vehicle.payment === value) ||
+      openPayments.some((payment) => payment.paymentMethod === value) ||
+      invoiceLineItems.some((item) => item.paymentMethod === value)
+    );
+  }
+  return false;
+}
+
+function updateCashflowOptionReferences(kind, currentValue, nextValue) {
+  if (kind === "category") {
+    cashEntries.forEach((entry) => {
+      if (entry.category === currentValue) entry.category = nextValue;
+    });
+    return;
+  }
+  if (kind === "costCenter") {
+    cashEntries.forEach((entry) => {
+      if (entry.costCenter === currentValue) entry.costCenter = nextValue;
+    });
+    return;
+  }
+  if (kind === "paymentMethod") {
+    cashEntries.forEach((entry) => {
+      if (entry.method === currentValue) entry.method = nextValue;
+    });
+    patioVehicles.forEach((vehicle) => {
+      if (vehicle.payment === currentValue) vehicle.payment = nextValue;
+    });
+    openPayments.forEach((payment) => {
+      if (payment.paymentMethod === currentValue) payment.paymentMethod = nextValue;
+    });
+    invoiceLineItems.forEach((item) => {
+      if (item.paymentMethod === currentValue) item.paymentMethod = nextValue;
+    });
+  }
 }
 
 function getCashflowScreenContent() {
@@ -6255,11 +9097,12 @@ function getCashflowScreenContent() {
   };
 }
 
-function openCashflowDialog(entryId = null) {
+function openCashflowDialog(entryId = null, draft = null) {
   selectedCashEntryId = entryId;
+  if (draft) cashflowDialogDraft = draft;
   const entry = entryId ? getCashEntryById(entryId) : null;
   const dialog = $("#cashflowDialog");
-  dialog.innerHTML = renderCashflowDialogForm(entry);
+  dialog.innerHTML = renderCashflowDialogForm(entry, draft);
   initIcons();
   bindCashflowDialogControls(dialog);
   updateCashflowScheduleFields(dialog);
@@ -6277,11 +9120,14 @@ function closeCashflowDialog() {
   else dialog.removeAttribute("open");
   dialog.innerHTML = "";
   selectedCashEntryId = null;
+  cashflowDialogDraft = null;
+  cashflowRegistryReturnToEntry = false;
 }
 
-function renderCashflowDialogForm(entry) {
-  const isScheduled = Boolean(entry?.scheduledDate);
-  const value = Math.abs(Number(entry?.value || ""));
+function renderCashflowDialogForm(entry, draft = null) {
+  const source = draft || entry || {};
+  const isScheduled = Boolean(source.scheduledDate);
+  const value = Math.abs(Number(source.value || ""));
   return `
     <form class="vehicle-box cashflow-box" id="cashflowForm" novalidate>
       <div class="dialog-head">
@@ -6298,7 +9144,7 @@ function renderCashflowDialogForm(entry) {
         <label class="login-field" for="cashEntryType">
           <span>Tipo</span>
           <select id="cashEntryType" required>
-            ${renderSelectOptions(["Entrada", "Saída"], entry?.type || "Entrada")}
+            ${renderSelectOptions(["Entrada", "Saída"], source.type || "Entrada")}
           </select>
         </label>
         <label class="login-field" for="cashEntryValue">
@@ -6307,30 +9153,33 @@ function renderCashflowDialogForm(entry) {
         </label>
         <label class="login-field cashflow-description-field" for="cashEntryDescription">
           <span>Descrição</span>
-          <input id="cashEntryDescription" type="text" placeholder="Ex.: Compra de insumos" value="${escapeHtml(entry?.description || "")}" required />
+          <input id="cashEntryDescription" type="text" placeholder="Ex.: Compra de insumos" value="${escapeHtml(source.description || "")}" required />
         </label>
-        <label class="login-field" for="cashEntryMethod">
-          <span>Forma</span>
-          <select id="cashEntryMethod" required>
-            ${renderSelectOptions(getCashflowPaymentMethods(), entry?.method || "Pix")}
-          </select>
-        </label>
-        <label class="login-field" for="cashEntryCategory">
-          <span>Categoria</span>
-          <select id="cashEntryCategory" required>
-            ${renderRegistrySelectOptions(cashflowCategories, entry?.category || cashflowCategories[0] || "")}
-          </select>
-        </label>
-        <label class="login-field" for="cashEntryCostCenter">
-          <span>Centro de custo</span>
-          <select id="cashEntryCostCenter" required>
-            ${renderRegistrySelectOptions(cashflowCostCenters, entry?.costCenter || cashflowCostCenters[0] || "")}
-          </select>
-        </label>
+        ${renderCashflowManagedSelectField({
+          id: "cashEntryMethod",
+          label: "Forma de Pagamento",
+          optionsHtml: renderSelectOptions(getCashflowPaymentMethods(), source.method || "Pix"),
+          registryKind: "paymentMethod",
+          actionLabel: "Cadastrar forma de pagamento"
+        })}
+        ${renderCashflowManagedSelectField({
+          id: "cashEntryCategory",
+          label: "Categoria",
+          optionsHtml: renderRegistrySelectOptions(cashflowCategories, source.category || cashflowCategories[0] || ""),
+          registryKind: "category",
+          actionLabel: "Cadastrar categoria"
+        })}
+        ${renderCashflowManagedSelectField({
+          id: "cashEntryCostCenter",
+          label: "Centro de custo",
+          optionsHtml: renderRegistrySelectOptions(cashflowCostCenters, source.costCenter || cashflowCostCenters[0] || ""),
+          registryKind: "costCenter",
+          actionLabel: "Cadastrar centro de custo"
+        })}
         <label class="login-field" for="cashEntryStatus">
           <span>Status</span>
           <select id="cashEntryStatus" required>
-            ${renderSelectOptions(["Confirmado", "Pendente"], entry ? getCashEntryStatus(entry) : "Confirmado")}
+            ${renderSelectOptions(["Confirmado", "Pendente"], source.status || (entry ? getCashEntryStatus(entry) : "Confirmado"))}
           </select>
         </label>
         <label class="switch-field cashflow-schedule-switch" for="cashEntryScheduled">
@@ -6340,12 +9189,12 @@ function renderCashflowDialogForm(entry) {
         </label>
         <label class="login-field cashflow-schedule-field" for="cashEntryScheduledDate">
           <span>Data agendada</span>
-          <input id="cashEntryScheduledDate" type="date" value="${escapeHtml(entry?.scheduledDate || entry?.date || getTodayISO())}" />
+          <input id="cashEntryScheduledDate" type="date" value="${escapeHtml(source.scheduledDate || source.date || getTodayISO())}" />
         </label>
         <label class="login-field cashflow-schedule-field" for="cashEntryScheduledTime">
           <span>Hora agendada</span>
           <select id="cashEntryScheduledTime">
-            ${getScheduleTimeOptionsHtml(entry?.scheduledTime || entry?.time || "")}
+            ${getScheduleTimeOptionsHtml(source.scheduledTime || source.time || "")}
           </select>
         </label>
         <label class="login-field cashflow-attachment-field" for="cashEntryAttachment">
@@ -6380,6 +9229,24 @@ function renderCashflowDialogForm(entry) {
   `;
 }
 
+function renderCashflowManagedSelectField({ id, label, optionsHtml, registryKind, actionLabel }) {
+  return `
+    <div class="cashflow-managed-select">
+      <div class="cashflow-managed-select-head">
+        <span>${escapeHtml(label)}</span>
+        <button class="icon-button cashflow-add-option-button" type="button" data-open-cashflow-dialog-registry="${escapeHtml(registryKind)}" aria-label="${escapeHtml(actionLabel)}">
+          <span data-icon="plus"></span>
+        </button>
+      </div>
+      <label class="login-field" for="${escapeHtml(id)}">
+        <select id="${escapeHtml(id)}" required>
+          ${optionsHtml}
+        </select>
+      </label>
+    </div>
+  `;
+}
+
 function bindCashflowDialogControls(dialog) {
   bindCurrencyInputs(dialog);
   $("#closeCashflowDialog", dialog).addEventListener("click", closeCashflowDialog);
@@ -6389,10 +9256,35 @@ function bindCashflowDialogControls(dialog) {
   $("#downloadCashAttachmentButton", dialog).addEventListener("click", () => downloadCashEntryAttachment(dialog));
   $("#deleteCashEntryFromDialogButton", dialog)?.addEventListener("click", () => deleteCashEntry(selectedCashEntryId));
   $("#cancelScheduledCashFromDialogButton", dialog)?.addEventListener("click", () => cancelScheduledCashEntry(selectedCashEntryId));
+  $$("[data-open-cashflow-dialog-registry]", dialog).forEach((button) => {
+    button.addEventListener("click", () => {
+      cashflowDialogDraft = getCashflowDialogDraft(dialog);
+      openCashflowRegistryDialog(button.dataset.openCashflowDialogRegistry, { returnToEntry: true });
+    });
+  });
   $("#cashflowForm", dialog).addEventListener("submit", (event) => {
     event.preventDefault();
     saveCashEntry(dialog);
   });
+}
+
+function getCashflowDialogDraft(dialog) {
+  const rawValue = getCurrencyInputValue("#cashEntryValue", dialog);
+  const type = $("#cashEntryType", dialog)?.value || "Entrada";
+  const signedValue = type === "Saída" ? -Math.abs(rawValue) : Math.abs(rawValue);
+  return {
+    type,
+    value: signedValue,
+    description: $("#cashEntryDescription", dialog)?.value.trim() || "",
+    method: $("#cashEntryMethod", dialog)?.value || "Pix",
+    category: $("#cashEntryCategory", dialog)?.value || cashflowCategories[0] || "",
+    costCenter: $("#cashEntryCostCenter", dialog)?.value || cashflowCostCenters[0] || "",
+    status: $("#cashEntryStatus", dialog)?.value || "Confirmado",
+    scheduledDate: $("#cashEntryScheduled", dialog)?.checked ? $("#cashEntryScheduledDate", dialog)?.value || getTodayISO() : "",
+    scheduledTime: $("#cashEntryScheduled", dialog)?.checked ? $("#cashEntryScheduledTime", dialog)?.value || "" : "",
+    date: $("#cashEntryScheduledDate", dialog)?.value || getTodayISO(),
+    time: $("#cashEntryScheduledTime", dialog)?.value || ""
+  };
 }
 
 function updateCashflowScheduleFields(dialog) {
@@ -6547,10 +9439,71 @@ function downloadCashEntryAttachment(dialog) {
   );
 }
 
-function exportCashflowCsv() {
+function exportCashflowReport(dialog) {
+  const startDate = $("#cashflowExportStartDate", dialog).value;
+  const endDate = $("#cashflowExportEndDate", dialog).value;
+  const movement = $("#cashflowExportMovement", dialog).value;
+  const format = $("#cashflowExportFormat", dialog).value;
+
+  if (!startDate || !endDate) {
+    showToast("Informe o período do relatório.");
+    return;
+  }
+  if (startDate > endDate) {
+    showToast("A data inicial não pode ser maior que a data final.");
+    return;
+  }
+
+  const filters = { startDate, endDate, movement };
+  if (format === "csv") exportCashflowCsv(filters);
+  else exportCashflowPdf(filters);
+
+  closeCashflowExportDialog();
+}
+
+function getCashflowReportEntries({ startDate, endDate, movement }) {
+  return cashEntries.filter((entry) => {
+    const reportDate = getCashEntryReportDate(entry);
+    if (!reportDate || reportDate < startDate || reportDate > endDate) return false;
+    const status = normalizeText(getCashEntryStatus(entry));
+    const isDeleted = Boolean(entry.deleted);
+    if (movement === "todos") return true;
+    if (movement === "entradas") return !isDeleted && entry.type === "Entrada";
+    if (movement === "saidas") return !isDeleted && entry.type === "Saída";
+    if (movement === "pendentes") return !isDeleted && status === "pendente";
+    if (movement === "confirmados") return !isDeleted && status === "confirmado";
+    if (movement === "agendados") return !isDeleted && Boolean(entry.scheduledDate);
+    if (movement === "excluidos") return isDeleted;
+    return true;
+  });
+}
+
+function getCashEntryReportDate(entry) {
+  return entry.scheduledDate || entry.date || "";
+}
+
+function getCashflowMovementLabel(movement) {
+  const labels = {
+    todos: "Todos os movimentos",
+    entradas: "Entradas",
+    saidas: "Saídas",
+    pendentes: "Pendentes",
+    confirmados: "Confirmados",
+    agendados: "Agendados",
+    excluidos: "Excluídos"
+  };
+  return labels[movement] || "Todos os movimentos";
+}
+
+function getCashflowReportFileSuffix(filters) {
+  return `${filters.startDate}-a-${filters.endDate}-${filters.movement}`;
+}
+
+function exportCashflowCsv(filters = { startDate: "0000-01-01", endDate: "9999-12-31", movement: "todos" }) {
+  const entries = getCashflowReportEntries(filters);
   const rows = [
     ["ID", "Data", "Hora", "Tipo", "Descrição", "Categoria", "Centro de custo", "Forma", "Valor", "Status", "Agendado", "Excluído", "Comprovante"],
-    ...cashEntries.map((entry) => [
+    ...entries.map((entry) => [
       entry.id,
       entry.date || "",
       entry.time || "",
@@ -6567,19 +9520,30 @@ function exportCashflowCsv() {
     ])
   ];
   const csv = rows.map((row) => row.map(formatCsvCell).join(";")).join("\n");
-  downloadTextFile(`fluxo-caixa-${getTodayISO()}.csv`, csv, "text/csv;charset=utf-8");
+  downloadTextFile(`fluxo-caixa-${getCashflowReportFileSuffix(filters)}.csv`, csv, "text/csv;charset=utf-8");
 }
 
-function exportCashflowPdf() {
+function exportCashflowPdf(filters = { startDate: "0000-01-01", endDate: "9999-12-31", movement: "todos" }) {
+  const entries = getCashflowReportEntries(filters);
+  const total = entries.reduce((sum, entry) => sum + Number(entry.value || 0), 0);
+  const period = `${formatDateBR(filters.startDate)} a ${formatDateBR(filters.endDate)}`;
+  const movementLabel = getCashflowMovementLabel(filters.movement);
   const lines = [
-    `Relatório de fluxo de caixa - ${formatDateBR(getTodayISO())}`,
+    `Relatório de fluxo de caixa - ${period}`,
+    `Movimentos incluídos: ${movementLabel}`,
+    `Total de lançamentos: ${entries.length}`,
+    `Saldo do relatório: ${formatCurrency(total)}`,
     "",
-    ...cashEntries.map(
+    ...entries.map(
       (entry) =>
         `${entry.id}. ${entry.type} | ${entry.description} | ${entry.category || "-"} | ${entry.costCenter || "-"} | ${formatCurrency(entry.value)} | ${getCashEntryStatus(entry)}${entry.scheduledDate ? " | agendado" : ""}${entry.deleted ? " | excluído" : ""}`
     )
   ];
-  downloadPdfFile(`fluxo-caixa-${getTodayISO()}.pdf`, "Relatório de fluxo de caixa", lines);
+  downloadPdfFile(`fluxo-caixa-${getCashflowReportFileSuffix(filters)}.pdf`, "Relatório de fluxo de caixa", lines, {
+    subtitle: "Fluxo de caixa",
+    category: "Financeiro",
+    summary: `${entries.length} lançamento(s) no período ${period}, filtrado por ${movementLabel.toLowerCase()}.`
+  });
 }
 
 function getCashflowActiveEntries() {
@@ -6596,7 +9560,11 @@ function getCashEntryById(id) {
 }
 
 function getCashflowPaymentMethods() {
-  return [...new Set([...paymentMethods.filter((method) => method !== "Faturado"), "Faturado", "Carteira", "Boleto"])];
+  return [...paymentMethods];
+}
+
+function getSettlementPaymentMethods() {
+  return [...new Set([...paymentMethods.filter((method) => method !== "Faturado"), "Depósito bancário"])];
 }
 
 function getAttachmentTypeLabel(fileName) {
@@ -6625,6 +9593,38 @@ function downloadTextFile(fileName, content, mimeType) {
 
 function downloadPdfFile(fileName, title, lines, options = {}) {
   const logoImage = getPdfLogoImage();
+  if (options.reportLayout === "operatorProduction") {
+    const pdf = createOperatorProductionPdfDocument({
+      fileName,
+      title,
+      operator: options.operator,
+      subtitle: Object.prototype.hasOwnProperty.call(options, "subtitle") ? options.subtitle : getPdfDocumentSubtitle(title),
+      documentNumber: options.documentNumber || createPdfDocumentNumber(fileName),
+      responsible: options.responsible || activeSessionUser || "Sistema LavaPrime",
+      category: options.category || getPdfDocumentCategory(title),
+      summary: options.summary || getPdfDocumentSummary(title, lines),
+      reportTarget: options.reportTarget || getPdfDocumentReportTarget({ fileName, title, subtitle: options.subtitle, category: options.category })
+    }, logoImage);
+    downloadTextFile(fileName, pdf, "application/pdf");
+    return;
+  }
+
+  if (options.reportLayout === "operatorCommission") {
+    const pdf = createOperatorCommissionPdfDocument({
+      fileName,
+      title,
+      operator: options.operator,
+      subtitle: Object.prototype.hasOwnProperty.call(options, "subtitle") ? options.subtitle : getPdfDocumentSubtitle(title),
+      documentNumber: options.documentNumber || createPdfDocumentNumber(fileName),
+      responsible: options.responsible || activeSessionUser || "Sistema LavaPrime",
+      category: options.category || getPdfDocumentCategory(title),
+      summary: options.summary || getPdfDocumentSummary(title, lines),
+      reportTarget: options.reportTarget || getPdfDocumentReportTarget({ fileName, title, subtitle: options.subtitle, category: options.category })
+    }, logoImage);
+    downloadTextFile(fileName, pdf, "application/pdf");
+    return;
+  }
+
   const pdf = createStandardPdfDocument({
     fileName,
     title,
@@ -6633,7 +9633,8 @@ function downloadPdfFile(fileName, title, lines, options = {}) {
     documentNumber: options.documentNumber || createPdfDocumentNumber(fileName),
     responsible: options.responsible || activeSessionUser || "Sistema LavaPrime",
     category: options.category || getPdfDocumentCategory(title),
-    summary: options.summary || getPdfDocumentSummary(title, lines)
+    summary: options.summary || getPdfDocumentSummary(title, lines),
+    reportTarget: options.reportTarget || getPdfDocumentReportTarget({ fileName, title, subtitle: options.subtitle, category: options.category })
   }, logoImage);
   downloadTextFile(fileName, pdf, "application/pdf");
 }
@@ -6676,6 +9677,807 @@ function createStandardPdfDocument(document, logoImage = null) {
   return buildPdfDocument(objects);
 }
 
+function createOperatorProductionPdfDocument(document, logoImage = null) {
+  const operator = document.operator || {};
+  const productionRows = getOperatorProductionRows(operator);
+  const stats = getOperatorProductionReportStats(productionRows);
+  const pdfRows = createOperatorProductionPdfRows(productionRows);
+  const pages = paginateOperatorProductionPdfRows(pdfRows);
+  const imageObjectNumber = logoImage ? 6 : null;
+  const firstPageObjectNumber = logoImage ? 7 : 6;
+  const pageObjects = pages.map((pageRows, index) =>
+    createOperatorProductionPdfPageContent(document, operator, stats, pageRows, index + 1, pages.length, logoImage)
+  );
+  const kids = pages.map((_, index) => `${firstPageObjectNumber + index * 2} 0 R`).join(" ");
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    `<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>"
+  ];
+
+  if (logoImage) objects.push(createPdfImageObject(logoImage));
+
+  pageObjects.forEach((content, index) => {
+    const pageNumber = firstPageObjectNumber + index * 2;
+    const contentNumber = pageNumber + 1;
+    objects.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pdfDocumentStandard.page.width} ${pdfDocumentStandard.page.height}] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >>${imageObjectNumber ? ` /XObject << /Logo ${imageObjectNumber} 0 R >>` : ""} >> /Contents ${contentNumber} 0 R >>`
+    );
+    objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+  });
+
+  return buildPdfDocument(objects);
+}
+
+function getOperatorProductionReportStats(rows) {
+  const totals = rows.reduce(
+    (result, row) => ({
+      services: result.services + 1,
+      revenue: result.revenue + row.value,
+      commission: result.commission + row.commission,
+      netRevenue: result.netRevenue + row.netValue,
+      minutes: result.minutes + parseServiceDurationMinutes(row.duration)
+    }),
+    { services: 0, revenue: 0, commission: 0, netRevenue: 0, minutes: 0 }
+  );
+  const sortedDates = [...new Set(rows.map((row) => row.date).filter(Boolean))].sort();
+  const periodLabel = sortedDates.length
+    ? sortedDates[0] === sortedDates[sortedDates.length - 1]
+      ? formatDateBR(sortedDates[0])
+      : `${formatDateBR(sortedDates[0])} a ${formatDateBR(sortedDates[sortedDates.length - 1])}`
+    : "Sem produção";
+  const byDate = sortedDates.map((date) => {
+    const dateRows = rows.filter((row) => row.date === date);
+    return {
+      date,
+      services: dateRows.length,
+      revenue: dateRows.reduce((total, row) => total + row.value, 0),
+      netRevenue: dateRows.reduce((total, row) => total + row.netValue, 0)
+    };
+  });
+
+  return {
+    ...totals,
+    averageTicket: totals.services ? totals.revenue / totals.services : 0,
+    averageMinutes: totals.services ? totals.minutes / totals.services : 0,
+    profitabilityRate: totals.revenue ? totals.netRevenue / totals.revenue : 0,
+    periodLabel,
+    byDate
+  };
+}
+
+function createOperatorProductionPdfRows(rows) {
+  if (!rows.length) {
+    return [
+      {
+        empty: true,
+        serviceLines: ["Sem servicos registrados para o operador selecionado."],
+        height: 30
+      }
+    ];
+  }
+
+  return rows.map((row) => {
+    const serviceLines = wrapPdfTextByWidth(row.service, 172, 7.8);
+    return {
+      ...row,
+      serviceLines,
+      height: Math.max(24, 13 + serviceLines.length * 9.5)
+    };
+  });
+}
+
+function paginateOperatorProductionPdfRows(rows) {
+  const firstPageCapacity = 292;
+  const continuationCapacity = 580;
+  const pages = [[]];
+  let capacity = firstPageCapacity;
+  let usedHeight = 0;
+
+  rows.forEach((row) => {
+    const rowHeight = row.height || 24;
+    if (usedHeight + rowHeight > capacity && pages[pages.length - 1].length) {
+      pages.push([]);
+      capacity = continuationCapacity;
+      usedHeight = 0;
+    }
+    pages[pages.length - 1].push(row);
+    usedHeight += rowHeight;
+  });
+
+  return pages;
+}
+
+function createOperatorProductionPdfPageContent(document, operator, stats, rows, pageNumber, pageCount, logoImage = null) {
+  const commands = [];
+  const { colors, page } = pdfDocumentStandard;
+  addPdfRect(commands, 0, 0, page.width, page.height, { fill: colors.white });
+  drawOperatorProductionLetterhead(commands, document, logoImage);
+
+  if (pageNumber === 1) {
+    drawOperatorProductionTitleBox(commands, document);
+    drawOperatorProductionMetaGrid(commands, operator, stats);
+    drawOperatorProductionMetrics(commands, stats);
+    drawOperatorProductionCharts(commands, stats);
+    drawOperatorSectionTitle(commands, "SERVICOS EXECUTADOS", 408);
+    drawOperatorProductionTable(commands, rows, 398);
+  } else {
+    drawOperatorProductionContinuationBox(commands, document, operator, pageNumber);
+    drawOperatorSectionTitle(commands, "SERVICOS EXECUTADOS (CONTINUACAO)", 694);
+    drawOperatorProductionTable(commands, rows, 686);
+  }
+
+  drawPdfDocumentFooter(commands, document, pageNumber, pageCount);
+  return commands.join("\n");
+}
+
+function drawOperatorProductionLetterhead(commands, document, logoImage) {
+  const { colors } = pdfDocumentStandard;
+  const reportName = getBusinessReportDocumentName(document.reportTarget);
+  const contactLine = getBusinessDocumentContactLine(document.reportTarget);
+  if (logoImage) {
+    const logoSize = getPdfLogoDrawSize(logoImage);
+    addPdfImage(commands, "Logo", 45, 785, logoSize.width, logoSize.height);
+    addPdfText(commands, truncatePdfText(reportName, 42), 45, 775, { size: 8.5, font: "F2", color: colors.petrol });
+    addPdfText(commands, truncatePdfText(contactLine, 58), 45, 764, { size: 7.2, color: colors.muted });
+  } else {
+    addPdfText(commands, reportName, 45, 805, { size: 22, font: "F2", color: colors.petrol });
+    addPdfRect(commands, 45, 792, 94, 3, { fill: colors.cyan });
+    addPdfText(commands, truncatePdfText(contactLine || "Sistema de gestao operacional", 64), 45, 779, {
+      size: 8,
+      color: colors.muted
+    });
+  }
+  addPdfText(commands, "RELATORIO OPERACIONAL", 522, 808, { size: 8, font: "F2", color: colors.cyan, align: "right" });
+  addPdfText(commands, `${normalizePdfText(document.category)} | ${new Date().toLocaleDateString("pt-BR")}`, 550, 794, {
+    size: 8,
+    color: colors.muted,
+    align: "right"
+  });
+  addPdfLine(commands, 45, 768, 550, 768, colors.cyan, 1.8);
+}
+
+function drawOperatorProductionTitleBox(commands, document) {
+  const { colors } = pdfDocumentStandard;
+  const documentCellX = 420;
+  const documentCellWidth = 130;
+  const documentCellCenterX = documentCellX + documentCellWidth / 2;
+  addPdfRect(commands, 45, 704, 505, 46, { fill: colors.ice, stroke: colors.border });
+  addPdfRect(commands, 45, 748, 505, 2, { fill: colors.cyan });
+  addPdfLine(commands, documentCellX, 704, documentCellX, 750, colors.border, 0.8);
+  const subtitle = normalizePdfText(document.subtitle);
+  addPdfText(commands, truncatePdfText(document.title, 34), 59, subtitle ? 728 : 721, { size: 17, font: "F2", color: colors.petrol });
+  if (subtitle) addPdfText(commands, truncatePdfText(subtitle, 64), 59, 712, { size: 8.6, font: "F3", color: colors.muted });
+  addPdfText(commands, "DOCUMENTO", documentCellCenterX, 729, { size: 7.5, font: "F2", color: colors.cyan, align: "center" });
+  addPdfText(commands, truncatePdfText(document.documentNumber, 18), documentCellCenterX, 712, {
+    size: getPdfTextSizeToFit(document.documentNumber, documentCellWidth - 24, 10.2, 7.6),
+    font: "F2",
+    color: colors.petrol,
+    align: "center"
+  });
+}
+
+function drawOperatorProductionMetaGrid(commands, operator, stats) {
+  const { colors } = pdfDocumentStandard;
+  const rows = [
+    ["Operador", operator.name || "-", "Periodo", stats.periodLabel],
+    ["CPF", operator.cpf || "-", "Regra", formatCommissionRule(operator)],
+    ["Funcao", operator.role || operator.accessProfile || "-", "Ticket medio", formatCurrency(stats.averageTicket)]
+  ];
+  const x = 45;
+  const y = 646;
+  const labelWidth = 58;
+  const valueWidth = 194.5;
+  const cellHeight = 16;
+
+  rows.forEach((row, rowIndex) => {
+    const rowY = y + (rows.length - 1 - rowIndex) * cellHeight;
+    [0, 2].forEach((labelIndex, groupIndex) => {
+      const groupX = x + groupIndex * (labelWidth + valueWidth);
+      addPdfRect(commands, groupX, rowY, labelWidth, cellHeight, { fill: colors.soft, stroke: colors.border, lineWidth: 0.45 });
+      addPdfRect(commands, groupX + labelWidth, rowY, valueWidth, cellHeight, { fill: colors.white, stroke: colors.border, lineWidth: 0.45 });
+      addPdfText(commands, truncatePdfText(row[labelIndex], 12), groupX + 7, rowY + 5.5, { size: 6.5, font: "F2", color: colors.cyan });
+      addPdfText(commands, truncatePdfText(row[labelIndex + 1], 32), groupX + labelWidth + 7, rowY + 5.5, {
+        size: 7,
+        color: colors.petrol
+      });
+    });
+  });
+}
+
+function drawOperatorProductionMetrics(commands, stats) {
+  const metrics = [
+    { label: "Servicos", value: String(stats.services), detail: `${formatServiceDurationMinutes(stats.averageMinutes)} medio` },
+    { label: "Produzido", value: formatCurrency(stats.revenue), detail: `${formatCurrency(stats.averageTicket)} ticket` },
+    { label: "Comissao", value: formatCurrency(stats.commission), detail: "descontada do bruto" },
+    { label: "Liquido", value: formatCurrency(stats.netRevenue), detail: `${Math.round(stats.profitabilityRate * 100)}% rentabilidade` }
+  ];
+  const gap = 8;
+  const cardWidth = (505 - gap * 3) / 4;
+  metrics.forEach((metric, index) => {
+    drawOperatorMetricCard(commands, 45 + index * (cardWidth + gap), 580, cardWidth, 52, metric);
+  });
+}
+
+function drawOperatorMetricCard(commands, x, y, width, height, metric) {
+  const { colors } = pdfDocumentStandard;
+  addPdfRect(commands, x, y, width, height, { fill: colors.ice, stroke: colors.border, lineWidth: 0.6 });
+  addPdfRect(commands, x, y + height - 3, width, 3, { fill: colors.cyan });
+  addPdfText(commands, truncatePdfText(metric.label, 18), x + 9, y + height - 17, { size: 7, font: "F2", color: colors.muted });
+  const valueSize = getPdfTextSizeToFit(metric.value, width - 18, 12, 8.5);
+  addPdfText(commands, truncatePdfText(metric.value, 22), x + 9, y + 19, { size: valueSize, font: "F2", color: colors.petrol });
+  addPdfText(commands, truncatePdfText(metric.detail, 26), x + 9, y + 7, { size: 6.6, color: colors.muted });
+}
+
+function drawOperatorProductionCharts(commands, stats) {
+  drawOperatorPerformanceChart(commands, 45, 438, 248, 122, stats);
+  drawOperatorProfitabilityChart(commands, 302, 438, 248, 122, stats);
+}
+
+function drawOperatorPerformanceChart(commands, x, y, width, height, stats) {
+  const { colors } = pdfDocumentStandard;
+  const data = stats.byDate.slice(-6);
+  const maxValue = Math.max(1, ...data.map((item) => item.revenue));
+  const plotX = x + 14;
+  const plotY = y + 30;
+  const plotWidth = width - 28;
+  const plotHeight = 52;
+  const slot = data.length ? plotWidth / data.length : plotWidth;
+  const barWidth = Math.min(22, slot * 0.42);
+
+  addPdfRect(commands, x, y, width, height, { fill: colors.white, stroke: colors.border, lineWidth: 0.6 });
+  addPdfText(commands, "PERFORMANCE POR DATA", x + 14, y + height - 19, { size: 8, font: "F2", color: colors.petrol });
+  addPdfText(commands, "Barras: produzido / liquido", x + 14, y + height - 33, { size: 6.6, color: colors.muted });
+  addPdfLine(commands, plotX, plotY, plotX + plotWidth, plotY, colors.border, 0.5);
+
+  if (!data.length) {
+    addPdfText(commands, "Sem dados para graficos.", x + 14, y + 56, { size: 7.2, color: colors.muted });
+    return;
+  }
+
+  data.forEach((item, index) => {
+    const centerX = plotX + slot * index + slot / 2;
+    const revenueHeight = Math.max(2, (item.revenue / maxValue) * plotHeight);
+    const netHeight = Math.max(2, (Math.max(0, item.netRevenue) / maxValue) * plotHeight);
+    addPdfRect(commands, centerX - barWidth / 2, plotY, barWidth, revenueHeight, { fill: colors.soft });
+    addPdfRect(commands, centerX - barWidth / 2, plotY, barWidth, netHeight, { fill: colors.cyan });
+    addPdfText(commands, formatDateBR(item.date).slice(0, 5), centerX, y + 16, { size: 6.2, color: colors.muted, align: "center" });
+  });
+}
+
+function drawOperatorProfitabilityChart(commands, x, y, width, height, stats) {
+  const { colors } = pdfDocumentStandard;
+  const safeRevenue = Math.max(0, stats.revenue);
+  const commissionWidth = safeRevenue ? Math.max(0, Math.min(1, stats.commission / safeRevenue)) : 0;
+  const netWidth = safeRevenue ? Math.max(0, Math.min(1, stats.netRevenue / safeRevenue)) : 0;
+  const barX = x + 14;
+  const barY = y + 53;
+  const barWidth = width - 28;
+  const barHeight = 18;
+
+  addPdfRect(commands, x, y, width, height, { fill: colors.white, stroke: colors.border, lineWidth: 0.6 });
+  addPdfText(commands, "RENTABILIDADE DO OPERADOR", x + 14, y + height - 19, { size: 8, font: "F2", color: colors.petrol });
+  addPdfText(commands, "Receita depois da comissao do periodo", x + 14, y + height - 33, { size: 6.6, color: colors.muted });
+  addPdfRect(commands, barX, barY, barWidth, barHeight, { fill: colors.soft });
+  addPdfRect(commands, barX, barY, barWidth * netWidth, barHeight, { fill: colors.cyan });
+  addPdfRect(commands, barX + barWidth * netWidth, barY, barWidth * commissionWidth, barHeight, { fill: "#B7F000" });
+  addPdfText(commands, `Liquido ${formatCurrency(stats.netRevenue)}`, barX, y + 31, { size: 7.1, font: "F2", color: colors.petrol });
+  addPdfText(commands, `Comissao ${formatCurrency(stats.commission)}`, barX, y + 18, { size: 7.1, color: colors.muted });
+  addPdfText(commands, `${Math.round(stats.profitabilityRate * 100)}%`, x + width - 14, y + 31, {
+    size: 16,
+    font: "F2",
+    color: colors.petrol,
+    align: "right"
+  });
+}
+
+function drawOperatorProductionContinuationBox(commands, document, operator, pageNumber) {
+  const { colors } = pdfDocumentStandard;
+  addPdfRect(commands, 45, 724, 505, 28, { fill: colors.ice, stroke: colors.border, lineWidth: 0.6 });
+  addPdfRect(commands, 45, 750, 505, 2, { fill: colors.cyan });
+  addPdfText(commands, truncatePdfText(document.title, 40), 59, 736, { size: 12, font: "F2", color: colors.petrol });
+  addPdfText(commands, `Continuacao ${pageNumber}`, 535, 736, {
+    size: 7.5,
+    color: colors.muted,
+    align: "right"
+  });
+}
+
+function drawOperatorSectionTitle(commands, title, y) {
+  const { colors } = pdfDocumentStandard;
+  addPdfRect(commands, 45, y, 505, 20, { fill: colors.petrol });
+  addPdfText(commands, title, 59, y + 7, { size: 8.4, font: "F2", color: colors.white });
+}
+
+function drawOperatorProductionTable(commands, rows, topY) {
+  const { colors } = pdfDocumentStandard;
+  const tableX = 45;
+  const tableWidth = 505;
+  const headerHeight = 24;
+  const columns = [
+    { key: "date", label: "DATA", x: tableX, width: 62, align: "left" },
+    { key: "service", label: "SERVICO REALIZADO", x: tableX + 62, width: 186, align: "left" },
+    { key: "duration", label: "TEMPO", x: tableX + 248, width: 54, align: "center" },
+    { key: "value", label: "VALOR PRODUZIDO", x: tableX + 302, width: 90, align: "right" },
+    { key: "netValue", label: "LIQUIDO OPERADOR", x: tableX + 392, width: 113, align: "right" }
+  ];
+  let y = topY;
+
+  addPdfRect(commands, tableX, y - headerHeight, tableWidth, headerHeight, { fill: colors.petrol });
+  columns.forEach((column) => {
+    const textX = getOperatorTableTextX(column, column.key === "netValue" ? 17 : 7);
+    addPdfText(commands, column.label, textX, y - 15, {
+      size: column.key === "netValue" ? 6.2 : 6.8,
+      font: "F2",
+      color: colors.white,
+      align: column.align === "right" ? "right" : column.align === "center" ? "center" : "left"
+    });
+  });
+  y -= headerHeight;
+
+  rows.forEach((row, index) => {
+    const rowHeight = row.height || 24;
+    const rowBottom = y - rowHeight;
+    addPdfRect(commands, tableX, rowBottom, tableWidth, rowHeight, { fill: index % 2 === 0 ? colors.white : "#F8FBFC" });
+
+    if (row.empty) {
+      addPdfText(commands, row.serviceLines[0], tableX + 9, y - 16, { size: 8, font: "F3", color: colors.muted });
+      y = rowBottom;
+      return;
+    }
+
+    const baseline = y - 15;
+    addPdfText(commands, formatDateBR(row.date), columns[0].x + 7, baseline, { size: 7.6, color: colors.petrol });
+    row.serviceLines.forEach((line, lineIndex) => {
+      addPdfText(commands, truncatePdfText(line, 42), columns[1].x + 7, baseline - lineIndex * 9.5, {
+        size: 7.6,
+        color: colors.petrol
+      });
+    });
+    addPdfText(commands, truncatePdfText(row.duration, 11), columns[2].x + columns[2].width / 2, baseline, {
+      size: 7.4,
+      color: colors.muted,
+      align: "center"
+    });
+    addPdfText(commands, formatCurrency(row.value), columns[3].x + columns[3].width - 11, baseline, {
+      size: getPdfTextSizeToFit(formatCurrency(row.value), columns[3].width - 18, 7.2, 6.2),
+      color: colors.petrol,
+      align: "right"
+    });
+    addPdfText(commands, formatCurrency(row.netValue), columns[4].x + columns[4].width - 17, baseline, {
+      size: getPdfTextSizeToFit(formatCurrency(row.netValue), columns[4].width - 24, 7.2, 6.2),
+      font: "F2",
+      color: row.netValue < 0 ? "#8F1F1F" : colors.petrol,
+      align: "right"
+    });
+    y = rowBottom;
+  });
+}
+
+function getOperatorTableTextX(column, padding) {
+  if (column.align === "right") return column.x + column.width - padding;
+  if (column.align === "center") return column.x + column.width / 2;
+  return column.x + padding;
+}
+
+function wrapPdfTextByWidth(value, width, size) {
+  const maxLength = Math.max(8, Math.floor(width / (size * 0.48)));
+  return wrapPdfLine(value, maxLength);
+}
+
+function getPdfTextSizeToFit(value, maxWidth, preferredSize, minSize) {
+  let size = preferredSize;
+  while (size > minSize && estimatePdfTextWidth(value, size) > maxWidth) {
+    size -= 0.4;
+  }
+  return Math.max(minSize, size);
+}
+
+function createOperatorCommissionPdfDocument(document, logoImage = null) {
+  const operator = document.operator || {};
+  const report = getOperatorCommissionReportData(operator);
+  const pdfRows = createOperatorCommissionPdfRows(report.rows);
+  const pages = paginateOperatorCommissionPdfRows(pdfRows);
+  const imageObjectNumber = logoImage ? 6 : null;
+  const firstPageObjectNumber = logoImage ? 7 : 6;
+  const pageObjects = pages.map((pageData, index) =>
+    createOperatorCommissionPdfPageContent(document, operator, report, pageData, index + 1, pages.length, logoImage)
+  );
+  const kids = pages.map((_, index) => `${firstPageObjectNumber + index * 2} 0 R`).join(" ");
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    `<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>"
+  ];
+
+  if (logoImage) objects.push(createPdfImageObject(logoImage));
+
+  pageObjects.forEach((content, index) => {
+    const pageNumber = firstPageObjectNumber + index * 2;
+    const contentNumber = pageNumber + 1;
+    objects.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pdfDocumentStandard.page.width} ${pdfDocumentStandard.page.height}] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >>${imageObjectNumber ? ` /XObject << /Logo ${imageObjectNumber} 0 R >>` : ""} >> /Contents ${contentNumber} 0 R >>`
+    );
+    objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+  });
+
+  return buildPdfDocument(objects);
+}
+
+function getOperatorCommissionReportData(operator) {
+  const rows = getOperatorProductionRows(operator).map((row) => ({
+    ...row,
+    commissionValue: row.commission
+  }));
+  const deductions = getOperatorCommissionDeductions(operator);
+  const grossCommission = rows.reduce((total, row) => total + row.commissionValue, 0);
+  const deductionsTotal = deductions.reduce((total, item) => total + item.value, 0);
+  const netPayable = Math.max(0, grossCommission - deductionsTotal);
+  const sortedDates = [...new Set(rows.map((row) => row.date).filter(Boolean))].sort();
+  const periodLabel = sortedDates.length
+    ? sortedDates[0] === sortedDates[sortedDates.length - 1]
+      ? formatDateBR(sortedDates[0])
+      : `${formatDateBR(sortedDates[0])} a ${formatDateBR(sortedDates[sortedDates.length - 1])}`
+    : "Sem comissao";
+
+  return {
+    rows,
+    deductions,
+    grossCommission,
+    deductionsTotal,
+    netPayable,
+    services: rows.length,
+    periodLabel,
+    amountWords: formatCurrencyInWordsPTBR(netPayable)
+  };
+}
+
+function getOperatorCommissionDeductions(operator) {
+  if (!operator) return [];
+  const sources = [
+    { items: operator.productPurchases, type: "Produtos adquiridos" },
+    { items: operator.advances, type: "Adiantamentos" },
+    { items: operator.discounts, type: "Descontos" },
+    { items: operator.deductions, type: "Outros descontos" }
+  ];
+
+  return sources.flatMap((source) =>
+    (Array.isArray(source.items) ? source.items : [])
+      .map((item) => normalizeOperatorDeductionEntry(item, source.type))
+      .filter((item) => item.value > 0)
+  );
+}
+
+function normalizeOperatorDeductionEntry(item, fallbackType) {
+  const value = Math.abs(Number(item?.value ?? item?.amount ?? item?.total ?? 0));
+  return {
+    date: item?.date || getTodayISO(),
+    type: item?.type || fallbackType,
+    description: item?.description || item?.name || fallbackType,
+    value
+  };
+}
+
+function createOperatorCommissionPdfRows(rows) {
+  if (!rows.length) {
+    return [
+      {
+        empty: true,
+        serviceLines: ["Sem servicos com comissao para o operador selecionado."],
+        height: 30
+      }
+    ];
+  }
+
+  return rows.map((row) => {
+    const serviceLines = wrapPdfTextByWidth(row.service, 238, 7.7);
+    return {
+      ...row,
+      serviceLines,
+      height: Math.max(24, 13 + serviceLines.length * 9.5)
+    };
+  });
+}
+
+function paginateOperatorCommissionPdfRows(rows) {
+  const pages = [{ rows: [], receipt: false }];
+  let pageIndex = 0;
+  let usedHeight = 0;
+
+  rows.forEach((row) => {
+    const rowHeight = row.height || 24;
+    const capacity = getOperatorCommissionPageRowCapacity(pageIndex, false);
+    if (usedHeight + rowHeight > capacity && pages[pageIndex].rows.length) {
+      pages.push({ rows: [], receipt: false });
+      pageIndex += 1;
+      usedHeight = 0;
+    }
+    pages[pageIndex].rows.push(row);
+    usedHeight += rowHeight;
+  });
+
+  let lastPage = pages[pages.length - 1];
+  let lastUsedHeight = getPdfRowsHeight(lastPage.rows);
+  const lastReceiptCapacity = getOperatorCommissionPageRowCapacity(pages.length - 1, true);
+  if (lastUsedHeight <= lastReceiptCapacity) {
+    lastPage.receipt = true;
+    return pages;
+  }
+
+  const receiptPage = { rows: [], receipt: true };
+  const receiptCapacity = getOperatorCommissionPageRowCapacity(pages.length, true);
+  let receiptUsedHeight = 0;
+  while (lastPage.rows.length) {
+    const nextRow = lastPage.rows[lastPage.rows.length - 1];
+    const nextHeight = nextRow.height || 24;
+    if (receiptPage.rows.length && receiptUsedHeight + nextHeight > receiptCapacity) break;
+    if (!receiptPage.rows.length && nextHeight > receiptCapacity) break;
+    receiptPage.rows.unshift(lastPage.rows.pop());
+    receiptUsedHeight += nextHeight;
+  }
+
+  if (!lastPage.rows.length && pages.length > 1) pages.pop();
+  pages.push(receiptPage);
+  return pages;
+}
+
+function getOperatorCommissionPageRowCapacity(pageIndex, hasReceipt) {
+  const tableTop = pageIndex === 0 ? 566 : 704;
+  const headerHeight = 24;
+  if (!hasReceipt) return tableTop - headerHeight - 82;
+  return tableTop - headerHeight - 314;
+}
+
+function getPdfRowsHeight(rows) {
+  return rows.reduce((total, row) => total + (row.height || 24), 0);
+}
+
+function createOperatorCommissionPdfPageContent(document, operator, report, pageData, pageNumber, pageCount, logoImage = null) {
+  const commands = [];
+  const { colors, page } = pdfDocumentStandard;
+  addPdfRect(commands, 0, 0, page.width, page.height, { fill: colors.white });
+  drawOperatorProductionLetterhead(commands, document, logoImage);
+
+  if (pageNumber === 1) {
+    drawOperatorProductionTitleBox(commands, document);
+    drawOperatorCommissionMetaGrid(commands, operator, report);
+    drawOperatorCommissionMetrics(commands, report);
+    drawOperatorCommissionTable(commands, pageData.rows, 566);
+  } else {
+    drawOperatorProductionContinuationBox(commands, document, operator, pageNumber);
+    drawOperatorCommissionTable(commands, pageData.rows, 704);
+  }
+
+  if (pageData.receipt) drawOperatorCommissionReceipt(commands, document, operator, report);
+
+  drawPdfDocumentFooter(commands, document, pageNumber, pageCount);
+  return commands.join("\n");
+}
+
+function drawOperatorCommissionMetaGrid(commands, operator, report) {
+  const { colors } = pdfDocumentStandard;
+  const rows = [
+    ["Operador", operator.name || "-", "Periodo", report.periodLabel],
+    ["CPF", operator.cpf || "-", "Regra", formatCommissionRule(operator)],
+    ["Funcao", operator.role || operator.accessProfile || "-", "Emissor", activeSessionUser || "Sistema LavaPrime"]
+  ];
+  const x = 45;
+  const y = 646;
+  const labelWidth = 58;
+  const valueWidth = 194.5;
+  const cellHeight = 16;
+
+  rows.forEach((row, rowIndex) => {
+    const rowY = y + (rows.length - 1 - rowIndex) * cellHeight;
+    [0, 2].forEach((labelIndex, groupIndex) => {
+      const groupX = x + groupIndex * (labelWidth + valueWidth);
+      addPdfRect(commands, groupX, rowY, labelWidth, cellHeight, { fill: colors.soft, stroke: colors.border, lineWidth: 0.45 });
+      addPdfRect(commands, groupX + labelWidth, rowY, valueWidth, cellHeight, { fill: colors.white, stroke: colors.border, lineWidth: 0.45 });
+      addPdfText(commands, truncatePdfText(row[labelIndex], 12), groupX + 7, rowY + 5.5, { size: 6.5, font: "F2", color: colors.cyan });
+      addPdfText(commands, truncatePdfText(row[labelIndex + 1], 32), groupX + labelWidth + 7, rowY + 5.5, {
+        size: 7,
+        color: colors.petrol
+      });
+    });
+  });
+}
+
+function drawOperatorCommissionMetrics(commands, report) {
+  const metrics = [
+    { label: "Servicos", value: String(report.services), detail: "base de calculo" },
+    { label: "Comissao bruta", value: formatCurrency(report.grossCommission), detail: "sobre servicos" },
+    { label: "Descontos", value: formatCurrency(report.deductionsTotal), detail: "produtos / adiantamentos" },
+    { label: "A pagar", value: formatCurrency(report.netPayable), detail: "valor liquido" }
+  ];
+  const gap = 8;
+  const cardWidth = (505 - gap * 3) / 4;
+  metrics.forEach((metric, index) => {
+    drawOperatorMetricCard(commands, 45 + index * (cardWidth + gap), 580, cardWidth, 52, metric);
+  });
+}
+
+function drawOperatorCommissionTable(commands, rows, topY) {
+  const { colors } = pdfDocumentStandard;
+  const tableX = 45;
+  const tableWidth = 505;
+  const headerHeight = 24;
+  const columns = [
+    { key: "date", label: "DATA", x: tableX, width: 62, align: "left" },
+    { key: "service", label: "SERVICO EXECUTADO", x: tableX + 62, width: 254, align: "left" },
+    { key: "value", label: "BASE", x: tableX + 316, width: 83, align: "right" },
+    { key: "commissionValue", label: "COMISSAO", x: tableX + 399, width: 106, align: "right" }
+  ];
+  let y = topY;
+
+  addPdfRect(commands, tableX, y - headerHeight, tableWidth, headerHeight, { fill: colors.petrol });
+  columns.forEach((column) => {
+    const rightColumn = column.align === "right";
+    addPdfText(commands, column.label, getOperatorTableTextX(column, rightColumn ? 15 : 7), y - 15, {
+      size: column.key === "commissionValue" ? 6.6 : 6.8,
+      font: "F2",
+      color: colors.white,
+      align: rightColumn ? "right" : "left"
+    });
+  });
+  y -= headerHeight;
+
+  rows.forEach((row, index) => {
+    const rowHeight = row.height || 24;
+    const rowBottom = y - rowHeight;
+    addPdfRect(commands, tableX, rowBottom, tableWidth, rowHeight, { fill: index % 2 === 0 ? colors.white : "#F8FBFC" });
+
+    if (row.empty) {
+      addPdfText(commands, row.serviceLines[0], tableX + 9, y - 16, { size: 8, font: "F3", color: colors.muted });
+      y = rowBottom;
+      return;
+    }
+
+    const baseline = y - 15;
+    addPdfText(commands, formatDateBR(row.date), columns[0].x + 7, baseline, { size: 7.5, color: colors.petrol });
+    row.serviceLines.forEach((line, lineIndex) => {
+      addPdfText(commands, truncatePdfText(line, 58), columns[1].x + 7, baseline - lineIndex * 9.5, {
+        size: 7.5,
+        color: colors.petrol
+      });
+    });
+    addPdfText(commands, formatCurrency(row.value), columns[2].x + columns[2].width - 12, baseline, {
+      size: getPdfTextSizeToFit(formatCurrency(row.value), columns[2].width - 20, 7.1, 6.1),
+      color: colors.muted,
+      align: "right"
+    });
+    addPdfText(commands, formatCurrency(row.commissionValue), columns[3].x + columns[3].width - 16, baseline, {
+      size: getPdfTextSizeToFit(formatCurrency(row.commissionValue), columns[3].width - 24, 7.3, 6.2),
+      font: "F2",
+      color: colors.petrol,
+      align: "right"
+    });
+    y = rowBottom;
+  });
+}
+
+function drawOperatorCommissionReceipt(commands, document, operator, report) {
+  const { colors } = pdfDocumentStandard;
+  const x = 45;
+  const y = 82;
+  const width = 505;
+  const height = 218;
+  const adminName = document.responsible || activeSessionUser || "Sistema LavaPrime";
+  const receiptText = `Recebi de ${getBusinessDocumentName()} o valor de ${formatCurrency(report.netPayable)} (${report.amountWords}), referente a Servicos de limpeza e/ou cuidados esteticos em veiculos.`;
+  const receiptLines = wrapPdfTextByWidth(receiptText, width - 28, 7.8);
+
+  addPdfRect(commands, x, y, width, height, { fill: colors.ice, stroke: colors.border, lineWidth: 0.8 });
+  addPdfRect(commands, x, y + height - 3, width, 3, { fill: colors.cyan });
+  addPdfText(commands, "Recibo de Pagamento", x + 14, y + height - 22, {
+    size: 9.2,
+    font: "F2",
+    color: colors.petrol
+  });
+  addPdfText(commands, `Valor liquido recebido: ${formatCurrency(report.netPayable)}`, x + width - 14, y + height - 22, {
+    size: getPdfTextSizeToFit(`Valor liquido recebido: ${formatCurrency(report.netPayable)}`, 180, 8, 6.2),
+    font: "F2",
+    color: colors.petrol,
+    align: "right"
+  });
+
+  addPdfText(commands, `Operador: ${operator.name || "-"} | CPF: ${operator.cpf || "-"} | Funcao: ${operator.role || operator.accessProfile || "-"}`, x + 14, y + height - 45, {
+    size: 7.2,
+    color: colors.petrol
+  });
+  addPdfText(commands, `Comissao bruta: ${formatCurrency(report.grossCommission)} | Descontos: ${formatCurrency(report.deductionsTotal)}`, x + 14, y + height - 60, {
+    size: 7,
+    color: colors.muted
+  });
+
+  receiptLines.slice(0, 5).forEach((line, index) => {
+    addPdfText(commands, line, x + 14, y + height - 88 - index * 10.5, { size: 7.8, color: colors.petrol });
+  });
+
+  addPdfText(commands, `Emissao: ${new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}`, x + 14, y + 68, {
+    size: 7,
+    color: colors.muted
+  });
+  drawOperatorSignatureField(commands, x + 28, y + 24, 190, `Administrador emissor: ${adminName}`);
+  drawOperatorSignatureField(commands, x + width - 218, y + 24, 190, `Operador recebedor: ${operator.name || "-"}`);
+}
+
+function drawOperatorSignatureField(commands, x, y, width, label) {
+  const { colors } = pdfDocumentStandard;
+  addPdfLine(commands, x, y + 18, x + width, y + 18, colors.border, 0.8);
+  addPdfText(commands, truncatePdfText(label, 42), x + width / 2, y + 3, {
+    size: 6.9,
+    color: colors.muted,
+    align: "center"
+  });
+}
+
+function formatCurrencyInWordsPTBR(value) {
+  const normalizedValue = Math.max(0, Number(value || 0));
+  const reais = Math.floor(normalizedValue);
+  const cents = Math.round((normalizedValue - reais) * 100);
+  const realText = `${numberToWordsPTBR(reais)} ${reais === 1 ? "real" : "reais"}`;
+  if (!cents) return realText;
+  return `${realText} e ${numberToWordsPTBR(cents)} ${cents === 1 ? "centavo" : "centavos"}`;
+}
+
+function numberToWordsPTBR(value) {
+  const number = Math.floor(Math.max(0, Number(value || 0)));
+  if (number === 0) return "zero";
+  if (number < 1000) return numberUnderThousandToWordsPTBR(number);
+
+  const groups = [];
+  let remaining = number;
+  while (remaining > 0) {
+    groups.unshift(remaining % 1000);
+    remaining = Math.floor(remaining / 1000);
+  }
+
+  const scales = ["", "mil", "milhao", "bilhao"];
+  const parts = [];
+  groups.forEach((groupValue, index) => {
+    if (!groupValue) return;
+    const scaleIndex = groups.length - index - 1;
+    if (scaleIndex === 1 && groupValue === 1) {
+      parts.push("mil");
+      return;
+    }
+    const scale = scales[scaleIndex] || "";
+    const pluralScale = scale === "milhao" && groupValue > 1 ? "milhoes" : scale === "bilhao" && groupValue > 1 ? "bilhoes" : scale;
+    parts.push(`${numberUnderThousandToWordsPTBR(groupValue)}${pluralScale ? ` ${pluralScale}` : ""}`);
+  });
+
+  return joinPortugueseWordParts(parts);
+}
+
+function numberUnderThousandToWordsPTBR(value) {
+  const units = ["", "um", "dois", "tres", "quatro", "cinco", "seis", "sete", "oito", "nove"];
+  const teens = ["dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
+  const tens = ["", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
+  const hundreds = ["", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos"];
+  const number = Math.floor(Math.max(0, Number(value || 0)));
+
+  if (number === 0) return "zero";
+  if (number < 10) return units[number];
+  if (number < 20) return teens[number - 10];
+  if (number < 100) {
+    const ten = Math.floor(number / 10);
+    const unit = number % 10;
+    return unit ? `${tens[ten]} e ${units[unit]}` : tens[ten];
+  }
+  if (number === 100) return "cem";
+  const hundred = Math.floor(number / 100);
+  const rest = number % 100;
+  return rest ? `${hundreds[hundred]} e ${numberUnderThousandToWordsPTBR(rest)}` : hundreds[hundred];
+}
+
+function joinPortugueseWordParts(parts) {
+  if (parts.length <= 1) return parts[0] || "zero";
+  return `${parts.slice(0, -1).join(", ")} e ${parts[parts.length - 1]}`;
+}
+
 function buildPdfDocument(objects) {
   let pdf = "%PDF-1.4\n";
   const offsets = [0];
@@ -6711,8 +10513,7 @@ function preloadPdfLogoImage() {
 
     const image = new Image();
     image.onload = () => {
-      const maxWidth = 360;
-      const scale = Math.min(1, maxWidth / image.naturalWidth);
+      const scale = Math.min(1, pdfLogoSizing.sourceMaxSide / image.naturalWidth, pdfLogoSizing.sourceMaxSide / image.naturalHeight);
       const width = Math.max(1, Math.round(image.naturalWidth * scale));
       const height = Math.max(1, Math.round(image.naturalHeight * scale));
       const canvas = document.createElement("canvas");
@@ -6722,7 +10523,7 @@ function preloadPdfLogoImage() {
       context.fillStyle = "#FFFFFF";
       context.fillRect(0, 0, width, height);
       context.drawImage(image, 0, 0, width, height);
-      const binary = atob(canvas.toDataURL("image/jpeg", 0.88).split(",")[1]);
+      const binary = atob(canvas.toDataURL("image/jpeg", pdfLogoSizing.jpegQuality).split(",")[1]);
       pdfLogoImageCache = { width, height, hex: binaryStringToHex(binary) };
       resolve(pdfLogoImageCache);
     };
@@ -6746,6 +10547,18 @@ function getPdfLogoSource() {
   return businessProfile.logoDataUrl || "./assets/brand/lavaprime-lockup.png";
 }
 
+function getPdfLogoDrawSize(logoImage) {
+  const scale = getBusinessLogoSizePercent() / 100;
+  const maxWidth = pdfLogoSizing.headerMaxWidth * scale;
+  const maxHeight = pdfLogoSizing.headerMaxHeight * scale;
+  if (!logoImage?.width || !logoImage?.height) return { width: maxWidth, height: maxHeight };
+  const ratio = Math.min(maxWidth / logoImage.width, maxHeight / logoImage.height);
+  return {
+    width: Math.max(1, logoImage.width * ratio),
+    height: Math.max(1, logoImage.height * ratio)
+  };
+}
+
 function createPdfImageObject(image) {
   const stream = `${image.hex}>`;
   return `<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter [/ASCIIHexDecode /DCTDecode] /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
@@ -6760,10 +10573,16 @@ function binaryStringToHex(binary) {
 }
 
 function createPdfRows(lines) {
-  const sourceLines = (Array.isArray(lines) ? lines : [lines]).map((line) => normalizePdfText(line));
+  const sourceLines = Array.isArray(lines) ? lines : [lines];
   const rows = [];
 
-  sourceLines.forEach((line) => {
+  sourceLines.forEach((sourceLine) => {
+    if (sourceLine && typeof sourceLine === "object") {
+      rows.push(createPdfStructuredRow(sourceLine));
+      return;
+    }
+
+    const line = normalizePdfText(sourceLine);
     if (!line) {
       rows.push({ type: "spacer", height: 8 });
       return;
@@ -6779,6 +10598,22 @@ function createPdfRows(lines) {
   });
 
   return rows.length ? rows : [{ type: "row", lines: ["Sem registros para este documento."], height: 16 }];
+}
+
+function createPdfStructuredRow(line) {
+  if (line.type === "checklistItem") {
+    const condition = line.condition || checklistUnverifiedCondition;
+    const text = `${line.part || "-"}: ${condition}`;
+    const wrappedLines = wrapPdfLine(text, 82);
+    return {
+      type: "checklistItem",
+      condition,
+      lines: wrappedLines,
+      height: 20 + (wrappedLines.length - 1) * 11
+    };
+  }
+
+  return { type: "row", lines: wrapPdfLine(line.text || "", 92), height: 16 };
 }
 
 function paginatePdfRows(rows) {
@@ -6802,17 +10637,18 @@ function paginatePdfRows(rows) {
 function createPdfPageContent(document, rows, pageNumber, pageCount, logoImage = null) {
   const commands = [];
   const { colors, page } = pdfDocumentStandard;
+  const reportName = getBusinessReportDocumentName(document.reportTarget);
+  const contactLine = getBusinessDocumentContactLine(document.reportTarget);
   addPdfRect(commands, 0, 0, page.width, page.height, { fill: colors.white });
   if (logoImage) {
-    const logoWidth = 156;
-    const logoHeight = Math.min(52, logoWidth * (logoImage.height / logoImage.width));
-    addPdfImage(commands, "Logo", 45, 785, logoWidth, logoHeight);
-    addPdfText(commands, truncatePdfText(getBusinessDocumentName(), 42), 45, 775, { size: 8.5, font: "F2", color: colors.petrol });
-    addPdfText(commands, truncatePdfText(getBusinessDocumentContactLine(), 58), 45, 764, { size: 7.2, color: colors.muted });
+    const logoSize = getPdfLogoDrawSize(logoImage);
+    addPdfImage(commands, "Logo", 45, 785, logoSize.width, logoSize.height);
+    addPdfText(commands, truncatePdfText(reportName, 42), 45, 775, { size: 8.5, font: "F2", color: colors.petrol });
+    addPdfText(commands, truncatePdfText(contactLine, 58), 45, 764, { size: 7.2, color: colors.muted });
   } else {
-    addPdfText(commands, getBusinessDocumentName(), 45, 805, { size: 22, font: "F2", color: colors.petrol });
+    addPdfText(commands, reportName, 45, 805, { size: 22, font: "F2", color: colors.petrol });
     addPdfRect(commands, 45, 792, 94, 3, { fill: colors.cyan });
-    addPdfText(commands, truncatePdfText(getBusinessDocumentContactLine() || "Sistema de gestao operacional", 64), 45, 779, { size: 8, color: colors.muted });
+    addPdfText(commands, truncatePdfText(contactLine || "Sistema de gestao operacional", 64), 45, 779, { size: 8, color: colors.muted });
   }
   addPdfText(commands, "MODELO PADRAO PARA PDF", 550, 808, { size: 8, font: "F2", color: colors.cyan, align: "right" });
   addPdfText(commands, `${normalizePdfText(document.category)} | ${new Date().toLocaleDateString("pt-BR")}`, 550, 794, {
@@ -6827,18 +10663,23 @@ function createPdfPageContent(document, rows, pageNumber, pageCount, logoImage =
   drawPdfSummary(commands, document);
   drawPdfItems(commands, rows);
 
+  drawPdfDocumentFooter(commands, document, pageNumber, pageCount);
+  return commands.join("\n");
+}
+
+function drawPdfDocumentFooter(commands, document, pageNumber, pageCount) {
+  const { colors } = pdfDocumentStandard;
   addPdfLine(commands, 45, 58, 550, 58, colors.border, 0.8);
-  addPdfText(commands, `${getBusinessDocumentName()} | Documento gerado pelo LavaPrime | Pagina ${pageNumber} de ${pageCount}`, 297, 42, {
+  addPdfText(commands, `${getBusinessReportDocumentName(document.reportTarget)} | Documento gerado pelo LavaPrime | Pagina ${pageNumber} de ${pageCount}`, 297, 42, {
     size: 8,
     color: colors.muted,
     align: "center"
   });
-  addPdfText(commands, getBusinessDocumentFooterDetails() || `Padrao: ${pdfDocumentStandard.templateReference}`, 297, 30, {
+  addPdfText(commands, getBusinessDocumentFooterDetails(document.reportTarget) || `Padrao: ${pdfDocumentStandard.templateReference}`, 297, 30, {
     size: 7,
     color: colors.muted,
     align: "center"
   });
-  return commands.join("\n");
 }
 
 function drawPdfTitleBox(commands, document) {
@@ -6856,8 +10697,8 @@ function drawPdfMetaGrid(commands, document) {
   const { colors } = pdfDocumentStandard;
   const emittedAt = new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
   const rows = [
-    ["Negocio", getBusinessDocumentName(), "Emissao", emittedAt],
-    ["Contato", getBusinessDocumentContactLine() || "-", "Responsavel", document.responsible],
+    ["Negocio", getBusinessReportDocumentName(document.reportTarget), "Emissao", emittedAt],
+    ["Contato", getBusinessDocumentContactLine(document.reportTarget) || "-", "Responsavel", document.responsible],
     ["Arquivo", document.fileName, "Categoria", document.category]
   ];
   const x = 45;
@@ -6911,12 +10752,87 @@ function drawPdfItems(commands, rows) {
 
     const fill = rowIndex % 2 === 0 ? colors.white : "#F8FBFC";
     addPdfRect(commands, 45, y - row.height + 2, 505, row.height, { fill, stroke: colors.border });
-    row.lines.forEach((line, lineIndex) => {
-      addPdfText(commands, truncatePdfText(line, 96), 59, y - 11 - lineIndex * 11, { size: 8.2, color: colors.petrol });
-    });
+    if (row.type === "checklistItem") {
+      drawPdfChecklistConditionIcon(commands, row.condition, 57, y - 16, 12);
+      row.lines.forEach((line, lineIndex) => {
+        addPdfText(commands, truncatePdfText(line, 86), 77, y - 11 - lineIndex * 11, { size: 8.2, color: colors.petrol });
+      });
+    } else {
+      row.lines.forEach((line, lineIndex) => {
+        addPdfText(commands, truncatePdfText(line, 96), 59, y - 11 - lineIndex * 11, { size: 8.2, color: colors.petrol });
+      });
+    }
     y -= row.height;
     rowIndex += 1;
   });
+}
+
+function drawPdfChecklistConditionIcon(commands, condition, x, y, size) {
+  const normalized = normalizeText(condition || checklistUnverifiedCondition);
+  const colors = {
+    border: "#D7E5EB",
+    green: "#22C55E",
+    yellow: "#F5B700",
+    red: "#EF4444",
+    gray: "#94A3B8",
+    cyan: "#00B8D9"
+  };
+  const cx = x + size / 2;
+  const cy = y + size / 2;
+  addPdfCircle(commands, cx, cy, size / 2, { fill: "#FFFFFF", stroke: colors.border, lineWidth: 0.7 });
+
+  if (normalized === "conforme") {
+    addPdfLine(commands, x + 3.2, y + 6.1, x + 5.3, y + 3.8, colors.green, 1.5);
+    addPdfLine(commands, x + 5.3, y + 3.8, x + 9.1, y + 8.5, colors.green, 1.5);
+    return;
+  }
+
+  if (normalized === "arranhado") {
+    addPdfPolyline(commands, [
+      [x + 2.2, y + 6],
+      [x + 3.8, y + 7.8],
+      [x + 5.4, y + 5.7],
+      [x + 7, y + 7.8],
+      [x + 8.6, y + 5.7],
+      [x + 10, y + 7.2]
+    ], colors.yellow, 1.3);
+    return;
+  }
+
+  if (normalized === "amassado") {
+    addPdfPolyline(commands, [
+      [x + 2.2, y + 6],
+      [x + 4, y + 4.5],
+      [x + 5.8, y + 7.5],
+      [x + 7.6, y + 4.5],
+      [x + 9.8, y + 6.8]
+    ], colors.green, 1.3);
+    return;
+  }
+
+  if (normalized === "quebrado") {
+    addPdfPolyline(commands, [
+      [x + 3.4, y + 9],
+      [x + 5.3, y + 6.4],
+      [x + 4.4, y + 5.2],
+      [x + 7.2, y + 2.8],
+      [x + 6.7, y + 5.6],
+      [x + 9.2, y + 3.6]
+    ], colors.red, 1.3);
+    return;
+  }
+
+  if (normalized === "faltando") {
+    addPdfLine(commands, x + 3.2, y + 6, x + 8.8, y + 6, colors.red, 1.5);
+    return;
+  }
+
+  if (normalized === "nao aplicavel") {
+    addPdfLine(commands, x + 3.4, y + 3.4, x + 8.6, y + 8.6, colors.gray, 1.4);
+    return;
+  }
+
+  addPdfText(commands, "?", cx, y + 2.5, { size: 9, font: "F2", color: colors.cyan, align: "center" });
 }
 
 function addPdfRect(commands, x, y, width, height, options = {}) {
@@ -6928,6 +10844,29 @@ function addPdfRect(commands, x, y, width, height, options = {}) {
 
 function addPdfLine(commands, x1, y1, x2, y2, color, width = 1) {
   commands.push(`${width} w ${pdfRgb(color)} RG ${formatPdfNumber(x1)} ${formatPdfNumber(y1)} m ${formatPdfNumber(x2)} ${formatPdfNumber(y2)} l S`);
+}
+
+function addPdfPolyline(commands, points, color, width = 1) {
+  if (!points.length) return;
+  const [startX, startY] = points[0];
+  const path = points
+    .slice(1)
+    .map(([x, y]) => `${formatPdfNumber(x)} ${formatPdfNumber(y)} l`)
+    .join(" ");
+  commands.push(`${width} w ${pdfRgb(color)} RG ${formatPdfNumber(startX)} ${formatPdfNumber(startY)} m ${path} S`);
+}
+
+function addPdfCircle(commands, cx, cy, radius, options = {}) {
+  const c = radius * 0.5522847498;
+  const path = [
+    `${formatPdfNumber(cx + radius)} ${formatPdfNumber(cy)} m`,
+    `${formatPdfNumber(cx + radius)} ${formatPdfNumber(cy + c)} ${formatPdfNumber(cx + c)} ${formatPdfNumber(cy + radius)} ${formatPdfNumber(cx)} ${formatPdfNumber(cy + radius)} c`,
+    `${formatPdfNumber(cx - c)} ${formatPdfNumber(cy + radius)} ${formatPdfNumber(cx - radius)} ${formatPdfNumber(cy + c)} ${formatPdfNumber(cx - radius)} ${formatPdfNumber(cy)} c`,
+    `${formatPdfNumber(cx - radius)} ${formatPdfNumber(cy - c)} ${formatPdfNumber(cx - c)} ${formatPdfNumber(cy - radius)} ${formatPdfNumber(cx)} ${formatPdfNumber(cy - radius)} c`,
+    `${formatPdfNumber(cx + c)} ${formatPdfNumber(cy - radius)} ${formatPdfNumber(cx + radius)} ${formatPdfNumber(cy - c)} ${formatPdfNumber(cx + radius)} ${formatPdfNumber(cy)} c`
+  ].join(" ");
+  if (options.fill) commands.push(`${pdfRgb(options.fill)} rg ${path} f`);
+  if (options.stroke) commands.push(`${options.lineWidth || 0.8} w ${pdfRgb(options.stroke)} RG ${path} S`);
 }
 
 function addPdfImage(commands, name, x, y, width, height) {
@@ -6959,6 +10898,9 @@ function formatPdfNumber(value, precision = 2) {
 }
 
 function normalizePdfText(value) {
+  if (value && typeof value === "object") {
+    return normalizePdfText(value.text || value.part || value.condition || "");
+  }
   return removeDiacritics(value ?? "")
     .replace(/[^\x20-\x7E]/g, "")
     .replace(/\s+/g, " ")
@@ -7023,6 +10965,20 @@ function getPdfDocumentCategory(title) {
   return "Documento";
 }
 
+function getPdfDocumentReportTarget(document = {}) {
+  const source = normalizeText(`${document.title || ""} ${document.subtitle || ""} ${document.category || ""} ${document.fileName || ""}`);
+  if (source.includes("producao")) return "operatorProduction";
+  if (source.includes("comissao")) return "operatorCommission";
+  if (source.includes("frequencia") || source.includes("attendance")) return "operatorAttendance";
+  if (source.includes("fluxo") && source.includes("caixa")) return "cashflow";
+  if (source.includes("pagamentos em aberto") || source.includes("pagamento em aberto")) return "openPayments";
+  if (source.includes("fatura") || source.includes("faturamento")) return "invoices";
+  if (source.includes("recibo")) return "receipts";
+  if (source.includes("check")) return "checklists";
+  if (source.includes("financeiro") || source.includes("comprovante")) return "financial";
+  return "all";
+}
+
 function getPdfDocumentSubtitle(title) {
   const category = getPdfDocumentCategory(title);
   if (category === "Financeiro") return "Controle financeiro operacional";
@@ -7077,13 +11033,341 @@ function getPayablesScreenContent() {
   };
 }
 
+function renderInvoicesScreen(container) {
+  const openInvoices = billingInvoices.filter((invoice) => invoice.status !== "Paga");
+  const overdueInvoices = openInvoices.filter((invoice) => invoice.dueDate < getTodayISO());
+  container.innerHTML = `
+    <section class="screen-metrics cashflow-metrics" aria-label="Resumo da central de faturas">
+      ${[
+        { label: "Faturas abertas", value: openInvoices.length, icon: "invoice" },
+        { label: "Vencidas", value: overdueInvoices.length, icon: "alert" },
+        { label: "Total aberto", value: formatCurrency(getOpenInvoicesTotal()), icon: "wallet" },
+        { label: "Pagas", value: billingInvoices.filter((invoice) => invoice.status === "Paga").length, icon: "check" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+
+    <section class="screen-toolbar cashflow-toolbar" aria-label="Filtros da central de faturas">
+      <label class="screen-search">
+        <span class="screen-search-icon">${icons.invoice}</span>
+        <input id="invoiceSearchInput" type="search" placeholder="Buscar fatura ou cliente" />
+      </label>
+      <div class="screen-filters" id="invoiceFilters">
+        ${["Todas", "Abertas", "Vencidas", "Pagas"]
+          .map((filter, index) => `<button class="${index === 0 ? "is-active" : ""}" type="button" data-invoice-filter="${filter.toLowerCase()}">${filter}</button>`)
+          .join("")}
+      </div>
+    </section>
+
+    <article class="admin-panel screen-table-panel cashflow-table-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Faturamento</p>
+          <h2>Faturas</h2>
+        </div>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table cashflow-table">
+          <thead>
+            <tr>
+              <th>Fatura</th>
+              <th>Cliente</th>
+              <th>Vencimento</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${billingInvoices.map(renderInvoiceRow).join("")}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  `;
+
+  initIcons();
+  bindInvoicesScreenControls(container);
+}
+
+function renderInvoiceRow(invoice) {
+  const status = invoice.status || "Aberta";
+  const isPaid = status === "Paga";
+  const isOverdue = !isPaid && invoice.dueDate < getTodayISO();
+  const displayAmount = getInvoiceDisplayAmount(invoice);
+  const statusLabel = invoice.partialSettlement ? "Paga parcial" : status;
+  return `
+    <tr class="cashflow-row ${isPaid ? "is-in" : isOverdue ? "is-outstanding" : ""}" data-invoice-row data-invoice-status="${isPaid ? "pagas" : isOverdue ? "vencidas" : "abertas"}">
+      <td data-label="Fatura">${escapeHtml(invoice.code)}</td>
+      <td data-label="Cliente">${escapeHtml(getBillingClientName(invoice.clientId))}</td>
+      <td data-label="Vencimento">${formatDateBR(invoice.dueDate)}</td>
+      <td data-label="Valor">${formatCurrency(displayAmount)}</td>
+      <td data-label="Status">${escapeHtml(statusLabel)}${invoice.partialSettlement ? ` · saldo remanejado ${formatCurrency(invoice.remainingBalance || 0)}` : ""}${isOverdue ? " · Vencida" : ""}</td>
+      <td data-label="Ações">
+        <div class="cashflow-row-actions">
+          ${!isPaid ? `<button class="ghost-action" type="button" data-send-invoice-message="${invoice.id}">Lembrete</button>
+          <button class="primary-button compact-action" type="button" data-settle-invoice="${invoice.id}">Baixar</button>` : `<span class="table-plate-chip">Baixada</span>`}
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function bindInvoicesScreenControls(container) {
+  $("#invoiceSearchInput", container)?.addEventListener("input", () => applyInvoiceFilters(container));
+  $$("[data-invoice-filter]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      $$("[data-invoice-filter]", container).forEach((item) => item.classList.toggle("is-active", item === button));
+      applyInvoiceFilters(container);
+    });
+  });
+  $$("[data-send-invoice-message]", container).forEach((button) => {
+    button.addEventListener("click", () => sendInvoiceReminder(Number(button.dataset.sendInvoiceMessage)));
+  });
+  $$("[data-settle-invoice]", container).forEach((button) => {
+    button.addEventListener("click", () => settleInvoice(Number(button.dataset.settleInvoice)));
+  });
+}
+
+function applyInvoiceFilters(container) {
+  const query = normalizeText($("#invoiceSearchInput", container)?.value || "");
+  const activeFilter = $("#invoiceFilters .is-active", container)?.dataset.invoiceFilter || "todas";
+  $$("[data-invoice-row]", container).forEach((row) => {
+    const textMatch = !query || normalizeText(row.textContent).includes(query);
+    const filterMatch = activeFilter === "todas" || row.dataset.invoiceStatus === activeFilter;
+    row.hidden = !textMatch || !filterMatch;
+  });
+}
+
+function sendInvoiceReminder(invoiceId) {
+  const invoice = billingInvoices.find((item) => item.id === Number(invoiceId));
+  if (!invoice) return;
+  sendManualMessage("open-invoice", getMessageContextFromInvoice(invoice));
+}
+
+async function settleInvoice(invoiceId) {
+  const invoice = billingInvoices.find((item) => item.id === Number(invoiceId));
+  if (!invoice || invoice.status === "Paga") return;
+  const invoiceTotal = getInvoiceAmount(invoice.id);
+  const settlement = await requestSettlementPaymentInfo({
+    title: "Baixar fatura",
+    description: `${invoice.code} / ${getBillingClientName(invoice.clientId)} / ${formatCurrency(invoiceTotal)}`,
+    defaultMethod: invoice.settlementMethod || "Pix",
+    totalValue: invoiceTotal,
+    allowPartial: true,
+    partialDestinations: getInvoicePartialDestinationConfig(invoice)
+  });
+  if (!settlement) return;
+  if (settlement.partial && !validateInvoicePartialDestination(invoice, settlement)) return;
+
+  invoice.status = "Paga";
+  invoice.paidAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+  invoice.settlementMethod = settlement.method;
+  invoice.paymentMethod = settlement.method;
+  invoice.settlementBankAccountId = settlement.bankAccountId;
+  invoice.settlementBankAccountName = settlement.bankAccountName;
+  invoice.partialSettlement = Boolean(settlement.partial);
+  invoice.settledAmount = settlement.partial ? settlement.amount : invoiceTotal;
+  invoice.remainingBalance = settlement.partial ? settlement.balance : 0;
+  invoice.remainingDestination = settlement.partial ? settlement.destination : "";
+
+  cashEntries.unshift({
+    id: getNextCashEntryId(),
+    date: getTodayISO(),
+    time: getCurrentShortTime(),
+    type: "Entrada",
+    description: settlement.partial ? `Baixa parcial fatura ${invoice.code}` : `Baixa fatura ${invoice.code}`,
+    method: settlement.method,
+    value: settlement.partial ? settlement.amount : invoiceTotal,
+    status: "Confirmado",
+    category: "Faturamento",
+    costCenter: "Financeiro",
+    bankAccountId: settlement.bankAccountId,
+    bankAccountName: settlement.bankAccountName,
+    invoiceId: invoice.id,
+    operator: activeSessionUser || "Administrador"
+  });
+  const balanceResult = settlement.partial ? routeInvoiceRemainingBalance(invoice, settlement) : null;
+  if (balanceResult?.destinationLabel) invoice.remainingDestinationLabel = balanceResult.destinationLabel;
+  triggerAutomatedMessage(
+    settlement.partial ? "partial-invoice-payment" : "payment-confirmation",
+    getMessageContextFromInvoice(invoice)
+  );
+  renderAdminScreen("invoices");
+  refreshCashflowScreen();
+  renderAdminDashboard();
+  showToast(getInvoiceSettlementToast(settlement, balanceResult));
+}
+
+function getInvoicePartialDestinationConfig(invoice) {
+  return {
+    existingInvoices: billingInvoices.filter(
+      (item) => item.id !== invoice.id && item.clientId === invoice.clientId && item.status !== "Paga"
+    ),
+    defaultDestination: "new-invoice",
+    defaultDueDate: getTodayISO()
+  };
+}
+
+function validateInvoicePartialDestination(invoice, settlement) {
+  if (settlement.destination === "existing-invoice") {
+    const targetInvoice = getInvoicePartialTargetInvoice(invoice, settlement.targetInvoiceId);
+    if (!targetInvoice) {
+      showToast("Selecione uma fatura aberta do mesmo cliente para receber o saldo.");
+      return false;
+    }
+  }
+  if (settlement.destination === "new-invoice" && !settlement.newInvoiceDueDate) {
+    showToast("Informe o vencimento da nova fatura.");
+    return false;
+  }
+  return true;
+}
+
+function routeInvoiceRemainingBalance(invoice, settlement) {
+  if (settlement.destination === "existing-invoice") {
+    const targetInvoice = getInvoicePartialTargetInvoice(invoice, settlement.targetInvoiceId);
+    addRemainingBalanceToInvoice(targetInvoice, invoice, settlement.balance);
+    return { invoice: targetInvoice, destinationLabel: `fatura ${targetInvoice.code}` };
+  }
+
+  if (settlement.destination === "open-payment") {
+    const openPayment = createOpenPaymentFromInvoiceBalance(invoice, settlement);
+    return { openPayment, destinationLabel: "pagamento em aberto" };
+  }
+
+  const newInvoice = createInvoiceFromRemainingBalance(invoice, settlement);
+  return { invoice: newInvoice, destinationLabel: `nova fatura ${newInvoice.code}` };
+}
+
+function getInvoicePartialTargetInvoice(sourceInvoice, targetInvoiceId) {
+  return billingInvoices.find(
+    (item) =>
+      item.id === Number(targetInvoiceId) &&
+      item.id !== sourceInvoice.id &&
+      item.clientId === sourceInvoice.clientId &&
+      item.status !== "Paga"
+  );
+}
+
+function createInvoiceFromRemainingBalance(sourceInvoice, settlement) {
+  const registryClient = getRegistryClientByBillingClientId(sourceInvoice.clientId);
+  const dueDate = settlement.newInvoiceDueDate || getTodayISO();
+  const invoice = {
+    id: getNextBillingInvoiceId(),
+    clientId: Number(sourceInvoice.clientId),
+    code: getNextBillingInvoiceCode(dueDate),
+    dueDate,
+    status: "Aberta",
+    approvedBy: registryClient?.approver || sourceInvoice.approvedBy || activeSessionUser || "Administrador",
+    cycle: registryClient?.billingCycle || sourceInvoice.cycle || "Mensal",
+    originInvoiceId: sourceInvoice.id,
+    originInvoiceCode: sourceInvoice.code
+  };
+
+  billingInvoices.push(invoice);
+  invoiceAmounts[invoice.id] = 0;
+  addRemainingBalanceToInvoice(invoice, sourceInvoice, settlement.balance);
+  return invoice;
+}
+
+function addRemainingBalanceToInvoice(targetInvoice, sourceInvoice, value) {
+  invoiceAmounts[targetInvoice.id] = (invoiceAmounts[targetInvoice.id] || 0) + value;
+  invoiceLineItems.push({
+    invoiceId: targetInvoice.id,
+    clientId: targetInvoice.clientId,
+    plate: getInvoicePrimaryPlate(sourceInvoice),
+    service: `Saldo remanescente ${sourceInvoice.code}`,
+    value,
+    operator: activeSessionUser || "Administrador",
+    originInvoiceId: sourceInvoice.id
+  });
+}
+
+function createOpenPaymentFromInvoiceBalance(invoice, settlement) {
+  const billingClient = billingClients.find((client) => client.id === Number(invoice.clientId));
+  const paymentId = getNextOpenPaymentId();
+  const cashEntryId = getNextCashEntryId();
+  const description = getInvoiceRemainingBalanceDescription(invoice);
+  const cashEntry = {
+    id: cashEntryId,
+    date: getTodayISO(),
+    time: getCurrentShortTime(),
+    type: "Entrada",
+    description,
+    method: settlement.method,
+    value: settlement.balance,
+    status: "Pendente",
+    category: "Faturamento",
+    costCenter: "Financeiro",
+    bankAccountId: settlement.bankAccountId,
+    bankAccountName: settlement.bankAccountName,
+    invoiceId: invoice.id,
+    openPaymentId: paymentId,
+    openPayment: true,
+    partialPayment: true,
+    partialPaidAmount: settlement.amount,
+    partialBalance: settlement.balance,
+    operator: activeSessionUser || "Administrador"
+  };
+  const openPayment = {
+    id: paymentId,
+    clientId: billingClient?.id || invoice.clientId,
+    clientName: billingClient?.name || getBillingClientName(invoice.clientId),
+    phone: billingClient?.phone || "",
+    plate: getInvoicePrimaryPlate(invoice),
+    service: "Fatura",
+    description,
+    value: settlement.balance,
+    paymentMethod: settlement.method || "Pix",
+    createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
+    dueDate: getTodayISO(),
+    status: "Aberto",
+    reminderFrequency: "Diário",
+    lastReminderAt: "",
+    operator: activeSessionUser || "Administrador",
+    cashEntryId,
+    invoiceId: invoice.id,
+    invoiceCode: invoice.code,
+    partialPayment: true,
+    paidAmount: settlement.amount
+  };
+
+  cashEntries.unshift(cashEntry);
+  openPayments.unshift(openPayment);
+  return openPayment;
+}
+
+function getNextBillingInvoiceId() {
+  return Math.max(0, ...billingInvoices.map((invoice) => invoice.id || 0)) + 1;
+}
+
+function getNextBillingInvoiceCode(dueDate) {
+  return `FAT-${dueDate.slice(5, 7)}${dueDate.slice(2, 4)}-${String(billingInvoices.length + 1).padStart(3, "0")}`;
+}
+
+function getInvoicePrimaryPlate(invoice) {
+  return invoiceLineItems.find((item) => item.invoiceId === invoice.id)?.plate || "";
+}
+
+function getInvoiceRemainingBalanceDescription(invoice) {
+  return `Saldo remanescente da fatura ${invoice.code}`;
+}
+
+function getInvoiceSettlementToast(settlement, balanceResult) {
+  if (!settlement.partial) return "Fatura baixada.";
+  return `Baixa parcial registrada. Saldo ${formatCurrency(settlement.balance)} enviado para ${balanceResult?.destinationLabel || "destino escolhido"}.`;
+}
+
 function getInvoicesScreenContent() {
+  const openInvoices = billingInvoices.filter((invoice) => invoice.status !== "Paga");
   return {
     searchIcon: "invoice",
     searchPlaceholder: "Buscar fatura",
     filters: ["Abertas", "Vencem no mês", "Pagas", "Em atraso"],
     metrics: [
-      { label: "Faturas abertas", value: billingInvoices.length, icon: "invoice" },
+      { label: "Faturas abertas", value: openInvoices.length, icon: "invoice" },
       { label: "Total aberto", value: formatCurrency(getOpenInvoicesTotal()), icon: "wallet" },
       { label: "Clientes faturados", value: billingClients.length, icon: "users" }
     ],
@@ -7094,8 +11378,8 @@ function getInvoicesScreenContent() {
       invoice.code,
       getBillingClientName(invoice.clientId),
       formatDateBR(invoice.dueDate),
-      formatCurrency(getInvoiceAmount(invoice.id)),
-      "Aberta"
+      formatCurrency(getInvoiceDisplayAmount(invoice)),
+      invoice.partialSettlement ? "Paga parcial" : invoice.status || "Aberta"
     ]),
     sideKicker: "Ciclo",
     sideTitle: "Próximos vencimentos",
@@ -7181,8 +11465,14 @@ function getInvoiceAmount(invoiceId) {
   return invoiceAmounts[invoiceId] || 0;
 }
 
+function getInvoiceDisplayAmount(invoice) {
+  return invoice?.partialSettlement ? Number(invoice.settledAmount || 0) : getInvoiceAmount(invoice?.id);
+}
+
 function getOpenInvoicesTotal() {
-  return billingInvoices.reduce((total, invoice) => total + getInvoiceAmount(invoice.id), 0);
+  return billingInvoices
+    .filter((invoice) => invoice.status !== "Paga")
+    .reduce((total, invoice) => total + getInvoiceAmount(invoice.id), 0);
 }
 
 function getAverageServicePrice() {
@@ -7237,18 +11527,23 @@ function getDialogMoneyValue(selector) {
 function readPaymentAdjustmentsFromDialog(vehicle) {
   const extraEnabled = Boolean($("#paymentExtraEnabled")?.checked);
   const discountEnabled = Boolean($("#paymentDiscountEnabled")?.checked);
+  const partialEnabled = Boolean($("#paymentPartialEnabled")?.checked);
   const extraCharges = extraEnabled ? getDialogMoneyValue("#paymentExtraCharges") : 0;
   const discount = discountEnabled ? getDialogMoneyValue("#paymentDiscount") : 0;
   const cashReceived = getDialogMoneyValue("#paymentCashReceived");
   const total = Math.max(0, getServicePrice(vehicle) + extraCharges - discount);
+  const partialAmount = partialEnabled ? Math.min(getDialogMoneyValue("#paymentPartialAmount"), total) : 0;
   return {
     extraEnabled,
     discountEnabled,
+    partialEnabled,
     extraCharges,
     extraDescription: extraEnabled ? $("#paymentExtraDescription")?.value.trim() || "" : "",
     discount,
     discountDescription: discountEnabled ? $("#paymentDiscountDescription")?.value.trim() || "" : "",
     cashReceived,
+    partialAmount,
+    partialBalance: partialEnabled ? Math.max(0, total - partialAmount) : 0,
     total,
     change: Math.max(0, cashReceived - total)
   };
@@ -7266,6 +11561,8 @@ function getPatioVehicleById(id = activeVehicleId) {
 }
 
 function getPaymentState(vehicle) {
+  if (vehicle.partialPaymentOpen) return "Parcial";
+  if (vehicle.paymentOpen) return "Em aberto";
   if (vehicle.payment === "Faturado") return vehicle.paymentStatus || "Pendente";
   if (vehicle.paymentConfirmed) return "Confirmado";
   return "A confirmar";
@@ -7340,19 +11637,25 @@ function renderChecklistItems(scope, vehicleType, checklist = null) {
   const savedItems = checklist?.items || [];
   return getChecklistTemplateForVehicleType(vehicleType)
     .map(
-      (group) => `
+      (group) => {
+        const areaVerified = isChecklistAreaVerified(group, savedItems);
+        return `
         <article class="checklist-area" data-checklist-area="${escapeHtml(scope)}" data-area="${escapeHtml(group.area)}">
           <div class="checklist-area-header">
-            <button class="checklist-area-toggle" type="button" data-checklist-area-toggle="${escapeHtml(scope)}" data-area="${escapeHtml(group.area)}" aria-expanded="true">
-              <span data-icon="dashboard"></span>
-              <strong>${escapeHtml(group.area)}</strong>
+            <strong class="checklist-area-title">
+              <span>${escapeHtml(group.area)}</span>
+              <img class="checklist-area-verified-icon" src="${escapeHtml(getChecklistConditionIcon("Conforme"))}" alt="Verificado" ${areaVerified ? "" : "hidden"} />
+            </strong>
+            <button class="checklist-area-toggle is-collapsed" type="button" data-checklist-area-toggle="${escapeHtml(scope)}" data-area="${escapeHtml(group.area)}" aria-label="Mostrar ou ocultar ${escapeHtml(group.area)}" aria-expanded="false">
+              ${icons.chevronDown}
+              <span class="visually-hidden">${escapeHtml(group.area)}</span>
             </button>
-            <button class="ghost-action checklist-area-verify" type="button" data-checklist-area-verify="${escapeHtml(scope)}" data-area="${escapeHtml(group.area)}">
+            <button class="ghost-action checklist-area-verify ${areaVerified ? "is-verified" : ""}" type="button" data-checklist-area-verify="${escapeHtml(scope)}" data-area="${escapeHtml(group.area)}" aria-pressed="${areaVerified ? "true" : "false"}">
               <span data-icon="check"></span>
-              <span>Marcar tópico como verificado</span>
+              <span>Verificado</span>
             </button>
           </div>
-          <div class="checklist-grid" data-checklist-area-body="${escapeHtml(scope)}" data-area="${escapeHtml(group.area)}">
+          <div class="checklist-grid" data-checklist-area-body="${escapeHtml(scope)}" data-area="${escapeHtml(group.area)}" hidden>
             ${group.parts
               .map((part) => {
                 const saved = savedItems.find((item) => item.area === group.area && item.part === part);
@@ -7360,27 +11663,71 @@ function renderChecklistItems(scope, vehicleType, checklist = null) {
                 return `
                   <label class="login-field checklist-item" for="${escapeHtml(getChecklistInputId(scope, group.area, part))}">
                     <span>${escapeHtml(part)}</span>
-                    <select id="${escapeHtml(getChecklistInputId(scope, group.area, part))}" data-checklist-condition="${escapeHtml(scope)}" data-area="${escapeHtml(group.area)}" data-part="${escapeHtml(part)}">
-                      ${getChecklistConditionOptions()
-                        .map(
-                          (condition) =>
-                            `<option value="${escapeHtml(condition)}" ${selectedCondition === condition ? "selected" : ""}>${escapeHtml(condition)}</option>`
-                        )
-                        .join("")}
-                    </select>
+                    ${renderChecklistConditionDropdown(scope, group.area, part, selectedCondition)}
                   </label>
                 `;
               })
               .join("")}
           </div>
         </article>
-      `
+      `;
+      }
     )
     .join("");
 }
 
+function renderChecklistConditionDropdown(scope, area, part, selectedCondition) {
+  const inputId = getChecklistInputId(scope, area, part);
+  return `
+    <span class="checklist-condition-dropdown" data-checklist-condition-dropdown>
+      <input
+        id="${escapeHtml(inputId)}"
+        type="hidden"
+        value="${escapeHtml(selectedCondition)}"
+        data-checklist-condition="${escapeHtml(scope)}"
+        data-area="${escapeHtml(area)}"
+        data-part="${escapeHtml(part)}"
+      />
+      <button class="checklist-condition-button" type="button" data-checklist-condition-button aria-haspopup="listbox" aria-expanded="false">
+        ${renderChecklistConditionLabel(selectedCondition)}
+      </button>
+      <span class="checklist-condition-menu" role="listbox" data-checklist-condition-menu hidden>
+        ${getChecklistConditionOptions()
+          .map(
+            (condition) => `
+              <button class="checklist-condition-option" type="button" role="option" data-checklist-condition-option="${escapeHtml(condition)}" aria-selected="${condition === selectedCondition ? "true" : "false"}">
+                ${renderChecklistConditionLabel(condition)}
+              </button>
+            `
+          )
+          .join("")}
+      </span>
+    </span>
+  `;
+}
+
+function renderChecklistConditionLabel(condition) {
+  return `
+    <span class="checklist-condition-label">
+      <img class="checklist-condition-icon" src="${escapeHtml(getChecklistConditionIcon(condition))}" alt="" aria-hidden="true" />
+      <span>${escapeHtml(condition)}</span>
+    </span>
+  `;
+}
+
+function isChecklistAreaVerified(group, savedItems) {
+  return group.parts.every((part) => {
+    const saved = savedItems.find((item) => item.area === group.area && item.part === part);
+    return saved?.condition === "Conforme";
+  });
+}
+
 function getChecklistConditionOptions() {
   return [checklistUnverifiedCondition, ...checklistConditions.filter((condition) => condition !== checklistUnverifiedCondition)];
+}
+
+function getChecklistConditionIcon(condition) {
+  return checklistConditionIconMap[condition] || checklistConditionIconMap[checklistUnverifiedCondition];
 }
 
 function getChecklistInputId(scope, area, part) {
@@ -7405,11 +11752,26 @@ function updateChecklistPanel(container, scope, vehicleType) {
 }
 
 function bindChecklistAreaControls(container, scope) {
+  container.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-checklist-condition-dropdown]")) closeChecklistConditionMenus(container);
+  });
   $$(`[data-checklist-area-toggle="${cssEscape(scope)}"]`, container).forEach((button) => {
     button.addEventListener("click", () => toggleChecklistArea(container, scope, button.dataset.area));
   });
   $$(`[data-checklist-area-verify="${cssEscape(scope)}"]`, container).forEach((button) => {
     button.addEventListener("click", () => markChecklistAreaVerified(container, scope, button.dataset.area));
+  });
+  $$("[data-checklist-condition-button]", container).forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleChecklistConditionMenu(button);
+    });
+  });
+  $$("[data-checklist-condition-option]", container).forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      selectChecklistCondition(button, container, scope);
+    });
   });
 }
 
@@ -7424,9 +11786,63 @@ function toggleChecklistArea(container, scope, area) {
 }
 
 function markChecklistAreaVerified(container, scope, area) {
-  $$(`[data-checklist-condition="${cssEscape(scope)}"][data-area="${cssEscape(area)}"]`, container).forEach((select) => {
-    select.value = "Conforme";
+  $$(`[data-checklist-condition="${cssEscape(scope)}"][data-area="${cssEscape(area)}"]`, container).forEach((input) => {
+    setChecklistCondition(input, "Conforme");
   });
+  updateChecklistAreaVerifiedState(container, scope, area);
+}
+
+function toggleChecklistConditionMenu(button) {
+  const dropdown = button.closest("[data-checklist-condition-dropdown]");
+  const menu = dropdown?.querySelector("[data-checklist-condition-menu]");
+  if (!dropdown || !menu) return;
+  const shouldOpen = menu.hidden;
+  closeChecklistConditionMenus(dropdown.closest(".checklist-content"));
+  menu.hidden = !shouldOpen;
+  button.setAttribute("aria-expanded", String(shouldOpen));
+  dropdown.classList.toggle("is-open", shouldOpen);
+}
+
+function closeChecklistConditionMenus(container = document) {
+  $$("[data-checklist-condition-dropdown]", container).forEach((dropdown) => {
+    dropdown.classList.remove("is-open");
+    const button = $("[data-checklist-condition-button]", dropdown);
+    const menu = $("[data-checklist-condition-menu]", dropdown);
+    if (button) button.setAttribute("aria-expanded", "false");
+    if (menu) menu.hidden = true;
+  });
+}
+
+function selectChecklistCondition(optionButton, container, scope) {
+  const dropdown = optionButton.closest("[data-checklist-condition-dropdown]");
+  const input = dropdown?.querySelector(`[data-checklist-condition="${cssEscape(scope)}"]`);
+  if (!input) return;
+  setChecklistCondition(input, optionButton.dataset.checklistConditionOption || checklistUnverifiedCondition);
+  closeChecklistConditionMenus(dropdown);
+  updateChecklistAreaVerifiedState(container, scope, input.dataset.area);
+}
+
+function setChecklistCondition(input, condition) {
+  input.value = condition || checklistUnverifiedCondition;
+  const dropdown = input.closest("[data-checklist-condition-dropdown]");
+  const button = dropdown?.querySelector("[data-checklist-condition-button]");
+  if (button) button.innerHTML = renderChecklistConditionLabel(input.value);
+  $$("[data-checklist-condition-option]", dropdown).forEach((option) => {
+    option.setAttribute("aria-selected", String(option.dataset.checklistConditionOption === input.value));
+  });
+}
+
+function updateChecklistAreaVerifiedState(container, scope, area) {
+  const inputs = $$(`[data-checklist-condition="${cssEscape(scope)}"][data-area="${cssEscape(area)}"]`, container);
+  const verified = inputs.length > 0 && inputs.every((input) => input.value === "Conforme");
+  const areaCard = $(`[data-checklist-area="${cssEscape(scope)}"][data-area="${cssEscape(area)}"]`, container);
+  const button = $(`[data-checklist-area-verify="${cssEscape(scope)}"][data-area="${cssEscape(area)}"]`, container);
+  const icon = areaCard?.querySelector(".checklist-area-verified-icon");
+  if (button) {
+    button.classList.toggle("is-verified", verified);
+    button.setAttribute("aria-pressed", String(verified));
+  }
+  if (icon) icon.hidden = !verified;
 }
 
 function collectChecklistFromPanel(container, scope) {
@@ -7519,6 +11935,7 @@ function getArrivalMinutes(value) {
 
 function renderVehicleCard(vehicle, queuePosition = 0) {
   const status = statusMeta[vehicle.status];
+  const vehicleName = formatVehicleDisplayName(vehicle);
   const cardLabel =
     vehicle.status === "cancelado"
       ? `Serviço cancelado de ${vehicle.plate}`
@@ -7536,7 +11953,7 @@ function renderVehicleCard(vehicle, queuePosition = 0) {
         <span class="status-corner status-${vehicle.status}" aria-hidden="true">${icons[status.icon]}</span>
       </span>
       <span class="vehicle-info">
-        <h3>${vehicle.plate} - ${vehicle.model} ${vehicle.color}</h3>
+        <h3>${escapeHtml(vehicle.plate)} - ${escapeHtml(vehicleName)} ${escapeHtml(vehicle.color || "")}</h3>
         <p>${vehicle.owner}</p>
         <p>${vehicle.service}</p>
         <span class="vehicle-meta">
@@ -7581,7 +11998,7 @@ function openStatusDialog(vehicleId) {
 }
 
 function renderStatusDialogContent(vehicle) {
-  $("#statusVehicleTitle").textContent = `${vehicle.plate} - ${vehicle.model} ${vehicle.color}`;
+  $("#statusVehicleTitle").textContent = `${vehicle.plate} - ${formatVehicleDisplayName(vehicle)} ${vehicle.color || ""}`.trim();
   $("#statusDialogEyebrow").textContent =
     vehicle.status === "pronto" ? "Confirmar pagamento" : isFinalizedStatus(vehicle.status) ? "Recibo" : "Ações do veículo";
   $("#statusOptions").innerHTML = isFinalizedStatus(vehicle.status)
@@ -7623,6 +12040,10 @@ function renderPaymentConfirmationPanel(vehicle) {
   const isCash = vehicle.payment === "Dinheiro";
   const cashReceived = Number(vehicle.cashReceived || 0);
   const change = Math.max(0, cashReceived - total);
+  const hasPartialPayment = Boolean(vehicle.partialPaymentOpen || vehicle.partialPaidAmount || vehicle.partialBalance);
+  const hasOpenPayment = Boolean(vehicle.paymentOpen && !hasPartialPayment);
+  const partialPaidAmount = Number(vehicle.partialPaidAmount || 0);
+  const partialBalance = hasPartialPayment ? Math.max(0, Number(vehicle.partialBalance || total - partialPaidAmount)) : total;
 
   return `
     <div class="status-action-panel">
@@ -7657,6 +12078,16 @@ function renderPaymentConfirmationPanel(vehicle) {
           <span class="switch-control"></span>
           <span>Desconto</span>
         </label>
+        <label class="switch-field payment-adjustment-switch payment-open-switch" for="paymentOpenEnabled">
+          <input id="paymentOpenEnabled" type="checkbox" ${hasOpenPayment ? "checked" : ""} />
+          <span class="switch-control"></span>
+          <span>Pagamento em aberto</span>
+        </label>
+        <label class="switch-field payment-adjustment-switch payment-partial-switch" for="paymentPartialEnabled">
+          <input id="paymentPartialEnabled" type="checkbox" ${hasPartialPayment ? "checked" : ""} />
+          <span class="switch-control"></span>
+          <span>Pagamento parcial</span>
+        </label>
         <label class="login-field payment-adjustment-field" for="paymentExtraCharges" ${hasExtraCharges ? "" : "hidden"}>
           <span>Valor avulso</span>
           <input id="paymentExtraCharges" type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" value="${escapeHtml(formatCurrencyFieldValue(extraCharges))}" />
@@ -7680,6 +12111,14 @@ function renderPaymentConfirmationPanel(vehicle) {
         <article class="cash-change-card" id="paymentCashChangeField" ${isCash ? "" : "hidden"}>
           <span>Troco</span>
           <strong id="paymentCashChange">${formatCurrency(change)}</strong>
+        </article>
+        <label class="login-field payment-partial-field" for="paymentPartialAmount" ${hasPartialPayment ? "" : "hidden"}>
+          <span>Valor pago agora</span>
+          <input id="paymentPartialAmount" type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" value="${escapeHtml(formatCurrencyFieldValue(partialPaidAmount))}" />
+        </label>
+        <article class="cash-change-card partial-balance-card" id="paymentPartialBalanceField" ${hasPartialPayment ? "" : "hidden"}>
+          <span>Saldo em aberto</span>
+          <strong id="paymentPartialBalance">${formatCurrency(partialBalance)}</strong>
         </article>
       </section>
 
@@ -7736,7 +12175,7 @@ function generateReceiptPdf(vehicle) {
     "",
     `Status: ${statusMeta[vehicle.status]?.label || vehicle.status}`,
     `Placa: ${vehicle.plate}`,
-    `Veiculo: ${vehicle.model} - ${vehicle.color}`,
+    `Veiculo: ${formatVehicleDisplayName(vehicle)} - ${vehicle.color}`,
     `Cliente: ${vehicle.owner}`,
     `Telefone: ${vehicle.phone || "-"}`,
     `Servicos: ${vehicle.service}`,
@@ -7750,6 +12189,8 @@ function generateReceiptPdf(vehicle) {
       ? `Desconto: ${formatCurrency(vehicle.discount)}${vehicle.discountDescription ? ` - ${vehicle.discountDescription}` : ""}`
       : "",
     `Valor total: ${formatCurrency(getVehiclePaymentTotal(vehicle))}`,
+    vehicle.partialPaymentOpen ? `Valor pago agora: ${formatCurrency(vehicle.partialPaidAmount || 0)}` : "",
+    vehicle.partialPaymentOpen ? `Saldo em aberto: ${formatCurrency(vehicle.partialBalance || 0)}` : "",
     vehicle.payment === "Dinheiro" ? `Valor recebido: ${formatCurrency(vehicle.cashReceived || 0)}` : "",
     vehicle.payment === "Dinheiro" ? `Troco: ${formatCurrency(vehicle.cashChange || 0)}` : "",
     getVehicleTimeLabel(vehicle),
@@ -7977,7 +12418,15 @@ function handleStatusDialogChange(event) {
     return;
   }
 
-  if (["paymentExtraEnabled", "paymentDiscountEnabled"].includes(target.id)) {
+  if (["paymentExtraEnabled", "paymentDiscountEnabled", "paymentOpenEnabled", "paymentPartialEnabled"].includes(target.id)) {
+    if (target.id === "paymentOpenEnabled" && target.checked) {
+      const partialToggle = $("#paymentPartialEnabled");
+      if (partialToggle) partialToggle.checked = false;
+    }
+    if (target.id === "paymentPartialEnabled" && target.checked) {
+      const openToggle = $("#paymentOpenEnabled");
+      if (openToggle) openToggle.checked = false;
+    }
     updatePaymentConfirmationPreview(vehicle);
     return;
   }
@@ -8003,7 +12452,8 @@ function handleStatusDialogInput(event) {
       "paymentExtraDescription",
       "paymentDiscount",
       "paymentDiscountDescription",
-      "paymentCashReceived"
+      "paymentCashReceived",
+      "paymentPartialAmount"
     ].includes(target.id)
   ) {
     return;
@@ -8031,17 +12481,31 @@ function updatePaymentConfirmationPreview(vehicle) {
   const cashField = $("#paymentCashReceivedField");
   const cashChangeField = $("#paymentCashChangeField");
   const cashReceivedInput = $("#paymentCashReceived");
-  const isCash = method === "Dinheiro";
+  const keepPaymentOpen = $("#paymentOpenEnabled")?.checked || false;
+  const usePartialPayment = $("#paymentPartialEnabled")?.checked || false;
+  const partialField = $("#paymentPartialAmount")?.closest(".payment-partial-field");
+  const partialBalanceField = $("#paymentPartialBalanceField");
+  const isCash = method === "Dinheiro" && !keepPaymentOpen && !usePartialPayment;
 
   if (cashField) cashField.hidden = !isCash;
   if (cashChangeField) cashChangeField.hidden = !isCash;
+  if (partialField) partialField.hidden = !usePartialPayment;
+  if (partialBalanceField) partialBalanceField.hidden = !usePartialPayment;
   if (isCash && cashReceivedInput && !getCurrencyInputValue(cashReceivedInput)) {
     setCurrencyInputValue(cashReceivedInput, adjustment.total);
   }
 
   const updatedAdjustment = readPaymentAdjustmentsFromDialog(vehicle);
   $("#paymentConfirmTotal").textContent = formatCurrency(updatedAdjustment.total);
-  $("#paymentConfirmBreakdown").textContent = `Avulsos: ${formatCurrency(updatedAdjustment.extraCharges)} · Desconto: ${formatCurrency(updatedAdjustment.discount)}`;
+  const breakdown = [`Avulsos: ${formatCurrency(updatedAdjustment.extraCharges)}`, `Desconto: ${formatCurrency(updatedAdjustment.discount)}`];
+  if (updatedAdjustment.partialEnabled) {
+    breakdown.push(`Pago agora: ${formatCurrency(updatedAdjustment.partialAmount)}`);
+    breakdown.push(`Saldo: ${formatCurrency(updatedAdjustment.partialBalance)}`);
+  }
+  $("#paymentConfirmBreakdown").textContent = breakdown.join(" · ");
+  if ($("#paymentPartialBalance")) {
+    $("#paymentPartialBalance").textContent = formatCurrency(updatedAdjustment.partialBalance);
+  }
   if ($("#paymentCashChange")) {
     const cashMessage =
       updatedAdjustment.cashReceived < updatedAdjustment.total
@@ -8416,13 +12880,94 @@ function confirmVehiclePayment() {
   const previousBillingValue = getVehiclePaymentTotal(vehicle);
   const method = $("#paymentConfirmMethod")?.value || vehicle.payment || "Pix";
   const adjustment = applyPaymentAdjustmentsFromDialog(vehicle, method);
-  if (method === "Dinheiro" && adjustment.cashReceived < adjustment.total) {
+  const keepPaymentOpen = $("#paymentOpenEnabled")?.checked || false;
+  const usePartialPayment = $("#paymentPartialEnabled")?.checked || false;
+  if (!keepPaymentOpen && !usePartialPayment && method === "Dinheiro" && adjustment.cashReceived < adjustment.total) {
     showToast("Informe um valor recebido suficiente para calcular o troco.");
     $("#paymentCashReceived")?.focus();
     return;
   }
 
-  if (method === "Faturado" && !vehicle.billing) {
+  if (usePartialPayment) {
+    if (method === "Faturado") {
+      showToast("Para pagamento parcial, selecione o meio pago agora; o saldo ficará em aberto.");
+      return;
+    }
+    if (adjustment.total <= 0) {
+      showToast("O valor do atendimento precisa ser maior que zero.");
+      return;
+    }
+    if (adjustment.partialAmount <= 0) {
+      showToast("Informe o valor pago agora.");
+      $("#paymentPartialAmount")?.focus();
+      return;
+    }
+    if (adjustment.partialAmount >= adjustment.total) {
+      showToast("Para pagamento parcial, o valor pago agora deve ser menor que o total.");
+      $("#paymentPartialAmount")?.focus();
+      return;
+    }
+
+    vehicle.payment = method;
+    if (previousPayment === "Faturado" && vehicle.billing) {
+      detachVehicleFromBilling(vehicle, previousBillingValue, previousService);
+    }
+
+    vehicle.partialPaymentOpen = true;
+    vehicle.partialPaidAmount = adjustment.partialAmount;
+    vehicle.partialBalance = adjustment.partialBalance;
+    vehicle.paymentStatus = "Parcial";
+    vehicle.paymentConfirmed = false;
+    vehicle.paymentConfirmedAt = getCurrentShortTime();
+    if (method === "Dinheiro") {
+      vehicle.cashReceived = adjustment.partialAmount;
+      vehicle.cashChange = 0;
+    }
+
+    const paidEntry = upsertCashEntryFromVehicle(vehicle, {
+      status: "Confirmado",
+      value: adjustment.partialAmount,
+      description: `${vehicle.plate} - pagamento parcial - ${vehicle.service}`,
+      openPayment: false,
+      partialPayment: true,
+      partialPaidAmount: adjustment.partialAmount,
+      partialBalance: adjustment.partialBalance
+    });
+    vehicle.cashEntryId = paidEntry.id;
+    vehicle.paymentOpen = true;
+    vehicle.status = "finalizado";
+    vehicle.finishedAt = paidEntry.time;
+
+    const openDescription = getPartialOpenPaymentDescription(vehicle);
+    const pendingEntry = upsertCashEntryFromVehicle(vehicle, {
+      forceNew: true,
+      status: "Pendente",
+      value: adjustment.partialBalance,
+      description: openDescription,
+      openPayment: true,
+      partialPayment: true,
+      partialPaidAmount: adjustment.partialAmount,
+      partialBalance: adjustment.partialBalance
+    });
+    const openPayment = upsertOpenPaymentFromVehicle(vehicle, pendingEntry, {
+      value: adjustment.partialBalance,
+      description: openDescription,
+      paymentMethod: method,
+      partialPayment: true,
+      paidAmount: adjustment.partialAmount
+    });
+
+    updateVehicleServiceStatus(vehicle);
+    renderPatio();
+    refreshCashflowScreen();
+    renderAdminDashboard();
+    closeStatusDialog();
+    triggerAutomatedMessage("partial-yard-payment", getMessageContextFromVehicle(vehicle));
+    showToast(`Pagamento parcial de ${vehicle.plate} registrado. Saldo em aberto: ${formatCurrency(adjustment.partialBalance)}.`);
+    return;
+  }
+
+  if (!keepPaymentOpen && method === "Faturado" && !vehicle.billing) {
     renderStatusBillingPanel(vehicle, "confirm");
     return;
   }
@@ -8431,7 +12976,28 @@ function confirmVehiclePayment() {
   if (previousPayment === "Faturado" && method !== "Faturado" && vehicle.billing) {
     detachVehicleFromBilling(vehicle, previousBillingValue, previousService);
   }
-  if (method === "Faturado" && !vehicle.billing && !attachVehicleToOpenInvoice(vehicle)) return;
+  if (!keepPaymentOpen && method === "Faturado" && !vehicle.billing && !attachVehicleToOpenInvoice(vehicle)) return;
+
+  if (keepPaymentOpen) {
+    vehicle.paymentOpen = true;
+    vehicle.paymentStatus = "Pendente";
+    vehicle.paymentConfirmed = false;
+    vehicle.paymentConfirmedAt = "";
+    vehicle.status = "finalizado";
+    vehicle.finishedAt = getCurrentShortTime();
+    const cashEntry = upsertCashEntryFromVehicle(vehicle, { status: "Pendente", openPayment: true });
+    vehicle.cashEntryId = cashEntry.id;
+    const openPayment = upsertOpenPaymentFromVehicle(vehicle, cashEntry);
+    updateVehicleServiceStatus(vehicle);
+    renderPatio();
+    refreshCashflowScreen();
+    renderAdminDashboard();
+    closeStatusDialog();
+    triggerAutomatedMessage("open-service-payment", getMessageContextFromOpenPayment(openPayment));
+    showToast(`Pagamento em aberto de ${vehicle.plate} registrado para ${openPayment.clientName}.`);
+    return;
+  }
+
   const cashEntry = upsertCashEntryFromVehicle(vehicle);
   vehicle.cashEntryId = cashEntry.id;
   vehicle.paymentStatus = cashEntry.status;
@@ -8444,6 +13010,10 @@ function confirmVehiclePayment() {
   renderPatio();
   refreshCashflowScreen();
   closeStatusDialog();
+  if (cashEntry.status === "Confirmado") {
+    triggerAutomatedMessage("payment-confirmation", getMessageContextFromVehicle(vehicle));
+    triggerAutomatedMessage("satisfaction", getMessageContextFromVehicle(vehicle));
+  }
   showToast(
     cashEntry.status === "Confirmado"
       ? `Pagamento de ${vehicle.plate} confirmado.`
@@ -8451,21 +13021,30 @@ function confirmVehiclePayment() {
   );
 }
 
-function upsertCashEntryFromVehicle(vehicle) {
-  const existingEntry = cashEntries.find((entry) => entry.id && entry.id === vehicle.cashEntryId);
-  const status = vehicle.payment === "Faturado" ? "Pendente" : "Confirmado";
+function getPartialOpenPaymentDescription(vehicle) {
+  return `Saldo aberto referente ao serviço ${vehicle.service} realizado em ${formatDateBR(getTodayISO())}.`;
+}
+
+function upsertCashEntryFromVehicle(vehicle, options = {}) {
+  const existingEntry = options.forceNew ? null : cashEntries.find((entry) => entry.id && entry.id === vehicle.cashEntryId);
+  const status = options.status || (vehicle.payment === "Faturado" || vehicle.paymentOpen ? "Pendente" : "Confirmado");
+  const value = Number.isFinite(Number(options.value)) ? Number(options.value) : getVehiclePaymentTotal(vehicle);
   const payload = {
     date: getTodayISO(),
     time: getCurrentShortTime(),
     type: "Entrada",
-    description: `${vehicle.plate} - ${vehicle.service}`,
-    method: vehicle.payment,
-    value: getVehiclePaymentTotal(vehicle),
+    description: options.description || `${vehicle.plate} - ${vehicle.service}`,
+    method: options.method || vehicle.payment,
+    value,
     status,
     category: "Serviços",
     costCenter: vehicle.type === "Carro" ? "Lavagem" : "Unidade principal",
     plate: vehicle.plate,
     vehicleId: vehicle.id,
+    openPayment: options.openPayment === undefined ? Boolean(vehicle.paymentOpen) : Boolean(options.openPayment),
+    partialPayment: Boolean(options.partialPayment),
+    partialPaidAmount: Number(options.partialPaidAmount || 0),
+    partialBalance: Number(options.partialBalance || 0),
     operator: activeSessionUser || "Operador"
   };
 
@@ -8482,6 +13061,48 @@ function upsertCashEntryFromVehicle(vehicle) {
   return entry;
 }
 
+function upsertOpenPaymentFromVehicle(vehicle, cashEntry, options = {}) {
+  const registeredVehicle = findVehicleByPlate(vehicle.plate);
+  const client =
+    (registeredVehicle?.currentClientId ? getClientById(registeredVehicle.currentClientId) : null) ||
+    findClientByPlate(vehicle.plate) ||
+    findClientByPhone(vehicle.phone);
+  const existingPayment = openPayments.find((payment) => payment.status !== "Baixado" && payment.vehicleId === vehicle.id);
+  const value = Number.isFinite(Number(options.value)) ? Number(options.value) : getVehiclePaymentTotal(vehicle);
+  const payload = {
+    clientId: client?.id || null,
+    clientName: client ? getClientDisplayName(client) : vehicle.owner || "Cliente avulso",
+    phone: client?.phone || vehicle.phone || "",
+    plate: vehicle.plate,
+    service: options.service || vehicle.service,
+    description: options.description || "",
+    value,
+    paymentMethod: options.paymentMethod || vehicle.payment || "Pix",
+    createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
+    dueDate: getTodayISO(),
+    status: "Aberto",
+    reminderFrequency: "Diário",
+    operator: activeSessionUser || "Operador",
+    vehicleId: vehicle.id,
+    cashEntryId: cashEntry?.id || vehicle.cashEntryId || null,
+    partialPayment: Boolean(options.partialPayment),
+    paidAmount: Number(options.paidAmount || 0)
+  };
+
+  if (existingPayment) {
+    Object.assign(existingPayment, payload, { id: existingPayment.id, lastReminderAt: existingPayment.lastReminderAt || "" });
+    return existingPayment;
+  }
+
+  const openPayment = {
+    id: getNextOpenPaymentId(),
+    lastReminderAt: "",
+    ...payload
+  };
+  openPayments.unshift(openPayment);
+  return openPayment;
+}
+
 function getNextCashEntryId() {
   return Math.max(0, ...cashEntries.map((entry) => entry.id || 0)) + 1;
 }
@@ -8492,10 +13113,10 @@ function syncCashEntryAfterPatioEdit(vehicle) {
 
   entry.description = `${vehicle.plate} - ${vehicle.service}`;
   entry.method = vehicle.payment;
-  entry.value = getVehiclePaymentTotal(vehicle);
-  entry.status = vehicle.payment === "Faturado" ? "Pendente" : "Confirmado";
+  entry.value = vehicle.partialPaymentOpen ? Number(vehicle.partialPaidAmount || entry.value || 0) : getVehiclePaymentTotal(vehicle);
+  entry.status = vehicle.partialPaymentOpen ? "Confirmado" : vehicle.payment === "Faturado" || vehicle.paymentOpen ? "Pendente" : "Confirmado";
   vehicle.paymentStatus = entry.status;
-  vehicle.paymentConfirmed = entry.status === "Confirmado";
+  vehicle.paymentConfirmed = vehicle.partialPaymentOpen ? false : entry.status === "Confirmado";
 }
 
 function syncBillingAfterPatioEdit(vehicle, previousValue, previousService, previousPayment) {
@@ -8613,6 +13234,8 @@ function updateVehicleHistoryAfterServiceEdit(vehicle, previousService) {
 function refreshCashflowScreen() {
   const view = $("#adminCashflowView");
   if (view && !view.hidden) renderAdminScreen("cashflow");
+  const openPaymentsView = $("#adminOpenPaymentsView");
+  if (openPaymentsView && !openPaymentsView.hidden) renderAdminScreen("openPayments");
 }
 
 function closeStatusDialog() {
@@ -8632,14 +13255,19 @@ function confirmScheduledVehicleEntryWithChecklist() {
 function updateVehicleStatus(status) {
   const vehicle = patioVehicles.find((item) => item.id === activeVehicleId);
   if (!vehicle || !statusMeta[status]) return;
-  const wasScheduled = vehicle.status === "agendado" && status === "aguardando";
-  const wasCanceledSchedule = vehicle.status === "agendado" && status === "cancelado";
+  const previousStatus = vehicle.status;
+  const wasScheduled = previousStatus === "agendado" && status === "aguardando";
+  const wasCanceledSchedule = previousStatus === "agendado" && status === "cancelado";
 
   vehicle.status = status;
   if (wasScheduled) vehicle.entry = getCurrentShortTime();
   updateVehicleServiceStatus(vehicle);
   renderPatio();
   closeStatusDialog();
+  if (wasScheduled) triggerAutomatedMessage("yard-entry", getMessageContextFromVehicle(vehicle));
+  else if (wasCanceledSchedule) triggerAutomatedMessage("schedule-canceled", getMessageContextFromVehicle(vehicle));
+  else if (status === "cancelado") triggerAutomatedMessage("service-canceled", getMessageContextFromVehicle(vehicle));
+  else if (status === "pronto") triggerAutomatedMessage("vehicle-ready", getMessageContextFromVehicle(vehicle));
   showToast(
     wasScheduled
       ? `Entrada de ${vehicle.plate} confirmada.`

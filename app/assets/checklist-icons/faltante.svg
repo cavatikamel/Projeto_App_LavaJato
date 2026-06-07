@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Faltante</title>
+  <circle cx="64" cy="64" r="56" fill="#FFFFFF" stroke="#D7E5EB" stroke-width="6"/>
+  <circle cx="64" cy="64" r="34" fill="none" stroke="#EF4444" stroke-width="11"/>
+  <path d="M43 64h42" fill="none" stroke="#EF4444" stroke-width="11" stroke-linecap="round"/>
+</svg>

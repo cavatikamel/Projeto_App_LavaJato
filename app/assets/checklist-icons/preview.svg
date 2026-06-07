@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 190" role="img" aria-labelledby="title">
+  <title id="title">Preview dos ícones simples do checklist LavaPrime</title>
+  <rect width="900" height="190" rx="16" fill="#F4FAFC"/>
+  <style>
+    .label{font-family:Roboto,Arial,sans-serif;font-size:15px;font-weight:700;fill:#0B1F2A;text-anchor:middle}
+    .base{fill:#fff;stroke:#D7E5EB;stroke-width:6}
+  </style>
+  <g transform="translate(28 24)">
+    <circle class="base" cx="48" cy="48" r="42"/>
+    <path d="M28 50 42 64 71 32" fill="none" stroke="#22C55E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <text class="label" x="48" y="118">Conforme</text>
+  </g>
+  <g transform="translate(150 24)">
+    <circle class="base" cx="48" cy="48" r="42"/>
+    <path d="M21 49 31 40 41 49 51 40 61 49 71 40 82 49" fill="none" stroke="#F5B700" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <text class="label" x="48" y="118">Arranhado</text>
+  </g>
+  <g transform="translate(272 24)">
+    <circle class="base" cx="48" cy="48" r="42"/>
+    <path d="M22 50 C31 36 41 36 50 50 S69 64 83 50" fill="none" stroke="#22C55E" stroke-width="10" stroke-linecap="round"/>
+    <text class="label" x="48" y="118">Amassado</text>
+  </g>
+  <g transform="translate(394 24)">
+    <circle class="base" cx="48" cy="48" r="42"/>
+    <path d="M29 20 41 36 35 44 51 60 46 78 69 48" fill="none" stroke="#EF4444" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <text class="label" x="48" y="118">Quebrado</text>
+  </g>
+  <g transform="translate(516 24)">
+    <circle class="base" cx="48" cy="48" r="42"/>
+    <circle cx="48" cy="48" r="26" fill="none" stroke="#EF4444" stroke-width="9"/>
+    <path d="M32 48h32" fill="none" stroke="#EF4444" stroke-width="9" stroke-linecap="round"/>
+    <text class="label" x="48" y="118">Faltando</text>
+  </g>
+  <g transform="translate(638 24)">
+    <circle class="base" cx="48" cy="48" r="42"/>
+    <circle cx="48" cy="48" r="26" fill="none" stroke="#94A3B8" stroke-width="8"/>
+    <path d="M30 66 66 30" fill="none" stroke="#94A3B8" stroke-width="9" stroke-linecap="round"/>
+    <text class="label" x="48" y="118">N/A</text>
+  </g>
+  <g transform="translate(760 24)">
+    <circle class="base" cx="48" cy="48" r="42"/>
+    <path d="M34 35c2-9 9-14 19-13 10 1 17 7 17 16 0 10-7 15-16 19-4 2-6 4-6 8" fill="none" stroke="#00B8D9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M48 77h.5" fill="none" stroke="#00B8D9" stroke-width="10" stroke-linecap="round"/>
+    <text class="label" x="48" y="118">Nao Verif.</text>
+  </g>
+</svg>

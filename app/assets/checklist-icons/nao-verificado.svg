@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Não Verificado</title>
+  <circle cx="64" cy="64" r="56" fill="#FFFFFF" stroke="#D7E5EB" stroke-width="6"/>
+  <path d="M48 48c2-11 10-18 23-17 12 1 21 8 21 19 0 12-9 18-20 23-5 2-7 5-7 10" fill="none" stroke="#00B8D9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M64 98h.5" fill="none" stroke="#00B8D9" stroke-width="12" stroke-linecap="round"/>
+</svg>

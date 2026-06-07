@@ -152,6 +152,10 @@
               <span data-icon="users"></span>
               <span>Comunicação</span>
             </button>
+            <button class="admin-nav-button" type="button" data-admin-view="businessMessages">
+              <span data-icon="message"></span>
+              <span>Central de Mensagens</span>
+            </button>
             <button class="admin-nav-button" type="button" data-admin-view="operators">
               <span data-icon="badge"></span>
               <span>Operadores</span>
@@ -163,6 +167,10 @@
             <button class="admin-nav-button" type="button" data-admin-view="cashflow">
               <span data-icon="cashflow"></span>
               <span>Fluxo de caixa</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="openPayments">
+              <span data-icon="alert"></span>
+              <span>Pagamento em Aberto</span>
             </button>
             <button class="admin-nav-button" type="button" data-admin-view="payables">
               <span data-icon="payable"></span>
@@ -304,6 +312,16 @@
           <div class="admin-screen-content" id="adminBusinessSocialContent"></div>
         </section>
 
+        <section class="admin-view admin-sketch-view" id="adminBusinessMessagesView" aria-labelledby="adminBusinessMessagesTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Meu Negócio</p>
+              <h1 id="adminBusinessMessagesTitle">Central de Mensagens</h1>
+            </div>
+          </header>
+          <div class="admin-screen-content" id="adminBusinessMessagesContent"></div>
+        </section>
+
         <section class="admin-view admin-sketch-view" id="adminOperatorsView" aria-labelledby="adminOperatorsTitle" hidden>
           <header class="admin-header">
             <div>
@@ -340,6 +358,16 @@
             </div>
           </header>
           <div class="admin-screen-content" id="adminCashflowContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminOpenPaymentsView" aria-labelledby="adminOpenPaymentsTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Financeiro</p>
+              <h1 id="adminOpenPaymentsTitle">Pagamento em Aberto</h1>
+            </div>
+          </header>
+          <div class="admin-screen-content" id="adminOpenPaymentsContent"></div>
         </section>
 
         <section class="admin-view admin-sketch-view" id="adminPayablesView" aria-labelledby="adminPayablesTitle" hidden>
@@ -388,6 +416,7 @@
 
     <dialog class="operator-dialog" id="operatorDialog"></dialog>
     <dialog class="client-dialog" id="clientDialog"></dialog>
+    <dialog class="vehicle-registry-dialog" id="vehicleRegistryDialog"></dialog>
     <dialog class="schedule-dialog" id="scheduleDialog"></dialog>
     <dialog class="service-dialog" id="serviceDialog"></dialog>
     <dialog class="cashflow-dialog" id="cashflowDialog"></dialog>
@@ -418,12 +447,17 @@
                 <input id="vehiclePlate" name="plate" type="text" placeholder="ABC1D23" maxlength="8" autocomplete="off" required />
               </label>
               <div class="entry-plate-results" id="vehiclePlateResults" hidden></div>
+              <div class="entry-linked-record" id="entryLinkedRecord" hidden></div>
             </div>
-            <label class="login-field" for="vehicleModel">
-              <span>Modelo</span>
-              <input id="vehicleModel" name="model" type="text" placeholder="Onix" required />
-            </label>
-            <div class="color-field">
+            <div class="vehicle-model-lookup-field entry-model-field">
+              <label class="login-field" for="vehicleModel">
+                <span>Modelo</span>
+                <input id="vehicleModel" name="model" type="text" placeholder="Onix" autocomplete="off" required />
+              </label>
+              <input id="vehicleBrand" name="brand" type="hidden" />
+              <div class="vehicle-model-results" id="vehicleModelResults" hidden></div>
+            </div>
+            <div class="color-field entry-color-field">
               <span>Cor</span>
               <input id="vehicleColor" name="color" type="hidden" value="Branco" required />
               <div class="color-grid" aria-label="Escolha a cor do veículo">
@@ -556,13 +590,10 @@
         </section>
 
         <section class="vehicle-step" data-vehicle-step="billing" hidden>
-          <p class="step-copy">Selecione o cliente faturado e a fatura onde esta lavagem será incluída.</p>
+          <p class="step-copy">Selecione a fatura onde esta lavagem sera incluida.</p>
 
           <div class="vehicle-form-grid">
-            <label class="login-field" for="billingClientSelect">
-              <span>Cliente faturado</span>
-              <select id="billingClientSelect"></select>
-            </label>
+            <input id="billingClientSelect" type="hidden" />
             <label class="login-field" for="billingInvoiceSelect">
               <span>Fatura</span>
               <select id="billingInvoiceSelect"></select>
@@ -570,10 +601,6 @@
           </div>
 
           <div class="support-actions">
-            <button class="ghost-action" id="newBillingClientButton" type="button">
-              <span data-icon="plus"></span>
-              <span>Novo cliente</span>
-            </button>
             <button class="ghost-action" id="newInvoiceButton" type="button">
               <span data-icon="plus"></span>
               <span>Abrir nova fatura</span>
@@ -679,6 +706,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <script src="./assets/data/fipe-veiculos.js" defer></script>
     <script src="./main.js" defer></script>
   </body>
 </html>

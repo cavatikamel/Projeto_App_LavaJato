@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Quebrado</title>
+  <circle cx="64" cy="64" r="56" fill="#FFFFFF" stroke="#D7E5EB" stroke-width="6"/>
+  <path d="M39 27 55 47 47 57 68 78 61 100 91 62" fill="none" stroke="#EF4444" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
