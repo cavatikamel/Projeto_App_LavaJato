@@ -38,6 +38,16 @@ docker-compose.yml     Execucao local com Docker
 nginx.conf             Configuracao do servidor estatico
 ```
 
+## Documentacao do repositorio
+
+Para garantir handoff completo para qualquer dev futuro, use estes arquivos como ponto de partida:
+
+- `docs/HANDOFF.md` - guia rapido para entender o projeto e por onde comecar
+- `docs/ARCHITECTURE.md` - arquitetura atual e decisoes tecnicas principais
+- `docs/DEVELOPMENT.md` - rotina de desenvolvimento, validacao, commit e publicacao
+- `docs/PROJECT_STATUS.md` - estado atual do produto, modulos e pendencias conhecidas
+- `docs/DECISIONS.md` - registro de decisoes estruturais do projeto
+
 ## Como rodar localmente
 
 ### Opcao 1: Docker Compose
@@ -70,6 +80,7 @@ Variaveis opcionais:
 - `Projeto_App_LavaJato` e o repositorio principal
 - `LavaPrime/` foi desconsiderado neste repositorio para evitar historico duplicado
 - `Gestão do Projeto.xlsx` e um artefato operacional local e nao entra no versionamento
+- toda alteracao relevante deve deixar rastros no GitHub: codigo, commit e, quando necessario, documentacao
 
 Fluxo recomendado:
 
@@ -91,3 +102,4 @@ O deploy atual esta preparado para entrega como site estatico com Nginx:
 
 - O ambiente atual permitiu validar acesso ao GitHub e publicacao por `git push`.
 - Neste turno, a checagem por `node --check` nao foi possivel porque `node.exe` retornou erro de acesso no Windows local.
+- Para compensar isso, o repositorio deve manter validacao automatica no GitHub Actions sempre que possivel.

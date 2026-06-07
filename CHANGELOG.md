@@ -7,3 +7,6 @@
 - documentada a arquitetura estatica com Nginx e Docker
 - documentados os modulos principais do app e a estrutura de pastas
 - registrado o fluxo recomendado para versionamento e publicacao
+- adicionada documentacao de handoff, arquitetura, desenvolvimento, status e decisoes
+- adicionada validacao automatica no GitHub Actions
+- adicionados templates basicos para pull request e bug report
