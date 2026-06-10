@@ -120,6 +120,10 @@
               <span data-icon="carFront"></span>
               <span>Pátio</span>
             </button>
+            <button class="admin-nav-button" type="button" data-admin-view="quotes">
+              <span data-icon="invoice"></span>
+              <span>Orçamentos</span>
+            </button>
           </div>
 
           <div class="admin-nav-group">
@@ -252,6 +256,16 @@
             </div>
             <div class="vehicle-grid" id="adminVehicleGrid"></div>
           </section>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminQuotesView" aria-labelledby="adminQuotesTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Operação</p>
+              <h1 id="adminQuotesTitle">Orçamentos</h1>
+            </div>
+          </header>
+          <section class="admin-screen-content admin-quotes-content" id="adminQuotesContent" aria-label="Orçamentos emitidos"></section>
         </section>
 
         <section class="admin-view admin-sketch-view" id="adminClientsView" aria-labelledby="adminClientsTitle" hidden>
@@ -417,9 +431,11 @@
     <dialog class="operator-dialog" id="operatorDialog"></dialog>
     <dialog class="client-dialog" id="clientDialog"></dialog>
     <dialog class="vehicle-registry-dialog" id="vehicleRegistryDialog"></dialog>
+    <dialog class="vehicle-registry-dialog" id="vehicleHistoryDialog"></dialog>
     <dialog class="schedule-dialog" id="scheduleDialog"></dialog>
     <dialog class="service-dialog" id="serviceDialog"></dialog>
     <dialog class="cashflow-dialog" id="cashflowDialog"></dialog>
+    <dialog class="vehicle-dialog quote-dialog" id="quoteDialog"></dialog>
 
     <dialog class="vehicle-dialog" id="vehicleDialog">
       <form class="vehicle-box" id="vehicleForm">
@@ -553,6 +569,11 @@
                 <option value="Faturado">Faturado</option>
               </select>
             </label>
+            <label class="switch-field vehicle-entry-payment-switch" id="vehicleEntryPaymentField" for="vehiclePaidAtEntry">
+              <input id="vehiclePaidAtEntry" name="paidAtEntry" type="checkbox" />
+              <span class="switch-control"></span>
+              <span>Pagamento na entrada</span>
+            </label>
           </div>
           <div id="vehicleClientChecklistMount"></div>
 
@@ -685,6 +706,8 @@
       </div>
     </dialog>
 
+    <dialog class="message-dialog" id="vehicleOwnerTransferDialog"></dialog>
+
     <dialog class="message-dialog" id="messageDialog">
       <div class="message-box">
         <div class="dialog-head">
@@ -703,6 +726,8 @@
         </div>
       </div>
     </dialog>
+
+    <dialog class="message-dialog client-message-dialog" id="clientMessageDialog"></dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

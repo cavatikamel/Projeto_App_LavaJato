@@ -54,11 +54,27 @@ let selectedEntryVehicleId = null;
 let entryRegistryEditContext = null;
 let clientVehicleRegistrationContext = null;
 let selectedScheduleVehicleId = null;
+let quoteDialogStep = "vehicle";
+let selectedQuoteVehicleId = null;
+let pendingQuotePatioEntry = null;
+let pendingQuotePatioQuoteId = null;
 let pdfLogoImageCache = null;
 let pdfLogoImageSourceCache = "";
 let pdfLogoImagePromise = null;
 let selectedMessageTemplateKey = "";
 let selectedMessageCategory = "";
+let selectedClientMessageClientId = null;
+let selectedClientMessagePlate = "";
+let selectedClientMessageCategory = "";
+let selectedClientMessageTemplateKey = "";
+let selectedVehicleOwnerTransferId = null;
+let vehicleRegistryDialogSource = "";
+const vehicleOwnerTransferSearchModes = [
+  { value: "name", label: "Nome / Razao social", placeholder: "Digite o nome ou a razao social" },
+  { value: "document", label: "Documento", placeholder: "Digite o CPF ou CNPJ" },
+  { value: "phone", label: "Telefone", placeholder: "Digite o telefone" },
+  { value: "plates", label: "Outras placas", placeholder: "Digite outra placa associada" }
+];
 
 const billingClients = [
   { id: 1, name: "Frota Prime Ltda", document: "12.345.678/0001-90", phone: "(11) 91111-0001" },
@@ -114,8 +130,11 @@ const pdfLogoSizing = {
   minPercent: 45,
   maxPercent: 100,
   defaultPercent: 100,
-  headerMaxWidth: 156,
-  headerMaxHeight: 52,
+  headerMaxWidth: 72,
+  headerMaxHeight: 72,
+  headerX: 45,
+  headerY: 766,
+  headerTextX: 129,
   sourceMaxSide: 320,
   jpegQuality: 0.82
 };
@@ -441,6 +460,95 @@ const patioVehicles = [
     payment: "Faturado",
     entry: "11:20",
     status: "cancelado"
+  }
+];
+
+const quoteEstimates = [
+  {
+    id: 1,
+    code: "ORC-202606-001",
+    date: "2026-06-03",
+    time: "09:20",
+    dueDate: "2026-06-18",
+    validityDays: 15,
+    plate: "QTE1A23",
+    brand: "Volkswagen",
+    model: "Polo",
+    color: "Branco",
+    type: "Carro",
+    category: "Hatch",
+    owner: "Helena Duarte",
+    phone: "(11) 97777-1200",
+    payment: "Pix",
+    services: ["Lavagem Prime"],
+    extraItems: [{ description: "Remoção de manchas no banco", value: 90 }],
+    status: "Pendente",
+    operator: "Administrador"
+  },
+  {
+    id: 2,
+    code: "ORC-202606-002",
+    date: "2026-06-01",
+    time: "16:10",
+    dueDate: "2026-06-10",
+    validityDays: 9,
+    plate: "APR4B10",
+    brand: "Honda",
+    model: "Civic",
+    color: "Preto",
+    type: "Carro",
+    category: "Sedan",
+    owner: "Diego Almeida",
+    phone: "(11) 96666-3344",
+    payment: "Cartão de crédito",
+    services: ["Higienização interna"],
+    extraItems: [{ description: "Oxi-sanitização", value: 70 }],
+    status: "Aprovado",
+    approvedAt: "03/06/2026 10:45",
+    operator: "Administrador"
+  },
+  {
+    id: 3,
+    code: "ORC-202605-003",
+    date: "2026-05-20",
+    time: "11:05",
+    dueDate: "2026-06-01",
+    validityDays: 12,
+    plate: "VCD9E02",
+    brand: "Jeep",
+    model: "Compass",
+    color: "Azul",
+    type: "Carro",
+    category: "SUV",
+    owner: "Renata Moura",
+    phone: "(31) 95555-2210",
+    payment: "Transferência",
+    services: ["Detailing completo"],
+    extraItems: [],
+    status: "Pendente",
+    operator: "Administrador"
+  },
+  {
+    id: 4,
+    code: "ORC-202606-004",
+    date: "2026-06-04",
+    time: "14:30",
+    dueDate: "2026-06-19",
+    validityDays: 15,
+    plate: "RJT6C88",
+    brand: "Toyota",
+    model: "Hilux",
+    color: "Prata",
+    type: "Caminhonete",
+    category: "Picape",
+    owner: "Marcelo Rocha",
+    phone: "(21) 94444-7100",
+    payment: "Boleto",
+    services: ["Vitrificação"],
+    extraItems: [{ description: "Polimento técnico", value: 180 }],
+    status: "Não aprovado",
+    rejectedAt: "05/06/2026 09:30",
+    operator: "Administrador"
   }
 ];
 
@@ -990,7 +1098,7 @@ function bindEvents() {
   });
   $("#startVehicleRegistryButton").addEventListener("click", () => {
     showAdminView("vehicles");
-    window.setTimeout(focusVehicleForm, 0);
+    window.setTimeout(() => openAdminVehicleRegistryDialog(), 0);
   });
   $("#startOperatorFormButton").addEventListener("click", () => {
     showAdminView("operators");
@@ -1026,7 +1134,13 @@ function bindEvents() {
     event.preventDefault();
     handleVehicleEntrySubmit();
   });
+  $("#vehiclePaidAtEntry")?.addEventListener("change", () => {
+    updateVehicleEntryPaymentState();
+    updatePaymentAction();
+    renderActiveVehicleChecklist();
+  });
   $("#vehiclePayment").addEventListener("change", () => {
+    updateVehicleEntryPaymentState();
     updatePaymentAction();
     renderActiveVehicleChecklist();
   });
@@ -1142,7 +1256,8 @@ function showAdminView(view) {
 
   if (view === "dashboard") renderAdminDashboard();
   if (view === "patio") renderPatio();
-  if (!["dashboard", "patio"].includes(view)) renderAdminScreen(view);
+  if (view === "quotes") renderPatioQuotes();
+  if (!["dashboard", "patio", "quotes"].includes(view)) renderAdminScreen(view);
 }
 
 function returnToLogin() {
@@ -1899,6 +2014,11 @@ function updateVehicleDialogMode() {
   $("#vehicleDialogTitle").textContent = isClientRegistration ? "Novo veículo do cliente" : isSchedule ? "Novo veículo para agendamento" : "Novo veículo";
   $("#vehicleEntryStepCopy").textContent = "Dados do veículo";
   $("#vehicleDialog .services-field")?.toggleAttribute("hidden", isClientRegistration);
+  const entryPaymentField = $("#vehicleEntryPaymentField");
+  const paidAtEntryInput = $("#vehiclePaidAtEntry");
+  const showEntryPayment = vehicleEntryMode === "entry";
+  if (entryPaymentField) entryPaymentField.hidden = !showEntryPayment;
+  if (!showEntryPayment && paidAtEntryInput) paidAtEntryInput.checked = false;
   $("#cancelVehicleEntry").textContent = isClientRegistration ? "Voltar ao cliente" : "Cancelar";
   const nextIcon = $("#nextVehicleEntryButton [data-icon]");
   const nextLabel = $("#nextVehicleEntryButton span:last-child");
@@ -1910,6 +2030,24 @@ function updateVehicleDialogMode() {
 
   setScheduleDateMin("#vehicleScheduleDate");
   renderScheduleTimeOptions();
+  updateVehicleEntryPaymentState();
+}
+
+function updateVehicleEntryPaymentState() {
+  const paymentSelect = $("#vehiclePayment");
+  const paidAtEntryInput = $("#vehiclePaidAtEntry");
+  if (!paymentSelect || !paidAtEntryInput) return;
+
+  const paidAtEntry = vehicleEntryMode === "entry" && paidAtEntryInput.checked;
+  const billedOption = Array.from(paymentSelect.options).find((option) => option.value === "Faturado");
+  if (billedOption) {
+    billedOption.disabled = paidAtEntry;
+    billedOption.hidden = paidAtEntry;
+  }
+
+  if (paidAtEntry && paymentSelect.value === "Faturado") {
+    paymentSelect.value = "";
+  }
 }
 
 function handleVehicleScheduleToggle(event) {
@@ -2166,6 +2304,15 @@ function buildVehicleFromForm(data, { requireSchedule = vehicleEntryMode === "sc
     return null;
   }
 
+  const payment = String(data.get("payment")).trim();
+  const paymentAtEntry = vehicleEntryMode === "entry" && data.get("paidAtEntry") === "on";
+  if (paymentAtEntry && payment === "Faturado") {
+    showToast("Pagamento na entrada nao permite forma de pagamento Faturado.");
+    showVehicleStep("client");
+    $("#vehiclePayment")?.focus();
+    return null;
+  }
+
   return {
     id: getNextPatioVehicleId(),
     plate: selectedRegistryVehicle?.plate || String(data.get("plate")).trim().toUpperCase(),
@@ -2178,7 +2325,16 @@ function buildVehicleFromForm(data, { requireSchedule = vehicleEntryMode === "sc
     phone: selectedRegistryClient?.phone || String(data.get("phone")).trim(),
     services,
     service: formatServices(services),
-    payment: String(data.get("payment")).trim(),
+    payment,
+    paymentAtEntry,
+    entryPaymentMethod: paymentAtEntry ? payment : "",
+    entryPaymentRegisteredAt: paymentAtEntry ? entry : "",
+    paymentStatus: paymentAtEntry ? "Pago na entrada" : "A confirmar",
+    paymentConfirmed: false,
+    paymentOpen: false,
+    partialPaymentOpen: false,
+    partialPaidAmount: 0,
+    partialBalance: 0,
     entry: isSchedule && scheduledTime ? scheduledTime : entry,
     scheduledDate: isSchedule ? scheduledDate : "",
     scheduledTime: isSchedule ? scheduledTime : "",
@@ -2533,7 +2689,7 @@ function openEntryVehicleRegistryEditor(vehicleId) {
 
 function openEntryClientRegistryEditor(clientId) {
   if (!$("#adminShell").hidden) {
-    entryRegistryEditContext = { type: "client", vehicleId: selectedEntryVehicleId, clientId };
+    entryRegistryEditContext = { type: "client", source: "entry", vehicleId: selectedEntryVehicleId, clientId };
     openClientDialog(clientId);
     return;
   }
@@ -2558,6 +2714,14 @@ function refreshEntryRegistrationAfterEdit() {
   renderVehicleServiceOptions({ preserveSelected: true });
 }
 
+function refreshLinkedRegistrationAfterEdit() {
+  if (entryRegistryEditContext?.source === "quote") {
+    refreshQuoteRegistrationAfterEdit();
+    return;
+  }
+  refreshEntryRegistrationAfterEdit();
+}
+
 function openEntryVehicleRegistryDialog(vehicleId) {
   const vehicle = findVehicleById(vehicleId);
   if (!vehicle) {
@@ -2565,8 +2729,13 @@ function openEntryVehicleRegistryDialog(vehicleId) {
     return;
   }
 
-  entryRegistryEditContext = { type: "vehicle", vehicleId };
+  entryRegistryEditContext = {
+    type: "vehicle",
+    source: entryRegistryEditContext?.source || "entry",
+    vehicleId
+  };
   selectedVehicleId = vehicleId;
+  vehicleRegistryDialogSource = "entry";
   const dialog = $("#vehicleRegistryDialog");
   dialog.innerHTML = renderVehicleRegistryDialogForm(vehicle);
   initIcons();
@@ -2584,19 +2753,410 @@ function closeEntryVehicleRegistryDialog() {
   else dialog.removeAttribute("open");
   dialog.innerHTML = "";
   selectedVehicleId = null;
-  refreshEntryRegistrationAfterEdit();
+  vehicleRegistryDialogSource = "";
+  refreshLinkedRegistrationAfterEdit();
   entryRegistryEditContext = null;
 }
 
-function renderVehicleRegistryDialogForm(vehicle) {
+function openAdminVehicleRegistryDialog(vehicleId = null) {
+  const vehicle = vehicleId ? findVehicleById(vehicleId) : null;
+  if (vehicleId && !vehicle) {
+    showToast("Veiculo nao localizado.");
+    return;
+  }
+
+  selectedVehicleId = vehicle?.id || null;
+  vehicleRegistryDialogSource = "admin";
+  const dialog = $("#vehicleRegistryDialog");
+  if (!dialog) return;
+
+  dialog.innerHTML = renderVehicleRegistryDialogForm(vehicle);
+  initIcons();
+  bindAdminVehicleRegistryDialogControls(dialog);
+
+  if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+  else dialog.setAttribute("open", "");
+
+  window.setTimeout(() => {
+    const focusTarget = vehicle ? "#vehicleRegistryBrand" : "#vehicleRegistryPlate";
+    $(focusTarget, dialog)?.focus();
+  }, 0);
+}
+
+function closeAdminVehicleRegistryDialog() {
+  const dialog = $("#vehicleRegistryDialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function" && dialog.open) dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+  selectedVehicleId = null;
+  vehicleRegistryDialogSource = "";
+}
+
+function openVehicleHistoryDialog(vehicleId) {
+  const vehicle = findVehicleById(vehicleId);
+  if (!vehicle) {
+    showToast("Veiculo nao localizado.");
+    return;
+  }
+
+  const dialog = $("#vehicleHistoryDialog");
+  if (!dialog) return;
+
+  dialog.innerHTML = renderVehicleHistoryDialog(vehicle);
+  initIcons();
+  bindVehicleHistoryDialogControls(dialog);
+
+  if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+  else dialog.setAttribute("open", "");
+}
+
+function closeVehicleHistoryDialog() {
+  const dialog = $("#vehicleHistoryDialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function" && dialog.open) dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+}
+
+function openVehicleOwnerTransferDialog(vehicleId = selectedVehicleId) {
+  const vehicle = findVehicleById(vehicleId);
+  if (!vehicle) {
+    showToast("Selecione um veiculo para alterar o proprietario.");
+    return;
+  }
+
+  selectedVehicleOwnerTransferId = vehicle.id;
+  const dialog = $("#vehicleOwnerTransferDialog");
+  if (!dialog) return;
+
+  dialog.innerHTML = renderVehicleOwnerTransferDialog(vehicle);
+  bindVehicleOwnerTransferDialogControls(dialog);
+
+  if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+  else dialog.setAttribute("open", "");
+}
+
+function closeVehicleOwnerTransferDialog() {
+  const dialog = $("#vehicleOwnerTransferDialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function" && dialog.open) dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+  selectedVehicleOwnerTransferId = null;
+}
+
+function getVehicleOwnerTransferSearchMode(value) {
+  return vehicleOwnerTransferSearchModes.find((item) => item.value === value) || vehicleOwnerTransferSearchModes[0];
+}
+
+function getVehicleOwnerTransferSearchMatches(searchMode, query) {
+  const rawQuery = String(query || "").trim();
+  if (!rawQuery) return clientRegistry;
+
+  const normalizedQuery = normalizeText(rawQuery);
+  const digitsQuery = onlyDigits(rawQuery);
+  const plateQuery = formatPlate(rawQuery);
+
+  return clientRegistry.filter((client) => {
+    if (searchMode === "document") {
+      return digitsQuery ? onlyDigits(client.document || "").includes(digitsQuery) : false;
+    }
+
+    if (searchMode === "phone") {
+      return digitsQuery ? onlyDigits(client.phone || "").includes(digitsQuery) : false;
+    }
+
+    if (searchMode === "plates") {
+      if (plateQuery) return (client.plates || []).some((plate) => formatPlate(plate).includes(plateQuery));
+      return (client.plates || []).some((plate) => normalizeText(plate).includes(normalizedQuery));
+    }
+
+    return [client.name, client.legalName].some((value) => normalizeText(value).includes(normalizedQuery));
+  });
+}
+
+function getVehicleOwnerTransferSearchHint(searchMode, query, clients) {
+  if (!String(query || "").trim()) {
+    return `${clientRegistry.length} clientes disponiveis. Busque por ${searchMode.label.toLowerCase()}.`;
+  }
+
+  if (!clients.length) return `Nenhum cliente encontrado para ${searchMode.label.toLowerCase()}.`;
+  if (clients.length === 1) return "1 cliente encontrado.";
+  return `${clients.length} clientes encontrados.`;
+}
+
+function refreshVehicleOwnerTransferSearch(dialog) {
+  const vehicle = selectedVehicleOwnerTransferId ? findVehicleById(selectedVehicleOwnerTransferId) : null;
+  if (!dialog || !vehicle) return;
+
+  const mode = getVehicleOwnerTransferSearchMode($("#vehicleOwnerTransferSearchField", dialog)?.value || "name");
+  const query = $("#vehicleOwnerTransferSearchInput", dialog)?.value || "";
+  const matches = getVehicleOwnerTransferSearchMatches(mode.value, query);
+  const select = $("#vehicleOwnerTransferClient", dialog);
+  const hint = $("#vehicleOwnerTransferSearchHint", dialog);
+  const submitButton = $("#vehicleOwnerTransferSubmitButton", dialog);
+  if (!select) return;
+
+  const currentValue = select.value || String(vehicle.currentClientId || "");
+  const availableIds = matches.map((client) => String(client.id));
+  let nextValue = currentValue;
+
+  if (String(query || "").trim()) {
+    if (!availableIds.includes(nextValue)) nextValue = availableIds[0] || "";
+  } else if (!availableIds.includes(nextValue) && vehicle.currentClientId) {
+    nextValue = String(vehicle.currentClientId);
+  }
+
+  select.innerHTML = renderVehicleOwnerOptions(nextValue, matches);
+  select.value = nextValue;
+
+  if (hint) hint.textContent = getVehicleOwnerTransferSearchHint(mode, query, matches);
+  if (submitButton) submitButton.disabled = Boolean(String(query || "").trim()) && !matches.length;
+  const searchInput = $("#vehicleOwnerTransferSearchInput", dialog);
+  if (searchInput) searchInput.placeholder = mode.placeholder;
+}
+
+function renderVehicleOwnerTransferDialog(vehicle) {
+  return `
+    <form class="message-box vehicle-owner-transfer-box" id="vehicleOwnerTransferForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Cadastro de veiculos</p>
+          <h2>Alterar cliente associado</h2>
+        </div>
+        <button class="icon-button" id="closeVehicleOwnerTransferDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+
+      <article class="schedule-selected-card vehicle-owner-transfer-summary">
+        <span>Placa</span>
+        <strong>${escapeHtml(vehicle.plate)}</strong>
+        <p>${escapeHtml(formatVehicleDisplayName(vehicle))} - ${escapeHtml(getVehicleOwnerName(vehicle))}</p>
+      </article>
+
+      <div class="vehicle-form-grid vehicle-owner-transfer-search-grid">
+        <label class="login-field" for="vehicleOwnerTransferSearchField">
+          <span>Buscar cliente por</span>
+          <select id="vehicleOwnerTransferSearchField">
+            ${renderTransferSearchModeOptions()}
+          </select>
+        </label>
+        <label class="login-field" for="vehicleOwnerTransferSearchInput">
+          <span>Busca</span>
+          <input id="vehicleOwnerTransferSearchInput" type="search" placeholder="${escapeHtml(vehicleOwnerTransferSearchModes[0].placeholder)}" autocomplete="off" />
+        </label>
+        <label class="login-field vehicle-owner-transfer-client-field" for="vehicleOwnerTransferClient">
+          <span>Novo cliente associado</span>
+          <select id="vehicleOwnerTransferClient">
+            ${renderVehicleOwnerOptions(vehicle.currentClientId || "")}
+          </select>
+        </label>
+      </div>
+      <p class="lookup-hint vehicle-owner-transfer-hint" id="vehicleOwnerTransferSearchHint"></p>
+
+      <p class="message-copy">Ao confirmar, a placa sera atualizada no cadastro do cliente e o historico do veiculo sera mantido.</p>
+
+      <div class="dialog-actions">
+        <button class="exit-button" id="cancelVehicleOwnerTransferDialog" type="button">Cancelar</button>
+        <button class="primary-button" id="vehicleOwnerTransferSubmitButton" type="submit">
+          <span data-icon="check"></span>
+          <span>Continuar</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function renderTransferSearchModeOptions(selectedValue = vehicleOwnerTransferSearchModes[0].value) {
+  return vehicleOwnerTransferSearchModes
+    .map(
+      (mode) => `<option value="${mode.value}" ${mode.value === selectedValue ? "selected" : ""}>${escapeHtml(mode.label)}</option>`
+    )
+    .join("");
+}
+
+function bindVehicleOwnerTransferDialogControls(dialog) {
+  $("#closeVehicleOwnerTransferDialog", dialog)?.addEventListener("click", closeVehicleOwnerTransferDialog);
+  $("#cancelVehicleOwnerTransferDialog", dialog)?.addEventListener("click", closeVehicleOwnerTransferDialog);
+  dialog.addEventListener("cancel", closeVehicleOwnerTransferDialog, { once: true });
+  $("#vehicleOwnerTransferSearchField", dialog)?.addEventListener("change", () => refreshVehicleOwnerTransferSearch(dialog));
+  $("#vehicleOwnerTransferSearchInput", dialog)?.addEventListener("input", () => refreshVehicleOwnerTransferSearch(dialog));
+  $("#vehicleOwnerTransferSearchInput", dialog)?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+  });
+  $("#vehicleOwnerTransferForm", dialog)?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await submitVehicleOwnerTransferDialog(dialog);
+  });
+  initIcons();
+  refreshVehicleOwnerTransferSearch(dialog);
+  window.setTimeout(() => $("#vehicleOwnerTransferSearchInput", dialog)?.focus(), 0);
+}
+
+async function submitVehicleOwnerTransferDialog(dialog) {
+  const vehicle = selectedVehicleOwnerTransferId ? findVehicleById(selectedVehicleOwnerTransferId) : null;
+  if (!vehicle) {
+    closeVehicleOwnerTransferDialog();
+    showToast("Veiculo nao localizado.");
+    return;
+  }
+
+  const nextClientValue = $("#vehicleOwnerTransferClient", dialog)?.value || "";
+  const nextClientId = nextClientValue ? Number(nextClientValue) : null;
+  const updated = await confirmVehicleOwnerTransfer(vehicle, nextClientId);
+  if (!updated) return;
+
+  closeVehicleOwnerTransferDialog();
+  selectedVehicleId = vehicle.id;
+
+  const editorContainer = getActiveVehicleRegistryEditorContainer();
+  const draft = captureVehicleRegistryDraft(editorContainer);
+  refreshVehicleRegistryEditorAfterTransfer(vehicle, editorContainer, draft);
+  renderAdminDashboard();
+
+  const nextClient = nextClientId ? getClientById(nextClientId) : null;
+  showToast(nextClient ? `${vehicle.plate} transferida para ${getClientDisplayName(nextClient)}.` : `${vehicle.plate} desvinculada do cliente.`);
+}
+
+async function confirmVehicleOwnerTransfer(vehicle, nextClientId) {
+  const currentClientId = vehicle.currentClientId || findClientByPlate(vehicle.plate)?.id || null;
+  if (currentClientId === nextClientId) {
+    showToast("Selecione um cliente diferente para alterar o proprietario.");
+    return false;
+  }
+
+  const currentClient = currentClientId ? getClientById(currentClientId) : null;
+  const nextClient = nextClientId ? getClientById(nextClientId) : null;
+  const shouldTransfer = await showMessageBox(
+    nextClient
+      ? {
+          title: currentClient ? "Transferir placa?" : "Associar placa?",
+          message: currentClient
+            ? `${vehicle.plate} esta vinculada a ${getClientDisplayName(currentClient)}. Deseja transferir esta placa para ${getClientDisplayName(nextClient)}? O historico do veiculo sera mantido.`
+            : `${vehicle.plate} passara a ficar vinculada a ${getClientDisplayName(nextClient)}. O historico do veiculo sera mantido.`,
+          eyebrow: currentClient ? "Proprietario diferente" : "Novo vinculo",
+          confirmLabel: currentClient ? "Sim, transferir" : "Sim, associar",
+          cancelLabel: "Nao",
+          confirmOnly: false
+        }
+      : {
+          title: "Desvincular placa?",
+          message: currentClient
+            ? `Deseja remover o vinculo de ${vehicle.plate} com ${getClientDisplayName(currentClient)}? O historico do veiculo sera mantido.`
+            : `Deseja deixar ${vehicle.plate} sem cliente vinculado? O historico do veiculo sera mantido.`,
+          eyebrow: "Sem cliente vinculado",
+          confirmLabel: "Sim, desvincular",
+          cancelLabel: "Nao",
+          confirmOnly: false
+        }
+  );
+
+  if (!shouldTransfer) return false;
+
+  transferPlateToClient(vehicle.plate, nextClientId);
+  return true;
+}
+
+function renderVehicleRegistryOwnerField(vehicle) {
+  if (!vehicle) {
+    return `
+      <label class="login-field" for="vehicleRegistryClient">
+        <span>Proprietário atual</span>
+        <select id="vehicleRegistryClient">
+          ${renderVehicleOwnerOptions("")}
+        </select>
+      </label>
+    `;
+  }
+
+  return `
+    <div class="vehicle-owner-field">
+      <div class="vehicle-owner-field-head">
+        <span>Proprietário atual</span>
+        <button class="ghost-action compact" id="openVehicleOwnerTransferButton" type="button">
+          <span data-icon="users"></span>
+          <span>Alterar cliente associado</span>
+        </button>
+      </div>
+      <label class="login-field" for="vehicleRegistryClient">
+        <select id="vehicleRegistryClient" class="is-readonly" disabled>
+          ${renderVehicleOwnerOptions(vehicle.currentClientId || "")}
+        </select>
+      </label>
+    </div>
+  `;
+}
+
+function getActiveVehicleRegistryEditorContainer() {
+  const dialog = $("#vehicleRegistryDialog");
+  if (dialog?.open && $("#vehicleRegistryForm", dialog)) return dialog;
+
+  const screen = $("#adminVehiclesView");
+  if (screen && !screen.hidden && $("#vehicleRegistryForm", screen)) return screen;
+  return null;
+}
+
+function refreshVehicleRegistryEditorAfterTransfer(vehicle, container, draft) {
+  if (!container) return;
+
+  if (container.id === "vehicleRegistryDialog") {
+    container.innerHTML = renderVehicleRegistryDialogForm(vehicle);
+    initIcons();
+    if (vehicleRegistryDialogSource === "admin") bindAdminVehicleRegistryDialogControls(container);
+    else bindEntryVehicleRegistryDialogControls(container);
+    restoreVehicleRegistryDraft(container, draft);
+    return;
+  }
+
+  renderVehiclesScreen(container);
+  restoreVehicleRegistryDraft(container, draft);
+}
+
+function captureVehicleRegistryDraft(container) {
+  if (!container || container.hidden) return null;
+
+  return {
+    plate: $("#vehicleRegistryPlate", container)?.value || "",
+    brand: $("#vehicleRegistryBrand", container)?.value || "",
+    model: $("#vehicleRegistryModel", container)?.value || "",
+    year: $("#vehicleRegistryYear", container)?.value || "",
+    color: $("#vehicleRegistryColor", container)?.value || "",
+    type: $("#vehicleRegistryType", container)?.value || "",
+    category: $("#vehicleRegistryCategory", container)?.value || "",
+    fuel: $("#vehicleRegistryFuel", container)?.value || "",
+    notes: $("#vehicleRegistryNotes", container)?.value || ""
+  };
+}
+
+function restoreVehicleRegistryDraft(container, draft) {
+  if (!container || !draft) return;
+
+  $("#vehicleRegistryBrand", container).value = draft.brand;
+  $("#vehicleRegistryModel", container).value = draft.model;
+  $("#vehicleRegistryYear", container).value = draft.year;
+  $("#vehicleRegistryColor", container).value = draft.color;
+  $("#vehicleRegistryType", container).value = draft.type;
+  updateVehicleRegistryCategoryState(container);
+  const categorySelect = $("#vehicleRegistryCategory", container);
+  if (categorySelect && !categorySelect.disabled) categorySelect.value = draft.category;
+  $("#vehicleRegistryFuel", container).value = draft.fuel;
+  $("#vehicleRegistryNotes", container).value = draft.notes;
+}
+
+function renderVehicleRegistryDialogForm(vehicle = null) {
+  const selectedVehicle = vehicle || null;
+
   return `
     <form class="vehicle-box vehicle-registry-dialog-box" id="vehicleRegistryForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">Edição</p>
-          <h2>${escapeHtml(vehicle.plate)}</h2>
+          <p class="eyebrow">${selectedVehicle ? "Edição" : "Cadastro"}</p>
+          <h2>${selectedVehicle ? escapeHtml(selectedVehicle.plate) : "Novo veículo"}</h2>
         </div>
-        <span class="client-status-label">Veículo</span>
+        <span class="client-status-label">${selectedVehicle ? "Editando" : "Novo"}</span>
         <button class="icon-button" id="closeVehicleRegistryDialog" type="button" aria-label="Fechar">
           <span data-icon="x"></span>
         </button>
@@ -2605,54 +3165,57 @@ function renderVehicleRegistryDialogForm(vehicle) {
       <div class="vehicle-form-grid client-form-grid">
         <label class="login-field" for="vehicleRegistryPlate">
           <span>Placa</span>
-          <input id="vehicleRegistryPlate" type="text" maxlength="8" value="${escapeHtml(vehicle.plate)}" disabled required />
+          <input
+            id="vehicleRegistryPlate"
+            type="text"
+            maxlength="8"
+            placeholder="ABC1D23"
+            value="${escapeHtml(selectedVehicle?.plate || "")}"
+            ${selectedVehicle ? "disabled" : ""}
+            required
+          />
         </label>
         <label class="login-field" for="vehicleRegistryBrand">
           <span>Marca</span>
-          <input id="vehicleRegistryBrand" type="text" placeholder="Chevrolet" value="${escapeHtml(vehicle.brand || "")}" />
+          <input id="vehicleRegistryBrand" type="text" placeholder="Chevrolet" value="${escapeHtml(selectedVehicle?.brand || "")}" />
         </label>
         <div class="vehicle-model-lookup-field">
           <label class="login-field" for="vehicleRegistryModel">
             <span>Modelo</span>
-            <input id="vehicleRegistryModel" type="text" placeholder="Onix" value="${escapeHtml(vehicle.model || "")}" autocomplete="off" required />
+            <input id="vehicleRegistryModel" type="text" placeholder="Onix" value="${escapeHtml(selectedVehicle?.model || "")}" autocomplete="off" required />
           </label>
           <div class="vehicle-model-results" id="vehicleRegistryModelResults" hidden></div>
         </div>
         <label class="login-field" for="vehicleRegistryYear">
           <span>Ano</span>
-          <input id="vehicleRegistryYear" type="text" inputmode="numeric" placeholder="2024" maxlength="4" value="${escapeHtml(vehicle.year || "")}" />
+          <input id="vehicleRegistryYear" type="text" inputmode="numeric" placeholder="2024" maxlength="4" value="${escapeHtml(selectedVehicle?.year || "")}" />
         </label>
         <label class="login-field" for="vehicleRegistryColor">
           <span>Cor</span>
-          <input id="vehicleRegistryColor" type="text" placeholder="Branco" value="${escapeHtml(vehicle.color || "")}" />
+          <input id="vehicleRegistryColor" type="text" placeholder="Branco" value="${escapeHtml(selectedVehicle?.color || "")}" />
         </label>
         <label class="login-field" for="vehicleRegistryType">
           <span>Tipo de veículo</span>
           <select id="vehicleRegistryType">
-            ${renderSelectOptions(vehicleTypes, vehicle.type || "")}
+            ${renderSelectOptions(vehicleTypes, selectedVehicle?.type || "")}
           </select>
         </label>
         <label class="login-field" for="vehicleRegistryCategory">
           <span>Categoria</span>
           <select id="vehicleRegistryCategory">
-            ${renderSelectOptions(vehicleCategories, vehicle.category || "")}
+            ${renderSelectOptions(vehicleCategories, selectedVehicle?.category || "")}
           </select>
         </label>
         <label class="login-field" for="vehicleRegistryFuel">
           <span>Combustível</span>
           <select id="vehicleRegistryFuel">
-            ${renderSelectOptions(["Flex", "Gasolina", "Etanol", "Diesel", "Híbrido", "Elétrico", "Outro"], vehicle.fuel || "")}
+            ${renderSelectOptions(["Flex", "Gasolina", "Etanol", "Diesel", "Híbrido", "Elétrico", "Outro"], selectedVehicle?.fuel || "")}
           </select>
         </label>
-        <label class="login-field" for="vehicleRegistryClient">
-          <span>Proprietário atual</span>
-          <select id="vehicleRegistryClient">
-            ${renderVehicleOwnerOptions(vehicle.currentClientId || "")}
-          </select>
-        </label>
+        ${renderVehicleRegistryOwnerField(selectedVehicle)}
         <label class="login-field vehicle-notes-field" for="vehicleRegistryNotes">
           <span>Observações do veículo</span>
-          <input id="vehicleRegistryNotes" type="text" placeholder="Preferências, restrições, histórico relevante" value="${escapeHtml(vehicle.notes || "")}" />
+          <input id="vehicleRegistryNotes" type="text" placeholder="Preferências, restrições, histórico relevante" value="${escapeHtml(selectedVehicle?.notes || "")}" />
         </label>
       </div>
 
@@ -2660,7 +3223,7 @@ function renderVehicleRegistryDialogForm(vehicle) {
         <button class="exit-button" id="cancelVehicleRegistryDialog" type="button">Cancelar</button>
         <button class="primary-button" type="submit">
           <span data-icon="check"></span>
-          <span>Atualizar veículo</span>
+          <span>${selectedVehicle ? "Atualizar veículo" : "Salvar veículo"}</span>
         </button>
       </div>
     </form>
@@ -2679,6 +3242,7 @@ function bindEntryVehicleRegistryDialogControls(container) {
   $("#closeVehicleRegistryDialog", container).addEventListener("click", closeEntryVehicleRegistryDialog);
   $("#cancelVehicleRegistryDialog", container).addEventListener("click", closeEntryVehicleRegistryDialog);
   $("#vehicleRegistryType", container).addEventListener("change", () => updateVehicleRegistryCategoryState(container));
+  $("#openVehicleOwnerTransferButton", container)?.addEventListener("click", () => openVehicleOwnerTransferDialog(selectedVehicleId));
   $("#vehicleRegistryYear", container).addEventListener("input", (event) => {
     event.currentTarget.value = event.currentTarget.value.replace(/\D/g, "").slice(0, 4);
   });
@@ -2689,12 +3253,59 @@ function bindEntryVehicleRegistryDialogControls(container) {
 }
 
 function saveEntryVehicleRegistryDialog(container) {
-  const form = $("#vehicleRegistryForm", container);
-  if (!form.reportValidity()) return;
-  const editedVehicleId = selectedVehicleId;
-  persistVehicleRegistration(container);
-  selectedVehicleId = editedVehicleId;
+  const result = persistVehicleRegistration(container);
+  if (!result?.ok) return;
+  showToast(`${result.vehicle.plate} salvo no cadastro de veículos.`);
   closeEntryVehicleRegistryDialog();
+}
+
+function bindAdminVehicleRegistryDialogControls(container) {
+  updateVehicleRegistryCategoryState(container);
+  bindLocalVehicleModelLookup({
+    container,
+    modelSelector: "#vehicleRegistryModel",
+    brandSelector: "#vehicleRegistryBrand",
+    resultsSelector: "#vehicleRegistryModelResults",
+    typeSelector: "#vehicleRegistryType"
+  });
+  $("#closeVehicleRegistryDialog", container)?.addEventListener("click", closeAdminVehicleRegistryDialog);
+  $("#cancelVehicleRegistryDialog", container)?.addEventListener("click", closeAdminVehicleRegistryDialog);
+  container.oncancel = (event) => {
+    event.preventDefault();
+    closeAdminVehicleRegistryDialog();
+  };
+  $("#vehicleRegistryType", container)?.addEventListener("change", () => updateVehicleRegistryCategoryState(container));
+  $("#vehicleRegistryPlate", container)?.addEventListener("input", (event) => {
+    event.currentTarget.value = formatPlate(event.currentTarget.value);
+  });
+  $("#openVehicleOwnerTransferButton", container)?.addEventListener("click", () => openVehicleOwnerTransferDialog(selectedVehicleId));
+  $("#vehicleRegistryYear", container)?.addEventListener("input", (event) => {
+    event.currentTarget.value = event.currentTarget.value.replace(/\D/g, "").slice(0, 4);
+  });
+  $("#vehicleRegistryForm", container)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveAdminVehicleRegistryDialog(container);
+  });
+}
+
+function saveAdminVehicleRegistryDialog(container) {
+  const result = persistVehicleRegistration(container);
+  if (!result) return;
+
+  if (result.reason === "duplicate") {
+    selectedVehicleId = result.vehicle.id;
+    container.innerHTML = renderVehicleRegistryDialogForm(result.vehicle);
+    initIcons();
+    bindAdminVehicleRegistryDialogControls(container);
+    window.setTimeout(() => $("#vehicleRegistryBrand", container)?.focus(), 0);
+    showToast(`${result.vehicle.plate} já está cadastrada. Ficha aberta para edição.`);
+    return;
+  }
+
+  refreshVehiclesScreenIfVisible();
+  renderAdminDashboard();
+  showToast(`${result.vehicle.plate} salvo no cadastro de veículos.`);
+  closeAdminVehicleRegistryDialog();
 }
 
 function fillEntryOwnerFromClient(client) {
@@ -3181,6 +3792,8 @@ function getDefaultBusinessProfile() {
     address: "",
     logoDataUrl: "",
     logoSizePercent: pdfLogoSizing.defaultPercent,
+    logoSizeXPercent: pdfLogoSizing.defaultPercent,
+    logoSizeYPercent: pdfLogoSizing.defaultPercent,
     reportFields: getDefaultBusinessProfileReportFields()
   };
 }
@@ -3199,18 +3812,32 @@ function getDefaultBusinessProfileReportFields(displayNameMode = "tradeName") {
 function normalizeBusinessProfile(profile = {}) {
   const fallback = getDefaultBusinessProfile();
   const mergedProfile = { ...fallback, ...profile };
+  const legacyLogoSize = getBusinessLogoSizePercent(mergedProfile.logoSizePercent);
   return {
     ...mergedProfile,
-    logoSizePercent: getBusinessLogoSizePercent(mergedProfile.logoSizePercent),
+    logoSizePercent: legacyLogoSize,
+    logoSizeXPercent: getBusinessLogoDimensionPercent("x", mergedProfile.logoSizeXPercent ?? legacyLogoSize),
+    logoSizeYPercent: getBusinessLogoDimensionPercent("y", mergedProfile.logoSizeYPercent ?? legacyLogoSize),
     additionalPhones: normalizeBusinessAdditionalPhones(mergedProfile.additionalPhones),
     reportFields: normalizeBusinessProfileReportFields(mergedProfile.reportFields, mergedProfile.displayNameMode)
   };
 }
 
 function getBusinessLogoSizePercent(value = businessProfile.logoSizePercent) {
+  return getBusinessLogoDimensionPercent("x", value);
+}
+
+function getBusinessLogoDimensionPercent(axis, value = axis === "y" ? businessProfile.logoSizeYPercent : businessProfile.logoSizeXPercent) {
   const numericValue = Number(value);
   if (!Number.isFinite(numericValue)) return pdfLogoSizing.defaultPercent;
   return Math.min(pdfLogoSizing.maxPercent, Math.max(pdfLogoSizing.minPercent, Math.round(numericValue)));
+}
+
+function getBusinessLogoDimensions() {
+  return {
+    x: getBusinessLogoDimensionPercent("x"),
+    y: getBusinessLogoDimensionPercent("y")
+  };
 }
 
 function normalizeBusinessProfileReportFields(fields = {}, displayNameMode = "tradeName") {
@@ -3534,6 +4161,1262 @@ function renderPatioSummary() {
   });
 }
 
+function renderPatioQuotes() {
+  const container = $("#adminQuotesContent");
+  if (!container) return;
+
+  updateExpiredQuotes();
+  const activeQuotes = quoteEstimates.filter((quote) => ["Pendente", "Aprovado"].includes(getQuoteStatus(quote)));
+  const approvedQuotes = quoteEstimates.filter((quote) => getQuoteStatus(quote) === "Aprovado");
+  const expiredQuotes = quoteEstimates.filter((quote) => getQuoteStatus(quote) === "Vencido");
+  const totalOpenValue = activeQuotes.reduce((total, quote) => total + getQuoteTotal(quote), 0);
+
+  container.innerHTML = `
+    <section class="screen-metrics quote-metrics" aria-label="Resumo dos orçamentos">
+      ${[
+        { label: "Orçamentos", value: quoteEstimates.length, icon: "invoice" },
+        { label: "Aprovados", value: approvedQuotes.length, icon: "check" },
+        { label: "Vencidos", value: expiredQuotes.length, icon: "alert" },
+        { label: "Valor em negociação", value: formatCurrency(totalOpenValue), icon: "wallet" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+
+    <section class="screen-toolbar quote-toolbar" aria-label="Filtros de orçamentos">
+      <label class="login-field quote-filter-param-field" for="quoteFilterParam">
+        <span>Buscar por</span>
+        <select id="quoteFilterParam">
+          ${renderSelectOptions(["Todos", "Período", "Cliente", "Placa", "Serviço", "Valor", "Status"], "Todos")}
+        </select>
+      </label>
+      <div class="quote-dynamic-filter" id="quoteDynamicFilter">
+        ${renderQuoteDynamicFilter("Todos")}
+      </div>
+      <div class="cashflow-export-actions quote-actions">
+        <button class="new-vehicle-button" id="newQuoteButton" type="button">
+          <span data-icon="plus"></span>
+          <span>Novo orçamento</span>
+        </button>
+      </div>
+    </section>
+
+    <article class="admin-panel screen-table-panel cashflow-table-panel quote-table-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Orçamentos</p>
+          <h2>Orçamentos emitidos</h2>
+        </div>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table quote-table">
+          <thead>
+            <tr>
+              <th>Emissão</th>
+              <th>Cliente</th>
+              <th>Placa / veículo</th>
+              <th>Serviços</th>
+              <th>Valor</th>
+              <th>Validade</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${quoteEstimates.map(renderQuoteRow).join("")}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  `;
+
+  initIcons();
+  bindCurrencyInputs(container);
+  bindPatioQuoteControls(container);
+  applyQuoteFilters(container);
+}
+
+function renderQuoteRow(quote) {
+  const status = getQuoteStatus(quote);
+  const statusKey = getQuoteStatusKey(status);
+  const services = getQuoteServiceSummary(quote);
+  const vehicleName = [quote.brand, quote.model].filter(Boolean).join(" ") || quote.model || "-";
+  return `
+    <tr class="cashflow-row quote-row ${status === "Vencido" ? "is-outstanding" : status === "Aprovado" ? "is-in" : ""}"
+      data-quote-row
+      data-quote-date="${escapeHtml(quote.date || "")}"
+      data-quote-client="${escapeHtml(normalizeText(quote.owner || ""))}"
+      data-quote-plate="${escapeHtml(normalizeText(quote.plate || ""))}"
+      data-quote-services="${escapeHtml(normalizeText(services))}"
+      data-quote-value="${getQuoteTotal(quote)}"
+      data-quote-status="${escapeHtml(statusKey)}">
+      <td data-label="Emissão">
+        <strong>${escapeHtml(quote.code)}</strong><br />
+        <small>${formatDateBR(quote.date)} ${escapeHtml(quote.time || "")}</small>
+      </td>
+      <td data-label="Cliente">
+        <strong>${escapeHtml(quote.owner || "-")}</strong><br />
+        <small>${escapeHtml(quote.phone || "-")}</small>
+      </td>
+      <td data-label="Placa / veículo">
+        <span class="table-plate-chip">${escapeHtml(quote.plate || "-")}</span><br />
+        <small>${escapeHtml(vehicleName)}${quote.color ? ` / ${escapeHtml(quote.color)}` : ""}</small>
+      </td>
+      <td data-label="Serviços">${renderQuoteServiceCell(quote)}</td>
+      <td data-label="Valor">${formatCurrency(getQuoteTotal(quote))}</td>
+      <td data-label="Validade">
+        <span>${formatDateBR(quote.dueDate)}</span><br />
+        <small>${escapeHtml(formatQuoteValidity(quote))}</small>
+      </td>
+      <td data-label="Status"><span class="quote-status-pill is-${escapeHtml(statusKey)}">${escapeHtml(status)}</span></td>
+      <td data-label="Ações">
+        <div class="cashflow-row-actions quote-row-actions">
+          ${renderQuoteRowActions(quote, status)}
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function renderQuoteServiceCell(quote) {
+  const services = (quote.services || []).filter(Boolean);
+  const extras = getQuoteExtraItems(quote);
+  const serviceLines = services.length
+    ? services.map((service) => `<span>${escapeHtml(service)}</span>`).join("")
+    : "<span>Serviços avulsos</span>";
+  const extraLines = extras.length
+    ? `<small class="open-payment-description">Avulsos: ${escapeHtml(extras.map((item) => `${item.description} (${formatCurrency(item.value)})`).join(", "))}</small>`
+    : "";
+  return `${serviceLines}${extraLines}`;
+}
+
+function renderQuoteRowActions(quote, status) {
+  if (status === "Pendente") {
+    return `
+      <button class="primary-button compact-action" type="button" data-approve-quote="${quote.id}">Aprovar</button>
+      <button class="exit-button compact" type="button" data-reject-quote="${quote.id}">Não aprovado</button>
+    `;
+  }
+  if (status === "Aprovado") {
+    return quote.usedAt
+      ? `<span class="table-plate-chip">Usado em ${escapeHtml(quote.usedAt)}</span>`
+      : `<button class="primary-button compact-action" type="button" data-use-quote="${quote.id}">Entrada no pátio</button>`;
+  }
+  if (status === "Vencido") return '<span class="table-plate-chip quote-renewal-chip">Novo orçamento necessário</span>';
+  if (status === "Usado") return `<span class="table-plate-chip">Usado em ${escapeHtml(quote.usedAt || "-")}</span>`;
+  return '<span class="table-plate-chip">Encerrado</span>';
+}
+
+function renderQuoteDynamicFilter(parameter = "Todos") {
+  const filter = normalizeText(parameter);
+  if (filter === "periodo") {
+    return `
+      <div class="quote-period-filter">
+        <label class="login-field" for="quoteFilterStartDate">
+          <span>Data inicial</span>
+          <input id="quoteFilterStartDate" type="date" />
+        </label>
+        <label class="login-field" for="quoteFilterEndDate">
+          <span>Data final</span>
+          <input id="quoteFilterEndDate" type="date" />
+        </label>
+      </div>
+    `;
+  }
+  if (filter === "status") {
+    return `
+      <label class="login-field" for="quoteFilterStatus">
+        <span>Status</span>
+        <select id="quoteFilterStatus">
+          ${renderSelectOptions(["Todos", "Pendente", "Aprovado", "Não aprovado", "Vencido", "Usado"], "Todos")}
+        </select>
+      </label>
+    `;
+  }
+  if (filter === "valor") {
+    return `
+      <label class="login-field" for="quoteFilterValue">
+        <span>Valor mínimo</span>
+        <input id="quoteFilterValue" type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" />
+      </label>
+    `;
+  }
+  if (filter === "cliente" || filter === "placa" || filter === "servico") {
+    const labels = {
+      cliente: "Cliente",
+      placa: "Placa",
+      servico: "Serviço"
+    };
+    const placeholders = {
+      cliente: "Nome do cliente",
+      placa: "ABC1D23",
+      servico: "Nome do serviço"
+    };
+    return `
+      <label class="login-field" for="quoteFilterText">
+        <span>${labels[filter]}</span>
+        <input id="quoteFilterText" type="search" placeholder="${placeholders[filter]}" />
+      </label>
+    `;
+  }
+  return '<p class="quote-filter-placeholder">Exibindo todos os orçamentos.</p>';
+}
+
+function bindPatioQuoteControls(container) {
+  $("#newQuoteButton", container)?.addEventListener("click", openQuoteDialog);
+  $("#quoteFilterParam", container)?.addEventListener("change", (event) => {
+    const dynamicFilter = $("#quoteDynamicFilter", container);
+    if (dynamicFilter) {
+      dynamicFilter.innerHTML = renderQuoteDynamicFilter(event.target.value);
+      bindCurrencyInputs(dynamicFilter);
+    }
+    applyQuoteFilters(container);
+  });
+  $("#quoteDynamicFilter", container)?.addEventListener("input", (event) => {
+    if (event.target.id === "quoteFilterText" && normalizeText($("#quoteFilterParam", container)?.value) === "placa") {
+      event.target.value = formatPlate(event.target.value);
+    }
+    applyQuoteFilters(container);
+  });
+  $("#quoteDynamicFilter", container)?.addEventListener("change", () => applyQuoteFilters(container));
+  $$("[data-approve-quote]", container).forEach((button) => {
+    button.addEventListener("click", () => approveQuote(Number(button.dataset.approveQuote)));
+  });
+  $$("[data-reject-quote]", container).forEach((button) => {
+    button.addEventListener("click", () => rejectQuote(Number(button.dataset.rejectQuote)));
+  });
+  $$("[data-use-quote]", container).forEach((button) => {
+    button.addEventListener("click", () => createPatioEntryFromQuote(Number(button.dataset.useQuote)));
+  });
+}
+
+function applyQuoteFilters(container = $("#adminQuotesContent")) {
+  if (!container) return;
+  const parameter = normalizeText($("#quoteFilterParam", container)?.value || "Todos");
+  const text = normalizeText($("#quoteFilterText", container)?.value || "");
+  const startDate = $("#quoteFilterStartDate", container)?.value || "";
+  const endDate = $("#quoteFilterEndDate", container)?.value || "";
+  const status = getQuoteStatusKey($("#quoteFilterStatus", container)?.value || "Todos");
+  const minValue = getCurrencyInputValue("#quoteFilterValue", container);
+
+  $$("[data-quote-row]", container).forEach((row) => {
+    const rowValue = Number(row.dataset.quoteValue || 0);
+    const rowDate = row.dataset.quoteDate || "";
+    let matches = true;
+    if (parameter === "periodo") matches = (!startDate || rowDate >= startDate) && (!endDate || rowDate <= endDate);
+    else if (parameter === "cliente") matches = !text || row.dataset.quoteClient.includes(text);
+    else if (parameter === "placa") matches = !text || row.dataset.quotePlate.includes(text);
+    else if (parameter === "servico") matches = !text || row.dataset.quoteServices.includes(text);
+    else if (parameter === "valor") matches = !minValue || rowValue >= minValue;
+    else if (parameter === "status") matches = status === "todos" || row.dataset.quoteStatus === status;
+    row.hidden = !matches;
+  });
+}
+
+function updateExpiredQuotes() {
+  quoteEstimates.forEach((quote) => {
+    if ((quote.status || "Pendente") === "Pendente" && quote.dueDate && quote.dueDate < getTodayISO()) {
+      quote.status = "Vencido";
+      quote.expiredAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+    }
+  });
+}
+
+function getQuoteById(id) {
+  return quoteEstimates.find((quote) => Number(quote.id) === Number(id));
+}
+
+function getQuoteStatus(quote) {
+  if (!quote) return "Pendente";
+  if (quote.usedAt) return "Usado";
+  if ((quote.status || "Pendente") === "Pendente" && quote.dueDate && quote.dueDate < getTodayISO()) return "Vencido";
+  return quote.status || "Pendente";
+}
+
+function getQuoteStatusKey(status) {
+  return normalizeText(status || "todos").replace(/\s+/g, "-");
+}
+
+function getQuoteFilterOptions(kind) {
+  const values = quoteEstimates.flatMap((quote) => {
+    if (kind === "owner") return [quote.owner].filter(Boolean);
+    if (kind === "service") return [(quote.services || []), getQuoteExtraItems(quote).map((item) => item.description)].flat();
+    return [];
+  });
+  return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+}
+
+function getQuoteBaseServiceTotal(quote) {
+  return (quote.services || []).reduce((total, serviceName) => total + (findServiceDefinition(serviceName)?.price || 0), 0);
+}
+
+function getQuoteExtraItems(quote) {
+  return (quote.extraItems || [])
+    .map((item) => ({
+      description: String(item.description || "").trim(),
+      value: Number(item.value || 0)
+    }))
+    .filter((item) => item.description && item.value > 0);
+}
+
+function getQuoteExtraTotal(quote) {
+  return getQuoteExtraItems(quote).reduce((total, item) => total + item.value, 0);
+}
+
+function getQuoteTotal(quote) {
+  return getQuoteBaseServiceTotal(quote) + getQuoteExtraTotal(quote);
+}
+
+function getQuoteServiceSummary(quote) {
+  return (quote.services || []).concat(getQuoteExtraItems(quote).map((item) => item.description)).filter(Boolean).join(", ");
+}
+
+function formatQuoteValidity(quote) {
+  const days = Number(quote.validityDays || 0);
+  return days ? `${days} ${days === 1 ? "dia" : "dias"}` : "Sem prazo";
+}
+
+function approveQuote(id) {
+  const quote = getQuoteById(id);
+  if (!quote) return;
+  if (getQuoteStatus(quote) === "Vencido") {
+    showToast("Orçamento vencido. Emita um novo orçamento para aprovação.");
+    return;
+  }
+  quote.status = "Aprovado";
+  quote.approvedAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+  renderPatioQuotes();
+  showToast(`Orçamento ${quote.code} aprovado.`);
+}
+
+function rejectQuote(id) {
+  const quote = getQuoteById(id);
+  if (!quote) return;
+  if (getQuoteStatus(quote) === "Vencido") {
+    showToast("Orçamento vencido. Emita um novo orçamento para continuar.");
+    return;
+  }
+  quote.status = "Não aprovado";
+  quote.rejectedAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+  renderPatioQuotes();
+  showToast(`Orçamento ${quote.code} marcado como não aprovado.`);
+}
+
+async function createPatioEntryFromQuote(id) {
+  const quote = getQuoteById(id);
+  if (!quote) return;
+  const status = getQuoteStatus(quote);
+  if (status === "Vencido") {
+    showToast("Orçamento vencido. Emita um novo orçamento para usar no pátio.");
+    return;
+  }
+  if (status !== "Aprovado") {
+    showToast("Apenas orçamentos aprovados podem virar entrada no pátio.");
+    return;
+  }
+
+  const extraItems = getQuoteExtraItems(quote);
+  const vehicle = {
+    id: getNextPatioVehicleId(),
+    plate: quote.plate,
+    brand: quote.brand || "",
+    model: quote.model,
+    color: quote.color,
+    type: quote.type || "Carro",
+    category: getVehicleCategoryValue(quote.type || "Carro", quote.category || ""),
+    owner: quote.owner,
+    phone: quote.phone,
+    services: quote.services?.length ? [...quote.services] : ["Serviços avulsos"],
+    service: quote.services?.length ? formatServices(quote.services) : "Serviços avulsos",
+    payment: quote.payment || "Pix",
+    extraChargesEnabled: extraItems.length > 0,
+    extraCharges: getQuoteExtraTotal(quote),
+    extraDescription: extraItems.map((item) => `${item.description}: ${formatCurrency(item.value)}`).join("; "),
+    quoteId: quote.id,
+    entry: getCurrentShortTime(),
+    status: "aguardando"
+  };
+
+  const shouldOpenChecklist = await showMessageBox({
+    title: "Fazer check-list?",
+    message: `Deseja realizar o check-list do veículo ${quote.plate} antes de confirmar a entrada no pátio?`,
+    eyebrow: "Entrada no pátio",
+    confirmLabel: "Sim, fazer check-list",
+    cancelLabel: "Não, entrar direto",
+    confirmOnly: false
+  });
+
+  if (shouldOpenChecklist) {
+    openQuoteEntryChecklist(quote, vehicle);
+    return;
+  }
+
+  finishQuotePatioEntry(quote, vehicle);
+}
+
+function openQuoteEntryChecklist(quote, vehicle) {
+  pendingQuotePatioEntry = vehicle;
+  pendingQuotePatioQuoteId = quote.id;
+  activeVehicleId = null;
+
+  $("#statusDialogEyebrow").textContent = "Entrada pelo orçamento";
+  $("#statusVehicleTitle").textContent = `${vehicle.plate} - ${formatVehicleDisplayName(vehicle)} ${vehicle.color || ""}`.trim();
+  $("#statusOptions").innerHTML = `
+    <div class="status-action-panel">
+      ${renderVehicleActionSummary(vehicle)}
+      <section class="status-billing-panel">
+        <p class="billing-warning">Preencha o check-list e confirme para registrar a entrada no pátio.</p>
+      </section>
+      ${renderChecklistPanel("quoteEntryChecklist", vehicle.type, { enabled: true, items: [] })}
+      <div class="dialog-actions status-dialog-actions">
+        <button class="exit-button" type="button" data-status-action="cancel-quote-entry-checklist">Cancelar</button>
+        <button class="primary-button" type="button" data-status-action="finish-quote-entry-checklist">
+          <span data-icon="check"></span>
+          <span>Concluir check-list e entrar</span>
+        </button>
+      </div>
+    </div>
+  `;
+  bindChecklistPanel($("#statusOptions"), "quoteEntryChecklist", vehicle.type);
+  initIcons();
+
+  const dialog = $("#statusDialog");
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+}
+
+function finishQuoteEntryWithChecklist() {
+  const vehicle = pendingQuotePatioEntry;
+  const quote = getQuoteById(pendingQuotePatioQuoteId);
+  if (!vehicle || !quote) return;
+  if (!attachChecklistFromPanel(vehicle, $("#statusOptions"), "quoteEntryChecklist")) return;
+  finishQuotePatioEntry(quote, vehicle);
+}
+
+function finishQuotePatioEntry(quote, vehicle) {
+  quote.usedAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+  quote.usedVehicleId = vehicle.id;
+  pendingQuotePatioEntry = null;
+  pendingQuotePatioQuoteId = null;
+  closeStatusDialog();
+  addVehicleToPatio(vehicle);
+  renderPatioQuotes();
+  showToast(`Orçamento ${quote.code} enviado para o pátio.`);
+}
+
+function openQuoteDialog() {
+  quoteDialogStep = "vehicle";
+  selectedQuoteVehicleId = null;
+  const dialog = $("#quoteDialog");
+  if (!dialog) return;
+  dialog.innerHTML = renderQuoteDialog();
+  initIcons();
+  bindQuoteDialogControls(dialog);
+  bindCurrencyInputs(dialog);
+  bindLocalVehicleModelLookup({
+    modelSelector: "#quoteVehicleModel",
+    brandSelector: "#quoteVehicleBrand",
+    resultsSelector: "#quoteVehicleModelResults",
+    typeSelector: "#quoteVehicleType"
+  });
+  updateQuoteVehicleCategoryState(dialog);
+  renderQuoteServiceOptions(dialog);
+  updateQuoteTotalPreview(dialog);
+  showQuoteDialogStep("vehicle", dialog);
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+  $("#quoteVehiclePlate", dialog)?.focus();
+}
+
+function closeQuoteDialog() {
+  const dialog = $("#quoteDialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function") dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+  quoteDialogStep = "vehicle";
+  selectedQuoteVehicleId = null;
+}
+
+function handleQuotePlateLookup(plateValue, dialog = $("#quoteDialog")) {
+  const plate = formatPlate(plateValue);
+  const list = $("#quoteVehiclePlateResults", dialog);
+  if (!list) return;
+
+  const selectedVehicle = getSelectedQuoteRegistryVehicle();
+  if (selectedVehicle && selectedVehicle.plate !== plate) {
+    clearSelectedQuoteRegistration(dialog);
+  }
+
+  if (!plate) {
+    clearQuotePlateResults(dialog);
+    return;
+  }
+
+  const matches = vehicleRegistry.filter((vehicle) => vehicle.plate.startsWith(plate)).slice(0, 6);
+  if (!matches.length) {
+    if (plate.length >= 7) {
+      list.hidden = false;
+      list.innerHTML = `
+        <button class="schedule-plate-option entry-plate-option" type="button" id="quoteNewPlateButton">
+          <strong>${escapeHtml(plate)}</strong>
+          <span>Placa nova</span>
+          <small>Complete modelo, cor e cliente para emitir o orçamento.</small>
+        </button>
+      `;
+      $("#quoteNewPlateButton", list)?.addEventListener("click", () => {
+        clearQuotePlateResults(dialog);
+        $("#quoteVehicleModel", dialog)?.focus();
+      });
+      return;
+    }
+    clearQuotePlateResults(dialog);
+    return;
+  }
+
+  list.hidden = false;
+  list.innerHTML = matches.map(renderQuoteVehicleOption).join("");
+  $$("[data-quote-vehicle-id]", list).forEach((button) => {
+    button.addEventListener("click", () => selectQuoteVehicle(Number(button.dataset.quoteVehicleId), dialog));
+  });
+}
+
+function renderQuoteVehicleOption(vehicle) {
+  const owner = getVehicleOwnerName(vehicle);
+  const description = [vehicle.brand, vehicle.model, vehicle.color].filter(Boolean).join(" / ") || vehicle.model || "Veículo";
+  return `
+    <button class="schedule-plate-option entry-plate-option" type="button" data-quote-vehicle-id="${vehicle.id}">
+      <strong>${escapeHtml(vehicle.plate)}</strong>
+      <span>${escapeHtml(description)}</span>
+      <small>${escapeHtml(owner)}</small>
+    </button>
+  `;
+}
+
+function selectQuoteVehicle(vehicleId, dialog = $("#quoteDialog")) {
+  const vehicle = findVehicleById(vehicleId);
+  if (!vehicle) return;
+  selectedQuoteVehicleId = vehicle.id;
+  $("#quoteVehiclePlate", dialog).value = vehicle.plate;
+  clearQuotePlateResults(dialog);
+  fillQuoteFromVehicle(vehicle, dialog);
+  renderQuoteLinkedRegistration(vehicle, dialog);
+  setQuoteRegistrationReadonly(true, dialog);
+  updateQuoteTotalPreview(dialog);
+}
+
+function clearQuotePlateResults(dialog = $("#quoteDialog")) {
+  const list = $("#quoteVehiclePlateResults", dialog);
+  if (!list) return;
+  list.innerHTML = "";
+  list.hidden = true;
+}
+
+function getSelectedQuoteRegistryVehicle() {
+  return selectedQuoteVehicleId ? findVehicleById(selectedQuoteVehicleId) : null;
+}
+
+function clearSelectedQuoteRegistration(dialog = $("#quoteDialog")) {
+  selectedQuoteVehicleId = null;
+  setQuoteRegistrationReadonly(false, dialog);
+  renderQuoteLinkedRegistration(null, dialog);
+  $("#quoteVehicleBrand", dialog).value = "";
+  $("#quoteVehicleModel", dialog).value = "";
+  delete $("#quoteVehicleModel", dialog).dataset.selectedVehicleModel;
+  delete $("#quoteVehicleModel", dialog).dataset.selectedVehicleBrand;
+  clearLocalVehicleResults($("#quoteVehicleModelResults", dialog));
+  $("#quoteClientName", dialog).value = "";
+  $("#quoteClientPhone", dialog).value = "";
+  if ($("#quoteVehicleType", dialog).options.length) $("#quoteVehicleType", dialog).value = vehicleTypes[0] || "";
+  updateQuoteVehicleCategoryState(dialog);
+  resetQuoteVehicleColor(dialog);
+  renderQuoteServiceOptions(dialog);
+}
+
+function fillQuoteFromVehicle(vehicle, dialog = $("#quoteDialog")) {
+  $("#quoteVehicleBrand", dialog).value = vehicle.brand || "";
+  $("#quoteVehicleModel", dialog).value = vehicle.model || "";
+  if (vehicle.color) setQuoteVehicleColor(vehicle.color, dialog);
+  if (vehicle.type && vehicleTypes.includes(vehicle.type)) $("#quoteVehicleType", dialog).value = vehicle.type;
+  if (vehicle.category && vehicleCategories.includes(vehicle.category)) $("#quoteVehicleCategory", dialog).value = vehicle.category;
+  updateQuoteVehicleCategoryState(dialog);
+  renderQuoteServiceOptions(dialog);
+
+  const client = vehicle.currentClientId ? getClientById(vehicle.currentClientId) : findClientByPlate(vehicle.plate);
+  if (!client) return;
+  $("#quoteClientName", dialog).value = getClientDisplayName(client);
+  $("#quoteClientPhone", dialog).value = client.phone || "";
+}
+
+function renderQuoteLinkedRegistration(vehicle, dialog = $("#quoteDialog")) {
+  const panel = $("#quoteLinkedRecord", dialog);
+  if (!panel) return;
+  if (!vehicle) {
+    panel.innerHTML = "";
+    panel.hidden = true;
+    return;
+  }
+
+  const client = vehicle.currentClientId ? getClientById(vehicle.currentClientId) : findClientByPlate(vehicle.plate);
+  panel.hidden = false;
+  panel.innerHTML = `
+    <div>
+      <strong>Cadastro localizado</strong>
+      <span>${escapeHtml(vehicle.plate)} - ${escapeHtml(formatEntryLinkedVehicleDetails(vehicle))}</span>
+      <small>${escapeHtml(client ? getClientDisplayName(client) : "Cliente não vinculado")}${client?.phone ? ` / ${escapeHtml(client.phone)}` : ""}</small>
+    </div>
+    <div class="entry-linked-actions">
+      <button class="ghost-action" type="button" data-edit-quote-vehicle="${vehicle.id}">
+        <span data-icon="carFront"></span>
+        <span>Editar veículo</span>
+      </button>
+      ${
+        client
+          ? `<button class="ghost-action" type="button" data-edit-quote-client="${client.id}">
+              <span data-icon="users"></span>
+              <span>Editar cliente</span>
+            </button>`
+          : ""
+      }
+    </div>
+  `;
+  initIcons();
+  $("[data-edit-quote-vehicle]", panel)?.addEventListener("click", () => openQuoteVehicleRegistryEditor(vehicle.id));
+  $("[data-edit-quote-client]", panel)?.addEventListener("click", () => openQuoteClientRegistryEditor(client.id, vehicle.id));
+}
+
+function openQuoteVehicleRegistryEditor(vehicleId) {
+  if (!$("#adminShell").hidden) {
+    entryRegistryEditContext = { type: "vehicle", source: "quote", vehicleId };
+    openEntryVehicleRegistryDialog(vehicleId);
+    return;
+  }
+
+  showMessageBox({
+    title: "Edição restrita",
+    message: "A edição do cadastro do veículo deve ser feita por um administrador.",
+    confirmLabel: "Entendi"
+  });
+}
+
+function openQuoteClientRegistryEditor(clientId, vehicleId = selectedQuoteVehicleId) {
+  if (!$("#adminShell").hidden) {
+    entryRegistryEditContext = { type: "client", source: "quote", vehicleId, clientId };
+    openClientDialog(clientId);
+    return;
+  }
+
+  showMessageBox({
+    title: "Edição restrita",
+    message: "A edição do cadastro do cliente deve ser feita por um administrador.",
+    confirmLabel: "Entendi"
+  });
+}
+
+function refreshQuoteRegistrationAfterEdit() {
+  const vehicleId = entryRegistryEditContext?.vehicleId || selectedQuoteVehicleId;
+  const vehicle = vehicleId ? findVehicleById(vehicleId) : null;
+  const dialog = $("#quoteDialog");
+  if (!vehicle || !dialog?.open) return;
+
+  selectedQuoteVehicleId = vehicle.id;
+  $("#quoteVehiclePlate", dialog).value = vehicle.plate;
+  fillQuoteFromVehicle(vehicle, dialog);
+  renderQuoteLinkedRegistration(vehicle, dialog);
+  setQuoteRegistrationReadonly(true, dialog);
+  updateQuoteTotalPreview(dialog);
+}
+
+function setQuoteRegistrationReadonly(isReadonly, dialog = $("#quoteDialog")) {
+  ["#quoteVehicleModel"].forEach((selector) => {
+    const input = $(selector, dialog);
+    if (!input) return;
+    input.readOnly = isReadonly;
+    input.classList.toggle("is-readonly", isReadonly);
+  });
+  ["#quoteVehicleType", "#quoteVehicleCategory"].forEach((selector) => {
+    const input = $(selector, dialog);
+    if (!input) return;
+    input.disabled = isReadonly || (selector === "#quoteVehicleCategory" && !shouldUseVehicleCategory($("#quoteVehicleType", dialog)?.value || ""));
+    input.classList.toggle("is-readonly", isReadonly);
+  });
+  $$("[data-quote-color]", dialog).forEach((button) => {
+    button.disabled = isReadonly;
+    button.classList.toggle("is-readonly", isReadonly);
+  });
+  $(".quote-model-field", dialog)?.toggleAttribute("hidden", isReadonly);
+  $(".quote-color-field", dialog)?.toggleAttribute("hidden", isReadonly);
+  $(".quote-other-color-field", dialog)?.toggleAttribute("hidden", isReadonly || $("#quoteVehicleColor", dialog)?.value !== "Outra");
+  $("#quoteVehicleModel", dialog).required = !isReadonly;
+}
+
+function selectQuoteVehicleColor(button, dialog = $("#quoteDialog")) {
+  const color = button.dataset.quoteColor;
+  const isOther = color === "Outra";
+  $$("[data-quote-color]", dialog).forEach((item) => {
+    const isSelected = item === button;
+    item.classList.toggle("is-selected", isSelected);
+    item.setAttribute("aria-pressed", String(isSelected));
+  });
+  $("#quoteVehicleColor", dialog).value = color;
+  const otherField = $(".quote-other-color-field", dialog);
+  const otherInput = $("#quoteVehicleOtherColor", dialog);
+  if (otherField) otherField.hidden = !isOther;
+  if (otherInput) {
+    otherInput.disabled = !isOther;
+    otherInput.required = isOther;
+    if (!isOther) otherInput.value = "";
+  }
+  if (isOther) otherInput?.focus();
+}
+
+function setQuoteVehicleColor(color, dialog = $("#quoteDialog")) {
+  const button = $(`[data-quote-color="${cssEscape(color)}"]`, dialog);
+  if (button) {
+    selectQuoteVehicleColor(button, dialog);
+    return;
+  }
+  const otherButton = $('[data-quote-color="Outra"]', dialog);
+  if (!otherButton) return;
+  selectQuoteVehicleColor(otherButton, dialog);
+  $("#quoteVehicleOtherColor", dialog).value = color;
+}
+
+function resetQuoteVehicleColor(dialog = $("#quoteDialog")) {
+  const defaultButton = $('[data-quote-color="Branco"]', dialog);
+  if (!defaultButton) return;
+  selectQuoteVehicleColor(defaultButton, dialog);
+}
+
+function getQuoteVehicleColor(dialog = $("#quoteDialog")) {
+  const selectedColor = $("#quoteVehicleColor", dialog)?.value || "";
+  if (selectedColor === "Outra") return $("#quoteVehicleOtherColor", dialog)?.value.trim() || selectedColor;
+  return selectedColor;
+}
+
+function renderQuoteDialog() {
+  return `
+    <form class="vehicle-box quote-box" id="quoteForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Orçamentos</p>
+          <h2>Novo orçamento</h2>
+        </div>
+        <button class="icon-button" id="closeQuoteDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+
+      <section class="quote-step is-active" data-quote-step="vehicle">
+        <p class="step-copy">Dados do veículo</p>
+        <div class="vehicle-form-grid">
+          <div class="plate-lookup-field">
+            <label class="login-field" for="quoteVehiclePlate">
+              <span>Placa</span>
+              <input id="quoteVehiclePlate" name="quotePlate" type="text" placeholder="ABC1D23" maxlength="8" autocomplete="off" required />
+            </label>
+            <div class="entry-plate-results" id="quoteVehiclePlateResults" hidden></div>
+            <div class="entry-linked-record quote-linked-record" id="quoteLinkedRecord" hidden></div>
+          </div>
+          <div class="vehicle-model-lookup-field quote-model-field">
+            <label class="login-field" for="quoteVehicleModel">
+              <span>Modelo</span>
+              <input id="quoteVehicleModel" name="quoteModel" type="text" placeholder="Onix" autocomplete="off" required />
+            </label>
+            <input id="quoteVehicleBrand" name="quoteBrand" type="hidden" />
+            <div class="vehicle-model-results" id="quoteVehicleModelResults" hidden></div>
+          </div>
+          <div class="color-field quote-color-field">
+            <span>Cor</span>
+            <input id="quoteVehicleColor" name="quoteColor" type="hidden" value="Branco" required />
+            <div class="color-grid" aria-label="Escolha a cor do veículo">
+              <button class="color-swatch quote-color-swatch is-selected" type="button" data-quote-color="Branco" aria-pressed="true">
+                <span class="swatch swatch-white"></span>
+                <span>Branco</span>
+              </button>
+              <button class="color-swatch quote-color-swatch" type="button" data-quote-color="Preto" aria-pressed="false">
+                <span class="swatch swatch-black"></span>
+                <span>Preto</span>
+              </button>
+              <button class="color-swatch quote-color-swatch" type="button" data-quote-color="Prata" aria-pressed="false">
+                <span class="swatch swatch-silver"></span>
+                <span>Prata</span>
+              </button>
+              <button class="color-swatch quote-color-swatch" type="button" data-quote-color="Cinza" aria-pressed="false">
+                <span class="swatch swatch-gray"></span>
+                <span>Cinza</span>
+              </button>
+              <button class="color-swatch quote-color-swatch" type="button" data-quote-color="Vermelho" aria-pressed="false">
+                <span class="swatch swatch-red"></span>
+                <span>Vermelho</span>
+              </button>
+              <button class="color-swatch quote-color-swatch" type="button" data-quote-color="Azul" aria-pressed="false">
+                <span class="swatch swatch-blue"></span>
+                <span>Azul</span>
+              </button>
+              <button class="color-swatch quote-color-swatch" type="button" data-quote-color="Marrom" aria-pressed="false">
+                <span class="swatch swatch-brown"></span>
+                <span>Marrom</span>
+              </button>
+              <button class="color-swatch quote-color-swatch" type="button" data-quote-color="Outra" aria-pressed="false">
+                <span class="swatch swatch-other"></span>
+                <span>Outra</span>
+              </button>
+            </div>
+          </div>
+          <label class="login-field quote-other-color-field" for="quoteVehicleOtherColor" hidden>
+            <span>Informe a cor</span>
+            <input id="quoteVehicleOtherColor" name="quoteOtherColor" type="text" placeholder="Digite a cor" disabled />
+          </label>
+          <label class="login-field" for="quoteVehicleType">
+            <span>Tipo de veículo</span>
+            <select id="quoteVehicleType" name="quoteType" required>
+              ${renderSelectOptions(vehicleTypes, vehicleTypes[0] || "Carro")}
+            </select>
+          </label>
+          <label class="login-field" for="quoteVehicleCategory">
+            <span>Categoria de veículo</span>
+            <select id="quoteVehicleCategory" name="quoteCategory" required>
+              ${renderSelectOptions(vehicleCategories, vehicleCategories[0] || "")}
+            </select>
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <button class="exit-button" id="cancelQuoteDialog" type="button">Cancelar</button>
+          <button class="primary-button" id="quoteNextClientButton" type="button">
+            <span data-icon="login"></span>
+            <span>Próximo</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="quote-step" data-quote-step="client" hidden>
+        <p class="step-copy">Dados do cliente e pagamento previsto</p>
+        <div class="vehicle-form-grid">
+          <label class="login-field" for="quoteClientPhone">
+            <span>Telefone com DDD</span>
+            <input id="quoteClientPhone" name="quotePhone" type="tel" inputmode="tel" placeholder="(11) 99999-9999" maxlength="15" required />
+          </label>
+          <label class="login-field" for="quoteClientName">
+            <span>Nome do cliente</span>
+            <input id="quoteClientName" name="quoteOwner" type="text" placeholder="Nome completo" required />
+          </label>
+          <label class="login-field" for="quotePayment">
+            <span>Forma de pagamento</span>
+            <select id="quotePayment" name="quotePayment" required>
+              ${renderPaymentOptions("Pix")}
+            </select>
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <button class="exit-button" id="quoteBackVehicleButton" type="button">Voltar</button>
+          <button class="primary-button" id="quoteNextServicesButton" type="button">
+            <span data-icon="login"></span>
+            <span>Próximo</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="quote-step" data-quote-step="services" hidden>
+        <p class="step-copy">Serviços, avulsos e validade</p>
+        <div class="quote-service-stack">
+          <div class="services-field quote-services-field">
+            <span>Serviços cadastrados</span>
+            <div class="service-dropdown-row">
+              <select id="quoteServiceSelect" aria-label="Selecionar serviço do orçamento"></select>
+              <button class="ghost-action" id="quoteAddServiceButton" type="button">
+                <span data-icon="plus"></span>
+                <span>Adicionar serviço</span>
+              </button>
+            </div>
+            <div class="selected-services-list" id="quoteServicesList" aria-label="Serviços do orçamento"></div>
+          </div>
+
+          <label class="switch-field quote-extra-switch" for="quoteExtraToggle">
+            <input id="quoteExtraToggle" type="checkbox" />
+            <span class="switch-control"></span>
+            <span>Adicionar serviços avulsos</span>
+          </label>
+
+          <section class="quote-extra-panel" id="quoteExtraPanel" aria-label="Serviços avulsos" hidden>
+            <div class="quote-extra-head">
+              <div>
+                <p class="eyebrow">Avulsos</p>
+                <h3>Serviços avulsos</h3>
+              </div>
+              <button class="ghost-action" id="quoteAddExtraButton" type="button">
+                <span data-icon="plus"></span>
+                <span>Adicionar avulso</span>
+              </button>
+            </div>
+            <div class="quote-extra-list" id="quoteExtraServicesList">
+              ${renderQuoteExtraRow(0)}
+            </div>
+          </section>
+
+          <div class="vehicle-form-grid quote-validity-grid">
+            <label class="login-field" for="quoteValidityDays">
+              <span>Prazo em dias</span>
+              <input id="quoteValidityDays" name="quoteValidityDays" type="number" min="1" step="1" value="15" required />
+            </label>
+          </div>
+
+          <section class="quote-total-card">
+            <span>Total do orçamento</span>
+            <strong id="quoteTotalValue">${formatCurrency(0)}</strong>
+            <p id="quoteTotalBreakdown">Serviços: ${formatCurrency(0)} · Avulsos: ${formatCurrency(0)}</p>
+          </section>
+        </div>
+        <div class="dialog-actions">
+          <button class="exit-button" id="quoteBackClientButton" type="button">Voltar</button>
+          <button class="primary-button" type="submit">
+            <span data-icon="check"></span>
+            <span>Emitir orçamento</span>
+          </button>
+        </div>
+      </section>
+    </form>
+  `;
+}
+
+function renderQuoteExtraRow(index, item = {}) {
+  return `
+    <div class="quote-extra-row" data-quote-extra-row>
+      <label class="login-field" for="quoteExtraDescription${index}">
+        <span>Serviço avulso</span>
+        <input id="quoteExtraDescription${index}" data-quote-extra-description type="text" placeholder="Ex.: Polimento localizado" value="${escapeHtml(item.description || "")}" />
+      </label>
+      <label class="login-field" for="quoteExtraValue${index}">
+        <span>Valor</span>
+        <input id="quoteExtraValue${index}" data-quote-extra-value type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" value="${escapeHtml(formatCurrencyFieldValue(item.value))}" />
+      </label>
+      <button class="icon-button quote-remove-extra-button" type="button" data-remove-quote-extra aria-label="Remover avulso">
+        <span data-icon="x"></span>
+      </button>
+    </div>
+  `;
+}
+
+function bindQuoteDialogControls(dialog) {
+  $("#closeQuoteDialog", dialog)?.addEventListener("click", closeQuoteDialog);
+  $("#cancelQuoteDialog", dialog)?.addEventListener("click", closeQuoteDialog);
+  dialog.addEventListener("cancel", closeQuoteDialog, { once: true });
+  $("#quoteNextClientButton", dialog)?.addEventListener("click", () => {
+    if (validateQuoteDialogStep("vehicle", dialog)) showQuoteDialogStep("client", dialog);
+  });
+  $("#quoteBackVehicleButton", dialog)?.addEventListener("click", () => showQuoteDialogStep("vehicle", dialog));
+  $("#quoteNextServicesButton", dialog)?.addEventListener("click", () => {
+    if (validateQuoteDialogStep("client", dialog)) showQuoteDialogStep("services", dialog);
+  });
+  $("#quoteBackClientButton", dialog)?.addEventListener("click", () => showQuoteDialogStep("client", dialog));
+  $("#quoteVehiclePlate", dialog)?.addEventListener("input", (event) => {
+    event.currentTarget.value = formatPlate(event.currentTarget.value);
+    handleQuotePlateLookup(event.currentTarget.value, dialog);
+  });
+  $$("[data-quote-color]", dialog).forEach((button) => {
+    button.addEventListener("click", () => selectQuoteVehicleColor(button, dialog));
+  });
+  $("#quoteClientPhone", dialog)?.addEventListener("input", (event) => {
+    event.currentTarget.value = formatPhone(event.currentTarget.value);
+  });
+  $("#quoteVehicleType", dialog)?.addEventListener("change", () => {
+    updateQuoteVehicleCategoryState(dialog);
+    renderQuoteServiceOptions(dialog, { preserveSelected: true });
+    updateQuoteTotalPreview(dialog);
+  });
+  $("#quoteVehicleCategory", dialog)?.addEventListener("change", () => {
+    renderQuoteServiceOptions(dialog, { preserveSelected: true });
+    updateQuoteTotalPreview(dialog);
+  });
+  $("#quoteAddServiceButton", dialog)?.addEventListener("click", () => addQuoteServiceFromDropdown(dialog));
+  $("#quoteExtraToggle", dialog)?.addEventListener("change", () => updateQuoteExtraPanel(dialog));
+  $("#quoteAddExtraButton", dialog)?.addEventListener("click", () => addQuoteExtraRow(dialog));
+  $("#quoteForm", dialog)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveQuoteFromDialog(dialog);
+  });
+  dialog.addEventListener("click", (event) => {
+    const removeService = event.target.closest("[data-remove-quote-service]");
+    if (removeService) {
+      renderSelectedQuoteServices(
+        getSelectedQuoteServices(dialog).filter((service) => service !== removeService.dataset.removeQuoteService),
+        dialog
+      );
+      updateQuoteTotalPreview(dialog);
+      return;
+    }
+    const removeExtra = event.target.closest("[data-remove-quote-extra]");
+    if (removeExtra) {
+      removeQuoteExtraRow(removeExtra, dialog);
+    }
+  });
+  dialog.addEventListener("input", (event) => {
+    if (event.target.id === "quoteValidityDays" || event.target.matches("[data-quote-extra-description], [data-quote-extra-value]")) {
+      updateQuoteTotalPreview(dialog);
+    }
+  });
+}
+
+function showQuoteDialogStep(step, dialog = $("#quoteDialog")) {
+  quoteDialogStep = step;
+  $$("[data-quote-step]", dialog).forEach((section) => {
+    const isActive = section.dataset.quoteStep === step;
+    section.hidden = !isActive;
+    section.classList.toggle("is-active", isActive);
+  });
+}
+
+function validateQuoteDialogStep(step, dialog) {
+  const quoteVehicleType = $("#quoteVehicleType", dialog)?.value || "";
+  const quoteColor = $("#quoteVehicleColor", dialog)?.value || "";
+  const selectors = {
+    vehicle: ["#quoteVehiclePlate", "#quoteVehicleModel", "#quoteVehicleColor", "#quoteVehicleType"].concat(
+      shouldUseVehicleCategory(quoteVehicleType) ? ["#quoteVehicleCategory"] : [],
+      quoteColor === "Outra" ? ["#quoteVehicleOtherColor"] : []
+    ),
+    client: ["#quoteClientPhone", "#quoteClientName", "#quotePayment"],
+    services: ["#quoteValidityDays"]
+  };
+  return (selectors[step] || []).every((selector) => {
+    const input = $(selector, dialog);
+    return !input || input.reportValidity();
+  });
+}
+
+function updateQuoteVehicleCategoryState(dialog = $("#quoteDialog")) {
+  const type = $("#quoteVehicleType", dialog)?.value || "Carro";
+  const categorySelect = $("#quoteVehicleCategory", dialog);
+  if (!categorySelect) return;
+  const usesCategory = shouldUseVehicleCategory(type);
+  categorySelect.disabled = !usesCategory;
+  categorySelect.required = usesCategory;
+  if (!usesCategory) categorySelect.value = "";
+}
+
+function getQuoteAvailableServices(dialog = $("#quoteDialog")) {
+  const type = $("#quoteVehicleType", dialog)?.value || "Carro";
+  const category = $("#quoteVehicleCategory", dialog)?.value || "";
+  return getServicesForVehicleTypeAndCategory(type, category);
+}
+
+function renderQuoteServiceOptions(dialog = $("#quoteDialog"), options = {}) {
+  const select = $("#quoteServiceSelect", dialog);
+  const addButton = $("#quoteAddServiceButton", dialog);
+  if (!select) return;
+  const services = getQuoteAvailableServices(dialog);
+  const selectedServices = options.preserveSelected
+    ? getSelectedQuoteServices(dialog).filter((serviceName) => services.some((service) => service.name === serviceName))
+    : [];
+
+  if (!services.length) {
+    select.innerHTML = '<option value="">Nenhum serviço cadastrado</option>';
+    select.disabled = true;
+    if (addButton) addButton.disabled = true;
+    renderSelectedQuoteServices(selectedServices, dialog);
+    return;
+  }
+
+  select.disabled = false;
+  if (addButton) addButton.disabled = false;
+  select.innerHTML = services
+    .map((service) => `<option value="${escapeHtml(service.name)}">${escapeHtml(formatServiceOptionLabel(service))}</option>`)
+    .join("");
+  renderSelectedQuoteServices(selectedServices.length ? selectedServices : [services[0].name], dialog);
+}
+
+function addQuoteServiceFromDropdown(dialog = $("#quoteDialog")) {
+  const select = $("#quoteServiceSelect", dialog);
+  if (!select?.value) return;
+  const selectedServices = getSelectedQuoteServices(dialog);
+  if (selectedServices.includes(select.value)) {
+    showToast("Serviço já incluído no orçamento.");
+    return;
+  }
+  selectedServices.push(select.value);
+  renderSelectedQuoteServices(selectedServices, dialog);
+  updateQuoteTotalPreview(dialog);
+}
+
+function getSelectedQuoteServices(dialog = $("#quoteDialog")) {
+  return $$('#quoteServicesList input[name="quoteServices"]', dialog).map((input) => input.value);
+}
+
+function renderSelectedQuoteServices(services, dialog = $("#quoteDialog")) {
+  const list = $("#quoteServicesList", dialog);
+  if (!list) return;
+  const uniqueServices = [...new Set(services.filter(Boolean))];
+  list.innerHTML = uniqueServices.length
+    ? uniqueServices
+        .map((service) => {
+          const registeredService = findServiceDefinition(service);
+          const details = registeredService ? formatServiceOptionLabel(registeredService) : "Serviço contratado";
+          return `
+            <article class="selected-service-chip">
+              <input type="hidden" name="quoteServices" value="${escapeHtml(service)}" />
+              <span>
+                <strong>${escapeHtml(service)}</strong>
+                <small>${escapeHtml(details)}</small>
+              </span>
+              <button type="button" aria-label="Remover ${escapeHtml(service)}" data-remove-quote-service="${escapeHtml(service)}">
+                ${icons.x}
+              </button>
+            </article>
+          `;
+        })
+        .join("")
+    : '<p class="empty-group">Nenhum serviço cadastrado incluído.</p>';
+}
+
+function addQuoteExtraRow(dialog = $("#quoteDialog")) {
+  const list = $("#quoteExtraServicesList", dialog);
+  if (!list) return;
+  const index = Date.now();
+  list.insertAdjacentHTML("beforeend", renderQuoteExtraRow(index));
+  initIcons();
+  bindCurrencyInputs(list);
+  updateQuoteTotalPreview(dialog);
+}
+
+function updateQuoteExtraPanel(dialog = $("#quoteDialog")) {
+  const toggle = $("#quoteExtraToggle", dialog);
+  const panel = $("#quoteExtraPanel", dialog);
+  const list = $("#quoteExtraServicesList", dialog);
+  if (!toggle || !panel || !list) return;
+  panel.hidden = !toggle.checked;
+  if (!toggle.checked) {
+    list.innerHTML = renderQuoteExtraRow(0);
+    bindCurrencyInputs(list);
+    initIcons();
+  }
+  updateQuoteTotalPreview(dialog);
+}
+
+function removeQuoteExtraRow(button, dialog = $("#quoteDialog")) {
+  const row = button.closest("[data-quote-extra-row]");
+  const rows = $$("[data-quote-extra-row]", dialog);
+  if (!row) return;
+  if (rows.length <= 1) {
+    $("[data-quote-extra-description]", row).value = "";
+    setCurrencyInputValue($("[data-quote-extra-value]", row), 0);
+  } else row.remove();
+  updateQuoteTotalPreview(dialog);
+}
+
+function collectQuoteExtras(dialog = $("#quoteDialog"), { validate = false } = {}) {
+  if (!$("#quoteExtraToggle", dialog)?.checked) return [];
+  const extras = [];
+  let invalidField = null;
+  $$("[data-quote-extra-row]", dialog).forEach((row) => {
+    const descriptionInput = $("[data-quote-extra-description]", row);
+    const valueInput = $("[data-quote-extra-value]", row);
+    const description = descriptionInput?.value.trim() || "";
+    const value = getCurrencyInputValue(valueInput);
+    if (!description && !value) return;
+    if (!description || value <= 0) {
+      invalidField = !description ? descriptionInput : valueInput;
+      return;
+    }
+    extras.push({ description, value });
+  });
+  if (validate && invalidField) {
+    showToast("Informe o nome e o valor de cada serviço avulso.");
+    invalidField.focus();
+    return false;
+  }
+  return extras;
+}
+
+function updateQuoteTotalPreview(dialog = $("#quoteDialog")) {
+  const services = getSelectedQuoteServices(dialog);
+  const serviceTotal = services.reduce((total, service) => total + (findServiceDefinition(service)?.price || 0), 0);
+  const extras = collectQuoteExtras(dialog) || [];
+  const extrasTotal = extras.reduce((total, item) => total + item.value, 0);
+  const total = serviceTotal + extrasTotal;
+  const totalOutput = $("#quoteTotalValue", dialog);
+  const breakdown = $("#quoteTotalBreakdown", dialog);
+  if (totalOutput) totalOutput.textContent = formatCurrency(total);
+  if (breakdown) breakdown.textContent = `Serviços: ${formatCurrency(serviceTotal)} · Avulsos: ${formatCurrency(extrasTotal)}`;
+}
+
+function saveQuoteFromDialog(dialog = $("#quoteDialog")) {
+  if (!validateQuoteDialogStep("vehicle", dialog) || !validateQuoteDialogStep("client", dialog) || !validateQuoteDialogStep("services", dialog)) return;
+  const services = getSelectedQuoteServices(dialog);
+  const extras = collectQuoteExtras(dialog, { validate: true });
+  if (extras === false) return;
+  if (!services.length && !extras.length) {
+    showToast("Inclua ao menos um serviço cadastrado ou avulso no orçamento.");
+    showQuoteDialogStep("services", dialog);
+    return;
+  }
+
+  const validityDays = getPositiveIntegerValue("#quoteValidityDays", dialog);
+  if (!validityDays) {
+    showToast("Informe o prazo em dias para o orçamento.");
+    $("#quoteValidityDays", dialog)?.focus();
+    return;
+  }
+
+  const date = getTodayISO();
+  const quote = {
+    id: getNextQuoteId(),
+    code: getNextQuoteCode(),
+    date,
+    time: getCurrentShortTime(),
+    dueDate: addDaysToISODate(date, validityDays),
+    validityDays,
+    plate: $("#quoteVehiclePlate", dialog).value.trim().toUpperCase(),
+    brand: $("#quoteVehicleBrand", dialog)?.value.trim() || "",
+    model: $("#quoteVehicleModel", dialog).value.trim(),
+    color: getQuoteVehicleColor(dialog),
+    type: $("#quoteVehicleType", dialog).value,
+    category: getVehicleCategoryValue($("#quoteVehicleType", dialog).value, $("#quoteVehicleCategory", dialog)?.value || ""),
+    owner: $("#quoteClientName", dialog).value.trim(),
+    phone: $("#quoteClientPhone", dialog).value.trim(),
+    payment: $("#quotePayment", dialog).value,
+    services,
+    extraItems: extras,
+    status: "Pendente",
+    operator: activeSessionUser || "Administrador"
+  };
+
+  quoteEstimates.unshift(quote);
+  closeQuoteDialog();
+  renderPatioQuotes();
+  showToast(`Orçamento ${quote.code} emitido com validade até ${formatDateBR(quote.dueDate)}.`);
+}
+
+function getPositiveIntegerValue(selector, container = document) {
+  const value = Number.parseInt($(selector, container)?.value || "0", 10);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function addDaysToISODate(dateISO, days = 0) {
+  const [year, month, day] = String(dateISO).split("-").map(Number);
+  const date = new Date(year, (month || 1) - 1, day || 1);
+  date.setDate(date.getDate() + Number(days || 0));
+  return formatLocalDateISO(date);
+}
+
+function formatLocalDateISO(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getNextQuoteId() {
+  return Math.max(0, ...quoteEstimates.map((quote) => quote.id || 0)) + 1;
+}
+
+function getNextQuoteCode() {
+  const datePart = getTodayISO().slice(0, 7).replace("-", "");
+  const maxSequence = quoteEstimates.reduce((max, quote) => {
+    const match = String(quote.code || "").match(new RegExp(`^ORC-${datePart}-(\\d+)$`));
+    return match ? Math.max(max, Number(match[1] || 0)) : max;
+  }, 0);
+  return `ORC-${datePart}-${String(maxSequence + 1).padStart(3, "0")}`;
+}
+
 function countByStatus(status) {
   if (status === "finalizado") return patioVehicles.filter((vehicle) => isFinalizedStatus(vehicle.status)).length;
   return patioVehicles.filter((vehicle) => vehicle.status === status).length;
@@ -3833,7 +5716,7 @@ function renderBusinessScreen(container) {
   const displayName = getBusinessDocumentName();
   const completeness = getBusinessProfileCompleteness();
   const logoSource = businessProfile.logoDataUrl || "./assets/brand/lavaprime-lockup.png";
-  const logoSizePercent = getBusinessLogoSizePercent();
+  const logoDimensions = getBusinessLogoDimensions();
 
   container.innerHTML = `
     <section class="screen-metrics business-metrics" aria-label="Resumo do negócio">
@@ -3909,19 +5792,35 @@ function renderBusinessScreen(container) {
             <h2>Logomarca padrão</h2>
           </div>
         </div>
-        <div class="business-logo-preview">
-          <img src="${escapeHtml(logoSource)}" alt="Logomarca do negócio" />
+        <div class="business-logo-preview business-logo-report-preview">
+          <div class="business-logo-report-header">
+            <div class="business-logo-report-slot">
+              <img id="businessLogoReportPreviewImage" src="${escapeHtml(logoSource)}" alt="Logomarca do negócio" style="--logo-width: ${logoDimensions.x}%; --logo-height: ${logoDimensions.y}%;" />
+            </div>
+            <div class="business-logo-report-copy">
+              <strong>${escapeHtml(displayName)}</strong>
+              <span>${escapeHtml(getBusinessDocumentContactLine("all") || "Documento gerado pelo sistema")}</span>
+            </div>
+            <span>RELATÓRIO</span>
+          </div>
         </div>
         <label class="login-field" for="businessLogoFile">
           <span>Arquivo PNG ou JPG</span>
           <input id="businessLogoFile" type="file" accept="image/png,image/jpeg" />
         </label>
-        <label class="login-field business-logo-size-field" for="businessLogoSize">
-          <span>Tamanho nos relatórios</span>
-          <input id="businessLogoSize" type="range" min="${pdfLogoSizing.minPercent}" max="${pdfLogoSizing.maxPercent}" step="5" value="${logoSizePercent}" />
-        </label>
+        <div class="business-logo-size-grid">
+          <label class="login-field business-logo-size-field" for="businessLogoSizeX">
+            <span>Largura (X)</span>
+            <input id="businessLogoSizeX" data-business-logo-axis="x" type="range" min="${pdfLogoSizing.minPercent}" max="${pdfLogoSizing.maxPercent}" step="5" value="${logoDimensions.x}" />
+          </label>
+          <label class="login-field business-logo-size-field" for="businessLogoSizeY">
+            <span>Altura (Y)</span>
+            <input id="businessLogoSizeY" data-business-logo-axis="y" type="range" min="${pdfLogoSizing.minPercent}" max="${pdfLogoSizing.maxPercent}" step="5" value="${logoDimensions.y}" />
+          </label>
+        </div>
         <div class="business-logo-size-meta">
-          <strong id="businessLogoSizeValue">${logoSizePercent}%</strong>
+          <span>X <strong id="businessLogoSizeXValue">${logoDimensions.x}%</strong></span>
+          <span>Y <strong id="businessLogoSizeYValue">${logoDimensions.y}%</strong></span>
         </div>
         <div class="dialog-actions business-logo-actions">
           <button class="ghost-action" type="button" id="removeBusinessLogoButton" ${businessProfile.logoDataUrl ? "" : "disabled"}>
@@ -3972,12 +5871,14 @@ function bindBusinessScreenControls(container) {
     renderBusinessScreen(container);
     showToast("Dados do negócio salvos.");
   });
-  $("#businessLogoSize", container)?.addEventListener("input", () => updateBusinessLogoSizeDisplay(container));
-  $("#businessLogoSize", container)?.addEventListener("change", () => {
-    businessProfile = getBusinessProfileFormValues(container);
-    saveBusinessStorageItem(businessStorageKeys.profile, businessProfile);
-    updateBusinessLogoSizeDisplay(container);
-    showToast("Tamanho da logomarca salvo.");
+  $$("[data-business-logo-axis]", container).forEach((input) => {
+    input.addEventListener("input", () => updateBusinessLogoSizeDisplay(container));
+    input.addEventListener("change", () => {
+      businessProfile = getBusinessProfileFormValues(container);
+      saveBusinessStorageItem(businessStorageKeys.profile, businessProfile);
+      updateBusinessLogoSizeDisplay(container);
+      showToast("Dimensões da logomarca salvas.");
+    });
   });
   $("#businessLogoFile", container).addEventListener("change", (event) => handleBusinessLogoUpload(event, container));
   $("#removeBusinessLogoButton", container)?.addEventListener("click", () => {
@@ -3990,11 +5891,21 @@ function bindBusinessScreenControls(container) {
 }
 
 function updateBusinessLogoSizeDisplay(container) {
-  const input = $("#businessLogoSize", container);
-  const value = getBusinessLogoSizePercent(input?.value);
-  if (input) input.value = String(value);
-  const output = $("#businessLogoSizeValue", container);
-  if (output) output.textContent = `${value}%`;
+  const xInput = $("#businessLogoSizeX", container);
+  const yInput = $("#businessLogoSizeY", container);
+  const xValue = getBusinessLogoDimensionPercent("x", xInput?.value);
+  const yValue = getBusinessLogoDimensionPercent("y", yInput?.value);
+  if (xInput) xInput.value = String(xValue);
+  if (yInput) yInput.value = String(yValue);
+  const xOutput = $("#businessLogoSizeXValue", container);
+  const yOutput = $("#businessLogoSizeYValue", container);
+  if (xOutput) xOutput.textContent = `${xValue}%`;
+  if (yOutput) yOutput.textContent = `${yValue}%`;
+  const preview = $("#businessLogoReportPreviewImage", container);
+  if (preview) {
+    preview.style.setProperty("--logo-width", `${xValue}%`);
+    preview.style.setProperty("--logo-height", `${yValue}%`);
+  }
 }
 
 function handleBusinessLogoUpload(event, container) {
@@ -4033,7 +5944,9 @@ function getBusinessProfileFormValues(container) {
     additionalPhones: getBusinessAdditionalPhonesFormValues(container),
     email: $("#businessEmail", container).value.trim(),
     address: $("#businessAddress", container).value.trim(),
-    logoSizePercent: getBusinessLogoSizePercent($("#businessLogoSize", container)?.value),
+    logoSizePercent: getBusinessLogoDimensionPercent("x", $("#businessLogoSizeX", container)?.value),
+    logoSizeXPercent: getBusinessLogoDimensionPercent("x", $("#businessLogoSizeX", container)?.value),
+    logoSizeYPercent: getBusinessLogoDimensionPercent("y", $("#businessLogoSizeY", container)?.value),
     reportFields
   };
 }
@@ -4795,9 +6708,9 @@ function getInvoiceRemainingDestinationLabel(invoice) {
   return labels[invoice.remainingDestination] || "destino escolhido";
 }
 
-function getMessageContextFromClient(client) {
-  const primaryPlate = client.plates?.[0] || "";
-  const vehicle = primaryPlate ? findVehicleByPlate(primaryPlate) : null;
+function getMessageContextFromClient(client, plate = "") {
+  const selectedPlate = plate || client.plates?.[0] || "";
+  const vehicle = selectedPlate ? findVehicleByPlate(selectedPlate) : null;
   const lastService = vehicle?.serviceHistory?.[vehicle.serviceHistory.length - 1];
   return {
     cliente: getClientDisplayName(client),
@@ -4805,7 +6718,7 @@ function getMessageContextFromClient(client) {
     documento: client.document || "",
     email: client.email || "",
     empresa: getBusinessMessageCompanyName(),
-    placa: primaryPlate,
+    placa: selectedPlate,
     veiculo: vehicle ? formatVehicleDisplayName(vehicle) : "",
     modelo: vehicle?.model || "",
     cor: vehicle?.color || "",
@@ -4936,8 +6849,8 @@ function bindClientsScreenControls(container) {
   $$("[data-edit-client]", container).forEach((button) => {
     button.addEventListener("click", () => editClientRegistration(container, Number(button.dataset.editClient)));
   });
-  $$("[data-send-client-message]", container).forEach((button) => {
-    button.addEventListener("click", () => sendClientRelationshipMessage(button.dataset.sendClientMessage, Number(button.dataset.clientId)));
+  $$("[data-open-client-message-dialog]", container).forEach((button) => {
+    button.addEventListener("click", () => openClientMessageDialog(Number(button.dataset.openClientMessageDialog)));
   });
   $$("[data-client-filter]", container).forEach((button) => {
     button.addEventListener("click", () => {
@@ -4947,10 +6860,192 @@ function bindClientsScreenControls(container) {
   });
 }
 
-function sendClientRelationshipMessage(key, clientId) {
+function sendClientRelationshipMessage(key, clientId, plate = "") {
   const client = getClientById(clientId);
   if (!client) return;
-  sendManualMessage(key, getMessageContextFromClient(client));
+  return sendManualMessage(key, getMessageContextFromClient(client, plate));
+}
+
+function openClientMessageDialog(clientId) {
+  const client = getClientById(clientId);
+  if (!client) {
+    showToast("Cliente não localizado.");
+    return;
+  }
+
+  selectedClientMessageClientId = client.id;
+  selectedClientMessagePlate = client.plates?.[0] || "";
+  const categories = getClientMessageCategories();
+  selectedClientMessageCategory = categories.includes("Relacionamento com o cliente")
+    ? "Relacionamento com o cliente"
+    : categories[0] || "";
+  selectedClientMessageTemplateKey = "";
+
+  const dialog = $("#clientMessageDialog");
+  if (!dialog) return;
+  renderClientMessageDialog(dialog);
+  if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+  else dialog.setAttribute("open", "");
+}
+
+function closeClientMessageDialog() {
+  const dialog = $("#clientMessageDialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function" && dialog.open) dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+  selectedClientMessageClientId = null;
+  selectedClientMessagePlate = "";
+  selectedClientMessageCategory = "";
+  selectedClientMessageTemplateKey = "";
+}
+
+function getClientMessageCategories() {
+  return [...new Set(businessMessageTemplates.map((template) => template.category).filter(Boolean))];
+}
+
+function getClientMessageTemplatesByCategory(category) {
+  return businessMessageTemplates.filter((template) => template.category === category);
+}
+
+function syncClientMessageDialogSelection(client) {
+  const categories = getClientMessageCategories();
+  if (!selectedClientMessageCategory || !categories.includes(selectedClientMessageCategory)) {
+    selectedClientMessageCategory = categories.includes("Relacionamento com o cliente")
+      ? "Relacionamento com o cliente"
+      : categories[0] || "";
+  }
+
+  const templates = getClientMessageTemplatesByCategory(selectedClientMessageCategory);
+  if (!selectedClientMessageTemplateKey || !templates.some((template) => template.key === selectedClientMessageTemplateKey)) {
+    selectedClientMessageTemplateKey = templates[0]?.key || "";
+  }
+
+  const plates = client.plates?.filter(Boolean) || [];
+  if (!plates.length) {
+    selectedClientMessagePlate = "";
+    return;
+  }
+  if (!plates.includes(selectedClientMessagePlate)) selectedClientMessagePlate = plates[0];
+}
+
+function renderClientMessageDialog(dialog = $("#clientMessageDialog")) {
+  const client = selectedClientMessageClientId ? getClientById(selectedClientMessageClientId) : null;
+  if (!dialog || !client) return;
+  syncClientMessageDialogSelection(client);
+  const templates = getClientMessageTemplatesByCategory(selectedClientMessageCategory);
+  const template = templates.find((item) => item.key === selectedClientMessageTemplateKey) || templates[0] || null;
+  const preview = template ? applyMessageTemplateTokens(template.text || "", getMessageContextFromClient(client, selectedClientMessagePlate)) : "Nenhuma mensagem disponível.";
+
+  dialog.innerHTML = `
+    <form class="message-box client-message-box" id="clientMessageForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Cadastro de clientes</p>
+          <h2>${escapeHtml(getClientDisplayName(client))}</h2>
+        </div>
+        <button class="icon-button" id="closeClientMessageDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+
+      <article class="schedule-selected-card client-message-summary">
+        <span>Telefone</span>
+        <strong>${escapeHtml(client.phone || "Não informado")}</strong>
+        <p>${escapeHtml(client.plates?.length ? `${client.plates.length} placa(s) vinculada(s)` : "Sem placa vinculada no cadastro.")}</p>
+      </article>
+
+      <div class="business-form-grid client-message-form">
+        <label class="login-field" for="clientMessagePlateSelect">
+          <span>Placa de referência</span>
+          <select id="clientMessagePlateSelect">
+            ${renderClientMessagePlateOptions(client)}
+          </select>
+        </label>
+        <label class="login-field" for="clientMessageCategorySelect">
+          <span>Natureza da mensagem</span>
+          <select id="clientMessageCategorySelect">
+            ${renderSelectOptions(getClientMessageCategories(), selectedClientMessageCategory)}
+          </select>
+        </label>
+        <label class="login-field client-message-template-field" for="clientMessageTemplateSelect">
+          <span>Mensagem</span>
+          <select id="clientMessageTemplateSelect" ${template ? "" : "disabled"}>
+            ${renderClientMessageTemplateOptions(templates, selectedClientMessageTemplateKey)}
+          </select>
+        </label>
+      </div>
+
+      <article class="message-preview-card">
+        <span>Prévia da mensagem</span>
+        <p id="clientMessagePreviewText">${renderWhatsappPreview(preview)}</p>
+      </article>
+
+      <div class="dialog-actions message-actions">
+        <button class="exit-button" id="cancelClientMessageDialog" type="button">Cancelar</button>
+        <button class="primary-button" type="submit" ${template ? "" : "disabled"}>
+          <span data-icon="message"></span>
+          <span>Abrir WhatsApp</span>
+        </button>
+      </div>
+    </form>
+  `;
+
+  initIcons();
+  bindClientMessageDialogControls(dialog);
+}
+
+function renderClientMessagePlateOptions(client) {
+  const plates = client.plates?.filter(Boolean) || [];
+  if (!plates.length) return '<option value="">Sem placa vinculada</option>';
+  return plates
+    .map((plate) => {
+      const vehicle = findVehicleByPlate(plate);
+      const label = vehicle ? `${plate} - ${formatVehicleDisplayName(vehicle)}` : plate;
+      return `<option value="${escapeHtml(plate)}" ${plate === selectedClientMessagePlate ? "selected" : ""}>${escapeHtml(label)}</option>`;
+    })
+    .join("");
+}
+
+function renderClientMessageTemplateOptions(templates, selectedKey) {
+  if (!templates.length) return '<option value="">Nenhuma mensagem disponível</option>';
+  return templates
+    .map(
+      (template) =>
+        `<option value="${escapeHtml(template.key)}" ${template.key === selectedKey ? "selected" : ""}>${escapeHtml(template.title)}</option>`
+    )
+    .join("");
+}
+
+function bindClientMessageDialogControls(dialog) {
+  $("#closeClientMessageDialog", dialog)?.addEventListener("click", closeClientMessageDialog);
+  $("#cancelClientMessageDialog", dialog)?.addEventListener("click", closeClientMessageDialog);
+  $("#clientMessagePlateSelect", dialog)?.addEventListener("change", (event) => {
+    selectedClientMessagePlate = event.currentTarget.value;
+    renderClientMessageDialog(dialog);
+  });
+  $("#clientMessageCategorySelect", dialog)?.addEventListener("change", (event) => {
+    selectedClientMessageCategory = event.currentTarget.value;
+    selectedClientMessageTemplateKey = "";
+    renderClientMessageDialog(dialog);
+  });
+  $("#clientMessageTemplateSelect", dialog)?.addEventListener("change", (event) => {
+    selectedClientMessageTemplateKey = event.currentTarget.value;
+    renderClientMessageDialog(dialog);
+  });
+  $("#clientMessageForm", dialog)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    submitClientMessageDialog();
+  });
+}
+
+function submitClientMessageDialog() {
+  const client = selectedClientMessageClientId ? getClientById(selectedClientMessageClientId) : null;
+  if (!client || !selectedClientMessageTemplateKey) return;
+  const sent = sendClientRelationshipMessage(selectedClientMessageTemplateKey, client.id, selectedClientMessagePlate);
+  if (!sent) return;
+  closeClientMessageDialog();
+  showToast("Mensagem aberta no WhatsApp.");
 }
 
 function bindClientDialogControls(container) {
@@ -5032,7 +7127,7 @@ function closeClientDialog() {
   selectedClientPersonType = "PF";
   pendingClientPlates = [];
   if (entryRegistryEditContext?.type === "client") {
-    refreshEntryRegistrationAfterEdit();
+    refreshLinkedRegistrationAfterEdit();
     entryRegistryEditContext = null;
   }
 }
@@ -5460,11 +7555,7 @@ function renderClientRows() {
           <td data-label="Ações">
             <span class="table-actions">
               <button type="button" data-edit-client="${client.id}">Editar</button>
-              <button type="button" data-send-client-message="loyalty-client" data-client-id="${client.id}">Fidelidade</button>
-              <button type="button" data-send-client-message="inactive-client" data-client-id="${client.id}">Retorno</button>
-              <button type="button" data-send-client-message="maintenance-reminder" data-client-id="${client.id}">Manutenção</button>
-              <button type="button" data-send-client-message="promotion" data-client-id="${client.id}">Promoção</button>
-              <button type="button" data-send-client-message="satisfaction" data-client-id="${client.id}">Satisfação</button>
+              <button type="button" data-open-client-message-dialog="${client.id}">Mensagem</button>
             </span>
           </td>
         </tr>
@@ -5646,107 +7737,7 @@ function getCurrentEntryColor() {
 }
 
 function renderVehiclesScreen(container) {
-  const selectedVehicle = selectedVehicleId ? findVehicleById(selectedVehicleId) : null;
-  const historyVehicle = selectedVehicle || vehicleRegistry[0] || null;
-
   container.innerHTML = `
-    <section class="screen-metrics vehicle-metrics" aria-label="Resumo de veículos">
-      ${[
-        { label: "Veículos cadastrados", value: vehicleRegistry.length, icon: "carFront" },
-        { label: "Vinculados a cliente", value: vehicleRegistry.filter((vehicle) => vehicle.currentClientId).length, icon: "users" },
-        { label: "Com histórico", value: vehicleRegistry.filter((vehicle) => vehicle.serviceHistory.length).length, icon: "service" },
-        { label: "No pátio hoje", value: getActivePatioPlates().length, icon: "clock" }
-      ]
-        .map(renderScreenMetric)
-        .join("")}
-    </section>
-
-    <section class="vehicle-registry-grid">
-      <form class="admin-panel vehicle-registry-form" id="vehicleRegistryForm" novalidate>
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">${selectedVehicle ? "Edição" : "Cadastro"}</p>
-            <h2>${selectedVehicle ? selectedVehicle.plate : "Ficha do veículo"}</h2>
-          </div>
-          <span class="client-status-label">${selectedVehicle ? "Editando" : "Novo"}</span>
-        </div>
-
-        <div class="vehicle-form-grid client-form-grid">
-          <label class="login-field" for="vehicleRegistryPlate">
-            <span>Placa</span>
-            <input
-              id="vehicleRegistryPlate"
-              type="text"
-              placeholder="ABC1D23"
-              maxlength="8"
-              value="${escapeHtml(selectedVehicle?.plate || "")}"
-              ${selectedVehicle ? "disabled" : ""}
-              required
-            />
-          </label>
-          <label class="login-field" for="vehicleRegistryBrand">
-            <span>Marca</span>
-            <input id="vehicleRegistryBrand" type="text" placeholder="Chevrolet" value="${escapeHtml(selectedVehicle?.brand || "")}" />
-          </label>
-          <div class="vehicle-model-lookup-field">
-            <label class="login-field" for="vehicleRegistryModel">
-              <span>Modelo</span>
-              <input id="vehicleRegistryModel" type="text" placeholder="Onix" value="${escapeHtml(selectedVehicle?.model || "")}" autocomplete="off" required />
-            </label>
-            <div class="vehicle-model-results" id="vehicleRegistryModelResults" hidden></div>
-          </div>
-          <label class="login-field" for="vehicleRegistryYear">
-            <span>Ano</span>
-            <input id="vehicleRegistryYear" type="text" inputmode="numeric" placeholder="2024" maxlength="4" value="${escapeHtml(selectedVehicle?.year || "")}" />
-          </label>
-          <label class="login-field" for="vehicleRegistryColor">
-            <span>Cor</span>
-            <input id="vehicleRegistryColor" type="text" placeholder="Branco" value="${escapeHtml(selectedVehicle?.color || "")}" />
-          </label>
-          <label class="login-field" for="vehicleRegistryType">
-            <span>Tipo de veículo</span>
-            <select id="vehicleRegistryType">
-              ${renderSelectOptions(vehicleTypes, selectedVehicle?.type || "")}
-            </select>
-          </label>
-          <label class="login-field" for="vehicleRegistryCategory">
-            <span>Categoria</span>
-            <select id="vehicleRegistryCategory">
-              ${renderSelectOptions(vehicleCategories, selectedVehicle?.category || "")}
-            </select>
-          </label>
-          <label class="login-field" for="vehicleRegistryFuel">
-            <span>Combustível</span>
-            <select id="vehicleRegistryFuel">
-              ${renderSelectOptions(["Flex", "Gasolina", "Etanol", "Diesel", "Híbrido", "Elétrico", "Outro"], selectedVehicle?.fuel || "")}
-            </select>
-          </label>
-          <label class="login-field" for="vehicleRegistryClient">
-            <span>Proprietário atual</span>
-            <select id="vehicleRegistryClient">
-              ${renderVehicleOwnerOptions(selectedVehicle?.currentClientId || "")}
-            </select>
-          </label>
-          <label class="login-field vehicle-notes-field" for="vehicleRegistryNotes">
-            <span>Observações do veículo</span>
-            <input id="vehicleRegistryNotes" type="text" placeholder="Preferências, restrições, histórico relevante" value="${escapeHtml(selectedVehicle?.notes || "")}" />
-          </label>
-        </div>
-
-        <div class="dialog-actions">
-          <button class="exit-button" id="clearVehicleRegistryButton" type="button">Limpar</button>
-          <button class="primary-button" type="submit">
-            <span data-icon="check"></span>
-            <span>${selectedVehicle ? "Atualizar veículo" : "Salvar veículo"}</span>
-          </button>
-        </div>
-      </form>
-
-      <article class="admin-panel vehicle-history-panel" id="vehicleHistoryPanel">
-        ${renderVehicleHistoryPanel(historyVehicle)}
-      </article>
-    </section>
-
     <section class="screen-toolbar" aria-label="Filtros de veículos">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.carFront}</span>
@@ -5767,6 +7758,7 @@ function renderVehiclesScreen(container) {
           <p class="eyebrow">Base</p>
           <h2>Veículos cadastrados</h2>
         </div>
+        <span class="client-status-label">${vehicleRegistry.length} registro(s)</span>
       </div>
       <div class="admin-table-wrap">
         <table class="admin-table vehicle-registry-table">
@@ -5792,30 +7784,14 @@ function renderVehiclesScreen(container) {
   bindVehiclesScreenControls(container);
 }
 
+function refreshVehiclesScreenIfVisible() {
+  const view = $("#adminVehiclesView");
+  const container = $("#adminVehiclesContent");
+  if (!view || view.hidden || !container) return;
+  renderVehiclesScreen(container);
+}
+
 function bindVehiclesScreenControls(container) {
-  updateVehicleRegistryCategoryState(container);
-  bindLocalVehicleModelLookup({
-    container,
-    modelSelector: "#vehicleRegistryModel",
-    brandSelector: "#vehicleRegistryBrand",
-    resultsSelector: "#vehicleRegistryModelResults",
-    typeSelector: "#vehicleRegistryType"
-  });
-  $("#vehicleRegistryType", container).addEventListener("change", () => updateVehicleRegistryCategoryState(container));
-  $("#vehicleRegistryPlate", container)?.addEventListener("input", (event) => {
-    event.currentTarget.value = formatPlate(event.currentTarget.value);
-  });
-  $("#vehicleRegistryYear", container).addEventListener("input", (event) => {
-    event.currentTarget.value = event.currentTarget.value.replace(/\D/g, "").slice(0, 4);
-  });
-  $("#vehicleRegistryForm", container).addEventListener("submit", (event) => {
-    event.preventDefault();
-    saveVehicleRegistration(container);
-  });
-  $("#clearVehicleRegistryButton", container).addEventListener("click", () => {
-    selectedVehicleId = null;
-    focusVehicleForm();
-  });
   $("#vehicleSearchInput", container).addEventListener("input", () => applyVehicleTableFilter(container));
   $$("[data-vehicle-filter]", container).forEach((button) => {
     button.addEventListener("click", () => {
@@ -5825,20 +7801,13 @@ function bindVehiclesScreenControls(container) {
   });
   $$("[data-edit-vehicle]", container).forEach((button) => {
     button.addEventListener("click", () => {
-      selectedVehicleId = Number(button.dataset.editVehicle);
-      renderVehiclesScreen(container);
-      focusVehicleForm();
+      openAdminVehicleRegistryDialog(Number(button.dataset.editVehicle));
     });
   });
   $$("[data-history-vehicle]", container).forEach((button) => {
     button.addEventListener("click", () => {
-      selectedVehicleId = Number(button.dataset.historyVehicle);
-      renderVehiclesScreen(container);
-      $("#vehicleHistoryPanel", container)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      openVehicleHistoryDialog(Number(button.dataset.historyVehicle));
     });
-  });
-  $$("[data-checklist-pdf]", container).forEach((button) => {
-    button.addEventListener("click", () => generateChecklistPdf(Number(button.dataset.checklistVehicle), button.dataset.checklistPdf));
   });
 }
 
@@ -5856,10 +7825,7 @@ function persistVehicleRegistration(container) {
 
   const duplicate = vehicleRegistry.find((vehicle) => vehicle.plate === plate && vehicle.id !== selectedVehicleId);
   if (duplicate) {
-    selectedVehicleId = duplicate.id;
-    renderVehiclesScreen(container);
-    showToast(`${plate} já está cadastrada. Ficha aberta para edição.`);
-    return;
+    return { ok: false, reason: "duplicate", vehicle: duplicate };
   }
 
   const linkedClient = findClientByPlate(plate);
@@ -5893,13 +7859,7 @@ function persistVehicleRegistration(container) {
   syncPlateOwnership(vehicle.plate, nextClientId);
 
   selectedVehicleId = vehicle.id;
-  renderVehiclesScreen(container);
-  renderAdminDashboard();
-  showToast(`${vehicle.plate} salvo no cadastro de veículos.`);
-}
-
-function saveVehicleRegistration(container) {
-  persistVehicleRegistration(container);
+  return { ok: true, reason: selectedVehicle ? "updated" : "created", vehicle };
 }
 
 function updateVehicleRegistryCategoryState(container) {
@@ -5916,7 +7876,29 @@ function updateVehicleRegistryCategoryState(container) {
 }
 
 function getVehicleHistoryCount(vehicle) {
-  return (vehicle.serviceHistory?.length || 0) + (vehicle.checklistHistory?.length || 0);
+  return (vehicle.serviceHistory?.length || 0) + getVehicleChecklistHistory(vehicle).length;
+}
+
+function getChecklistRecordTimestamp(checklist) {
+  if (!checklist) return 0;
+  if (checklist.completedAt) {
+    const completedAt = Date.parse(checklist.completedAt);
+    if (!Number.isNaN(completedAt)) return completedAt;
+  }
+
+  const datePart = checklist.date || "";
+  const timePart = checklist.time || "00:00";
+  const parsed = Date.parse(`${datePart}T${timePart}`);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function getVehicleChecklistHistory(vehicle) {
+  if (!Array.isArray(vehicle?.checklistHistory)) return [];
+  return vehicle.checklistHistory
+    .filter(Boolean)
+    .slice()
+    .sort((left, right) => getChecklistRecordTimestamp(right) - getChecklistRecordTimestamp(left))
+    .slice(0, 1);
 }
 
 function renderVehicleRegistryRows() {
@@ -5994,10 +7976,9 @@ function renderVehicleHistoryPanel(vehicle) {
         .join("")
     : '<p class="empty-alert">Nenhuma troca de proprietário registrada.</p>';
 
-  const checklistItems = vehicle.checklistHistory?.length
-    ? vehicle.checklistHistory
-        .slice()
-        .reverse()
+  const checklistHistory = getVehicleChecklistHistory(vehicle);
+  const checklistItems = checklistHistory.length
+    ? checklistHistory
         .map(
           (item) => `
             <article class="history-item checklist-history-item">
@@ -6030,7 +8011,7 @@ function renderVehicleHistoryPanel(vehicle) {
       ${serviceItems}
     </div>
     <div class="history-section">
-      <h3>Check-lists em PDF</h3>
+      <h3>Ultimo check-list em PDF</h3>
       ${checklistItems}
     </div>
     <div class="history-section">
@@ -6040,9 +8021,42 @@ function renderVehicleHistoryPanel(vehicle) {
   `;
 }
 
+function renderVehicleHistoryDialog(vehicle) {
+  return `
+    <div class="vehicle-box vehicle-registry-dialog-box">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Cadastro</p>
+          <h2>Histórico do veículo</h2>
+        </div>
+        <button class="icon-button" id="closeVehicleHistoryDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+      ${renderVehicleHistoryPanel(vehicle)}
+      <div class="dialog-actions">
+        <button class="exit-button" id="dismissVehicleHistoryDialog" type="button">Fechar</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindVehicleHistoryDialogControls(dialog) {
+  $("#closeVehicleHistoryDialog", dialog)?.addEventListener("click", closeVehicleHistoryDialog);
+  $("#dismissVehicleHistoryDialog", dialog)?.addEventListener("click", closeVehicleHistoryDialog);
+  dialog.oncancel = (event) => {
+    event.preventDefault();
+    closeVehicleHistoryDialog();
+  };
+  $$("[data-checklist-pdf]", dialog).forEach((button) => {
+    button.addEventListener("click", () => generateChecklistPdf(Number(button.dataset.checklistVehicle), button.dataset.checklistPdf));
+  });
+}
+
 function generateChecklistPdf(vehicleId, checklistId) {
   const vehicle = findVehicleById(vehicleId);
-  const checklist = vehicle?.checklistHistory?.find((item) => item.id === checklistId);
+  const checklistHistory = getVehicleChecklistHistory(vehicle);
+  const checklist = checklistHistory.find((item) => item.id === checklistId) || checklistHistory[0];
   if (!vehicle || !checklist) {
     showToast("Check-list não localizado no histórico do veículo.");
     return;
@@ -6102,10 +8116,10 @@ function applyVehicleTableFilter(container) {
   });
 }
 
-function renderVehicleOwnerOptions(selectedClientId) {
+function renderVehicleOwnerOptions(selectedClientId, clients = clientRegistry) {
   return [
     `<option value="">Sem cliente vinculado</option>`,
-    ...clientRegistry.map((client) => {
+    ...clients.map((client) => {
       const value = String(client.id);
       return `<option value="${value}" ${String(selectedClientId) === value ? "selected" : ""}>${escapeHtml(getClientDisplayName(client))}</option>`;
     })
@@ -6116,11 +8130,6 @@ function renderSelectOptions(options, selectedValue) {
   return options
     .map((option) => `<option value="${escapeHtml(option)}" ${option === selectedValue ? "selected" : ""}>${escapeHtml(option)}</option>`)
     .join("");
-}
-
-function focusVehicleForm() {
-  const input = $("#adminVehiclesView:not([hidden]) #vehicleRegistryPlate:not([disabled]), #adminVehiclesView:not([hidden]) #vehicleRegistryBrand");
-  if (input) input.focus();
 }
 
 function syncVehiclesFromClientRegistration(client) {
@@ -6219,7 +8228,6 @@ function updateVehicleServiceStatus(patioVehicle) {
 function upsertVehicleChecklistHistory(patioVehicle, registryVehicle = findVehicleByPlate(patioVehicle.plate)) {
   if (!registryVehicle || !patioVehicle.checklist?.enabled) return;
 
-  registryVehicle.checklistHistory = registryVehicle.checklistHistory || [];
   const completedAt = patioVehicle.checklist.completedAt || new Date().toISOString();
   const checklistId = patioVehicle.checklist.id || `CHK-${patioVehicle.id}-${Date.parse(completedAt) || Date.now()}`;
   patioVehicle.checklist.id = checklistId;
@@ -6227,6 +8235,7 @@ function upsertVehicleChecklistHistory(patioVehicle, registryVehicle = findVehic
   const record = {
     ...patioVehicle.checklist,
     id: checklistId,
+    completedAt,
     title: `Check-list ${formatVehicleScope(patioVehicle.type || registryVehicle.type, patioVehicle.category || registryVehicle.category)}`,
     date: completedAt.slice(0, 10),
     time: formatChecklistTime(completedAt),
@@ -6239,9 +8248,7 @@ function upsertVehicleChecklistHistory(patioVehicle, registryVehicle = findVehic
     pdfName: `checklist-${patioVehicle.plate}-${completedAt.slice(0, 10)}.pdf`
   };
 
-  const existingIndex = registryVehicle.checklistHistory.findIndex((item) => item.id === checklistId);
-  if (existingIndex >= 0) registryVehicle.checklistHistory[existingIndex] = record;
-  else registryVehicle.checklistHistory.push(record);
+  registryVehicle.checklistHistory = [record];
 }
 
 function formatChecklistTime(value) {
@@ -9819,9 +11826,9 @@ function drawOperatorProductionLetterhead(commands, document, logoImage) {
   const contactLine = getBusinessDocumentContactLine(document.reportTarget);
   if (logoImage) {
     const logoSize = getPdfLogoDrawSize(logoImage);
-    addPdfImage(commands, "Logo", 45, 785, logoSize.width, logoSize.height);
-    addPdfText(commands, truncatePdfText(reportName, 42), 45, 775, { size: 8.5, font: "F2", color: colors.petrol });
-    addPdfText(commands, truncatePdfText(contactLine, 58), 45, 764, { size: 7.2, color: colors.muted });
+    addPdfImage(commands, "Logo", pdfLogoSizing.headerX, pdfLogoSizing.headerY, logoSize.width, logoSize.height);
+    addPdfText(commands, truncatePdfText(reportName, 42), pdfLogoSizing.headerTextX, 805, { size: 9, font: "F2", color: colors.petrol });
+    addPdfText(commands, truncatePdfText(contactLine, 50), pdfLogoSizing.headerTextX, 790, { size: 7.2, color: colors.muted });
   } else {
     addPdfText(commands, reportName, 45, 805, { size: 22, font: "F2", color: colors.petrol });
     addPdfRect(commands, 45, 792, 94, 3, { fill: colors.cyan });
@@ -9836,7 +11843,7 @@ function drawOperatorProductionLetterhead(commands, document, logoImage) {
     color: colors.muted,
     align: "right"
   });
-  addPdfLine(commands, 45, 768, 550, 768, colors.cyan, 1.8);
+  addPdfLine(commands, 45, 758, 550, 758, colors.cyan, 1.8);
 }
 
 function drawOperatorProductionTitleBox(commands, document) {
@@ -10548,9 +12555,8 @@ function getPdfLogoSource() {
 }
 
 function getPdfLogoDrawSize(logoImage) {
-  const scale = getBusinessLogoSizePercent() / 100;
-  const maxWidth = pdfLogoSizing.headerMaxWidth * scale;
-  const maxHeight = pdfLogoSizing.headerMaxHeight * scale;
+  const maxWidth = pdfLogoSizing.headerMaxWidth * (getBusinessLogoDimensionPercent("x") / 100);
+  const maxHeight = pdfLogoSizing.headerMaxHeight * (getBusinessLogoDimensionPercent("y") / 100);
   if (!logoImage?.width || !logoImage?.height) return { width: maxWidth, height: maxHeight };
   const ratio = Math.min(maxWidth / logoImage.width, maxHeight / logoImage.height);
   return {
@@ -10642,9 +12648,9 @@ function createPdfPageContent(document, rows, pageNumber, pageCount, logoImage =
   addPdfRect(commands, 0, 0, page.width, page.height, { fill: colors.white });
   if (logoImage) {
     const logoSize = getPdfLogoDrawSize(logoImage);
-    addPdfImage(commands, "Logo", 45, 785, logoSize.width, logoSize.height);
-    addPdfText(commands, truncatePdfText(reportName, 42), 45, 775, { size: 8.5, font: "F2", color: colors.petrol });
-    addPdfText(commands, truncatePdfText(contactLine, 58), 45, 764, { size: 7.2, color: colors.muted });
+    addPdfImage(commands, "Logo", pdfLogoSizing.headerX, pdfLogoSizing.headerY, logoSize.width, logoSize.height);
+    addPdfText(commands, truncatePdfText(reportName, 42), pdfLogoSizing.headerTextX, 805, { size: 9, font: "F2", color: colors.petrol });
+    addPdfText(commands, truncatePdfText(contactLine, 50), pdfLogoSizing.headerTextX, 790, { size: 7.2, color: colors.muted });
   } else {
     addPdfText(commands, reportName, 45, 805, { size: 22, font: "F2", color: colors.petrol });
     addPdfRect(commands, 45, 792, 94, 3, { fill: colors.cyan });
@@ -10656,7 +12662,7 @@ function createPdfPageContent(document, rows, pageNumber, pageCount, logoImage =
     color: colors.muted,
     align: "right"
   });
-  addPdfLine(commands, 45, 768, 550, 768, colors.cyan, 1.8);
+  addPdfLine(commands, 45, 758, 550, 758, colors.cyan, 1.8);
 
   drawPdfTitleBox(commands, document);
   drawPdfMetaGrid(commands, document);
@@ -11565,12 +13571,14 @@ function getPaymentState(vehicle) {
   if (vehicle.paymentOpen) return "Em aberto";
   if (vehicle.payment === "Faturado") return vehicle.paymentStatus || "Pendente";
   if (vehicle.paymentConfirmed) return "Confirmado";
+  if (vehicle.paymentAtEntry) return "Pago na entrada";
   return "A confirmar";
 }
 
 function getPaymentPillClass(vehicle) {
   const state = getPaymentState(vehicle);
   if (state === "Confirmado") return "payment-confirmed";
+  if (state === "Pago na entrada") return "payment-confirmed";
   if (vehicle.payment === "Faturado") return "payment-billed";
   return "payment-pending";
 }
@@ -12030,18 +14038,20 @@ function renderVehicleActionSummary(vehicle) {
 
 function renderPaymentConfirmationPanel(vehicle) {
   const isConfirmed = getPaymentState(vehicle) === "Confirmado";
-  const confirmLabel = vehicle.payment === "Faturado" ? "Registrar faturado" : "Confirmar pagamento";
+  const isEntryPayment = Boolean(vehicle.paymentAtEntry);
+  const selectedPaymentMethod = vehicle.entryPaymentMethod || vehicle.payment || "Pix";
+  const confirmLabel = isEntryPayment ? "Finalizar atendimento" : vehicle.payment === "Faturado" ? "Registrar faturado" : "Confirmar pagamento";
   const serviceValue = getServicePrice(vehicle);
   const extraCharges = Number(vehicle.extraCharges || 0);
   const discount = Number(vehicle.discount || 0);
   const hasExtraCharges = Boolean(vehicle.extraChargesEnabled || extraCharges || vehicle.extraDescription);
   const hasDiscount = Boolean(vehicle.discountEnabled || discount || vehicle.discountDescription);
   const total = getVehiclePaymentTotal(vehicle);
-  const isCash = vehicle.payment === "Dinheiro";
+  const isCash = !isEntryPayment && vehicle.payment === "Dinheiro";
   const cashReceived = Number(vehicle.cashReceived || 0);
   const change = Math.max(0, cashReceived - total);
-  const hasPartialPayment = Boolean(vehicle.partialPaymentOpen || vehicle.partialPaidAmount || vehicle.partialBalance);
-  const hasOpenPayment = Boolean(vehicle.paymentOpen && !hasPartialPayment);
+  const hasPartialPayment = !isEntryPayment && Boolean(vehicle.partialPaymentOpen || vehicle.partialPaidAmount || vehicle.partialBalance);
+  const hasOpenPayment = !isEntryPayment && Boolean(vehicle.paymentOpen && !hasPartialPayment);
   const partialPaidAmount = Number(vehicle.partialPaidAmount || 0);
   const partialBalance = hasPartialPayment ? Math.max(0, Number(vehicle.partialBalance || total - partialPaidAmount)) : total;
 
@@ -12055,6 +14065,8 @@ function renderPaymentConfirmationPanel(vehicle) {
           <p>${
             isConfirmed
               ? `Pagamento confirmado às ${escapeHtml(vehicle.paymentConfirmedAt || "agora")}.`
+              : isEntryPayment
+                ? `Pagamento informado na entrada por ${escapeHtml(selectedPaymentMethod)}. Ajuste avulsos e desconto antes de lançar no Fluxo de caixa.`
               : `Serviços: ${formatCurrency(serviceValue)}. Ajuste avulsos e desconto antes de lançar no Fluxo de caixa.`
           }</p>
           <p id="paymentConfirmBreakdown">Avulsos: ${formatCurrency(extraCharges)} · Desconto: ${formatCurrency(discount)}</p>
@@ -12062,7 +14074,7 @@ function renderPaymentConfirmationPanel(vehicle) {
         <label class="login-field" for="paymentConfirmMethod">
           <span>Forma de pagamento</span>
           <select id="paymentConfirmMethod">
-            ${renderPaymentOptions(vehicle.payment || "Pix")}
+            ${renderPaymentOptions(selectedPaymentMethod, !isEntryPayment)}
           </select>
         </label>
       </section>
@@ -12078,7 +14090,10 @@ function renderPaymentConfirmationPanel(vehicle) {
           <span class="switch-control"></span>
           <span>Desconto</span>
         </label>
-        <label class="switch-field payment-adjustment-switch payment-open-switch" for="paymentOpenEnabled">
+        ${
+          isEntryPayment
+            ? ""
+            : `<label class="switch-field payment-adjustment-switch payment-open-switch" for="paymentOpenEnabled">
           <input id="paymentOpenEnabled" type="checkbox" ${hasOpenPayment ? "checked" : ""} />
           <span class="switch-control"></span>
           <span>Pagamento em aberto</span>
@@ -12087,7 +14102,8 @@ function renderPaymentConfirmationPanel(vehicle) {
           <input id="paymentPartialEnabled" type="checkbox" ${hasPartialPayment ? "checked" : ""} />
           <span class="switch-control"></span>
           <span>Pagamento parcial</span>
-        </label>
+        </label>`
+        }
         <label class="login-field payment-adjustment-field" for="paymentExtraCharges" ${hasExtraCharges ? "" : "hidden"}>
           <span>Valor avulso</span>
           <input id="paymentExtraCharges" type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" value="${escapeHtml(formatCurrencyFieldValue(extraCharges))}" />
@@ -12326,6 +14342,16 @@ function getAllowedStatusTransitions(currentStatus) {
 }
 
 function handleStatusDialogAction(action) {
+  if (action === "finish-quote-entry-checklist") {
+    finishQuoteEntryWithChecklist();
+    return;
+  }
+
+  if (action === "cancel-quote-entry-checklist") {
+    closeStatusDialog();
+    return;
+  }
+
   const vehicle = getPatioVehicleById();
   if (!vehicle) return;
 
@@ -12409,6 +14435,12 @@ function handleStatusDialogChange(event) {
   }
 
   if (target.id === "paymentConfirmMethod") {
+    if (vehicle.paymentAtEntry && target.value === "Faturado") {
+      target.value = vehicle.entryPaymentMethod || vehicle.payment || "Pix";
+      showToast("Pagamento na entrada nao permite Faturado.");
+      updatePaymentConfirmationPreview(vehicle);
+      return;
+    }
     if (target.value === "Faturado" && !vehicle.billing) {
       applyPaymentAdjustmentsFromDialog(vehicle, "Faturado");
       renderStatusBillingPanel(vehicle, "confirm");
@@ -12465,6 +14497,7 @@ function handleStatusDialogInput(event) {
 
 function updatePaymentConfirmationPreview(vehicle) {
   const method = $("#paymentConfirmMethod")?.value || vehicle.payment || "Pix";
+  const isEntryPayment = Boolean(vehicle.paymentAtEntry);
   bindCurrencyInputs($("#statusOptions"));
   const adjustment = readPaymentAdjustmentsFromDialog(vehicle);
   const extraEnabled = $("#paymentExtraEnabled")?.checked || false;
@@ -12485,7 +14518,7 @@ function updatePaymentConfirmationPreview(vehicle) {
   const usePartialPayment = $("#paymentPartialEnabled")?.checked || false;
   const partialField = $("#paymentPartialAmount")?.closest(".payment-partial-field");
   const partialBalanceField = $("#paymentPartialBalanceField");
-  const isCash = method === "Dinheiro" && !keepPaymentOpen && !usePartialPayment;
+  const isCash = method === "Dinheiro" && !keepPaymentOpen && !usePartialPayment && !isEntryPayment;
 
   if (cashField) cashField.hidden = !isCash;
   if (cashChangeField) cashChangeField.hidden = !isCash;
@@ -12498,6 +14531,9 @@ function updatePaymentConfirmationPreview(vehicle) {
   const updatedAdjustment = readPaymentAdjustmentsFromDialog(vehicle);
   $("#paymentConfirmTotal").textContent = formatCurrency(updatedAdjustment.total);
   const breakdown = [`Avulsos: ${formatCurrency(updatedAdjustment.extraCharges)}`, `Desconto: ${formatCurrency(updatedAdjustment.discount)}`];
+  if (isEntryPayment) {
+    breakdown.push(`Pago na entrada: ${method}`);
+  }
   if (updatedAdjustment.partialEnabled) {
     breakdown.push(`Pago agora: ${formatCurrency(updatedAdjustment.partialAmount)}`);
     breakdown.push(`Saldo: ${formatCurrency(updatedAdjustment.partialBalance)}`);
@@ -12879,12 +14915,56 @@ function confirmVehiclePayment() {
   const previousService = vehicle.service;
   const previousBillingValue = getVehiclePaymentTotal(vehicle);
   const method = $("#paymentConfirmMethod")?.value || vehicle.payment || "Pix";
+  const isEntryPayment = Boolean(vehicle.paymentAtEntry);
+  if (isEntryPayment && method === "Faturado") {
+    showToast("Pagamento na entrada nao permite Faturado.");
+    return;
+  }
   const adjustment = applyPaymentAdjustmentsFromDialog(vehicle, method);
-  const keepPaymentOpen = $("#paymentOpenEnabled")?.checked || false;
-  const usePartialPayment = $("#paymentPartialEnabled")?.checked || false;
-  if (!keepPaymentOpen && !usePartialPayment && method === "Dinheiro" && adjustment.cashReceived < adjustment.total) {
+  const keepPaymentOpen = isEntryPayment ? false : $("#paymentOpenEnabled")?.checked || false;
+  const usePartialPayment = isEntryPayment ? false : $("#paymentPartialEnabled")?.checked || false;
+  if (!isEntryPayment && !keepPaymentOpen && !usePartialPayment && method === "Dinheiro" && adjustment.cashReceived < adjustment.total) {
     showToast("Informe um valor recebido suficiente para calcular o troco.");
     $("#paymentCashReceived")?.focus();
+    return;
+  }
+
+  if (isEntryPayment) {
+    vehicle.payment = method;
+    vehicle.entryPaymentMethod = method;
+    if (previousPayment === "Faturado" && vehicle.billing) {
+      detachVehicleFromBilling(vehicle, previousBillingValue, previousService);
+    }
+    vehicle.paymentOpen = false;
+    vehicle.partialPaymentOpen = false;
+    vehicle.partialPaidAmount = 0;
+    vehicle.partialBalance = 0;
+    vehicle.paymentStatus = "Confirmado";
+    vehicle.paymentConfirmed = true;
+    vehicle.paymentConfirmedAt = getCurrentShortTime();
+    vehicle.status = "finalizado";
+    if (method === "Dinheiro") {
+      vehicle.cashReceived = adjustment.total;
+      vehicle.cashChange = 0;
+    }
+    const cashEntry = upsertCashEntryFromVehicle(vehicle, {
+      status: "Confirmado",
+      description: `${vehicle.plate} - pagamento na entrada - ${vehicle.service}`,
+      method,
+      openPayment: false
+    });
+    vehicle.cashEntryId = cashEntry.id;
+    vehicle.paymentConfirmedAt = cashEntry.time;
+    vehicle.finishedAt = cashEntry.time;
+    updateVehicleServiceStatus(vehicle);
+
+    renderPatio();
+    refreshCashflowScreen();
+    renderAdminDashboard();
+    closeStatusDialog();
+    triggerAutomatedMessage("payment-confirmation", getMessageContextFromVehicle(vehicle));
+    triggerAutomatedMessage("satisfaction", getMessageContextFromVehicle(vehicle));
+    showToast(`Pagamento na entrada de ${vehicle.plate} confirmado.`);
     return;
   }
 
@@ -13242,6 +15322,8 @@ function closeStatusDialog() {
   const dialog = $("#statusDialog");
   if (typeof dialog.close === "function") dialog.close();
   else dialog.removeAttribute("open");
+  pendingQuotePatioEntry = null;
+  pendingQuotePatioQuoteId = null;
   resetStatusBillingSelection();
 }
 
