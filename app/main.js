@@ -13090,6 +13090,40 @@ function renderServiceDialogForm(service) {
         </label>
       </div>
 
+      <section class="vehicle-special-care-section service-technical-section">
+        <div class="vehicle-special-care-head">
+          <div>
+            <p class="eyebrow">Ficha técnica</p>
+            <h3>Compatibilidade com cuidados especiais</h3>
+          </div>
+          <span class="client-status-label">Opcional</span>
+        </div>
+        <label class="switch-field" for="serviceRequiresSpecialCareCheck">
+          <input id="serviceRequiresSpecialCareCheck" type="checkbox" ${service?.requiresSpecialCareCheck ? "checked" : ""} />
+          <span class="switch-control"></span>
+          <span>Exigir conferência quando houver cuidado especial</span>
+        </label>
+        <div class="vehicle-special-care-choice-block">
+          <span>Riscos técnicos do serviço</span>
+          ${renderChoiceChipGroup(serviceRiskTagOptions, service?.serviceRiskTags || [], {
+            name: "serviceRiskTag",
+            twoColumns: true
+          })}
+        </div>
+        <div class="vehicle-form-grid service-dialog-grid inventory-form-grid">
+          <label class="login-field" for="serviceAutoCreateVehicleCareType">
+            <span>Sugerir cuidado ao finalizar</span>
+            <select id="serviceAutoCreateVehicleCareType">
+              ${renderSelectOptions(serviceAutoCareTypeOptions, service?.autoCreateVehicleCareType || "")}
+            </select>
+          </label>
+          <label class="login-field inventory-notes-field" for="serviceTechnicalNotes">
+            <span>Observação técnica</span>
+            <textarea id="serviceTechnicalNotes" rows="3" placeholder="Ex.: confirmar insumos antes de aplicar em veículos protegidos.">${escapeHtml(service?.technicalNotes || "")}</textarea>
+          </label>
+        </div>
+      </section>
+
       <div class="dialog-actions">
         <button class="exit-button" id="cancelServiceDialog" type="button">Cancelar</button>
         <button class="primary-button" type="submit">
@@ -13120,6 +13154,10 @@ function saveServiceRegistration(container) {
   const price = getCurrencyInputValue("#servicePrice", container);
   const duration = $("#serviceDuration", container).value.trim() || "A definir";
   const status = $("#serviceStatus", container).value;
+  const serviceRiskTags = getCheckedValuesByName(container, "serviceRiskTag");
+  const requiresSpecialCareCheck = $("#serviceRequiresSpecialCareCheck", container).checked;
+  const technicalNotes = $("#serviceTechnicalNotes", container).value.trim();
+  const autoCreateVehicleCareType = $("#serviceAutoCreateVehicleCareType", container).value || "";
 
   if (!name || !vehicleType || (shouldUseVehicleCategory(vehicleType) && !vehicleCategory) || !price) {
     showToast(shouldUseVehicleCategory(vehicleType) ? "Informe nome, tipo, categoria e valor do serviço." : "Informe nome, tipo e valor do serviço.");
@@ -13137,7 +13175,18 @@ function saveServiceRegistration(container) {
   const previousService = selectedServiceIndex !== null ? serviceCatalog[selectedServiceIndex] : null;
   const previousName = previousService?.name || "";
   const previousProfileKey = previousService ? getServiceSupplyProfileKey(previousService) : "";
-  const serviceData = { name, price, duration, vehicleType, vehicleCategory, status };
+  const serviceData = {
+    name,
+    price,
+    duration,
+    vehicleType,
+    vehicleCategory,
+    status,
+    serviceRiskTags,
+    requiresSpecialCareCheck,
+    technicalNotes,
+    autoCreateVehicleCareType
+  };
   const nextProfileKey = getServiceSupplyProfileKey(serviceData);
 
   if (previousService) {
@@ -14174,6 +14223,11 @@ function renderInventoryItemDialog(kind, item = null) {
   const isProduct = kind === "product";
   const title = isProduct ? (item ? "Editar produto" : "Novo produto") : item ? "Editar insumo" : "Novo insumo";
   const eyebrow = isProduct ? "Produtos para venda" : "Insumos internos";
+  const compatibilityOptions = [
+    { value: "unknown", label: "Não informado" },
+    { value: "true", label: "Sim" },
+    { value: "false", label: "Não" }
+  ];
   return `
     <form class="vehicle-box service-box" id="inventoryItemForm" novalidate>
       <div class="dialog-head">
@@ -14237,6 +14291,68 @@ function renderInventoryItemDialog(kind, item = null) {
           <span>Item ativo</span>
         </label>
       </div>
+      ${
+        isProduct
+          ? ""
+          : `
+            <section class="vehicle-special-care-section service-technical-section">
+              <div class="vehicle-special-care-head">
+                <div>
+                  <p class="eyebrow">Classificação técnica</p>
+                  <h3>Compatibilidade do insumo</h3>
+                </div>
+                <span class="client-status-label">Opcional</span>
+              </div>
+              <div class="vehicle-form-grid service-dialog-grid inventory-form-grid">
+                <label class="login-field" for="inventoryItemPhType">
+                  <span>Tipo químico</span>
+                  <select id="inventoryItemPhType">
+                    ${renderSelectOptions(supplyPhTypeOptions, item?.phType || "unknown")}
+                  </select>
+                </label>
+                <label class="login-field" for="inventoryItemPhApproximate">
+                  <span>pH aproximado</span>
+                  <input id="inventoryItemPhApproximate" type="number" min="0" max="14" step="0.1" value="${escapeHtml(String(item?.phApproximate ?? ""))}" placeholder="Ex.: 7.0" />
+                </label>
+                <label class="login-field" for="inventoryItemAggressiveness">
+                  <span>Nível de agressividade</span>
+                  <select id="inventoryItemAggressiveness">
+                    ${renderSelectOptions(supplyAggressivenessOptions, item?.aggressivenessLevel || "unknown")}
+                  </select>
+                </label>
+                <label class="login-field" for="inventoryItemSafeForCoating">
+                  <span>Seguro para vitrificado</span>
+                  <select id="inventoryItemSafeForCoating">
+                    ${renderSelectOptions(compatibilityOptions, String(item?.safeForCoating ?? "unknown"))}
+                  </select>
+                </label>
+                <label class="login-field" for="inventoryItemSafeForWrap">
+                  <span>Seguro para envelopado</span>
+                  <select id="inventoryItemSafeForWrap">
+                    ${renderSelectOptions(compatibilityOptions, String(item?.safeForWrap ?? "unknown"))}
+                  </select>
+                </label>
+                <label class="login-field" for="inventoryItemSafeForMattePaint">
+                  <span>Seguro para pintura fosca</span>
+                  <select id="inventoryItemSafeForMattePaint">
+                    ${renderSelectOptions(compatibilityOptions, String(item?.safeForMattePaint ?? "unknown"))}
+                  </select>
+                </label>
+              </div>
+              <div class="vehicle-special-care-choice-block">
+                <span>Tags de risco</span>
+                ${renderChoiceChipGroup(supplyRiskTagOptions, item?.riskTags || [], {
+                  name: "inventoryItemRiskTag",
+                  twoColumns: true
+                })}
+              </div>
+              <label class="login-field inventory-notes-field" for="inventoryItemTechnicalNotes">
+                <span>Observação técnica</span>
+                <textarea id="inventoryItemTechnicalNotes" rows="3" placeholder="Ex.: evitar em veículos com proteção delicada sem conferência prévia.">${escapeHtml(item?.technicalNotes || "")}</textarea>
+              </label>
+            </section>
+          `
+      }
       <div class="dialog-actions">
         <button class="exit-button" id="cancelInventoryDialog" type="button">Cancelar</button>
         <button class="primary-button" type="submit">
@@ -14594,7 +14710,20 @@ function saveInventoryItemForm(dialog) {
     renderProductsScreen($("#adminProductsContent"));
   } else {
     const supplier = $("#inventoryItemSupplier", dialog).value.trim();
-    const nextSupply = { ...basePayload, supplier };
+    const phApproximateValue = $("#inventoryItemPhApproximate", dialog).value;
+    const parsedPhApproximate = Number(phApproximateValue);
+    const nextSupply = {
+      ...basePayload,
+      supplier,
+      phType: $("#inventoryItemPhType", dialog).value || "unknown",
+      phApproximate: phApproximateValue === "" || Number.isNaN(parsedPhApproximate) ? null : parsedPhApproximate,
+      aggressivenessLevel: $("#inventoryItemAggressiveness", dialog).value || "unknown",
+      riskTags: getCheckedValuesByName(dialog, "inventoryItemRiskTag"),
+      safeForCoating: normalizeCompatibilityFlag($("#inventoryItemSafeForCoating", dialog).value || "unknown"),
+      safeForWrap: normalizeCompatibilityFlag($("#inventoryItemSafeForWrap", dialog).value || "unknown"),
+      safeForMattePaint: normalizeCompatibilityFlag($("#inventoryItemSafeForMattePaint", dialog).value || "unknown"),
+      technicalNotes: $("#inventoryItemTechnicalNotes", dialog).value.trim()
+    };
     if (existingItem) Object.assign(existingItem, nextSupply);
     else supplyCatalog.unshift(nextSupply);
     saveSupplyCatalog();
