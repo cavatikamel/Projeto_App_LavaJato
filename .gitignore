@@ -10,3 +10,8 @@ Thumbs.db
 .codex-downloads/
 LavaPrime/
 /Gestão do Projeto.xlsx
+.gradle/
+.idea/
+**/build/
+local.properties
+*.iml

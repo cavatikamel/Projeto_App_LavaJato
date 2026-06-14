@@ -23,7 +23,10 @@ const icons = {
   payable: '<svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>',
   invoice: '<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-1.8-3 1.8-3-1.8L6 21V3z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',
   card: '<svg viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10h17"/><path d="M7 15h3"/></svg>',
-  message: '<svg viewBox="0 0 24 24"><path d="M4.5 5.5h15v10.8h-9L6.7 19.5v-3.2H4.5z"/><path d="M8 9.5h8M8 12.5h5"/></svg>'
+  message: '<svg viewBox="0 0 24 24"><path d="M4.5 5.5h15v10.8h-9L6.7 19.5v-3.2H4.5z"/><path d="M8 9.5h8M8 12.5h5"/></svg>',
+  package: '<svg viewBox="0 0 24 24"><path d="M4.5 8.2 12 4l7.5 4.2v7.6L12 20l-7.5-4.2V8.2z"/><path d="M12 4v16"/><path d="M4.5 8.2 12 12l7.5-3.8"/></svg>',
+  flask: '<svg viewBox="0 0 24 24"><path d="M10 3h4"/><path d="M10.5 3v5.2L6 16.5A3 3 0 0 0 8.6 21h6.8a3 3 0 0 0 2.6-4.5l-4.5-8.3V3"/><path d="M8.8 14h6.4"/><path d="M7.8 17h8.4"/></svg>',
+  clipboard: '<svg viewBox="0 0 24 24"><path d="M9 4.5h6"/><path d="M9.8 3h4.4A1.8 1.8 0 0 1 16 4.8V6h1.5A2.5 2.5 0 0 1 20 8.5v10A2.5 2.5 0 0 1 17.5 21h-11A2.5 2.5 0 0 1 4 18.5v-10A2.5 2.5 0 0 1 6.5 6H8V4.8A1.8 1.8 0 0 1 9.8 3z"/><path d="M8 11h8M8 15h5"/></svg>'
 };
 
 let selectedProfile = "";
@@ -68,7 +71,11 @@ let selectedClientMessagePlate = "";
 let selectedClientMessageCategory = "";
 let selectedClientMessageTemplateKey = "";
 let selectedVehicleOwnerTransferId = null;
+let selectedBusinessPaymentMethodId = null;
+let inventoryDialogState = null;
 let vehicleRegistryDialogSource = "";
+let selectedVehicleSpecialCareId = null;
+let entryVehicleSpecialCareDraft = null;
 const vehicleOwnerTransferSearchModes = [
   { value: "name", label: "Nome / Razao social", placeholder: "Digite o nome ou a razao social" },
   { value: "document", label: "Documento", placeholder: "Digite o CPF ou CNPJ" },
@@ -101,7 +108,111 @@ const invoiceLineItems = [
 ];
 
 const billingCycles = ["Mensal", "Bimestral", "Trimestral", "Semestral"];
-const paymentMethods = ["Pix", "Cartão de crédito", "Cartão de débito", "Dinheiro", "Transferência", "Faturado", "Carteira", "Boleto"];
+const paymentMethodTypeOptions = [
+  { value: "instantâneo", label: "Instantâneo" },
+  { value: "dinheiro", label: "Dinheiro" },
+  { value: "cartão", label: "Cartão" },
+  { value: "transferência", label: "Transferência" },
+  { value: "boleto", label: "Boleto" },
+  { value: "faturado", label: "Faturado" },
+  { value: "outro", label: "Outro" }
+];
+const vehicleSpecialCareTypes = [
+  "Vitrificação / coating cerâmico",
+  "Enceramento recente",
+  "Pintura fosca",
+  "Pintura sensível ou repintada",
+  "Envelopamento",
+  "PPF / película de proteção",
+  "Película recém-instalada",
+  "Couro tratado ou sensível",
+  "Interior delicado",
+  "Rodas especiais / diamantadas",
+  "Motor com restrição de lavagem",
+  "Sensor, câmera ou componente sensível",
+  "Restrição informada pelo cliente",
+  "Outro"
+];
+const vehicleSpecialCareAttentionLevels = ["Informativo", "Atenção", "Alto risco"];
+const vehicleSpecialCareSources = [
+  "Informado pelo cliente",
+  "Identificado pelo operador",
+  "Serviço realizado neste lava jato",
+  "Serviço realizado em outro estabelecimento",
+  "Outro"
+];
+const vehicleSpecialCareRestrictionOptions = [
+  { tag: "avoid_acid", label: "Evitar produto ácido" },
+  { tag: "avoid_strong_alkaline", label: "Evitar produto alcalino forte" },
+  { tag: "use_ph_neutral", label: "Usar preferencialmente pH neutro" },
+  { tag: "avoid_degreaser", label: "Evitar desengraxante agressivo" },
+  { tag: "avoid_abrasive_brush", label: "Evitar escova abrasiva" },
+  { tag: "avoid_high_pressure_close", label: "Evitar alta pressão muito próxima" },
+  { tag: "avoid_solvent", label: "Evitar solvente" },
+  { tag: "avoid_heavy_polishing", label: "Evitar polimento agressivo" },
+  { tag: "avoid_engine_wash", label: "Evitar lavagem de motor" },
+  { tag: "avoid_film_contact", label: "Evitar produto em película/vidro" },
+  { tag: "avoid_abrasive_product", label: "Evitar produto abrasivo" },
+  { tag: "avoid_silicone", label: "Evitar produto à base de silicone" },
+  { tag: "custom", label: "Outro" }
+];
+const vehicleSpecialCareRecommendedOptions = [
+  { tag: "prefer_ph_neutral", label: "Preferir produto pH neutro" },
+  { tag: "prefer_low_aggression", label: "Usar baixa agressividade" },
+  { tag: "prefer_soft_touch", label: "Usar toque macio" },
+  { tag: "protect_sensitive_area", label: "Proteger área sensível" },
+  { tag: "manual_review", label: "Conferência manual antes de iniciar" }
+];
+const vehicleSpecialCareRestrictionLabelMap = vehicleSpecialCareRestrictionOptions.reduce((accumulator, option) => {
+  accumulator[option.tag] = option.label;
+  return accumulator;
+}, {});
+const vehicleSpecialCareRecommendedLabelMap = vehicleSpecialCareRecommendedOptions.reduce((accumulator, option) => {
+  accumulator[option.tag] = option.label;
+  return accumulator;
+}, {});
+const supplyPhTypeOptions = [
+  { value: "unknown", label: "Não informado" },
+  { value: "acid", label: "Ácido" },
+  { value: "neutral", label: "Neutro" },
+  { value: "alkaline", label: "Alcalino" }
+];
+const supplyAggressivenessOptions = [
+  { value: "unknown", label: "Não informado" },
+  { value: "low", label: "Baixa" },
+  { value: "medium", label: "Média" },
+  { value: "high", label: "Alta" }
+];
+const supplyRiskTagOptions = [
+  { tag: "acid_product", label: "Produto ácido" },
+  { tag: "strong_alkaline_product", label: "Alcalino forte" },
+  { tag: "degreaser", label: "Desengraxante" },
+  { tag: "solvent", label: "Solvente" },
+  { tag: "abrasive", label: "Abrasivo" },
+  { tag: "silicone_based", label: "À base de silicone" },
+  { tag: "engine_cleaner", label: "Limpeza de motor" },
+  { tag: "wheel_acid", label: "Ácido de roda" },
+  { tag: "heavy_cleaner", label: "Limpeza pesada" }
+];
+const serviceRiskTagOptions = [
+  { tag: "acid_product", label: "Pode usar produto ácido" },
+  { tag: "strong_alkaline_product", label: "Pode usar alcalino forte" },
+  { tag: "degreaser", label: "Pode usar desengraxante" },
+  { tag: "abrasive", label: "Pode usar abrasivo" },
+  { tag: "solvent", label: "Pode usar solvente" },
+  { tag: "engine_cleaner", label: "Pode envolver motor" },
+  { tag: "heavy_cleaner", label: "Limpeza pesada" },
+  { tag: "high_pressure_close", label: "Alta pressão próxima" },
+  { tag: "film_contact", label: "Contato com película/vidro" },
+  { tag: "heavy_polishing", label: "Polimento agressivo" }
+];
+const serviceAutoCareTypeOptions = [
+  { value: "", label: "Não sugerir" },
+  { value: "Vitrificação / coating cerâmico", label: "Vitrificação / coating cerâmico" },
+  { value: "Couro tratado ou sensível", label: "Couro tratado ou sensível" },
+  { value: "Pintura sensível ou repintada", label: "Pintura sensível ou repintada" },
+  { value: "Outro", label: "Outro" }
+];
 const checklistUnverifiedCondition = "Não Verificado";
 const checklistConditions = ["Conforme", "Arranhado", "Amassado", "Quebrado", "Faltando", "Não Aplicável"];
 const checklistConditionIconMap = {
@@ -142,6 +253,16 @@ const businessStorageKeys = {
   profile: "lavaprime-business-profile-v1",
   bankAccounts: "lavaprime-business-bank-accounts-v1",
   pix: "lavaprime-business-pix-v1",
+  paymentMethods: "lavaprime-business-payment-methods-v1",
+  financeSettings: "lavaprime-business-finance-settings-v1",
+  products: "lavaprime-products-v1",
+  supplies: "lavaprime-supplies-v1",
+  productSales: "lavaprime-product-sales-v1",
+  inventoryMovements: "lavaprime-inventory-movements-v1",
+  serviceSupplies: "lavaprime-service-supply-profiles-v1",
+  documentHistory: "lavaprime-document-history-v1",
+  cashEntries: "lavaprime-cash-entries-v1",
+  vehicleSpecialCare: "lavaprime-vehicle-special-care-v1",
   social: "lavaprime-business-social-v1",
   messages: "lavaprime-business-message-templates-v1"
 };
@@ -169,8 +290,20 @@ const businessProfileReportFieldKeys = ["cnpj", "legalName", "tradeName", "phone
 let businessProfile = normalizeBusinessProfile(loadBusinessStorageItem(businessStorageKeys.profile, getDefaultBusinessProfile()));
 let businessBankAccounts = loadBusinessStorageItem(businessStorageKeys.bankAccounts, []);
 let businessPixInfo = loadBusinessStorageItem(businessStorageKeys.pix, getDefaultBusinessPixInfo());
+let businessPaymentMethods = normalizeBusinessPaymentMethods(loadBusinessStorageItem(businessStorageKeys.paymentMethods, getDefaultBusinessPaymentMethods()));
+let businessFinanceSettings = normalizeBusinessFinanceSettings(
+  loadBusinessStorageItem(businessStorageKeys.financeSettings, getDefaultBusinessFinanceSettings())
+);
 let businessSocialLinks = normalizeBusinessSocialLinks(loadBusinessStorageItem(businessStorageKeys.social, getDefaultBusinessSocialLinks()));
 let businessMessageTemplates = loadBusinessStorageItem(businessStorageKeys.messages, getDefaultMessageTemplates());
+let productCatalog = normalizeProductCatalog(loadBusinessStorageItem(businessStorageKeys.products, getDefaultProductCatalog()));
+let supplyCatalog = normalizeSupplyCatalog(loadBusinessStorageItem(businessStorageKeys.supplies, getDefaultSupplyCatalog()));
+let productSales = normalizeProductSales(loadBusinessStorageItem(businessStorageKeys.productSales, []));
+let inventoryMovements = normalizeInventoryMovements(loadBusinessStorageItem(businessStorageKeys.inventoryMovements, []));
+let serviceSupplyProfiles = normalizeServiceSupplyProfiles(loadBusinessStorageItem(businessStorageKeys.serviceSupplies, getDefaultServiceSupplyProfiles()));
+let documentHistory = normalizeDocumentHistory(loadBusinessStorageItem(businessStorageKeys.documentHistory, []));
+let cashEntries = normalizeCashEntries(loadBusinessStorageItem(businessStorageKeys.cashEntries, getDefaultCashEntries()));
+let vehicleSpecialCareRecords = normalizeVehicleSpecialCareRecords(loadBusinessStorageItem(businessStorageKeys.vehicleSpecialCare, getDefaultVehicleSpecialCareRecords()));
 
 function getDefaultMessageTemplates() {
   return [
@@ -868,87 +1001,133 @@ const adminOperators = [
 ];
 
 const serviceCatalog = [
-  { name: "Lavagem Prime", price: 65, duration: "35 min", vehicleType: "Carro", vehicleCategory: "Hatch", status: "Ativo" },
-  { name: "Higienização interna", price: 140, duration: "1h20", vehicleType: "Carro", vehicleCategory: "Sedan", status: "Ativo" },
-  { name: "Detailing completo", price: 320, duration: "3h00", vehicleType: "Carro", vehicleCategory: "SUV", status: "Ativo" },
-  { name: "Vitrificação", price: 490, duration: "4h00", vehicleType: "Caminhonete", vehicleCategory: "Picape", status: "Ativo" }
+  {
+    name: "Lavagem Prime",
+    price: 65,
+    duration: "35 min",
+    vehicleType: "Carro",
+    vehicleCategory: "Hatch",
+    status: "Ativo",
+    serviceRiskTags: [],
+    requiresSpecialCareCheck: false,
+    technicalNotes: "",
+    autoCreateVehicleCareType: ""
+  },
+  {
+    name: "Higienização interna",
+    price: 140,
+    duration: "1h20",
+    vehicleType: "Carro",
+    vehicleCategory: "Sedan",
+    status: "Ativo",
+    serviceRiskTags: [],
+    requiresSpecialCareCheck: false,
+    technicalNotes: "",
+    autoCreateVehicleCareType: "Couro tratado ou sensível"
+  },
+  {
+    name: "Detailing completo",
+    price: 320,
+    duration: "3h00",
+    vehicleType: "Carro",
+    vehicleCategory: "SUV",
+    status: "Ativo",
+    serviceRiskTags: ["heavy_cleaner", "degreaser"],
+    requiresSpecialCareCheck: true,
+    technicalNotes: "Confirme os insumos antes de aplicar em veículos com proteção especial.",
+    autoCreateVehicleCareType: ""
+  },
+  {
+    name: "Vitrificação",
+    price: 490,
+    duration: "4h00",
+    vehicleType: "Caminhonete",
+    vehicleCategory: "Picape",
+    status: "Ativo",
+    serviceRiskTags: [],
+    requiresSpecialCareCheck: true,
+    technicalNotes: "Após a execução, pode ser útil registrar proteção ativa no veículo.",
+    autoCreateVehicleCareType: "Vitrificação / coating cerâmico"
+  }
 ];
 
 const vehicleTypes = ["Carro", "Moto", "Caminhonete", "Van", "Utilitário"];
 const vehicleCategories = ["Hatch", "Sedan", "SUV", "Picape", "Executivo", "Comercial", "Outro"];
 
-const cashflowCategories = ["Serviços", "Insumos", "Faturamento", "Taxas", "Manutenção", "Outros"];
-const cashflowCostCenters = ["Unidade principal", "Lavagem", "Estética", "Administrativo", "Financeiro"];
+const cashflowCategories = ["Serviços", "Produtos", "Insumos", "Faturamento", "Taxas", "Manutenção", "Outros"];
+const cashflowCostCenters = ["Unidade principal", "Lavagem", "Loja", "Estética", "Administrativo", "Financeiro"];
 
-const cashEntries = [
-  {
-    id: 1,
-    date: "2026-05-25",
-    time: "08:34",
-    type: "Entrada",
-    description: "Lavagem Prime",
-    method: "Pix",
-    value: 65,
-    category: "Serviços",
-    costCenter: "Lavagem",
-    status: "Confirmado",
-    attachment: { name: "pix-lavagem-prime.pdf", type: "Comprovante bancário" }
-  },
-  {
-    id: 2,
-    date: "2026-05-25",
-    time: "09:48",
-    type: "Entrada",
-    description: "Higienização interna",
-    method: "Cartão de débito",
-    value: 140,
-    category: "Serviços",
-    costCenter: "Estética",
-    status: "Confirmado",
-    attachment: null
-  },
-  {
-    id: 3,
-    date: "2026-05-25",
-    time: "10:30",
-    type: "Entrada",
-    description: "Detailing completo",
-    method: "Cartão de crédito",
-    value: 320,
-    category: "Serviços",
-    costCenter: "Estética",
-    status: "Pendente",
-    attachment: null
-  },
-  {
-    id: 4,
-    date: "2026-05-25",
-    time: "12:20",
-    type: "Saída",
-    description: "Produtos químicos",
-    method: "Carteira",
-    value: -86.5,
-    category: "Insumos",
-    costCenter: "Lavagem",
-    status: "Pendente",
-    attachment: { name: "nf-produtos-quimicos.pdf", type: "NF" }
-  },
-  {
-    id: 5,
-    date: "2026-05-25",
-    time: "16:00",
-    type: "Saída",
-    description: "Reposição de shampoo automotivo",
-    method: "Transferência",
-    value: -260,
-    category: "Insumos",
-    costCenter: "Lavagem",
-    status: "Pendente",
-    scheduledDate: "2026-05-25",
-    scheduledTime: "16:00",
-    attachment: null
-  }
-];
+function getDefaultCashEntries() {
+  return [
+    {
+      id: 1,
+      date: "2026-05-25",
+      time: "08:34",
+      type: "Entrada",
+      description: "Lavagem Prime",
+      method: "Pix",
+      value: 65,
+      category: "Serviços",
+      costCenter: "Lavagem",
+      status: "Confirmado",
+      attachment: { name: "pix-lavagem-prime.pdf", type: "Comprovante bancário" }
+    },
+    {
+      id: 2,
+      date: "2026-05-25",
+      time: "09:48",
+      type: "Entrada",
+      description: "Higienização interna",
+      method: "Cartão de débito",
+      value: 140,
+      category: "Serviços",
+      costCenter: "Estética",
+      status: "Confirmado",
+      attachment: null
+    },
+    {
+      id: 3,
+      date: "2026-05-25",
+      time: "10:30",
+      type: "Entrada",
+      description: "Detailing completo",
+      method: "Cartão de crédito",
+      value: 320,
+      category: "Serviços",
+      costCenter: "Estética",
+      status: "Pendente",
+      attachment: null
+    },
+    {
+      id: 4,
+      date: "2026-05-25",
+      time: "12:20",
+      type: "Saída",
+      description: "Produtos químicos",
+      method: "Carteira",
+      value: -86.5,
+      category: "Insumos",
+      costCenter: "Lavagem",
+      status: "Pendente",
+      attachment: { name: "nf-produtos-quimicos.pdf", type: "NF" }
+    },
+    {
+      id: 5,
+      date: "2026-05-25",
+      time: "16:00",
+      type: "Saída",
+      description: "Reposição de shampoo automotivo",
+      method: "Transferência",
+      value: -260,
+      category: "Insumos",
+      costCenter: "Lavagem",
+      status: "Pendente",
+      scheduledDate: "2026-05-25",
+      scheduledTime: "16:00",
+      attachment: null
+    }
+  ];
+}
 
 const openPayments = [
   {
@@ -975,13 +1154,6 @@ const payableAccounts = [
   { supplier: "CleanPro Distribuidora", category: "Insumos", dueDate: "2026-05-20", value: 420, status: "A vencer" },
   { supplier: "Energia", category: "Operacional", dueDate: "2026-05-22", value: 310, status: "A vencer" },
   { supplier: "Aluguel do ponto", category: "Fixo", dueDate: "2026-05-10", value: 1800, status: "Pago" }
-];
-
-const walletMethods = [
-  { name: "Pix", type: "Conta principal", balance: 1840, settlement: "Imediato", status: "Ativa" },
-  { name: "Cartão de crédito", type: "Maquininha", balance: 1260, settlement: "D+30", status: "Ativa" },
-  { name: "Cartão de débito", type: "Maquininha", balance: 520, settlement: "D+1", status: "Ativa" },
-  { name: "Dinheiro", type: "Caixa físico", balance: 210, settlement: "Manual", status: "Ativa" }
 ];
 
 const $ = (selector, scope = document) => scope.querySelector(selector);
@@ -1079,6 +1251,7 @@ function exitTool() {
 }
 
 function bindEvents() {
+  migrateExistingPaymentMethodReferences();
   $$(".profile-button").forEach((button) => {
     button.addEventListener("click", () => selectProfile(button));
   });
@@ -1108,6 +1281,18 @@ function bindEvents() {
     showAdminView("services");
     window.setTimeout(() => openServiceDialog(), 0);
   });
+  $("#startProductFormButton")?.addEventListener("click", () => {
+    showAdminView("products");
+    window.setTimeout(() => openInventoryDialog({ mode: "product" }), 0);
+  });
+  $("#startSupplyFormButton")?.addEventListener("click", () => {
+    showAdminView("supplies");
+    window.setTimeout(() => openInventoryDialog({ mode: "supply" }), 0);
+  });
+  $("#startProductSaleButton")?.addEventListener("click", () => {
+    showAdminView("productSales");
+    window.setTimeout(() => openInventoryDialog({ mode: "sale" }), 0);
+  });
   $$("[data-admin-view]").forEach((button) => {
     button.addEventListener("click", () => showAdminView(button.dataset.adminView));
   });
@@ -1133,6 +1318,46 @@ function bindEvents() {
   $("#vehicleForm").addEventListener("submit", (event) => {
     event.preventDefault();
     handleVehicleEntrySubmit();
+  });
+  $("#vehicleForm").addEventListener("click", (event) => {
+    const actionButton = event.target.closest("[data-entry-care-action]");
+    if (!actionButton) return;
+    const draft = captureEntryVehicleSpecialCareDraft();
+    if (actionButton.dataset.entryCareAction === "toggle-details") {
+      entryVehicleSpecialCareDraft = { ...draft, showDetails: !draft.showDetails };
+      refreshEntryVehicleSpecialCareSection({ preserveDraft: false });
+      return;
+    }
+    if (actionButton.dataset.entryCareAction === "toggle-new-care") {
+      entryVehicleSpecialCareDraft = {
+        ...draft,
+        enabled: !draft.enabled,
+        showDetails: draft.showDetails || !draft.enabled
+      };
+      refreshEntryVehicleSpecialCareSection({ preserveDraft: false });
+    }
+  });
+  $("#vehicleForm").addEventListener("change", (event) => {
+    if (event.target.id === "entryVehicleSpecialCareEnabled") {
+      const draft = captureEntryVehicleSpecialCareDraft();
+      entryVehicleSpecialCareDraft = {
+        ...draft,
+        enabled: event.target.checked,
+        showDetails: draft.showDetails || event.target.checked
+      };
+      const fields = $("[data-special-care-fields='entryVehicleSpecialCare']", $("#vehicleForm"));
+      if (fields) fields.hidden = !event.target.checked;
+      refreshEntryVehicleSpecialCareSection({ preserveDraft: false });
+      return;
+    }
+    if (
+      event.target.closest("[data-special-care-fields='entryVehicleSpecialCare']") ||
+      event.target.name === "entryVehicleSpecialCareRestriction" ||
+      event.target.name === "entryVehicleSpecialCareRecommended"
+    ) {
+      captureEntryVehicleSpecialCareDraft();
+      refreshEntryVehicleSpecialCareSection({ preserveDraft: false });
+    }
   });
   $("#vehiclePaidAtEntry")?.addEventListener("change", () => {
     updateVehicleEntryPaymentState();
@@ -1194,6 +1419,12 @@ function bindEvents() {
       return;
     }
 
+    const removeProduct = event.target.closest("[data-remove-attendance-product]");
+    if (removeProduct) {
+      removeAttendanceProductFromVehicle(removeProduct.dataset.removeAttendanceProduct);
+      return;
+    }
+
     const action = event.target.closest("[data-status-action]");
     if (action) {
       handleStatusDialogAction(action.dataset.statusAction);
@@ -1242,22 +1473,28 @@ function showAdmin(user) {
 }
 
 function showAdminView(view) {
+  if (view === "serviceEntry") {
+    showAdminView("patio");
+    window.setTimeout(() => openVehicleDialog("entry"), 0);
+    return;
+  }
+  const normalizedView = view === "wallet" ? "businessFinance" : view;
   $$("[data-admin-view]").forEach((button) => {
-    const isActive = button.dataset.adminView === view;
+    const isActive = button.dataset.adminView === normalizedView;
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-pressed", String(isActive));
   });
 
   $$(".admin-view").forEach((section) => {
-    const isActive = section.id === `admin${capitalize(view)}View`;
+    const isActive = section.id === `admin${capitalize(normalizedView)}View`;
     section.hidden = !isActive;
     section.classList.toggle("is-active", isActive);
   });
 
-  if (view === "dashboard") renderAdminDashboard();
-  if (view === "patio") renderPatio();
-  if (view === "quotes") renderPatioQuotes();
-  if (!["dashboard", "patio", "quotes"].includes(view)) renderAdminScreen(view);
+  if (normalizedView === "dashboard") renderAdminDashboard();
+  if (normalizedView === "patio") renderPatio();
+  if (normalizedView === "quotes") renderPatioQuotes();
+  if (!["dashboard", "patio", "quotes"].includes(normalizedView)) renderAdminScreen(normalizedView);
 }
 
 function returnToLogin() {
@@ -1282,6 +1519,7 @@ function openVehicleDialog(mode = "entry") {
   updateVehicleDialogMode();
   updatePaymentAction();
   setInvoiceDateMin();
+  refreshEntryVehicleSpecialCareSection({ preserveDraft: false });
   const dialog = $("#vehicleDialog");
   if (typeof dialog.showModal === "function") dialog.showModal();
   else dialog.setAttribute("open", "");
@@ -1361,7 +1599,7 @@ function renderScheduleDialog() {
             <span>Forma de pagamento</span>
             <select id="schedulePayment" required>
               <option value="">Selecione</option>
-              ${paymentMethods.map((method) => `<option value="${escapeHtml(method)}">${escapeHtml(method)}</option>`).join("")}
+              ${getSelectablePaymentMethodNames("service").map((method) => `<option value="${escapeHtml(method)}">${escapeHtml(method)}</option>`).join("")}
             </select>
           </label>
           <label class="login-field" for="scheduleLookupDate">
@@ -1674,6 +1912,8 @@ function buildScheduledVehicleFromRegistry(registryVehicle, scheduledDate, sched
     services,
     service: formatServices(services),
     payment: options.payment || "A definir",
+    productsSold: [],
+    attendanceHistory: [],
     entry: scheduledTime,
     scheduledDate,
     scheduledTime,
@@ -1690,6 +1930,12 @@ function renderVehicleEntryOptions() {
   $("#vehicleCategory").innerHTML = vehicleCategories
     .map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`)
     .join("");
+  const paymentSelect = $("#vehiclePayment");
+  if (paymentSelect) {
+    const selectedValue = paymentSelect.value || getPreferredPaymentMethodName("service");
+    paymentSelect.innerHTML = `<option value="">Selecione</option>${renderPaymentOptions(selectedValue, true, "service")}`;
+    paymentSelect.value = selectedValue;
+  }
   renderScheduleTimeOptions();
   updateVehicleEntryCategoryState();
   renderVehicleServiceOptions();
@@ -2133,6 +2379,7 @@ function renderSelectedEntryServices(services) {
       renderSelectedEntryServices(getSelectedEntryServices().filter((service) => service !== button.dataset.removeEntryService));
     });
   });
+  refreshEntryVehicleSpecialCareSection();
 }
 
 function goToVehicleClientStep() {
@@ -2232,6 +2479,9 @@ async function handleVehicleEntrySubmit() {
 
   const ownershipReady = await resolveEntryOwnership(vehicle);
   if (!ownershipReady) return;
+
+  const conflictResult = getEntryVehicleSpecialCareConflictResult();
+  if (!(await ensureVehicleCareWarningAcknowledged(vehicle, conflictResult, "attendance_save"))) return;
 
   if (vehicle.payment === "Faturado") {
     const billingClient = getApprovedBillingClientForEntry(vehicle);
@@ -2335,6 +2585,11 @@ function buildVehicleFromForm(data, { requireSchedule = vehicleEntryMode === "sc
     partialPaymentOpen: false,
     partialPaidAmount: 0,
     partialBalance: 0,
+    productsSold: [],
+    attendanceHistory: [],
+    specialCareWarningsAcknowledged: false,
+    specialCareWarningSignature: "",
+    specialCareWarningLog: [],
     entry: isSchedule && scheduledTime ? scheduledTime : entry,
     scheduledDate: isSchedule ? scheduledDate : "",
     scheduledTime: isSchedule ? scheduledTime : "",
@@ -2575,6 +2830,7 @@ function clearSelectedEntryRegistration() {
   updateVehicleEntryCategoryState();
   resetVehicleColor();
   renderVehicleServiceOptions();
+  refreshEntryVehicleSpecialCareSection();
 }
 
 function fillEntryFromVehicle(vehicle) {
@@ -2587,8 +2843,12 @@ function fillEntryFromVehicle(vehicle) {
   renderVehicleServiceOptions();
 
   const client = vehicle.currentClientId ? getClientById(vehicle.currentClientId) : findClientByPlate(vehicle.plate);
-  if (!client) return;
+  if (!client) {
+    refreshEntryVehicleSpecialCareSection();
+    return;
+  }
   fillEntryOwnerFromClient(client);
+  refreshEntryVehicleSpecialCareSection();
 }
 
 function renderEntryLinkedRegistration(vehicle) {
@@ -2734,6 +2994,7 @@ function openEntryVehicleRegistryDialog(vehicleId) {
     source: entryRegistryEditContext?.source || "entry",
     vehicleId
   };
+  selectedVehicleSpecialCareId = null;
   selectedVehicleId = vehicleId;
   vehicleRegistryDialogSource = "entry";
   const dialog = $("#vehicleRegistryDialog");
@@ -2752,6 +3013,7 @@ function closeEntryVehicleRegistryDialog() {
   if (typeof dialog.close === "function" && dialog.open) dialog.close();
   else dialog.removeAttribute("open");
   dialog.innerHTML = "";
+  selectedVehicleSpecialCareId = null;
   selectedVehicleId = null;
   vehicleRegistryDialogSource = "";
   refreshLinkedRegistrationAfterEdit();
@@ -2765,6 +3027,7 @@ function openAdminVehicleRegistryDialog(vehicleId = null) {
     return;
   }
 
+  selectedVehicleSpecialCareId = null;
   selectedVehicleId = vehicle?.id || null;
   vehicleRegistryDialogSource = "admin";
   const dialog = $("#vehicleRegistryDialog");
@@ -2789,6 +3052,7 @@ function closeAdminVehicleRegistryDialog() {
   if (typeof dialog.close === "function" && dialog.open) dialog.close();
   else dialog.removeAttribute("open");
   dialog.innerHTML = "";
+  selectedVehicleSpecialCareId = null;
   selectedVehicleId = null;
   vehicleRegistryDialogSource = "";
 }
@@ -3090,6 +3354,327 @@ function renderVehicleRegistryOwnerField(vehicle) {
   `;
 }
 
+function getDefaultVehicleSpecialCareDraftState() {
+  return {
+    enabled: false,
+    type: vehicleSpecialCareTypes[0] || "Outro",
+    attentionLevel: "Informativo",
+    source: vehicleSpecialCareSources[0] || "Informado pelo cliente",
+    restrictionTags: [],
+    recommendedTags: [],
+    description: "",
+    validUntil: ""
+  };
+}
+
+function getVehicleSpecialCareRecordById(recordId) {
+  return vehicleSpecialCareRecords.find((record) => Number(record.id) === Number(recordId)) || null;
+}
+
+function getVehicleSpecialCareFormState() {
+  const record = selectedVehicleSpecialCareId ? getVehicleSpecialCareRecordById(selectedVehicleSpecialCareId) : null;
+  if (!record) return getDefaultVehicleSpecialCareDraftState();
+  return {
+    enabled: true,
+    type: record.type,
+    attentionLevel: record.attentionLevel,
+    source: record.source,
+    restrictionTags: [...(record.restrictionTags || [])],
+    recommendedTags: [...(record.recommendedTags || [])],
+    description: record.description || "",
+    validUntil: record.validUntil || ""
+  };
+}
+
+function renderVehicleSpecialCareFields(prefix, state, options = {}) {
+  const compact = Boolean(options.compact);
+  const requiresDescription = state.type === "Outro";
+  return `
+    <div class="vehicle-special-care-fields${compact ? " is-compact" : ""}" data-special-care-fields="${escapeHtml(prefix)}" ${state.enabled ? "" : "hidden"}>
+      <div class="vehicle-form-grid client-form-grid">
+        <label class="login-field" for="${escapeHtml(prefix)}Type">
+          <span>Tipo de cuidado</span>
+          <select id="${escapeHtml(prefix)}Type">
+            ${renderSelectOptions(vehicleSpecialCareTypes, state.type || vehicleSpecialCareTypes[0] || "")}
+          </select>
+        </label>
+        <label class="login-field" for="${escapeHtml(prefix)}AttentionLevel">
+          <span>Nível de atenção</span>
+          <select id="${escapeHtml(prefix)}AttentionLevel">
+            ${renderSelectOptions(vehicleSpecialCareAttentionLevels, state.attentionLevel || "Informativo")}
+          </select>
+        </label>
+        <label class="login-field" for="${escapeHtml(prefix)}Source">
+          <span>Origem da informação</span>
+          <select id="${escapeHtml(prefix)}Source">
+            ${renderSelectOptions(vehicleSpecialCareSources, state.source || vehicleSpecialCareSources[0] || "")}
+          </select>
+        </label>
+        <label class="login-field" for="${escapeHtml(prefix)}ValidUntil">
+          <span>Validade ou revisão</span>
+          <input id="${escapeHtml(prefix)}ValidUntil" type="date" value="${escapeHtml(state.validUntil || "")}" />
+        </label>
+      </div>
+      <div class="vehicle-special-care-choice-block">
+        <span>Restrições principais</span>
+        ${renderChoiceChipGroup(vehicleSpecialCareRestrictionOptions, state.restrictionTags || [], {
+          name: `${prefix}Restriction`,
+          twoColumns: true
+        })}
+      </div>
+      <div class="vehicle-special-care-choice-block">
+        <span>Produtos recomendados ou forma de cuidado</span>
+        ${renderChoiceChipGroup(vehicleSpecialCareRecommendedOptions, state.recommendedTags || [], {
+          name: `${prefix}Recommended`,
+          twoColumns: true
+        })}
+      </div>
+      <label class="login-field inventory-notes-field vehicle-special-care-description-field" for="${escapeHtml(prefix)}Description">
+        <span>${requiresDescription ? "Observação personalizada" : "Observação"}</span>
+        <textarea id="${escapeHtml(prefix)}Description" rows="${compact ? "2" : "3"}" placeholder="Ex.: Cliente informou vitrificação feita em outro local há aproximadamente 3 meses.">${escapeHtml(state.description || "")}</textarea>
+      </label>
+    </div>
+  `;
+}
+
+function renderVehicleSpecialCareRecordCard(record, options = {}) {
+  const canManage = Boolean(options.canManage);
+  const restrictionLabels = (record.restrictionTags || []).map(getVehicleSpecialCareRestrictionLabel);
+  return `
+    <article class="vehicle-special-care-card ${getVehicleSpecialCareLevelClass(record.attentionLevel)}">
+      <div class="vehicle-special-care-card-head">
+        <div>
+          <strong>${escapeHtml(record.type)}</strong>
+          <span class="vehicle-special-care-level ${getVehicleSpecialCareLevelClass(record.attentionLevel)}">${escapeHtml(record.attentionLevel)}</span>
+        </div>
+        <span class="vehicle-special-care-status">${record.active !== false ? "Ativo" : "Inativo"}</span>
+      </div>
+      <p>${escapeHtml(record.description || "Sem observação complementar.")}</p>
+      <small>${escapeHtml(record.source)}${record.validUntil ? ` · revisão ${formatDateBR(record.validUntil)}` : ""}</small>
+      ${restrictionLabels.length ? `<div class="vehicle-special-care-inline-tags">${restrictionLabels.map((label) => `<span>${escapeHtml(label)}</span>`).join("")}</div>` : ""}
+      ${
+        canManage
+          ? `
+            <div class="cashflow-row-actions vehicle-special-care-actions">
+              <button class="ghost-action compact" type="button" data-edit-vehicle-special-care="${record.id}">Editar</button>
+              ${
+                record.active !== false
+                  ? `<button class="exit-button compact" type="button" data-deactivate-vehicle-special-care="${record.id}">Inativar</button>`
+                  : ""
+              }
+            </div>
+          `
+          : ""
+      }
+    </article>
+  `;
+}
+
+function renderVehicleRegistrySpecialCareSection(vehicle) {
+  const records = vehicle ? getVehicleSpecialCareRecords(vehicle) : [];
+  const formState = getVehicleSpecialCareFormState();
+  const activeRecords = records.filter((record) => record.active !== false);
+  return `
+    <section class="vehicle-special-care-section">
+      <div class="vehicle-special-care-head">
+        <div>
+          <p class="eyebrow">Segurança operacional</p>
+          <h3>Cuidados especiais</h3>
+        </div>
+        ${vehicle ? `<span class="client-status-label">${activeRecords.length} ativo(s)</span>` : '<span class="client-status-label">Novo</span>'}
+      </div>
+      ${
+        vehicle
+          ? activeRecords.length
+            ? `<div class="vehicle-special-care-record-list">${activeRecords.map((record) => renderVehicleSpecialCareRecordCard(record, { canManage: true })).join("")}</div>`
+            : '<p class="empty-plates">Nenhum cuidado especial ativo para este veículo.</p>'
+          : '<p class="empty-plates">Salve o veículo para manter histórico completo. Você já pode registrar o primeiro cuidado especial.</p>'
+      }
+      <label class="switch-field" for="vehicleSpecialCareEnabled">
+        <input id="vehicleSpecialCareEnabled" type="checkbox" ${formState.enabled ? "checked" : ""} />
+        <span class="switch-control"></span>
+        <span>${selectedVehicleSpecialCareId ? "Editar cuidado selecionado" : "Registrar cuidado especial"}</span>
+      </label>
+      ${renderVehicleSpecialCareFields("vehicleSpecialCare", formState)}
+    </section>
+  `;
+}
+
+function readVehicleSpecialCareFormState(container, prefix) {
+  const enabled = $(`#${prefix}Enabled`, container)?.checked || false;
+  return {
+    enabled,
+    type: $(`#${prefix}Type`, container)?.value || vehicleSpecialCareTypes[0] || "Outro",
+    attentionLevel: $(`#${prefix}AttentionLevel`, container)?.value || "Informativo",
+    source: $(`#${prefix}Source`, container)?.value || vehicleSpecialCareSources[0] || "Informado pelo cliente",
+    restrictionTags: getCheckedValuesByName(container, `${prefix}Restriction`),
+    recommendedTags: getCheckedValuesByName(container, `${prefix}Recommended`),
+    description: $(`#${prefix}Description`, container)?.value.trim() || "",
+    validUntil: $(`#${prefix}ValidUntil`, container)?.value || ""
+  };
+}
+
+function getDefaultEntryVehicleSpecialCareState() {
+  return {
+    ...getDefaultVehicleSpecialCareDraftState(),
+    showDetails: false
+  };
+}
+
+function getEntryVehicleSpecialCareDraftState() {
+  const base = entryVehicleSpecialCareDraft || getDefaultEntryVehicleSpecialCareState();
+  return {
+    ...getDefaultEntryVehicleSpecialCareState(),
+    ...base,
+    restrictionTags: [...(base.restrictionTags || [])],
+    recommendedTags: [...(base.recommendedTags || [])]
+  };
+}
+
+function captureEntryVehicleSpecialCareDraft() {
+  const form = $("#vehicleForm");
+  const currentState = getEntryVehicleSpecialCareDraftState();
+  if (!form || !$("#entryVehicleSpecialCareMount")) {
+    entryVehicleSpecialCareDraft = currentState;
+    return currentState;
+  }
+  const payload = readVehicleSpecialCareFormState(form, "entryVehicleSpecialCare");
+  entryVehicleSpecialCareDraft = {
+    ...currentState,
+    ...payload
+  };
+  return entryVehicleSpecialCareDraft;
+}
+
+function getEntryVehicleSpecialCareContextVehicle() {
+  const selectedVehicle = getSelectedEntryRegistryVehicle();
+  if (selectedVehicle) return selectedVehicle;
+  const plate = $("#vehiclePlate")?.value || "";
+  const existingVehicle = getAnyVehicleRecord(null, plate);
+  if (existingVehicle) return existingVehicle;
+  return {
+    id: null,
+    vehicleId: null,
+    plate: formatPlate(plate),
+    type: $("#vehicleType")?.value || "",
+    category: $("#vehicleCategory")?.value || "",
+    services: getSelectedEntryServices()
+  };
+}
+
+function createTransientVehicleSpecialCareRecord(vehicle, payload = {}) {
+  return {
+    id: `draft-${Date.now()}`,
+    vehicleId: Number(vehicle?.id || 0) || null,
+    vehiclePlate: formatPlate(vehicle?.plate || payload.vehiclePlate || ""),
+    type: String(payload.type || vehicleSpecialCareTypes[0] || "Outro").trim(),
+    attentionLevel: vehicleSpecialCareAttentionLevels.includes(payload.attentionLevel) ? payload.attentionLevel : "Informativo",
+    description: String(payload.description || "").trim(),
+    restrictionTags: normalizeStringTagList(payload.restrictionTags, vehicleSpecialCareRestrictionOptions.map((option) => option.tag)),
+    recommendedTags: normalizeStringTagList(payload.recommendedTags, vehicleSpecialCareRecommendedOptions.map((option) => option.tag)),
+    source: vehicleSpecialCareSources.includes(payload.source) ? payload.source : "Outro",
+    validUntil: String(payload.validUntil || "").trim(),
+    registeredAt: new Date().toISOString(),
+    active: true
+  };
+}
+
+function getEntryVehicleSpecialCareConflictResult() {
+  const vehicle = getEntryVehicleSpecialCareContextVehicle();
+  const draft = captureEntryVehicleSpecialCareDraft();
+  const extraRecords = draft.enabled ? [createTransientVehicleSpecialCareRecord(vehicle, draft)] : [];
+  return checkVehicleServiceCareConflictsForVehicle(vehicle, getSelectedEntryServices(), extraRecords);
+}
+
+function getVehicleSpecialCareSummaryText(vehicle) {
+  const summary = getVehicleSpecialCareSummary(vehicle);
+  if (!summary.count) return "Nenhum cuidado especial ativo para este veículo.";
+  const labels = summary.labels.slice(0, 2).join(", ");
+  const suffix = summary.labels.length > 2 ? ` e mais ${summary.labels.length - 2}` : "";
+  return `Este veículo possui ${summary.count} cuidado(s) ativo(s): ${labels}${suffix}.`;
+}
+
+function renderEntryVehicleSpecialCareSection() {
+  const vehicle = getEntryVehicleSpecialCareContextVehicle();
+  const linkedVehicle = vehicle?.plate ? getAnyVehicleRecord(vehicle.id, vehicle.plate) : null;
+  const activeRecords = linkedVehicle ? getVehicleActiveSpecialCareRecords(linkedVehicle) : [];
+  const draft = getEntryVehicleSpecialCareDraftState();
+  const conflictResult = getEntryVehicleSpecialCareConflictResult();
+  const hasConflictAlert = conflictResult.hasConflicts || conflictResult.unknownTechnicalClassification.length;
+  const summary = activeRecords.length
+    ? getVehicleSpecialCareSummaryText(linkedVehicle)
+    : "Registre aqui restrições informadas na chegada sem sair da entrada no pátio.";
+  const conflictMessage = conflictResult.hasConflicts
+    ? "O serviço selecionado pode exigir cuidado com este veículo. Confira os produtos antes de executar."
+    : conflictResult.unknownTechnicalClassification.length
+      ? "Há serviços com insumos sem classificação técnica completa. Faça a conferência antes da execução."
+      : "";
+  return `
+    <section class="vehicle-special-care-section vehicle-entry-special-care-section ${hasConflictAlert ? "has-conflict" : ""}">
+      <div class="vehicle-special-care-head">
+        <div>
+          <p class="eyebrow">Segurança operacional</p>
+          <h3>Cuidados especiais do veículo</h3>
+        </div>
+        <span class="client-status-label">${activeRecords.length ? `${activeRecords.length} ativo(s)` : "Opcional"}</span>
+      </div>
+      <p class="vehicle-special-care-summary">${escapeHtml(summary)}</p>
+      <div class="vehicle-special-care-toolbar">
+        ${
+          activeRecords.length
+            ? `<button class="ghost-action compact" type="button" data-entry-care-action="toggle-details">${draft.showDetails ? "Ocultar detalhes" : "Ver detalhes"}</button>`
+            : ""
+        }
+        <button class="ghost-action compact" type="button" data-entry-care-action="toggle-new-care">${draft.enabled ? "Ocultar cadastro" : "Registrar novo cuidado"}</button>
+      </div>
+      ${
+        activeRecords.length && draft.showDetails
+          ? `<div class="vehicle-special-care-record-list is-compact">${activeRecords.map((record) => renderVehicleSpecialCareRecordCard(record)).join("")}</div>`
+          : ""
+      }
+      <label class="switch-field" for="entryVehicleSpecialCareEnabled">
+        <input id="entryVehicleSpecialCareEnabled" type="checkbox" ${draft.enabled ? "checked" : ""} />
+        <span class="switch-control"></span>
+        <span>Registrar cuidado especial informado neste atendimento</span>
+      </label>
+      ${renderVehicleSpecialCareFields("entryVehicleSpecialCare", draft, { compact: true })}
+      ${
+        hasConflictAlert
+          ? `<article class="vehicle-special-care-inline-alert ${conflictResult.highestLevel}">
+              <strong>${conflictResult.highestLevel === "high" ? "Alto risco" : "Atenção"}</strong>
+              <p>${escapeHtml(conflictMessage)}</p>
+            </article>`
+          : ""
+      }
+    </section>
+  `;
+}
+
+function refreshEntryVehicleSpecialCareSection(options = {}) {
+  const mount = $("#entryVehicleSpecialCareMount");
+  if (!mount) return;
+  if (options.preserveDraft !== false) captureEntryVehicleSpecialCareDraft();
+  mount.innerHTML = renderEntryVehicleSpecialCareSection();
+  initIcons();
+}
+
+function persistEntryVehicleSpecialCareFromDraft(attendanceVehicle, registryVehicle) {
+  const draft = getEntryVehicleSpecialCareDraftState();
+  entryVehicleSpecialCareDraft = null;
+  if (!draft.enabled || !registryVehicle) return null;
+  if (!draft.description && !draft.restrictionTags.length && !draft.recommendedTags.length) return null;
+  const record = createVehicleSpecialCareRecord(registryVehicle, draft, {
+    attendanceId: attendanceVehicle.id,
+    sourceAttendanceId: attendanceVehicle.id,
+    createdBy: activeSessionUser || "Operador",
+    historyType: "vehicle_special_care_added_from_attendance",
+    historyDescription: `Cuidado especial informado na entrada do atendimento ${attendanceVehicle.plate}.`
+  });
+  if (!record) return null;
+  appendAttendanceHistory(attendanceVehicle, `Cuidado especial registrado no veículo: ${record.type}.`, "vehicle_special_care_created");
+  return record;
+}
+
 function getActiveVehicleRegistryEditorContainer() {
   const dialog = $("#vehicleRegistryDialog");
   if (dialog?.open && $("#vehicleRegistryForm", dialog)) return dialog;
@@ -3219,6 +3804,8 @@ function renderVehicleRegistryDialogForm(vehicle = null) {
         </label>
       </div>
 
+      ${renderVehicleRegistrySpecialCareSection(selectedVehicle)}
+
       <div class="dialog-actions">
         <button class="exit-button" id="cancelVehicleRegistryDialog" type="button">Cancelar</button>
         <button class="primary-button" type="submit">
@@ -3246,6 +3833,7 @@ function bindEntryVehicleRegistryDialogControls(container) {
   $("#vehicleRegistryYear", container).addEventListener("input", (event) => {
     event.currentTarget.value = event.currentTarget.value.replace(/\D/g, "").slice(0, 4);
   });
+  bindVehicleSpecialCareRegistryControls(container);
   $("#vehicleRegistryForm", container).addEventListener("submit", (event) => {
     event.preventDefault();
     saveEntryVehicleRegistryDialog(container);
@@ -3282,9 +3870,53 @@ function bindAdminVehicleRegistryDialogControls(container) {
   $("#vehicleRegistryYear", container)?.addEventListener("input", (event) => {
     event.currentTarget.value = event.currentTarget.value.replace(/\D/g, "").slice(0, 4);
   });
+  bindVehicleSpecialCareRegistryControls(container);
   $("#vehicleRegistryForm", container)?.addEventListener("submit", (event) => {
     event.preventDefault();
     saveAdminVehicleRegistryDialog(container);
+  });
+}
+
+function bindVehicleSpecialCareRegistryControls(container) {
+  $("#vehicleSpecialCareEnabled", container)?.addEventListener("change", (event) => {
+    const fields = $("[data-special-care-fields='vehicleSpecialCare']", container);
+    if (fields) fields.hidden = !event.currentTarget.checked;
+    if (!event.currentTarget.checked) selectedVehicleSpecialCareId = null;
+  });
+  if (container.dataset.vehicleSpecialCareRegistryBound === "true") return;
+  container.dataset.vehicleSpecialCareRegistryBound = "true";
+  container.addEventListener("click", async (event) => {
+    const editButton = event.target.closest("[data-edit-vehicle-special-care]");
+    if (editButton) {
+      selectedVehicleSpecialCareId = Number(editButton.dataset.editVehicleSpecialCare);
+      const vehicle = selectedVehicleId ? findVehicleById(selectedVehicleId) : null;
+      const nextMarkup = renderVehicleRegistrySpecialCareSection(vehicle);
+      const section = $(".vehicle-special-care-section", container);
+      if (section) section.outerHTML = nextMarkup;
+      bindVehicleSpecialCareRegistryControls(container);
+      return;
+    }
+
+    const deactivateButton = event.target.closest("[data-deactivate-vehicle-special-care]");
+    if (!deactivateButton) return;
+    const confirmed = await showMessageBox({
+      title: "Inativar cuidado especial?",
+      message: "O histórico será preservado e o registro deixará de gerar alertas ativos.",
+      eyebrow: "Cadastro de veículos",
+      confirmLabel: "Inativar",
+      cancelLabel: "Cancelar",
+      confirmOnly: false
+    });
+    if (!confirmed) return;
+    deactivateVehicleSpecialCareRecord(Number(deactivateButton.dataset.deactivateVehicleSpecialCare), "Registro revisado pelo administrador.");
+    selectedVehicleSpecialCareId = null;
+    const vehicle = selectedVehicleId ? findVehicleById(selectedVehicleId) : null;
+    const section = $(".vehicle-special-care-section", container);
+    if (section) section.outerHTML = renderVehicleRegistrySpecialCareSection(vehicle);
+    bindVehicleSpecialCareRegistryControls(container);
+    renderAdminDashboard();
+    renderPatio();
+    showToast("Cuidado especial inativado.");
   });
 }
 
@@ -3344,9 +3976,11 @@ function setEntryVehicleColor(color) {
 
 function addVehicleToPatio(vehicle) {
   patioVehicles.unshift(vehicle);
-  syncVehicleFromPatioEntry(vehicle);
+  const registryVehicle = syncVehicleFromPatioEntry(vehicle);
+  persistEntryVehicleSpecialCareFromDraft(vehicle, registryVehicle);
   closeVehicleDialog();
   renderPatio();
+  renderAdminDashboard();
   triggerAutomatedMessage(vehicle.status === "agendado" ? "schedule-confirmation" : "yard-entry", getMessageContextFromVehicle(vehicle));
   showToast(vehicle.status === "agendado" ? `Agendamento de ${vehicle.plate} criado.` : `${vehicle.plate} entrou no pátio.`);
 }
@@ -3380,6 +4014,7 @@ function resetVehicleForm() {
   $("#vehicleForm").reset();
   pendingVehicle = null;
   selectedEntryVehicleId = null;
+  entryVehicleSpecialCareDraft = null;
   selectedBillingClientId = "";
   selectedBillingInvoiceId = "";
   lastOpenInvoiceNoticePlate = "";
@@ -3395,6 +4030,7 @@ function resetVehicleForm() {
   showVehicleStep("entry");
   updatePaymentAction();
   clearBillingSubforms();
+  refreshEntryVehicleSpecialCareSection({ preserveDraft: false });
 }
 
 function updatePaymentAction() {
@@ -3875,6 +4511,1172 @@ function getDefaultBusinessPixInfo() {
   };
 }
 
+function getDefaultBusinessPaymentMethods() {
+  const today = getTodayISO();
+  return [
+    {
+      id: 1,
+      name: "Pix",
+      type: "instantâneo",
+      active: true,
+      showInService: true,
+      showInProductSale: true,
+      showInQuote: true,
+      showInInvoice: true,
+      immediateSettlement: true,
+      settlementDays: 0,
+      feePercent: 0,
+      fixedFee: 0,
+      linkedBankAccountId: null,
+      notes: "Recebimento imediato por chave Pix.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 2,
+      name: "Dinheiro",
+      type: "dinheiro",
+      active: true,
+      showInService: true,
+      showInProductSale: true,
+      showInQuote: true,
+      showInInvoice: false,
+      immediateSettlement: true,
+      settlementDays: 0,
+      feePercent: 0,
+      fixedFee: 0,
+      linkedBankAccountId: null,
+      notes: "Recebimento em caixa físico.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 3,
+      name: "Cartão de débito",
+      type: "cartão",
+      active: true,
+      showInService: true,
+      showInProductSale: true,
+      showInQuote: true,
+      showInInvoice: true,
+      immediateSettlement: false,
+      settlementDays: 1,
+      feePercent: 0,
+      fixedFee: 0,
+      linkedBankAccountId: null,
+      notes: "Taxa deve ser ajustada conforme a maquininha.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 4,
+      name: "Cartão de crédito",
+      type: "cartão",
+      active: true,
+      showInService: true,
+      showInProductSale: true,
+      showInQuote: true,
+      showInInvoice: true,
+      immediateSettlement: false,
+      settlementDays: 30,
+      feePercent: 0,
+      fixedFee: 0,
+      linkedBankAccountId: null,
+      notes: "Taxa e prazo devem ser ajustados conforme a maquininha.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 5,
+      name: "Transferência bancária",
+      type: "transferência",
+      active: true,
+      showInService: true,
+      showInProductSale: true,
+      showInQuote: true,
+      showInInvoice: true,
+      immediateSettlement: true,
+      settlementDays: 0,
+      feePercent: 0,
+      fixedFee: 0,
+      linkedBankAccountId: null,
+      notes: "Recebimento por transferência.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 6,
+      name: "Faturado",
+      type: "faturado",
+      active: true,
+      showInService: true,
+      showInProductSale: true,
+      showInQuote: true,
+      showInInvoice: true,
+      immediateSettlement: false,
+      settlementDays: 30,
+      feePercent: 0,
+      fixedFee: 0,
+      linkedBankAccountId: null,
+      notes: "Gera fatura ou recebimento em aberto.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 7,
+      name: "Boleto",
+      type: "boleto",
+      active: false,
+      showInService: false,
+      showInProductSale: true,
+      showInQuote: true,
+      showInInvoice: true,
+      immediateSettlement: false,
+      settlementDays: 3,
+      feePercent: 0,
+      fixedFee: 0,
+      linkedBankAccountId: null,
+      notes: "Ativar somente se a empresa usar boleto.",
+      createdAt: today,
+      updatedAt: today
+    }
+  ];
+}
+
+function getDefaultBusinessFinanceSettings() {
+  return {
+    receiptRules: {
+      invoiceDefaultDueDays: 30,
+      openPaymentDueDays: 7,
+      requirePixKeyWhenActive: false
+    },
+    margins: {
+      serviceMarginPercent: 30,
+      productMarginPercent: 25,
+      monthlyOperationalCost: 0,
+      productiveHoursMonthly: 176,
+      averageCommissionPercent: 0,
+      averageTaxPercent: 0,
+      notes: ""
+    },
+    inventory: {
+      allowProductSaleWithoutStock: false,
+      allowSupplyNegativeStock: false,
+      alertProductMinStock: true,
+      alertSupplyMinStock: true,
+      autoConsumeSuppliesOnServiceCompletion: true,
+      allowManualSupplyAdjustment: true,
+      requireSupplyAdjustmentReason: false,
+      reserveStockOnQuote: false,
+      defaultQuoteValidityDays: 15
+    },
+    documents: {
+      defaultProductDocumentType: "Recibo",
+      defaultServiceDocumentType: "Recibo",
+      showPixInInvoices: true,
+      showBankAccountsInInvoices: true,
+      showBusinessDataInDocuments: true,
+      receiptNumberPrefix: "REC",
+      quoteNumberPrefix: "ORC",
+      orderNumberPrefix: "PED",
+      receiptDefaultNote: "",
+      quoteDefaultNote: ""
+    }
+  };
+}
+
+function getDefaultProductCatalog() {
+  const today = getTodayISO();
+  return [
+    {
+      id: 1,
+      sku: "PRD-001",
+      name: "Aromatizante premium",
+      unit: "un",
+      stock: 18,
+      minStock: 6,
+      cost: 8.5,
+      price: 24.9,
+      active: true,
+      notes: "Item de balcão para vendas rápidas.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 2,
+      sku: "PRD-002",
+      name: "Limpa vidros spray",
+      unit: "un",
+      stock: 9,
+      minStock: 4,
+      cost: 12,
+      price: 32,
+      active: true,
+      notes: "Produto de vitrine com saída recorrente.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 3,
+      sku: "PRD-003",
+      name: "Toalha de microfibra",
+      unit: "un",
+      stock: 14,
+      minStock: 5,
+      cost: 9.2,
+      price: 22,
+      active: true,
+      notes: "Também pode ser usada em kits promocionais.",
+      createdAt: today,
+      updatedAt: today
+    }
+  ];
+}
+
+function getDefaultSupplyCatalog() {
+  const today = getTodayISO();
+  return [
+    {
+      id: 1,
+      sku: "INS-001",
+      name: "Shampoo automotivo",
+      unit: "ml",
+      stock: 8500,
+      minStock: 2500,
+      cost: 0.03,
+      active: true,
+      supplier: "Distribuidora Prime Clean",
+      notes: "Base principal para lavagens externas.",
+      phType: "neutral",
+      phApproximate: "7",
+      aggressivenessLevel: "low",
+      riskTags: [],
+      safeForCoating: "true",
+      safeForWrap: "true",
+      safeForMattePaint: "true",
+      technicalNotes: "Uso seguro como base neutra para manutenção.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 2,
+      sku: "INS-002",
+      name: "Desengraxante",
+      unit: "ml",
+      stock: 3200,
+      minStock: 1200,
+      cost: 0.04,
+      active: true,
+      supplier: "Distribuidora Prime Clean",
+      notes: "Uso em rodas e áreas críticas.",
+      phType: "alkaline",
+      phApproximate: "12",
+      aggressivenessLevel: "high",
+      riskTags: ["strong_alkaline_product", "degreaser", "heavy_cleaner"],
+      safeForCoating: "false",
+      safeForWrap: "false",
+      safeForMattePaint: "unknown",
+      technicalNotes: "Evitar em superfícies com proteção delicada sem conferência prévia.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 3,
+      sku: "INS-003",
+      name: "Limpa vidros",
+      unit: "ml",
+      stock: 2400,
+      minStock: 900,
+      cost: 0.035,
+      active: true,
+      supplier: "Glass Care",
+      notes: "Aplicação final em vidros e espelhos.",
+      phType: "neutral",
+      phApproximate: "7",
+      aggressivenessLevel: "low",
+      riskTags: [],
+      safeForCoating: "true",
+      safeForWrap: "unknown",
+      safeForMattePaint: "true",
+      technicalNotes: "Conferir aplicação direta sobre películas recém-instaladas.",
+      createdAt: today,
+      updatedAt: today
+    },
+    {
+      id: 4,
+      sku: "INS-004",
+      name: "Pano descartável",
+      unit: "un",
+      stock: 120,
+      minStock: 40,
+      cost: 0.9,
+      active: true,
+      supplier: "Tecno Wipes",
+      notes: "Uso recorrente em acabamentos.",
+      phType: "unknown",
+      phApproximate: "",
+      aggressivenessLevel: "low",
+      riskTags: [],
+      safeForCoating: "true",
+      safeForWrap: "true",
+      safeForMattePaint: "true",
+      technicalNotes: "Material auxiliar para acabamento e secagem.",
+      createdAt: today,
+      updatedAt: today
+    }
+  ];
+}
+
+function getDefaultServiceSupplyProfiles() {
+  return {
+    [getServiceSupplyProfileKey({ name: "Lavagem Prime", vehicleType: "Carro", vehicleCategory: "Hatch" })]: [
+      { supplyId: 1, quantity: 50, notes: "Diluição padrão da cuba." },
+      { supplyId: 3, quantity: 18, notes: "Acabamento dos vidros." },
+      { supplyId: 4, quantity: 1, notes: "Secagem final." }
+    ],
+    [getServiceSupplyProfileKey({ name: "Higienização interna", vehicleType: "Carro", vehicleCategory: "Sedan" })]: [
+      { supplyId: 2, quantity: 30, notes: "Apoio na limpeza pesada." },
+      { supplyId: 4, quantity: 2, notes: "Aplicação nos bancos e painéis." }
+    ],
+    [getServiceSupplyProfileKey({ name: "Detailing completo", vehicleType: "Carro", vehicleCategory: "SUV" })]: [
+      { supplyId: 1, quantity: 60, notes: "Base neutra para a lavagem." },
+      { supplyId: 2, quantity: 25, notes: "Uso pontual em áreas críticas." },
+      { supplyId: 4, quantity: 2, notes: "Acabamento final." }
+    ]
+  };
+}
+
+function getDefaultVehicleSpecialCareRecords() {
+  const today = `${getTodayISO()}T09:30:00`;
+  return [
+    {
+      id: 1,
+      companyId: "local-default",
+      vehicleId: 3,
+      vehiclePlate: "LVP3E72",
+      attendanceId: null,
+      type: "Vitrificação / coating cerâmico",
+      attentionLevel: "Atenção",
+      description: "Cliente informou proteção cerâmica recente e preferência por manutenção com baixa agressividade.",
+      restrictionTags: ["avoid_acid", "avoid_strong_alkaline", "use_ph_neutral"],
+      recommendedTags: ["prefer_ph_neutral", "prefer_low_aggression"],
+      source: "Informado pelo cliente",
+      sourceAttendanceId: null,
+      sourceServiceId: "",
+      registeredAt: today,
+      validUntil: "",
+      active: true,
+      createdAt: today,
+      updatedAt: today,
+      createdBy: "Administrador",
+      updatedBy: "Administrador",
+      deletedAt: "",
+      syncStatus: "local_only",
+      auditLogId: "care-1",
+      history: []
+    }
+  ];
+}
+
+function normalizeProductCatalog(products = []) {
+  const source = Array.isArray(products) && products.length ? products : getDefaultProductCatalog();
+  return source
+    .map((item, index) => {
+      const today = getTodayISO();
+      return {
+        id: Number(item.id || index + 1),
+        sku: String(item.sku || `PRD-${String(index + 1).padStart(3, "0")}`).trim(),
+        name: String(item.name || "").trim(),
+        unit: String(item.unit || "un").trim() || "un",
+        stock: Number(item.stock || 0),
+        minStock: Math.max(0, Number(item.minStock || 0)),
+        cost: Math.max(0, Number(item.cost || 0)),
+        price: Math.max(0, Number(item.price || 0)),
+        active: item.active !== false,
+        notes: String(item.notes || "").trim(),
+        createdAt: item.createdAt || today,
+        updatedAt: item.updatedAt || today
+      };
+    })
+    .filter((item) => item.name);
+}
+
+function normalizeSupplyCatalog(supplies = []) {
+  const source = Array.isArray(supplies) && supplies.length ? supplies : getDefaultSupplyCatalog();
+  return source
+    .map((item, index) => {
+      const today = getTodayISO();
+      return {
+        id: Number(item.id || index + 1),
+        sku: String(item.sku || `INS-${String(index + 1).padStart(3, "0")}`).trim(),
+        name: String(item.name || "").trim(),
+        unit: String(item.unit || "un").trim() || "un",
+        stock: Number(item.stock || 0),
+        minStock: Math.max(0, Number(item.minStock || 0)),
+        cost: Math.max(0, Number(item.cost || 0)),
+        active: item.active !== false,
+        supplier: String(item.supplier || "").trim(),
+        notes: String(item.notes || "").trim(),
+        phType: ["acid", "neutral", "alkaline"].includes(item.phType) ? item.phType : "unknown",
+        phApproximate: String(item.phApproximate || "").trim(),
+        aggressivenessLevel: ["low", "medium", "high"].includes(item.aggressivenessLevel) ? item.aggressivenessLevel : "unknown",
+        riskTags: normalizeStringTagList(item.riskTags, supplyRiskTagOptions.map((option) => option.tag)),
+        safeForCoating: normalizeCompatibilityFlag(item.safeForCoating),
+        safeForWrap: normalizeCompatibilityFlag(item.safeForWrap),
+        safeForMattePaint: normalizeCompatibilityFlag(item.safeForMattePaint),
+        technicalNotes: String(item.technicalNotes || "").trim(),
+        createdAt: item.createdAt || today,
+        updatedAt: item.updatedAt || today
+      };
+    })
+    .filter((item) => item.name);
+}
+
+function normalizeStringTagList(values = [], allowedValues = []) {
+  const allowed = new Set(allowedValues || []);
+  return [...new Set((Array.isArray(values) ? values : []).map((value) => String(value || "").trim()).filter(Boolean))]
+    .filter((value) => !allowed.size || allowed.has(value));
+}
+
+function normalizeCompatibilityFlag(value) {
+  if (value === true || value === "true") return "true";
+  if (value === false || value === "false") return "false";
+  return "unknown";
+}
+
+function normalizeVehicleSpecialCareRecords(records = []) {
+  const source = Array.isArray(records) && records.length ? records : getDefaultVehicleSpecialCareRecords();
+  return source
+    .map((record, index) => {
+      const timestamp = String(record.createdAt || record.registeredAt || new Date().toISOString()).trim();
+      return {
+        id: Number(record.id || index + 1),
+        companyId: String(record.companyId || "local-default").trim(),
+        vehicleId: Number(record.vehicleId || 0) || null,
+        vehiclePlate: formatPlate(String(record.vehiclePlate || record.plate || "").trim()),
+        attendanceId: Number(record.attendanceId || 0) || null,
+        type: String(record.type || vehicleSpecialCareTypes[0]).trim(),
+        attentionLevel: vehicleSpecialCareAttentionLevels.includes(record.attentionLevel) ? record.attentionLevel : "Informativo",
+        description: String(record.description || "").trim(),
+        restrictionTags: normalizeStringTagList(record.restrictionTags, vehicleSpecialCareRestrictionOptions.map((option) => option.tag)),
+        recommendedTags: normalizeStringTagList(record.recommendedTags, vehicleSpecialCareRecommendedOptions.map((option) => option.tag)),
+        source: vehicleSpecialCareSources.includes(record.source) ? record.source : "Outro",
+        sourceAttendanceId: Number(record.sourceAttendanceId || 0) || null,
+        sourceServiceId: String(record.sourceServiceId || "").trim(),
+        registeredAt: String(record.registeredAt || timestamp).trim(),
+        validUntil: String(record.validUntil || "").trim(),
+        active: record.active !== false,
+        createdAt: timestamp,
+        updatedAt: String(record.updatedAt || timestamp).trim(),
+        createdBy: String(record.createdBy || activeSessionUser || "Administrador").trim(),
+        updatedBy: String(record.updatedBy || activeSessionUser || "Administrador").trim(),
+        deletedAt: String(record.deletedAt || "").trim(),
+        syncStatus: String(record.syncStatus || "local_only").trim(),
+        auditLogId: String(record.auditLogId || `care-${index + 1}`).trim(),
+        history: (Array.isArray(record.history) ? record.history : []).map((item, historyIndex) => ({
+          id: String(item.id || `care-history-${index + 1}-${historyIndex + 1}`),
+          type: String(item.type || "").trim(),
+          description: String(item.description || "").trim(),
+          createdAt: String(item.createdAt || timestamp).trim(),
+          author: String(item.author || activeSessionUser || "Administrador").trim()
+        }))
+      };
+    })
+    .filter((record) => record.vehicleId || record.vehiclePlate);
+}
+
+function normalizeProductSales(sales = []) {
+  return (Array.isArray(sales) ? sales : [])
+    .map((sale, index) => ({
+      id: Number(sale.id || index + 1),
+      code: String(sale.code || "").trim(),
+      date: sale.date || getTodayISO(),
+      time: sale.time || "00:00",
+      clientName: String(sale.clientName || "Cliente avulso").trim(),
+      plate: String(sale.plate || "").trim(),
+      paymentMethod: getCanonicalPaymentMethodName(sale.paymentMethod || getPreferredPaymentMethodName("productSale")),
+      documentType: String(sale.documentType || businessFinanceSettings.documents.defaultProductDocumentType || "Recibo").trim(),
+      operator: String(sale.operator || activeSessionUser || "Administrador").trim(),
+      notes: String(sale.notes || "").trim(),
+      status: sale.status || "Confirmado",
+      items: (Array.isArray(sale.items) ? sale.items : []).map((item) => ({
+        productId: Number(item.productId || 0),
+        name: String(item.name || "").trim(),
+        quantity: Math.max(0, Number(item.quantity || 0)),
+        unitPrice: Math.max(0, Number(item.unitPrice || 0)),
+        lineTotal: Math.max(0, Number(item.lineTotal || Number(item.quantity || 0) * Number(item.unitPrice || 0)))
+      })),
+      total: Math.max(0, Number(sale.total || 0)),
+      cashEntryId: Number(sale.cashEntryId || 0) || null
+    }))
+    .filter((sale) => sale.code && sale.items.length);
+}
+
+function normalizeInventoryMovements(movements = []) {
+  return (Array.isArray(movements) ? movements : [])
+    .map((movement, index) => ({
+      id: Number(movement.id || index + 1),
+      kind: movement.kind === "product" ? "product" : "supply",
+      itemId: Number(movement.itemId || 0),
+      itemName: String(movement.itemName || "").trim(),
+      type: String(movement.type || "Ajuste").trim(),
+      quantity: Number(movement.quantity || 0),
+      previousStock: Number(movement.previousStock || 0),
+      currentStock: Number(movement.currentStock || 0),
+      unit: String(movement.unit || "un").trim() || "un",
+      reason: String(movement.reason || "").trim(),
+      sourceCode: String(movement.sourceCode || "").trim(),
+      createdAt: String(movement.createdAt || `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`).trim(),
+      operator: String(movement.operator || activeSessionUser || "Administrador").trim()
+    }))
+    .filter((movement) => movement.itemId && movement.itemName);
+}
+
+function normalizeCashEntries(entries = []) {
+  return (Array.isArray(entries) ? entries : [])
+    .map((entry, index) => ({
+      id: Number(entry.id || index + 1),
+      date: String(entry.date || getTodayISO()).trim(),
+      time: String(entry.time || getCurrentShortTime()).trim(),
+      type: entry.type === "Saída" ? "Saída" : "Entrada",
+      description: String(entry.description || "").trim(),
+      method: getCanonicalPaymentMethodName(entry.method || "") || String(entry.method || "").trim(),
+      value: Number(entry.value || 0),
+      category: String(entry.category || "").trim(),
+      costCenter: String(entry.costCenter || "").trim(),
+      status: entry.status === "Confirmado" ? "Confirmado" : "Pendente",
+      scheduledDate: String(entry.scheduledDate || "").trim(),
+      scheduledTime: String(entry.scheduledTime || "").trim(),
+      deleted: Boolean(entry.deleted),
+      deletedAt: String(entry.deletedAt || "").trim(),
+      deletedBy: String(entry.deletedBy || "").trim(),
+      attachment: entry.attachment?.name ? { name: String(entry.attachment.name), type: String(entry.attachment.type || "Comprovante") } : null,
+      feePercent: Number(entry.feePercent || 0),
+      fixedFee: Number(entry.fixedFee || 0),
+      feeAmount: Number(entry.feeAmount || 0),
+      netAmount: Number(entry.netAmount || Math.abs(Number(entry.value || 0))),
+      expectedReceiptDate: String(entry.expectedReceiptDate || entry.date || getTodayISO()).trim(),
+      methodImmediateSettlement: Boolean(entry.methodImmediateSettlement),
+      settlementDays: Math.max(0, Number(entry.settlementDays || 0)),
+      linkedBankAccountName: String(entry.linkedBankAccountName || "").trim(),
+      serviceAmount: Number(entry.serviceAmount || 0),
+      productAmount: Number(entry.productAmount || 0),
+      createdBy: String(entry.createdBy || activeSessionUser || "Administrador").trim(),
+      updatedBy: String(entry.updatedBy || activeSessionUser || "Administrador").trim(),
+      openPayment: Boolean(entry.openPayment),
+      plate: String(entry.plate || "").trim(),
+      vehicleId: Number(entry.vehicleId || 0) || null
+    }))
+    .filter((entry) => entry.description);
+}
+
+function normalizeServiceSupplyProfiles(profiles = {}) {
+  const validSupplyIds = new Set((Array.isArray(supplyCatalog) ? supplyCatalog : []).map((item) => Number(item.id)));
+  return Object.entries(profiles || {}).reduce((accumulator, [serviceKey, entries]) => {
+    const normalizedEntries = (Array.isArray(entries) ? entries : [])
+      .map((entry) => ({
+        supplyId: Number(entry.supplyId || 0),
+        quantity: Math.max(0, Number(entry.quantity || 0)),
+        notes: String(entry.notes || "").trim()
+      }))
+      .filter((entry) => entry.supplyId && entry.quantity > 0 && (validSupplyIds.size ? validSupplyIds.has(entry.supplyId) : true));
+    if (normalizedEntries.length) accumulator[serviceKey] = normalizedEntries;
+    return accumulator;
+  }, {});
+}
+
+function normalizeDocumentHistory(items = []) {
+  return (Array.isArray(items) ? items : [])
+    .map((item, index) => ({
+      id: Number(item.id || index + 1),
+      fileName: String(item.fileName || "").trim(),
+      title: String(item.title || "Documento").trim(),
+      subtitle: String(item.subtitle || "").trim(),
+      documentNumber: String(item.documentNumber || "").trim(),
+      category: String(item.category || "Documento").trim(),
+      summary: String(item.summary || "").trim(),
+      reportTarget: String(item.reportTarget || "documents").trim(),
+      sourceType: String(item.sourceType || "").trim(),
+      sourceId: String(item.sourceId || "").trim(),
+      createdAt: String(item.createdAt || `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`).trim(),
+      responsible: String(item.responsible || activeSessionUser || "Sistema LavaPrime").trim()
+    }))
+    .filter((item) => item.fileName && item.title);
+}
+
+function saveProductCatalog() {
+  saveBusinessStorageItem(businessStorageKeys.products, productCatalog);
+}
+
+function saveSupplyCatalog() {
+  saveBusinessStorageItem(businessStorageKeys.supplies, supplyCatalog);
+}
+
+function saveProductSales() {
+  saveBusinessStorageItem(businessStorageKeys.productSales, productSales);
+}
+
+function saveInventoryMovements() {
+  saveBusinessStorageItem(businessStorageKeys.inventoryMovements, inventoryMovements);
+}
+
+function saveServiceSupplyProfiles() {
+  saveBusinessStorageItem(businessStorageKeys.serviceSupplies, serviceSupplyProfiles);
+}
+
+function saveDocumentHistory() {
+  saveBusinessStorageItem(businessStorageKeys.documentHistory, documentHistory);
+}
+
+function saveCashEntries() {
+  saveBusinessStorageItem(businessStorageKeys.cashEntries, cashEntries);
+}
+
+function saveVehicleSpecialCareRecords() {
+  saveBusinessStorageItem(businessStorageKeys.vehicleSpecialCare, vehicleSpecialCareRecords);
+}
+
+function getNextProductId() {
+  return Math.max(0, ...productCatalog.map((item) => Number(item.id) || 0)) + 1;
+}
+
+function getNextSupplyId() {
+  return Math.max(0, ...supplyCatalog.map((item) => Number(item.id) || 0)) + 1;
+}
+
+function getNextProductSaleId() {
+  return Math.max(0, ...productSales.map((item) => Number(item.id) || 0)) + 1;
+}
+
+function getNextInventoryMovementId() {
+  return Math.max(0, ...inventoryMovements.map((item) => Number(item.id) || 0)) + 1;
+}
+
+function getNextDocumentHistoryId() {
+  return Math.max(0, ...documentHistory.map((item) => Number(item.id) || 0)) + 1;
+}
+
+function getProductById(id) {
+  return productCatalog.find((item) => Number(item.id) === Number(id)) || null;
+}
+
+function getSupplyById(id) {
+  return supplyCatalog.find((item) => Number(item.id) === Number(id)) || null;
+}
+
+function getProductMarginValue(product) {
+  return Math.max(0, Number(product.price || 0) - Number(product.cost || 0));
+}
+
+function getProductMarginPercent(product) {
+  const price = Number(product.price || 0);
+  if (!price) return 0;
+  return Math.max(0, (getProductMarginValue(product) / price) * 100);
+}
+
+function isLowStockItem(item) {
+  return Number(item.stock || 0) <= Number(item.minStock || 0);
+}
+
+function getLowStockProducts() {
+  return productCatalog.filter((item) => item.active !== false && isLowStockItem(item));
+}
+
+function getLowStockSupplies() {
+  return supplyCatalog.filter((item) => item.active !== false && isLowStockItem(item));
+}
+
+function getServiceSupplyProfileKey(service) {
+  const safeService = service || {};
+  return [safeService.name || "", safeService.vehicleType || "", shouldUseVehicleCategory(safeService.vehicleType) ? safeService.vehicleCategory || "" : "todos"]
+    .map((value) => normalizeText(value))
+    .join("__");
+}
+
+function getServiceSupplyProfile(service) {
+  return serviceSupplyProfiles[getServiceSupplyProfileKey(service)] || [];
+}
+
+function getServiceTechnicalCoverageCount() {
+  return serviceCatalog.filter((service) => getServiceSupplyProfile(service).length > 0).length;
+}
+
+function getServicesWithoutSupplyProfile() {
+  return serviceCatalog.filter((service) => getServiceSupplyProfile(service).length === 0);
+}
+
+function getInventoryMovementLabel(type) {
+  const labels = {
+    sale: "Venda",
+    saida_venda_atendimento: "Venda no atendimento",
+    estorno_venda_atendimento: "Estorno de venda no atendimento",
+    estorno_cancelamento_atendimento: "Estorno por cancelamento",
+    serviceConsumption: "Consumo em serviço",
+    adjustment: "Ajuste manual",
+    restock: "Reposição"
+  };
+  return labels[type] || type || "Movimento";
+}
+
+function recordGeneratedDocument(payload) {
+  documentHistory.unshift({
+    id: getNextDocumentHistoryId(),
+    fileName: payload.fileName,
+    title: payload.title,
+    subtitle: payload.subtitle || "",
+    documentNumber: payload.documentNumber || createPdfDocumentNumber(payload.fileName),
+    category: payload.category || "Documento",
+    summary: payload.summary || "",
+    reportTarget: payload.reportTarget || "documents",
+    sourceType: payload.sourceType || "",
+    sourceId: payload.sourceId || "",
+    createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
+    responsible: payload.responsible || activeSessionUser || "Sistema LavaPrime"
+  });
+  saveDocumentHistory();
+}
+
+function getVehicleServiceDefinitions(vehicle) {
+  const services = getVehicleServices(vehicle);
+  return services
+    .map((serviceName) => findServiceDefinition(serviceName, vehicle.type, vehicle.category))
+    .filter(Boolean);
+}
+
+function getAggregatedSupplyConsumptionForVehicle(vehicle) {
+  const totals = new Map();
+  getVehicleServiceDefinitions(vehicle).forEach((service) => {
+    getServiceSupplyProfile(service).forEach((entry) => {
+      const current = totals.get(entry.supplyId) || { supplyId: entry.supplyId, quantity: 0, serviceNames: new Set() };
+      current.quantity += Number(entry.quantity || 0);
+      current.serviceNames.add(service.name);
+      totals.set(entry.supplyId, current);
+    });
+  });
+  return Array.from(totals.values()).map((entry) => ({
+    supplyId: entry.supplyId,
+    quantity: entry.quantity,
+    serviceNames: Array.from(entry.serviceNames)
+  }));
+}
+
+function validateSupplyAvailabilityForVehicle(vehicle) {
+  const entries = getAggregatedSupplyConsumptionForVehicle(vehicle);
+  const issues = entries
+    .map((entry) => {
+      const supply = getSupplyById(entry.supplyId);
+      if (!supply) return null;
+      const currentStock = Number(supply.stock || 0);
+      const nextStock = currentStock - Number(entry.quantity || 0);
+      const allowNegative = businessFinanceSettings.inventory.allowSupplyNegativeStock;
+      if (!allowNegative && nextStock < 0) {
+        return `${supply.name}: faltam ${formatInventoryQuantity(Math.abs(nextStock), supply.unit)}`;
+      }
+      return null;
+    })
+    .filter(Boolean);
+  return { valid: !issues.length, issues, entries };
+}
+
+function consumeServiceSuppliesForVehicle(vehicle) {
+  if (!businessFinanceSettings.inventory.autoConsumeSuppliesOnServiceCompletion) return true;
+  if (vehicle.suppliesConsumedAt) return true;
+
+  const validation = validateSupplyAvailabilityForVehicle(vehicle);
+  if (!validation.valid) {
+    showToast(`Estoque insuficiente para concluir: ${validation.issues.join(" · ")}`);
+    return false;
+  }
+
+  validation.entries.forEach((entry) => {
+    const supply = getSupplyById(entry.supplyId);
+    if (!supply) return;
+    const previousStock = Number(supply.stock || 0);
+    const nextStock = previousStock - Number(entry.quantity || 0);
+    supply.stock = nextStock;
+    supply.updatedAt = getTodayISO();
+    registerInventoryMovement({
+      kind: "supply",
+      itemId: supply.id,
+      itemName: supply.name,
+      type: "serviceConsumption",
+      quantity: -Number(entry.quantity || 0),
+      previousStock,
+      currentStock: nextStock,
+      unit: supply.unit,
+      reason: `Consumo automático em ${vehicle.plate} · ${entry.serviceNames.join(", ")}`
+    });
+  });
+
+  vehicle.suppliesConsumedAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+  saveSupplyCatalog();
+  return true;
+}
+
+function clampNumber(value, min, max) {
+  return Math.min(max, Math.max(min, Number(value || 0)));
+}
+
+function getCanonicalPaymentMethodName(name) {
+  const rawName = String(name || "").trim();
+  if (!rawName) return "";
+
+  const aliases = {
+    pix: "Pix",
+    dinheiro: "Dinheiro",
+    "cartao de debito": "Cartão de débito",
+    "cartão de debito": "Cartão de débito",
+    "cartao de crédito": "Cartão de crédito",
+    "cartão de crédito": "Cartão de crédito",
+    "cartao de credito": "Cartão de crédito",
+    "cartão de credito": "Cartão de crédito",
+    transferencia: "Transferência bancária",
+    "transferência": "Transferência bancária",
+    "transferencia bancaria": "Transferência bancária",
+    "transferência bancária": "Transferência bancária",
+    faturado: "Faturado",
+    boleto: "Boleto",
+    carteira: "Carteira (legado)"
+  };
+  const normalized = normalizeText(rawName);
+  if (aliases[normalized]) return aliases[normalized];
+
+  const defaultMatch = getDefaultBusinessPaymentMethods().find((method) => normalizeText(method.name) === normalized);
+  return defaultMatch ? defaultMatch.name : rawName;
+}
+
+function createBusinessPaymentMethodRecord(rawMethod, fallbackId = 0) {
+  const raw = typeof rawMethod === "string" ? { name: rawMethod } : { ...(rawMethod || {}) };
+  const canonicalName = getCanonicalPaymentMethodName(raw.name || "");
+  if (!canonicalName) return null;
+
+  const defaultMethod = getDefaultBusinessPaymentMethods().find((method) => normalizeText(method.name) === normalizeText(canonicalName));
+  const today = getTodayISO();
+  const linkedBankAccountId =
+    raw.linkedBankAccountId === "" || raw.linkedBankAccountId === undefined || raw.linkedBankAccountId === null
+      ? defaultMethod?.linkedBankAccountId ?? null
+      : Number(raw.linkedBankAccountId);
+
+  return {
+    ...(defaultMethod || {
+      id: fallbackId || Date.now(),
+      name: canonicalName,
+      type: "outro",
+      active: true,
+      showInService: true,
+      showInProductSale: true,
+      showInQuote: true,
+      showInInvoice: true,
+      immediateSettlement: true,
+      settlementDays: 0,
+      feePercent: 0,
+      fixedFee: 0,
+      linkedBankAccountId: null,
+      notes: ""
+    }),
+    ...raw,
+    id: Number(raw.id || defaultMethod?.id || fallbackId || Date.now()),
+    name: canonicalName,
+    type: raw.type || defaultMethod?.type || "outro",
+    active: raw.active === undefined ? Boolean(defaultMethod?.active ?? true) : Boolean(raw.active),
+    showInService: raw.showInService === undefined ? Boolean(defaultMethod?.showInService ?? true) : Boolean(raw.showInService),
+    showInProductSale:
+      raw.showInProductSale === undefined ? Boolean(defaultMethod?.showInProductSale ?? true) : Boolean(raw.showInProductSale),
+    showInQuote: raw.showInQuote === undefined ? Boolean(defaultMethod?.showInQuote ?? true) : Boolean(raw.showInQuote),
+    showInInvoice: raw.showInInvoice === undefined ? Boolean(defaultMethod?.showInInvoice ?? true) : Boolean(raw.showInInvoice),
+    immediateSettlement:
+      raw.immediateSettlement === undefined ? Boolean(defaultMethod?.immediateSettlement ?? true) : Boolean(raw.immediateSettlement),
+    settlementDays: Math.max(0, Number(raw.settlementDays ?? defaultMethod?.settlementDays ?? 0)),
+    feePercent: clampNumber(raw.feePercent ?? defaultMethod?.feePercent ?? 0, 0, 100),
+    fixedFee: Math.max(0, Number(raw.fixedFee ?? defaultMethod?.fixedFee ?? 0)),
+    linkedBankAccountId:
+      Number.isFinite(linkedBankAccountId) && businessBankAccounts.some((account) => account.id === linkedBankAccountId)
+        ? linkedBankAccountId
+        : null,
+    notes: raw.notes || defaultMethod?.notes || "",
+    createdAt: raw.createdAt || defaultMethod?.createdAt || today,
+    updatedAt: raw.updatedAt || today
+  };
+}
+
+function normalizeBusinessPaymentMethods(methods = []) {
+  const defaults = getDefaultBusinessPaymentMethods();
+  const merged = new Map(
+    defaults.map((method) => [normalizeText(method.name), createBusinessPaymentMethodRecord(method, method.id)])
+  );
+
+  (Array.isArray(methods) ? methods : []).forEach((method, index) => {
+    const record = createBusinessPaymentMethodRecord(method, index + 1);
+    if (!record) return;
+    const key = normalizeText(record.name);
+    const previous = merged.get(key);
+    merged.set(key, { ...(previous || {}), ...record, id: previous?.id || record.id || index + 1 });
+  });
+
+  return Array.from(merged.values()).sort((left, right) => left.id - right.id);
+}
+
+function normalizeBusinessFinanceSettings(settings = {}) {
+  const defaults = getDefaultBusinessFinanceSettings();
+  return {
+    receiptRules: {
+      ...defaults.receiptRules,
+      ...(settings?.receiptRules || {})
+    },
+    margins: {
+      ...defaults.margins,
+      ...(settings?.margins || {})
+    },
+    inventory: {
+      ...defaults.inventory,
+      ...(settings?.inventory || {})
+    },
+    documents: {
+      ...defaults.documents,
+      ...(settings?.documents || {})
+    }
+  };
+}
+
+function saveBusinessPaymentMethods() {
+  saveBusinessStorageItem(businessStorageKeys.paymentMethods, businessPaymentMethods);
+}
+
+function saveBusinessFinanceSettings() {
+  saveBusinessStorageItem(businessStorageKeys.financeSettings, businessFinanceSettings);
+}
+
+function getNextBusinessPaymentMethodId() {
+  return Math.max(0, ...businessPaymentMethods.map((method) => Number(method.id) || 0)) + 1;
+}
+
+function getAllPaymentMethodNames() {
+  return businessPaymentMethods.map((method) => method.name);
+}
+
+function getPaymentMethodByName(name) {
+  const canonicalName = getCanonicalPaymentMethodName(name);
+  return businessPaymentMethods.find((method) => normalizeText(method.name) === normalizeText(canonicalName)) || null;
+}
+
+function getActivePaymentMethods(context = "service") {
+  const contextMap = {
+    service: "showInService",
+    productSale: "showInProductSale",
+    quote: "showInQuote",
+    invoice: "showInInvoice",
+    cashflow: "active",
+    settlement: "active"
+  };
+  const field = contextMap[context] || "showInService";
+  return businessPaymentMethods.filter((method) => method.active && (field === "active" || method[field]));
+}
+
+function getActivePaymentMethodNames(context = "service", allowBilled = true) {
+  return getActivePaymentMethods(context)
+    .map((method) => method.name)
+    .filter((name) => allowBilled || normalizeText(name) !== normalizeText("Faturado"));
+}
+
+function getPaymentMethodFee(methodName, grossAmount = 0, referenceDate = getTodayISO()) {
+  const method = getPaymentMethodByName(methodName);
+  const grossValue = Math.max(0, Number(grossAmount || 0));
+  const feePercent = method ? clampNumber(method.feePercent, 0, 100) : 0;
+  const fixedFee = method ? Math.max(0, Number(method.fixedFee || 0)) : 0;
+  const feeAmount = grossValue * (feePercent / 100) + fixedFee;
+  const settlementDays = Math.max(0, Number(method?.settlementDays || 0));
+  const expectedDate = settlementDays ? addDaysToISODate(referenceDate, settlementDays) : referenceDate;
+  return {
+    method,
+    feePercent,
+    fixedFee,
+    feeAmount: grossValue > 0 ? feeAmount : 0,
+    netAmount: Math.max(0, grossValue - feeAmount),
+    settlementDays,
+    immediateSettlement: Boolean(method?.immediateSettlement),
+    expectedDate
+  };
+}
+
+function calculatePaymentNetAmount(grossAmount, methodName, referenceDate = getTodayISO()) {
+  return getPaymentMethodFee(methodName, grossAmount, referenceDate).netAmount;
+}
+
+function getExpectedReceiptStatus(methodName, type = "Entrada") {
+  const method = getPaymentMethodByName(methodName);
+  if (!method || type === "Saída") return "Confirmado";
+  if (normalizeText(method.name) === normalizeText("Faturado")) return "Pendente";
+  if (method.immediateSettlement) return "Confirmado";
+  return "Pendente";
+}
+
+function getPaymentMethodLinkedBankAccountName(methodName) {
+  const method = getPaymentMethodByName(methodName);
+  const accountId = Number(method?.linkedBankAccountId || 0);
+  return businessBankAccounts.find((account) => account.id === accountId)?.bank || "";
+}
+
+function getPaymentMethodUsage(name) {
+  const normalizedName = normalizeText(getCanonicalPaymentMethodName(name));
+  return {
+    cashEntries: cashEntries.filter((entry) => normalizeText(entry.method) === normalizedName).length,
+    patioVehicles: patioVehicles.filter(
+      (vehicle) => normalizeText(vehicle.payment) === normalizedName || normalizeText(vehicle.entryPaymentMethod) === normalizedName
+    ).length,
+    openPayments: openPayments.filter(
+      (payment) =>
+        normalizeText(payment.paymentMethod) === normalizedName || normalizeText(payment.settlementMethod) === normalizedName
+    ).length,
+    quotes: quoteEstimates.filter((quote) => normalizeText(quote.payment) === normalizedName).length,
+    invoiceItems: invoiceLineItems.filter((item) => normalizeText(item.paymentMethod) === normalizedName).length,
+    invoices: billingInvoices.filter(
+      (invoice) => normalizeText(invoice.paymentMethod) === normalizedName || normalizeText(invoice.settlementMethod) === normalizedName
+    ).length
+  };
+}
+
+function isBusinessPaymentMethodInUse(name) {
+  const usage = getPaymentMethodUsage(name);
+  return Object.values(usage).some((value) => Number(value) > 0);
+}
+
+function migrateExistingPaymentMethodReferences() {
+  const namesInUse = new Set();
+  const migrateField = (record, key) => {
+    if (!record || !record[key]) return;
+    const nextName = getCanonicalPaymentMethodName(record[key]);
+    if (!nextName) return;
+    record[key] = nextName;
+    namesInUse.add(nextName);
+  };
+
+  patioVehicles.forEach((vehicle) => {
+    migrateField(vehicle, "payment");
+    migrateField(vehicle, "entryPaymentMethod");
+  });
+  quoteEstimates.forEach((quote) => migrateField(quote, "payment"));
+  cashEntries.forEach((entry) => migrateField(entry, "method"));
+  openPayments.forEach((payment) => {
+    migrateField(payment, "paymentMethod");
+    migrateField(payment, "settlementMethod");
+  });
+  invoiceLineItems.forEach((item) => migrateField(item, "paymentMethod"));
+  billingInvoices.forEach((invoice) => {
+    migrateField(invoice, "paymentMethod");
+    migrateField(invoice, "settlementMethod");
+  });
+
+  let catalogChanged = false;
+  namesInUse.forEach((name) => {
+    if (getPaymentMethodByName(name)) return;
+    businessPaymentMethods.push(
+      createBusinessPaymentMethodRecord(
+        {
+          id: getNextBusinessPaymentMethodId(),
+          name,
+          active: false,
+          showInService: false,
+          showInProductSale: false,
+          showInQuote: false,
+          showInInvoice: false,
+          immediateSettlement: false,
+          notes: "Forma importada do histórico."
+        },
+        getNextBusinessPaymentMethodId()
+      )
+    );
+    catalogChanged = true;
+  });
+
+  if (catalogChanged) saveBusinessPaymentMethods();
+  saveCashEntries();
+}
+
+function isDefaultBusinessPaymentMethod(name) {
+  const canonicalName = getCanonicalPaymentMethodName(name);
+  return getDefaultBusinessPaymentMethods().some((method) => normalizeText(method.name) === normalizeText(canonicalName));
+}
+
+function renameBusinessPaymentMethodReferences(currentName, nextName) {
+  const normalizedCurrent = normalizeText(getCanonicalPaymentMethodName(currentName));
+  const canonicalNext = getCanonicalPaymentMethodName(nextName);
+  if (!normalizedCurrent || !canonicalNext || normalizedCurrent === normalizeText(canonicalNext)) return;
+
+  const replaceField = (record, key) => {
+    if (!record?.[key]) return;
+    if (normalizeText(record[key]) === normalizedCurrent) record[key] = canonicalNext;
+  };
+
+  patioVehicles.forEach((vehicle) => {
+    replaceField(vehicle, "payment");
+    replaceField(vehicle, "entryPaymentMethod");
+  });
+  quoteEstimates.forEach((quote) => replaceField(quote, "payment"));
+  cashEntries.forEach((entry) => replaceField(entry, "method"));
+  openPayments.forEach((payment) => {
+    replaceField(payment, "paymentMethod");
+    replaceField(payment, "settlementMethod");
+  });
+  invoiceLineItems.forEach((item) => replaceField(item, "paymentMethod"));
+  billingInvoices.forEach((invoice) => {
+    replaceField(invoice, "paymentMethod");
+    replaceField(invoice, "settlementMethod");
+  });
+  saveCashEntries();
+}
+
+function getSelectablePaymentMethodNames(context = "service", options = {}) {
+  const allowBilled = options.allowBilled === undefined ? true : Boolean(options.allowBilled);
+  const includeBankDeposit = Boolean(options.includeBankDeposit);
+  const selectedValue = options.selectedValue ? getCanonicalPaymentMethodName(options.selectedValue) : "";
+  const uniqueNames = [];
+  const pushName = (name) => {
+    if (!name) return;
+    if (uniqueNames.some((item) => normalizeText(item) === normalizeText(name))) return;
+    uniqueNames.push(name);
+  };
+
+  if (selectedValue) pushName(selectedValue);
+  getActivePaymentMethodNames(context, allowBilled).forEach(pushName);
+  if (includeBankDeposit) pushName("Depósito bancário");
+  return uniqueNames;
+}
+
+function getPreferredPaymentMethodName(context = "service", allowBilled = true) {
+  return getSelectablePaymentMethodNames(context, { allowBilled })[0] || "Pix";
+}
+
+function getDefaultQuoteValidityDays() {
+  return Math.max(1, Number(businessFinanceSettings.inventory?.defaultQuoteValidityDays || 15));
+}
+
+function getDefaultInvoiceDueDate(referenceDate = getTodayISO(), offsetDays = null) {
+  const days =
+    offsetDays === null ? Number(businessFinanceSettings.receiptRules?.invoiceDefaultDueDays || 0) : Number(offsetDays || 0);
+  return addDaysToISODate(referenceDate, Math.max(0, days));
+}
+
+function getDefaultOpenPaymentDueDate(referenceDate = getTodayISO(), offsetDays = null) {
+  const days =
+    offsetDays === null ? Number(businessFinanceSettings.receiptRules?.openPaymentDueDays || 0) : Number(offsetDays || 0);
+  return addDaysToISODate(referenceDate, Math.max(0, days));
+}
+
+function getCashEntryFinanceSnapshot(value, method, type = "Entrada", referenceDate = getTodayISO()) {
+  const grossValue = Math.max(0, Math.abs(Number(value || 0)));
+  const fee = getPaymentMethodFee(method, grossValue, referenceDate);
+  return {
+    feePercent: fee.feePercent,
+    fixedFee: fee.fixedFee,
+    feeAmount: type === "Saída" ? 0 : fee.feeAmount,
+    netAmount: type === "Saída" ? grossValue : fee.netAmount,
+    expectedReceiptDate: fee.expectedDate,
+    methodImmediateSettlement: fee.immediateSettlement,
+    settlementDays: fee.settlementDays,
+    linkedBankAccountName: getPaymentMethodLinkedBankAccountName(method)
+  };
+}
+
 function getDefaultBusinessSocialLinks() {
   return businessSocialChannels.reduce((links, channel) => {
     links[channel.key] = { value: "", showInFooter: false, reportTarget: "all" };
@@ -4013,15 +5815,17 @@ function shouldAddInvoicePaymentData(document) {
 }
 
 function getBusinessInvoicePaymentLines() {
+  const showBankAccounts = businessFinanceSettings.documents.showBankAccountsInInvoices;
+  const showPixInInvoices = businessFinanceSettings.documents.showPixInInvoices;
   const bankLines = businessBankAccounts
-    .filter((account) => account.showInInvoices)
+    .filter((account) => showBankAccounts && account.showInInvoices)
     .map(
       (account) =>
         `${account.bank} - ${account.type} - Agencia ${account.agency} - Conta ${account.account} - Titular ${account.holder || getBusinessDocumentName()}`
     );
   const hasValidPixQr = isValidPixCopyPastePayload(businessPixInfo.qrPayload);
   const pixLines =
-    businessPixInfo.showInInvoices && (businessPixInfo.key || hasValidPixQr)
+    showPixInInvoices && businessPixInfo.showInInvoices && (businessPixInfo.key || hasValidPixQr)
       ? [businessPixInfo.key ? `Pix ${businessPixInfo.keyType}: ${businessPixInfo.key}` : "", hasValidPixQr ? "QR Code Pix habilitado para faturas." : ""].filter(Boolean)
       : [];
   return [...bankLines, ...pixLines];
@@ -5004,7 +6808,7 @@ function renderQuoteDialog() {
           <label class="login-field" for="quotePayment">
             <span>Forma de pagamento</span>
             <select id="quotePayment" name="quotePayment" required>
-              ${renderPaymentOptions("Pix")}
+              ${renderPaymentOptions(getPreferredPaymentMethodName("quote"), true, "quote")}
             </select>
           </label>
         </div>
@@ -5057,7 +6861,7 @@ function renderQuoteDialog() {
           <div class="vehicle-form-grid quote-validity-grid">
             <label class="login-field" for="quoteValidityDays">
               <span>Prazo em dias</span>
-              <input id="quoteValidityDays" name="quoteValidityDays" type="number" min="1" step="1" value="15" required />
+              <input id="quoteValidityDays" name="quoteValidityDays" type="number" min="1" step="1" value="${escapeHtml(String(getDefaultQuoteValidityDays()))}" required />
             </label>
           </div>
 
@@ -5409,12 +7213,14 @@ function getNextQuoteId() {
 }
 
 function getNextQuoteCode() {
+  const prefix = (businessFinanceSettings.documents.quoteNumberPrefix || "ORC").trim().toUpperCase();
   const datePart = getTodayISO().slice(0, 7).replace("-", "");
+  const safePrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const maxSequence = quoteEstimates.reduce((max, quote) => {
-    const match = String(quote.code || "").match(new RegExp(`^ORC-${datePart}-(\\d+)$`));
+    const match = String(quote.code || "").match(new RegExp(`^${safePrefix}-${datePart}-(\\d+)$`));
     return match ? Math.max(max, Number(match[1] || 0)) : max;
   }, 0);
-  return `ORC-${datePart}-${String(maxSequence + 1).padStart(3, "0")}`;
+  return `${prefix}-${datePart}-${String(maxSequence + 1).padStart(3, "0")}`;
 }
 
 function countByStatus(status) {
@@ -5436,18 +7242,35 @@ function renderAdminDashboard() {
     ["aguardando", "lavando", "pronto"].includes(vehicle.status)
   );
   const expectedRevenue = activeVehicles.reduce((total, vehicle) => total + getVehiclePaymentTotal(vehicle), 0);
+  const estimatedFees = cashEntries
+    .filter((entry) => entry.value > 0)
+    .reduce((total, entry) => total + Number(entry.feeAmount || 0), 0);
+  const estimatedNet = cashEntries.filter((entry) => entry.value > 0).reduce((total, entry) => total + Number(entry.netAmount || entry.value || 0), 0);
   const billedOpen = patioVehicles
     .filter((vehicle) => vehicle.payment === "Faturado" && !isFinalizedStatus(vehicle.status))
     .reduce((total, vehicle) => total + getVehiclePaymentTotal(vehicle), 0);
+  const lowStockAlerts = getLowStockProducts().length + getLowStockSupplies().length;
+  const servicesWithoutProfile = getServicesWithoutSupplyProfile().length;
+  const patioVehiclesWithSpecialCare = activeVehicles.filter((vehicle) => hasVehicleSpecialCare(vehicle)).length;
+  const acknowledgedCareWarnings = patioVehicles.filter((vehicle) =>
+    (vehicle.specialCareWarningLog || []).some((entry) => entry.acknowledged)
+  ).length;
 
   const metrics = [
     { label: "Receita prevista", value: formatCurrency(expectedRevenue), icon: "wallet" },
+    { label: "Vendas de produtos", value: formatCurrency(getProductSalesRevenueTotal()), icon: "package" },
+    { label: "Taxas previstas", value: formatCurrency(estimatedFees), icon: "card" },
+    { label: "Líquido estimado", value: formatCurrency(estimatedNet), icon: "clipboard" },
     { label: "Veículos no pátio", value: activeVehicles.length, icon: "carFront" },
     { label: "Agendados", value: countByStatus("agendado"), icon: "hourglass" },
     { label: "Em Serviço", value: countByStatus("lavando"), icon: "drop" },
     { label: "Prontos", value: countByStatus("pronto"), icon: "sparkle" },
     { label: "Finalizados", value: countByStatus("finalizado"), icon: "check" },
-    { label: "Faturado aberto", value: formatCurrency(billedOpen), icon: "wallet" }
+    { label: "Faturado aberto", value: formatCurrency(billedOpen), icon: "wallet" },
+    { label: "Com cuidado especial", value: patioVehiclesWithSpecialCare, icon: "alert" },
+    { label: "Alertas confirmados", value: acknowledgedCareWarnings, icon: "shield" },
+    { label: "Alertas de estoque", value: lowStockAlerts, icon: "alert" },
+    { label: "Serviços sem ficha", value: servicesWithoutProfile, icon: "service" }
   ];
 
   metricsContainer.innerHTML = metrics
@@ -5488,6 +7311,17 @@ function renderAdminDashboard() {
 
 function renderAdminAlerts(billedOpen) {
   const scheduledCashDue = getCashflowScheduledDueToday();
+  const lowStockProducts = getLowStockProducts();
+  const lowStockSupplies = getLowStockSupplies();
+  const patioCareCount = patioVehicles.filter((vehicle) => !isFinalizedStatus(vehicle.status) && hasVehicleSpecialCare(vehicle)).length;
+  const acknowledgedCareWarnings = patioVehicles.filter((vehicle) =>
+    (vehicle.specialCareWarningLog || []).some((entry) => entry.acknowledged)
+  ).length;
+  const technicalClassificationWarnings = getActiveServiceCatalog().filter((service) => {
+    const profile = getServiceSupplyProfile(service);
+    if (!profile.length) return Boolean(service.requiresSpecialCareCheck);
+    return profile.some((entry) => isSupplyTechnicalClassificationUnknown(getSupplyById(entry.supplyId)));
+  }).length;
   const alerts = [
     countByStatus("agendado")
       ? `${countByStatus("agendado")} agendamento(s) aguardando confirmação de entrada.`
@@ -5498,10 +7332,18 @@ function renderAdminAlerts(billedOpen) {
     countByStatus("pronto") ? `${countByStatus("pronto")} veículo(s) pronto(s) para entrega.` : "",
     countByStatus("lavando") ? `${countByStatus("lavando")} serviço(s) em execução agora.` : "",
     billedOpen ? `${formatCurrency(billedOpen)} em lançamentos faturados abertos.` : "",
+    patioCareCount ? `${patioCareCount} veículo(s) no pátio exigem cuidado especial.` : "",
+    acknowledgedCareWarnings ? `${acknowledgedCareWarnings} atendimento(s) já tiveram alerta técnico confirmado.` : "",
     getActiveOpenPayments().length
       ? `${getActiveOpenPayments().length} pagamento(s) em aberto exigem lembrete diário ao gestor.`
       : "",
-    countByStatus("finalizado") ? `${countByStatus("finalizado")} atendimento(s) em Finalizados.` : ""
+    countByStatus("finalizado") ? `${countByStatus("finalizado")} atendimento(s) em Finalizados.` : "",
+    lowStockProducts.length ? `${lowStockProducts.length} produto(s) em estoque mínimo pedem reposição.` : "",
+    lowStockSupplies.length ? `${lowStockSupplies.length} insumo(s) em estoque mínimo podem travar a operação.` : "",
+    technicalClassificationWarnings ? `${technicalClassificationWarnings} serviço(s) usam insumos sem classificação técnica completa.` : "",
+    getServicesWithoutSupplyProfile().length
+      ? `${getServicesWithoutSupplyProfile().length} serviço(s) ainda estão sem ficha técnica de insumos.`
+      : ""
   ].filter(Boolean);
 
   if (!alerts.length) {
@@ -5521,6 +7363,10 @@ function renderAdminAlerts(billedOpen) {
 }
 
 function renderAdminScreen(view) {
+  if (view === "wallet") {
+    renderAdminScreen("businessFinance");
+    return;
+  }
   const container = $(`#admin${capitalize(view)}Content`);
   if (!container) return;
 
@@ -5531,6 +7377,21 @@ function renderAdminScreen(view) {
 
   if (view === "vehicles") {
     renderVehiclesScreen(container);
+    return;
+  }
+
+  if (view === "products") {
+    renderProductsScreen(container);
+    return;
+  }
+
+  if (view === "supplies") {
+    renderSuppliesScreen(container);
+    return;
+  }
+
+  if (view === "inventory") {
+    renderInventoryScreen(container);
     return;
   }
 
@@ -5561,6 +7422,16 @@ function renderAdminScreen(view) {
 
   if (view === "services") {
     renderServicesScreen(container);
+    return;
+  }
+
+  if (view === "productSales") {
+    renderProductSalesScreen(container);
+    return;
+  }
+
+  if (view === "documents") {
+    renderDocumentsScreen(container);
     return;
   }
 
@@ -5984,11 +7855,461 @@ function createBusinessContactPhoneId() {
   return `phone-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function getBusinessPaymentMethodFormState() {
+  const currentMethod = businessPaymentMethods.find((method) => method.id === Number(selectedBusinessPaymentMethodId));
+  if (!currentMethod) {
+    return {
+      id: null,
+      name: "",
+      type: paymentMethodTypeOptions[0]?.value || "outro",
+      active: true,
+      showInService: true,
+      showInProductSale: true,
+      showInQuote: true,
+      showInInvoice: true,
+      immediateSettlement: true,
+      settlementDays: 0,
+      feePercent: 0,
+      fixedFee: 0,
+      linkedBankAccountId: null,
+      notes: ""
+    };
+  }
+  return { ...currentMethod };
+}
+
+function getBusinessPaymentMethodUsageTotal(methodName) {
+  return Object.values(getPaymentMethodUsage(methodName)).reduce((total, value) => total + Number(value || 0), 0);
+}
+
+function getBusinessPaymentMethodChannelLabels(method) {
+  return [
+    method.showInService ? "Atendimento" : "",
+    method.showInProductSale ? "Produtos" : "",
+    method.showInQuote ? "Orçamentos" : "",
+    method.showInInvoice ? "Faturas" : ""
+  ].filter(Boolean);
+}
+
+function getBusinessPaymentMethodFeeSummary(method) {
+  const parts = [];
+  if (Number(method.feePercent || 0) > 0) parts.push(`${String(Number(method.feePercent || 0)).replace(".", ",")}%`);
+  if (Number(method.fixedFee || 0) > 0) parts.push(formatCurrency(method.fixedFee));
+  return parts.length ? `Taxa ${parts.join(" + ")}` : "Sem taxa cadastrada";
+}
+
+function getBusinessPaymentMethodSettlementSummary(method) {
+  if (method.immediateSettlement) return "Recebimento imediato";
+  return `Liquidação em ${Math.max(0, Number(method.settlementDays || 0))} dia(s)`;
+}
+
+function renderBusinessPaymentMethodLinkedBankOptions(selectedId = null) {
+  const normalizedSelected = Number(selectedId || 0);
+  return [
+    '<option value="">Sem conta vinculada</option>',
+    ...businessBankAccounts.map(
+      (account) =>
+        `<option value="${account.id}" ${account.id === normalizedSelected ? "selected" : ""}>${escapeHtml(
+          getBusinessBankAccountLabel(account)
+        )}</option>`
+    )
+  ].join("");
+}
+
+function renderBusinessFinanceSettingsForm() {
+  const settings = businessFinanceSettings;
+  return `
+    <form class="business-settings-stack" id="businessFinanceSettingsForm">
+      <section class="business-settings-group">
+        <div class="business-settings-head">
+          <p class="eyebrow">Recebimento</p>
+          <h3>Regras de recebimento</h3>
+        </div>
+        <div class="business-form-grid">
+          <label class="login-field" for="businessInvoiceDefaultDueDays">
+            <span>Prazo padrão de fatura</span>
+            <input id="businessInvoiceDefaultDueDays" type="number" min="0" step="1" value="${escapeHtml(String(settings.receiptRules.invoiceDefaultDueDays || 0))}" />
+          </label>
+          <label class="login-field" for="businessOpenPaymentDueDays">
+            <span>Prazo padrão de recebimento em aberto</span>
+            <input id="businessOpenPaymentDueDays" type="number" min="0" step="1" value="${escapeHtml(String(settings.receiptRules.openPaymentDueDays || 0))}" />
+          </label>
+          <label class="switch-field business-switch-field" for="businessRequirePixKeyWhenActive">
+            <input id="businessRequirePixKeyWhenActive" type="checkbox" ${settings.receiptRules.requirePixKeyWhenActive ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Exigir chave Pix configurada quando Pix estiver ativo</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="business-settings-group">
+        <div class="business-settings-head">
+          <p class="eyebrow">Gestão</p>
+          <h3>Margens e custos padrão</h3>
+        </div>
+        <div class="business-form-grid">
+          <label class="login-field" for="businessServiceMarginPercent">
+            <span>Margem padrão de serviços (%)</span>
+            <input id="businessServiceMarginPercent" type="number" min="0" max="99.99" step="0.01" value="${escapeHtml(String(settings.margins.serviceMarginPercent || 0))}" />
+          </label>
+          <label class="login-field" for="businessProductMarginPercent">
+            <span>Margem padrão de produtos (%)</span>
+            <input id="businessProductMarginPercent" type="number" min="0" max="99.99" step="0.01" value="${escapeHtml(String(settings.margins.productMarginPercent || 0))}" />
+          </label>
+          <label class="login-field" for="businessMonthlyOperationalCost">
+            <span>Custo operacional mensal estimado</span>
+            <input id="businessMonthlyOperationalCost" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(formatCurrencyFieldValue(settings.margins.monthlyOperationalCost || 0))}" />
+          </label>
+          <label class="login-field" for="businessProductiveHoursMonthly">
+            <span>Horas produtivas mensais</span>
+            <input id="businessProductiveHoursMonthly" type="number" min="1" step="1" value="${escapeHtml(String(settings.margins.productiveHoursMonthly || 176))}" />
+          </label>
+          <label class="login-field" for="businessAverageCommissionPercent">
+            <span>Comissão média (%)</span>
+            <input id="businessAverageCommissionPercent" type="number" min="0" max="100" step="0.01" value="${escapeHtml(String(settings.margins.averageCommissionPercent || 0))}" />
+          </label>
+          <label class="login-field" for="businessAverageTaxPercent">
+            <span>Imposto médio (%)</span>
+            <input id="businessAverageTaxPercent" type="number" min="0" max="100" step="0.01" value="${escapeHtml(String(settings.margins.averageTaxPercent || 0))}" />
+          </label>
+          <label class="login-field business-address-field" for="businessMarginsNotes">
+            <span>Observações gerenciais</span>
+            <textarea id="businessMarginsNotes" rows="3">${escapeHtml(settings.margins.notes || "")}</textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="business-settings-group">
+        <div class="business-settings-head">
+          <p class="eyebrow">Estoque</p>
+          <h3>Estoque e insumos</h3>
+        </div>
+        <div class="business-form-grid">
+          <label class="switch-field business-switch-field" for="businessAllowProductSaleWithoutStock">
+            <input id="businessAllowProductSaleWithoutStock" type="checkbox" ${settings.inventory.allowProductSaleWithoutStock ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Permitir venda de produto sem estoque</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessAllowSupplyNegativeStock">
+            <input id="businessAllowSupplyNegativeStock" type="checkbox" ${settings.inventory.allowSupplyNegativeStock ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Permitir baixa de insumo com estoque negativo</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessAlertProductMinStock">
+            <input id="businessAlertProductMinStock" type="checkbox" ${settings.inventory.alertProductMinStock ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Alertar estoque mínimo de produtos</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessAlertSupplyMinStock">
+            <input id="businessAlertSupplyMinStock" type="checkbox" ${settings.inventory.alertSupplyMinStock ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Alertar estoque mínimo de insumos</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessAutoConsumeSupplies">
+            <input id="businessAutoConsumeSupplies" type="checkbox" ${settings.inventory.autoConsumeSuppliesOnServiceCompletion ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Baixar insumos automaticamente ao concluir serviço</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessAllowManualSupplyAdjustment">
+            <input id="businessAllowManualSupplyAdjustment" type="checkbox" ${settings.inventory.allowManualSupplyAdjustment ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Permitir ajuste manual de consumo real</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessRequireSupplyAdjustmentReason">
+            <input id="businessRequireSupplyAdjustmentReason" type="checkbox" ${settings.inventory.requireSupplyAdjustmentReason ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Exigir justificativa para ajuste manual de insumo</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessReserveStockOnQuote">
+            <input id="businessReserveStockOnQuote" type="checkbox" ${settings.inventory.reserveStockOnQuote ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Reservar estoque em orçamento</span>
+          </label>
+          <label class="login-field" for="businessDefaultQuoteValidityDays">
+            <span>Validade padrão do orçamento (dias)</span>
+            <input id="businessDefaultQuoteValidityDays" type="number" min="1" step="1" value="${escapeHtml(String(settings.inventory.defaultQuoteValidityDays || 15))}" />
+          </label>
+        </div>
+      </section>
+
+      <section class="business-settings-group">
+        <div class="business-settings-head">
+          <p class="eyebrow">Documentos</p>
+          <h3>Documentos e comprovantes</h3>
+        </div>
+        <div class="business-form-grid">
+          <label class="login-field" for="businessDefaultProductDocumentType">
+            <span>Documento padrão de venda de produto</span>
+            <select id="businessDefaultProductDocumentType">
+              ${renderSelectOptions(["Recibo", "Pedido", "Comprovante simples", "Orçamento"], settings.documents.defaultProductDocumentType || "Recibo")}
+            </select>
+          </label>
+          <label class="login-field" for="businessDefaultServiceDocumentType">
+            <span>Documento padrão de serviço</span>
+            <select id="businessDefaultServiceDocumentType">
+              ${renderSelectOptions(["Recibo", "Comprovante simples", "Orçamento", "Pedido"], settings.documents.defaultServiceDocumentType || "Recibo")}
+            </select>
+          </label>
+          <label class="login-field" for="businessReceiptNumberPrefix">
+            <span>Prefixo de recibos</span>
+            <input id="businessReceiptNumberPrefix" type="text" value="${escapeHtml(settings.documents.receiptNumberPrefix || "REC")}" />
+          </label>
+          <label class="login-field" for="businessQuoteNumberPrefix">
+            <span>Prefixo de orçamentos</span>
+            <input id="businessQuoteNumberPrefix" type="text" value="${escapeHtml(settings.documents.quoteNumberPrefix || "ORC")}" />
+          </label>
+          <label class="login-field" for="businessOrderNumberPrefix">
+            <span>Prefixo de pedidos</span>
+            <input id="businessOrderNumberPrefix" type="text" value="${escapeHtml(settings.documents.orderNumberPrefix || "PED")}" />
+          </label>
+          <label class="switch-field business-switch-field" for="businessShowPixInInvoices">
+            <input id="businessShowPixInInvoices" type="checkbox" ${settings.documents.showPixInInvoices ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Permitir Pix nos documentos</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessShowBankAccountsInInvoices">
+            <input id="businessShowBankAccountsInInvoices" type="checkbox" ${settings.documents.showBankAccountsInInvoices ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Permitir contas bancárias nos documentos</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessShowBusinessDataInDocuments">
+            <input id="businessShowBusinessDataInDocuments" type="checkbox" ${settings.documents.showBusinessDataInDocuments ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Exibir dados da empresa nos documentos</span>
+          </label>
+          <label class="login-field business-address-field" for="businessReceiptDefaultNote">
+            <span>Observação padrão de recibos</span>
+            <textarea id="businessReceiptDefaultNote" rows="3">${escapeHtml(settings.documents.receiptDefaultNote || "")}</textarea>
+          </label>
+          <label class="login-field business-address-field" for="businessQuoteDefaultNote">
+            <span>Observação padrão de orçamentos</span>
+            <textarea id="businessQuoteDefaultNote" rows="3">${escapeHtml(settings.documents.quoteDefaultNote || "")}</textarea>
+          </label>
+        </div>
+      </section>
+
+      <div class="dialog-actions business-form-actions">
+        <button class="primary-button" type="submit">
+          <span data-icon="check"></span>
+          <span>Salvar configurações</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function getBusinessPaymentMethodTypeLabel(type) {
+  const option = paymentMethodTypeOptions.find((item) => item.value === type);
+  return option?.label || capitalize(type || "Outro");
+}
+
+function getBusinessPaymentMethodUsageLabel(method) {
+  const channels = getBusinessPaymentMethodChannelLabels(method);
+  if (!channels.length) return "Sem contexto";
+  if (channels.length === 4) return "Todos";
+  return channels.join(", ");
+}
+
+function renderBusinessPaymentMethodsTable() {
+  if (!businessPaymentMethods.length) return '<p class="empty-alert">Nenhuma forma de pagamento cadastrada.</p>';
+  return `
+    <div class="admin-table-wrap business-payment-method-table-wrap">
+      <table class="admin-table business-payment-method-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Forma de pagamento</th>
+            <th>Tipo</th>
+            <th>Taxa</th>
+            <th>Prazo de recebimento</th>
+            <th>Usar em</th>
+            <th>Conta vinculada</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${businessPaymentMethods
+            .map((method) => {
+              const linkedAccount = businessBankAccounts.find((account) => account.id === Number(method.linkedBankAccountId || 0));
+              const usageTotal = getBusinessPaymentMethodUsageTotal(method.name);
+              const canDelete = !usageTotal && !isDefaultBusinessPaymentMethod(method.name);
+              return `
+                <tr>
+                  <td data-label="Status">
+                    <span class="business-payment-method-status ${method.active ? "is-active" : "is-inactive"}">${method.active ? "Ativa" : "Inativa"}</span>
+                  </td>
+                  <td data-label="Forma de pagamento">
+                    <strong>${escapeHtml(method.name)}</strong>
+                    ${method.notes ? `<span class="table-note">${escapeHtml(method.notes)}</span>` : ""}
+                  </td>
+                  <td data-label="Tipo">${escapeHtml(getBusinessPaymentMethodTypeLabel(method.type))}</td>
+                  <td data-label="Taxa">${escapeHtml(getBusinessPaymentMethodFeeSummary(method))}</td>
+                  <td data-label="Prazo de recebimento">${escapeHtml(getBusinessPaymentMethodSettlementSummary(method))}</td>
+                  <td data-label="Usar em">${escapeHtml(getBusinessPaymentMethodUsageLabel(method))}</td>
+                  <td data-label="Conta vinculada">${linkedAccount ? escapeHtml(linkedAccount.bank) : "Sem conta vinculada"}</td>
+                  <td data-label="Ações">
+                    <div class="cashflow-row-actions business-payment-method-actions">
+                      <button class="ghost-action compact" type="button" data-edit-business-payment-method="${method.id}">
+                        <span data-icon="edit"></span>
+                        <span>Editar</span>
+                      </button>
+                      <button class="ghost-action compact" type="button" data-toggle-business-payment-method="${method.id}">
+                        <span data-icon="${method.active ? "clock" : "check"}"></span>
+                        <span>${method.active ? "Inativar" : "Ativar"}</span>
+                      </button>
+                      ${canDelete ? `<button class="exit-button compact" type="button" data-delete-business-payment-method="${method.id}">Excluir</button>` : ""}
+                    </div>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderBusinessPaymentMethodDialogForm() {
+  const paymentMethodForm = getBusinessPaymentMethodFormState();
+  const editingDefaultMethod = Boolean(paymentMethodForm.id && isDefaultBusinessPaymentMethod(paymentMethodForm.name));
+  return `
+    <form class="vehicle-box service-box" id="businessPaymentMethodForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Configurações financeiras</p>
+          <h2>${paymentMethodForm.id ? "Editar forma de pagamento" : "Nova forma de pagamento"}</h2>
+        </div>
+        <button class="icon-button" id="closeBusinessPaymentMethodDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+      <div class="vehicle-form-grid service-dialog-grid inventory-form-grid">
+        <label class="login-field" for="businessPaymentMethodName">
+          <span>Nome da forma de pagamento</span>
+          <input id="businessPaymentMethodName" type="text" value="${escapeHtml(paymentMethodForm.name || "")}" placeholder="Ex.: Link de pagamento" ${editingDefaultMethod ? "readonly" : ""} />
+        </label>
+        <label class="login-field" for="businessPaymentMethodType">
+          <span>Tipo</span>
+          <select id="businessPaymentMethodType">
+            ${renderSelectOptions(paymentMethodTypeOptions, paymentMethodForm.type || paymentMethodTypeOptions[0]?.value || "outro")}
+          </select>
+        </label>
+        <label class="login-field" for="businessPaymentMethodLinkedAccount">
+          <span>Conta bancária vinculada</span>
+          <select id="businessPaymentMethodLinkedAccount">
+            ${renderBusinessPaymentMethodLinkedBankOptions(paymentMethodForm.linkedBankAccountId)}
+          </select>
+        </label>
+        <label class="login-field" for="businessPaymentMethodSettlementDays">
+          <span>Prazo de recebimento (dias)</span>
+          <input id="businessPaymentMethodSettlementDays" type="number" min="0" step="1" value="${escapeHtml(String(paymentMethodForm.settlementDays || 0))}" ${paymentMethodForm.immediateSettlement ? "disabled" : ""} />
+        </label>
+        <label class="login-field" for="businessPaymentMethodFeePercent">
+          <span>Taxa percentual (%)</span>
+          <input id="businessPaymentMethodFeePercent" type="number" min="0" max="100" step="0.01" value="${escapeHtml(String(paymentMethodForm.feePercent || 0))}" />
+        </label>
+        <label class="login-field" for="businessPaymentMethodFixedFee">
+          <span>Taxa fixa</span>
+          <input id="businessPaymentMethodFixedFee" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(formatCurrencyFieldValue(paymentMethodForm.fixedFee || 0))}" />
+        </label>
+        <label class="switch-field business-switch-field" for="businessPaymentMethodActive">
+          <input id="businessPaymentMethodActive" type="checkbox" ${paymentMethodForm.active ? "checked" : ""} />
+          <span class="switch-control"></span>
+          <span>Ativa</span>
+        </label>
+        <label class="switch-field business-switch-field" for="businessPaymentMethodImmediate">
+          <input id="businessPaymentMethodImmediate" type="checkbox" ${paymentMethodForm.immediateSettlement ? "checked" : ""} />
+          <span class="switch-control"></span>
+          <span>Liquidação imediata</span>
+        </label>
+        <label class="switch-field business-switch-field" for="businessPaymentMethodShowInService">
+          <input id="businessPaymentMethodShowInService" type="checkbox" ${paymentMethodForm.showInService ? "checked" : ""} />
+          <span class="switch-control"></span>
+          <span>Usar em atendimento</span>
+        </label>
+        <label class="switch-field business-switch-field" for="businessPaymentMethodShowInProductSale">
+          <input id="businessPaymentMethodShowInProductSale" type="checkbox" ${paymentMethodForm.showInProductSale ? "checked" : ""} />
+          <span class="switch-control"></span>
+          <span>Usar em venda de produtos</span>
+        </label>
+        <label class="switch-field business-switch-field" for="businessPaymentMethodShowInQuote">
+          <input id="businessPaymentMethodShowInQuote" type="checkbox" ${paymentMethodForm.showInQuote ? "checked" : ""} />
+          <span class="switch-control"></span>
+          <span>Usar em orçamento</span>
+        </label>
+        <label class="switch-field business-switch-field" for="businessPaymentMethodShowInInvoice">
+          <input id="businessPaymentMethodShowInInvoice" type="checkbox" ${paymentMethodForm.showInInvoice ? "checked" : ""} />
+          <span class="switch-control"></span>
+          <span>Usar em fatura</span>
+        </label>
+        <label class="login-field inventory-notes-field" for="businessPaymentMethodNotes">
+          <span>Observações</span>
+          <textarea id="businessPaymentMethodNotes" rows="3">${escapeHtml(paymentMethodForm.notes || "")}</textarea>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button class="exit-button" id="cancelBusinessPaymentMethodDialog" type="button">Cancelar</button>
+        <button class="primary-button" type="submit">
+          <span data-icon="check"></span>
+          <span>${paymentMethodForm.id ? "Salvar forma" : "Cadastrar forma"}</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function renderBusinessPaymentMethods() {
+  if (!businessPaymentMethods.length) return '<p class="empty-alert">Nenhuma forma de pagamento cadastrada.</p>';
+  return businessPaymentMethods
+    .map((method) => {
+      const linkedAccount = businessBankAccounts.find((account) => account.id === Number(method.linkedBankAccountId || 0));
+      const usageTotal = getBusinessPaymentMethodUsageTotal(method.name);
+      const channels = getBusinessPaymentMethodChannelLabels(method);
+      const isEditing = method.id === Number(selectedBusinessPaymentMethodId);
+      const canDelete = !usageTotal && !isDefaultBusinessPaymentMethod(method.name);
+      return `
+        <article class="business-payment-method-card ${method.active ? "" : "is-inactive"} ${isEditing ? "is-editing" : ""}">
+          <div class="business-payment-method-head">
+            <div>
+              <strong>${escapeHtml(method.name)}</strong>
+              <p>${escapeHtml(capitalize(method.type || "outro"))} · ${escapeHtml(getBusinessPaymentMethodSettlementSummary(method))}</p>
+            </div>
+            <span class="business-payment-method-status ${method.active ? "is-active" : "is-inactive"}">${method.active ? "Ativa" : "Inativa"}</span>
+          </div>
+          <div class="business-payment-method-meta">
+            <span>${escapeHtml(getBusinessPaymentMethodFeeSummary(method))}</span>
+            <span>${linkedAccount ? `Conta: ${escapeHtml(linkedAccount.bank)}` : "Sem conta vinculada"}</span>
+            <span>${channels.length ? `Usada em: ${escapeHtml(channels.join(", "))}` : "Sem contexto ativo"}</span>
+            <span>${usageTotal ? `${usageTotal} lançamento(s) vinculado(s)` : "Sem movimentação vinculada"}</span>
+          </div>
+          ${method.notes ? `<p class="business-payment-method-notes">${escapeHtml(method.notes)}</p>` : ""}
+          <div class="business-account-actions business-payment-method-actions">
+            <button class="ghost-action" type="button" data-edit-business-payment-method="${method.id}">
+              <span data-icon="edit"></span>
+              <span>Editar</span>
+            </button>
+            <button class="ghost-action" type="button" data-toggle-business-payment-method="${method.id}">
+              <span data-icon="${method.active ? "clock" : "check"}"></span>
+              <span>${method.active ? "Inativar" : "Ativar"}</span>
+            </button>
+            ${canDelete ? `<button class="exit-button compact" type="button" data-delete-business-payment-method="${method.id}">Excluir</button>` : ""}
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
 function renderBusinessFinanceScreen(container) {
   const visibleAccounts = businessBankAccounts.filter((account) => account.showInInvoices).length;
+  const activeMethods = businessPaymentMethods.filter((method) => method.active).length;
+  const immediateMethods = businessPaymentMethods.filter((method) => method.active && method.immediateSettlement).length;
   container.innerHTML = `
     <section class="screen-metrics business-metrics" aria-label="Resumo financeiro do negócio">
       ${[
+        { label: "Formas ativas", value: activeMethods, icon: "card" },
+        { label: "Liquidação imediata", value: immediateMethods, icon: "check" },
         { label: "Contas cadastradas", value: businessBankAccounts.length, icon: "wallet" },
         { label: "Exibir em faturas", value: visibleAccounts, icon: "invoice" },
         { label: "Pix", value: businessPixInfo.key ? "Configurado" : "Pendente", icon: "cashflow" }
@@ -5997,7 +8318,90 @@ function renderBusinessFinanceScreen(container) {
         .join("")}
     </section>
 
-    <section class="business-two-column-grid">
+    <section class="business-finance-layout">
+      <article class="admin-panel business-finance-primary-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Recebimentos</p>
+            <h2>Formas de pagamento aceitas</h2>
+          </div>
+        </div>
+        <p class="step-copy">Centralize aqui as formas aceitas, as taxas, os prazos de liquidação e onde cada uma deve aparecer.</p>
+        <form class="business-form-grid" id="businessPaymentMethodForm">
+          <label class="login-field" for="businessPaymentMethodName">
+            <span>Nome da forma</span>
+            <input id="businessPaymentMethodName" type="text" value="${escapeHtml(paymentMethodForm.name || "")}" placeholder="Ex.: Link de pagamento" ${editingDefaultMethod ? "readonly" : ""} />
+          </label>
+          <label class="login-field" for="businessPaymentMethodType">
+            <span>Tipo</span>
+            <select id="businessPaymentMethodType">
+              ${renderSelectOptions(paymentMethodTypeOptions, paymentMethodForm.type || paymentMethodTypeOptions[0]?.value || "outro")}
+            </select>
+          </label>
+          <label class="login-field" for="businessPaymentMethodLinkedAccount">
+            <span>Conta bancária vinculada</span>
+            <select id="businessPaymentMethodLinkedAccount">
+              ${renderBusinessPaymentMethodLinkedBankOptions(paymentMethodForm.linkedBankAccountId)}
+            </select>
+          </label>
+          <label class="login-field" for="businessPaymentMethodSettlementDays">
+            <span>Prazo de liquidação (dias)</span>
+            <input id="businessPaymentMethodSettlementDays" type="number" min="0" step="1" value="${escapeHtml(String(paymentMethodForm.settlementDays || 0))}" ${paymentMethodForm.immediateSettlement ? "disabled" : ""} />
+          </label>
+          <label class="login-field" for="businessPaymentMethodFeePercent">
+            <span>Taxa percentual (%)</span>
+            <input id="businessPaymentMethodFeePercent" type="number" min="0" max="100" step="0.01" value="${escapeHtml(String(paymentMethodForm.feePercent || 0))}" />
+          </label>
+          <label class="login-field" for="businessPaymentMethodFixedFee">
+            <span>Taxa fixa</span>
+            <input id="businessPaymentMethodFixedFee" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(formatCurrencyFieldValue(paymentMethodForm.fixedFee || 0))}" />
+          </label>
+          <label class="switch-field business-switch-field" for="businessPaymentMethodActive">
+            <input id="businessPaymentMethodActive" type="checkbox" ${paymentMethodForm.active ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Ativa</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessPaymentMethodImmediate">
+            <input id="businessPaymentMethodImmediate" type="checkbox" ${paymentMethodForm.immediateSettlement ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Recebimento imediato</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessPaymentMethodShowInService">
+            <input id="businessPaymentMethodShowInService" type="checkbox" ${paymentMethodForm.showInService ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Exibir no atendimento</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessPaymentMethodShowInProductSale">
+            <input id="businessPaymentMethodShowInProductSale" type="checkbox" ${paymentMethodForm.showInProductSale ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Exibir na venda de produtos</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessPaymentMethodShowInQuote">
+            <input id="businessPaymentMethodShowInQuote" type="checkbox" ${paymentMethodForm.showInQuote ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Exibir no orçamento</span>
+          </label>
+          <label class="switch-field business-switch-field" for="businessPaymentMethodShowInInvoice">
+            <input id="businessPaymentMethodShowInInvoice" type="checkbox" ${paymentMethodForm.showInInvoice ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Exibir na fatura</span>
+          </label>
+          <label class="login-field business-address-field" for="businessPaymentMethodNotes">
+            <span>Observações</span>
+            <textarea id="businessPaymentMethodNotes" rows="3">${escapeHtml(paymentMethodForm.notes || "")}</textarea>
+          </label>
+          <div class="dialog-actions business-form-actions">
+            ${paymentMethodForm.id ? `<button class="ghost-action" id="cancelBusinessPaymentMethodEdit" type="button"><span data-icon="x"></span><span>Cancelar edição</span></button>` : ""}
+            <button class="primary-button" type="submit">
+              <span data-icon="check"></span>
+              <span>${paymentMethodForm.id ? "Salvar forma" : "Adicionar forma"}</span>
+            </button>
+          </div>
+        </form>
+        <div class="business-payment-method-list">
+          ${renderBusinessPaymentMethods()}
+        </div>
+      </article>
       <article class="admin-panel">
         <div class="panel-heading">
           <div>
@@ -6095,23 +8499,38 @@ function renderBusinessFinanceScreen(container) {
         </form>
         ${renderBusinessPixQr()}
       </article>
+      <article class="admin-panel business-finance-settings-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Parâmetros</p>
+            <h2>Regras, margens, estoque e documentos</h2>
+          </div>
+        </div>
+        <p class="step-copy">Essas definições alimentam vencimentos padrão, validade do orçamento, documentos e futuros cálculos gerenciais.</p>
+        ${renderBusinessFinanceSettingsForm()}
+      </article>
     </section>
   `;
 
   initIcons();
+  bindCurrencyInputs(container);
   bindBusinessFinanceControls(container);
+  bindBusinessFinanceSettingsControls(container);
 }
 
 function renderBusinessBankAccounts() {
   if (!businessBankAccounts.length) return '<p class="empty-alert">Nenhuma conta bancária cadastrada.</p>';
   return businessBankAccounts
     .map(
-      (account) => `
+      (account) => {
+        const linkedMethods = businessPaymentMethods.filter((method) => Number(method.linkedBankAccountId || 0) === account.id);
+        return `
         <article class="business-account-card">
           <div>
             <strong>${escapeHtml(account.bank)}</strong>
             <p>${escapeHtml(account.type)} / Agência ${escapeHtml(account.agency)} / Conta ${escapeHtml(account.account)}</p>
             <span>${escapeHtml(account.holder || getBusinessDocumentName())}</span>
+            ${linkedMethods.length ? `<small>${escapeHtml(`Vinculada a: ${linkedMethods.map((method) => method.name).join(", ")}`)}</small>` : ""}
           </div>
           <div class="business-account-actions">
             <label class="switch-field" for="businessAccountInvoice${account.id}">
@@ -6125,7 +8544,8 @@ function renderBusinessBankAccounts() {
             </button>
           </div>
         </article>
-      `
+      `;
+      }
     )
     .join("");
 }
@@ -6146,7 +8566,169 @@ function renderBusinessPixQr() {
   `;
 }
 
+function saveBusinessPaymentMethod(container) {
+  const currentMethod = businessPaymentMethods.find((method) => method.id === Number(selectedBusinessPaymentMethodId));
+  const rawName = $("#businessPaymentMethodName", container).value.trim();
+  const name = currentMethod && isDefaultBusinessPaymentMethod(currentMethod.name) ? currentMethod.name : rawName;
+  const canonicalName = getCanonicalPaymentMethodName(name);
+  const feePercent = Number($("#businessPaymentMethodFeePercent", container).value || 0);
+  const fixedFee = getCurrencyInputValue("#businessPaymentMethodFixedFee", container);
+  const linkedBankAccountId = Number($("#businessPaymentMethodLinkedAccount", container).value || 0) || null;
+  const immediateSettlement = $("#businessPaymentMethodImmediate", container).checked;
+  const settlementDays = immediateSettlement ? 0 : Math.max(0, Number($("#businessPaymentMethodSettlementDays", container).value || 0));
+
+  if (!canonicalName) {
+    showToast("Informe o nome da forma de pagamento.");
+    $("#businessPaymentMethodName", container)?.focus();
+    return;
+  }
+  if (canonicalName === "Carteira (legado)" && !currentMethod) {
+    showToast("Carteira é apenas um registro legado. Cadastre uma forma real de pagamento.");
+    $("#businessPaymentMethodName", container)?.focus();
+    return;
+  }
+  if (
+    businessPaymentMethods.some(
+      (method) => method.id !== currentMethod?.id && normalizeText(method.name) === normalizeText(canonicalName)
+    )
+  ) {
+    showToast("Já existe uma forma de pagamento com esse nome.");
+    $("#businessPaymentMethodName", container)?.focus();
+    return;
+  }
+  if (feePercent < 0 || feePercent > 100) {
+    showToast("A taxa percentual deve ficar entre 0% e 100%.");
+    $("#businessPaymentMethodFeePercent", container)?.focus();
+    return;
+  }
+  if (fixedFee < 0) {
+    showToast("A taxa fixa não pode ser negativa.");
+    $("#businessPaymentMethodFixedFee", container)?.focus();
+    return;
+  }
+  if (linkedBankAccountId && !businessBankAccounts.some((account) => account.id === linkedBankAccountId)) {
+    showToast("Selecione uma conta bancária válida.");
+    $("#businessPaymentMethodLinkedAccount", container)?.focus();
+    return;
+  }
+  if (
+    normalizeText(canonicalName) === normalizeText("Pix") &&
+    $("#businessPaymentMethodActive", container).checked &&
+    businessFinanceSettings.receiptRules.requirePixKeyWhenActive &&
+    !($("#businessPixKey", container).value.trim() || businessPixInfo.key)
+  ) {
+    showToast("Cadastre a chave Pix antes de ativar essa forma.");
+    $("#businessPixKey", container)?.focus();
+    return;
+  }
+
+  const methodPayload = createBusinessPaymentMethodRecord(
+    {
+      id: currentMethod?.id || getNextBusinessPaymentMethodId(),
+      name: canonicalName,
+      type: $("#businessPaymentMethodType", container).value,
+      active: $("#businessPaymentMethodActive", container).checked,
+      showInService: $("#businessPaymentMethodShowInService", container).checked,
+      showInProductSale: $("#businessPaymentMethodShowInProductSale", container).checked,
+      showInQuote: $("#businessPaymentMethodShowInQuote", container).checked,
+      showInInvoice: $("#businessPaymentMethodShowInInvoice", container).checked,
+      immediateSettlement,
+      settlementDays,
+      feePercent,
+      fixedFee,
+      linkedBankAccountId,
+      notes: $("#businessPaymentMethodNotes", container).value.trim(),
+      createdAt: currentMethod?.createdAt || getTodayISO(),
+      updatedAt: getTodayISO()
+    },
+    currentMethod?.id || getNextBusinessPaymentMethodId()
+  );
+
+  if (!methodPayload) {
+    showToast("Não foi possível salvar a forma de pagamento.");
+    return;
+  }
+
+  if (currentMethod) {
+    renameBusinessPaymentMethodReferences(currentMethod.name, methodPayload.name);
+    const index = businessPaymentMethods.findIndex((method) => method.id === currentMethod.id);
+    if (index >= 0) businessPaymentMethods[index] = methodPayload;
+  } else {
+    businessPaymentMethods.push(methodPayload);
+  }
+
+  businessPaymentMethods = normalizeBusinessPaymentMethods(businessPaymentMethods);
+  saveBusinessPaymentMethods();
+  selectedBusinessPaymentMethodId = null;
+  renderBusinessFinanceScreen(container);
+  showToast(currentMethod ? "Forma de pagamento atualizada." : "Forma de pagamento cadastrada.");
+}
+
+function deleteBusinessPaymentMethod(methodId, container) {
+  const method = businessPaymentMethods.find((item) => item.id === Number(methodId));
+  if (!method) return;
+  if (getBusinessPaymentMethodUsageTotal(method.name) > 0 || isDefaultBusinessPaymentMethod(method.name)) {
+    if (method.active) {
+      method.active = false;
+      method.updatedAt = getTodayISO();
+      saveBusinessPaymentMethods();
+      if (Number(selectedBusinessPaymentMethodId) === method.id) selectedBusinessPaymentMethodId = null;
+      renderBusinessFinanceScreen(container);
+      showToast("Forma de pagamento inativada para preservar o histórico.");
+      return;
+    }
+    showToast("Esta forma já está inativa e segue preservada para o histórico.");
+    return;
+  }
+
+  businessPaymentMethods = businessPaymentMethods.filter((item) => item.id !== method.id);
+  saveBusinessPaymentMethods();
+  if (Number(selectedBusinessPaymentMethodId) === method.id) selectedBusinessPaymentMethodId = null;
+  renderBusinessFinanceScreen(container);
+  showToast("Forma de pagamento removida.");
+}
+
 function bindBusinessFinanceControls(container) {
+  $("#businessPaymentMethodImmediate", container)?.addEventListener("change", (event) => {
+    const settlementInput = $("#businessPaymentMethodSettlementDays", container);
+    if (!settlementInput) return;
+    settlementInput.disabled = event.currentTarget.checked;
+    if (event.currentTarget.checked) settlementInput.value = "0";
+  });
+  $("#businessPaymentMethodForm", container)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveBusinessPaymentMethod(container);
+  });
+  $("#cancelBusinessPaymentMethodEdit", container)?.addEventListener("click", () => {
+    selectedBusinessPaymentMethodId = null;
+    renderBusinessFinanceScreen(container);
+  });
+  $$("[data-edit-business-payment-method]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedBusinessPaymentMethodId = Number(button.dataset.editBusinessPaymentMethod);
+      renderBusinessFinanceScreen(container);
+      $("#businessPaymentMethodName", container)?.focus();
+    });
+  });
+  $$("[data-toggle-business-payment-method]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      const method = businessPaymentMethods.find((item) => item.id === Number(button.dataset.toggleBusinessPaymentMethod));
+      if (!method) return;
+      if (!method.active && normalizeText(method.name) === normalizeText("Pix") && businessFinanceSettings.receiptRules.requirePixKeyWhenActive && !businessPixInfo.key) {
+        showToast("Cadastre a chave Pix antes de ativar essa forma.");
+        return;
+      }
+      method.active = !method.active;
+      method.updatedAt = getTodayISO();
+      saveBusinessPaymentMethods();
+      renderBusinessFinanceScreen(container);
+      showToast(method.active ? "Forma de pagamento ativada." : "Forma de pagamento inativada.");
+    });
+  });
+  $$("[data-delete-business-payment-method]", container).forEach((button) => {
+    button.addEventListener("click", () => deleteBusinessPaymentMethod(Number(button.dataset.deleteBusinessPaymentMethod), container));
+  });
+
   $("#businessBankAccountForm", container).addEventListener("submit", (event) => {
     event.preventDefault();
     const bank = $("#businessBankName", container).value.trim();
@@ -6162,7 +8744,7 @@ function bindBusinessFinanceControls(container) {
       type: $("#businessBankType", container).value,
       agency,
       account,
-      holder: $("#businessBankHolder", container).value.trim(),
+      holder: $("#businessBankHolder", container).value.trim() || getBusinessDocumentName(),
       showInInvoices: $("#businessBankShowInvoices", container).checked
     });
     saveBusinessStorageItem(businessStorageKeys.bankAccounts, businessBankAccounts);
@@ -6186,11 +8768,97 @@ function bindBusinessFinanceControls(container) {
   });
   $$("[data-delete-business-account]", container).forEach((button) => {
     button.addEventListener("click", () => {
-      businessBankAccounts = businessBankAccounts.filter((account) => account.id !== Number(button.dataset.deleteBusinessAccount));
+      const accountId = Number(button.dataset.deleteBusinessAccount);
+      const linkedMethods = businessPaymentMethods.filter((method) => Number(method.linkedBankAccountId || 0) === accountId);
+      if (linkedMethods.length) {
+        showToast(`Desvincule ${linkedMethods.map((method) => method.name).join(", ")} antes de excluir a conta.`);
+        return;
+      }
+      businessBankAccounts = businessBankAccounts.filter((account) => account.id !== accountId);
       saveBusinessStorageItem(businessStorageKeys.bankAccounts, businessBankAccounts);
       renderBusinessFinanceScreen(container);
       showToast("Conta bancária removida.");
     });
+  });
+}
+
+function bindBusinessFinanceSettingsControls(container) {
+  $("#businessFinanceSettingsForm", container)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const nextSettings = normalizeBusinessFinanceSettings({
+      receiptRules: {
+        invoiceDefaultDueDays: Math.max(0, Number($("#businessInvoiceDefaultDueDays", container).value || 0)),
+        openPaymentDueDays: Math.max(0, Number($("#businessOpenPaymentDueDays", container).value || 0)),
+        requirePixKeyWhenActive: $("#businessRequirePixKeyWhenActive", container).checked
+      },
+      margins: {
+        serviceMarginPercent: Number($("#businessServiceMarginPercent", container).value || 0),
+        productMarginPercent: Number($("#businessProductMarginPercent", container).value || 0),
+        monthlyOperationalCost: getCurrencyInputValue("#businessMonthlyOperationalCost", container),
+        productiveHoursMonthly: Math.max(1, Number($("#businessProductiveHoursMonthly", container).value || 176)),
+        averageCommissionPercent: Number($("#businessAverageCommissionPercent", container).value || 0),
+        averageTaxPercent: Number($("#businessAverageTaxPercent", container).value || 0),
+        notes: $("#businessMarginsNotes", container).value.trim()
+      },
+      inventory: {
+        allowProductSaleWithoutStock: $("#businessAllowProductSaleWithoutStock", container).checked,
+        allowSupplyNegativeStock: $("#businessAllowSupplyNegativeStock", container).checked,
+        alertProductMinStock: $("#businessAlertProductMinStock", container).checked,
+        alertSupplyMinStock: $("#businessAlertSupplyMinStock", container).checked,
+        autoConsumeSuppliesOnServiceCompletion: $("#businessAutoConsumeSupplies", container).checked,
+        allowManualSupplyAdjustment: $("#businessAllowManualSupplyAdjustment", container).checked,
+        requireSupplyAdjustmentReason: $("#businessRequireSupplyAdjustmentReason", container).checked,
+        reserveStockOnQuote: $("#businessReserveStockOnQuote", container).checked,
+        defaultQuoteValidityDays: Math.max(1, Number($("#businessDefaultQuoteValidityDays", container).value || 15))
+      },
+      documents: {
+        defaultProductDocumentType: $("#businessDefaultProductDocumentType", container).value,
+        defaultServiceDocumentType: $("#businessDefaultServiceDocumentType", container).value,
+        showPixInInvoices: $("#businessShowPixInInvoices", container).checked,
+        showBankAccountsInInvoices: $("#businessShowBankAccountsInInvoices", container).checked,
+        showBusinessDataInDocuments: $("#businessShowBusinessDataInDocuments", container).checked,
+        receiptNumberPrefix: $("#businessReceiptNumberPrefix", container).value.trim() || "REC",
+        quoteNumberPrefix: $("#businessQuoteNumberPrefix", container).value.trim() || "ORC",
+        orderNumberPrefix: $("#businessOrderNumberPrefix", container).value.trim() || "PED",
+        receiptDefaultNote: $("#businessReceiptDefaultNote", container).value.trim(),
+        quoteDefaultNote: $("#businessQuoteDefaultNote", container).value.trim()
+      }
+    });
+
+    if (nextSettings.margins.serviceMarginPercent < 0 || nextSettings.margins.serviceMarginPercent >= 100) {
+      showToast("A margem padrão de serviços deve ficar entre 0% e 99,99%.");
+      $("#businessServiceMarginPercent", container)?.focus();
+      return;
+    }
+    if (nextSettings.margins.productMarginPercent < 0 || nextSettings.margins.productMarginPercent >= 100) {
+      showToast("A margem padrão de produtos deve ficar entre 0% e 99,99%.");
+      $("#businessProductMarginPercent", container)?.focus();
+      return;
+    }
+    if (nextSettings.margins.averageCommissionPercent < 0 || nextSettings.margins.averageCommissionPercent > 100) {
+      showToast("A comissão média deve ficar entre 0% e 100%.");
+      $("#businessAverageCommissionPercent", container)?.focus();
+      return;
+    }
+    if (nextSettings.margins.averageTaxPercent < 0 || nextSettings.margins.averageTaxPercent > 100) {
+      showToast("O imposto médio deve ficar entre 0% e 100%.");
+      $("#businessAverageTaxPercent", container)?.focus();
+      return;
+    }
+    if (
+      nextSettings.receiptRules.requirePixKeyWhenActive &&
+      getPaymentMethodByName("Pix")?.active &&
+      !($("#businessPixKey", container).value.trim() || businessPixInfo.key)
+    ) {
+      showToast("Cadastre a chave Pix antes de exigir Pix ativo com validação.");
+      $("#businessPixKey", container)?.focus();
+      return;
+    }
+
+    businessFinanceSettings = nextSettings;
+    saveBusinessFinanceSettings();
+    renderBusinessFinanceScreen(container);
+    showToast("Configurações financeiras salvas.");
   });
 }
 
@@ -6220,10 +8888,399 @@ function saveBusinessPixInfo(container, shouldGenerateQr) {
     nextPixInfo.qrPayload = payload;
   }
 
+  if (businessFinanceSettings.receiptRules.requirePixKeyWhenActive && getPaymentMethodByName("Pix")?.active && !nextPixInfo.key) {
+    showToast("Cadastre a chave Pix para manter essa forma ativa.");
+    $("#businessPixKey", container)?.focus();
+    return;
+  }
+
   businessPixInfo = nextPixInfo;
   saveBusinessStorageItem(businessStorageKeys.pix, businessPixInfo);
   renderBusinessFinanceScreen(container);
   showToast(shouldGenerateQr ? "QR Code Pix gerado." : "Informações Pix salvas.");
+}
+
+function getBusinessFinanceScreenContainer() {
+  return $("#adminBusinessFinanceContent");
+}
+
+function closeBusinessPaymentMethodDialog(resetSelection = true) {
+  const dialog = $("#businessPaymentMethodDialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function") dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+  if (resetSelection) selectedBusinessPaymentMethodId = null;
+}
+
+function openBusinessPaymentMethodDialog(methodId = null) {
+  selectedBusinessPaymentMethodId = methodId ? Number(methodId) : null;
+  const dialog = $("#businessPaymentMethodDialog");
+  if (!dialog) return;
+  dialog.innerHTML = renderBusinessPaymentMethodDialogForm();
+  initIcons();
+  bindCurrencyInputs(dialog);
+  bindBusinessPaymentMethodDialogControls(dialog);
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+  window.setTimeout(() => $("#businessPaymentMethodName", dialog)?.focus(), 0);
+}
+
+function bindBusinessPaymentMethodDialogControls(dialog) {
+  $("#closeBusinessPaymentMethodDialog", dialog)?.addEventListener("click", () => closeBusinessPaymentMethodDialog(true));
+  $("#cancelBusinessPaymentMethodDialog", dialog)?.addEventListener("click", () => closeBusinessPaymentMethodDialog(true));
+  $("#businessPaymentMethodImmediate", dialog)?.addEventListener("change", (event) => {
+    const settlementInput = $("#businessPaymentMethodSettlementDays", dialog);
+    if (!settlementInput) return;
+    settlementInput.disabled = event.currentTarget.checked;
+    if (event.currentTarget.checked) settlementInput.value = "0";
+  });
+  $("#businessPaymentMethodForm", dialog)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveBusinessPaymentMethod(dialog);
+  });
+}
+
+function saveBusinessPaymentMethod(container) {
+  const currentMethod = businessPaymentMethods.find((method) => method.id === Number(selectedBusinessPaymentMethodId));
+  const rawName = $("#businessPaymentMethodName", container)?.value.trim() || "";
+  const canonicalName = getCanonicalPaymentMethodName(rawName);
+  const feePercent = Number($("#businessPaymentMethodFeePercent", container)?.value || 0);
+  const fixedFee = getCurrencyInputValue("#businessPaymentMethodFixedFee", container);
+  const linkedBankAccountId = Number($("#businessPaymentMethodLinkedAccount", container)?.value || 0) || null;
+  const immediateSettlement = Boolean($("#businessPaymentMethodImmediate", container)?.checked);
+  const settlementDays = immediateSettlement ? 0 : Math.max(0, Number($("#businessPaymentMethodSettlementDays", container)?.value || 0));
+
+  if (!canonicalName) {
+    showToast("Informe o nome da forma de pagamento.");
+    $("#businessPaymentMethodName", container)?.focus();
+    return;
+  }
+  if (canonicalName === "Carteira (legado)" && !currentMethod) {
+    showToast("Carteira é apenas um registro legado. Cadastre uma forma real de pagamento.");
+    $("#businessPaymentMethodName", container)?.focus();
+    return;
+  }
+  if (businessPaymentMethods.some((method) => method.id !== currentMethod?.id && normalizeText(method.name) === normalizeText(canonicalName))) {
+    showToast("Já existe uma forma de pagamento com esse nome.");
+    $("#businessPaymentMethodName", container)?.focus();
+    return;
+  }
+  if (feePercent < 0 || feePercent > 100) {
+    showToast("A taxa percentual deve ficar entre 0% e 100%.");
+    $("#businessPaymentMethodFeePercent", container)?.focus();
+    return;
+  }
+  if (fixedFee < 0) {
+    showToast("A taxa fixa não pode ser negativa.");
+    $("#businessPaymentMethodFixedFee", container)?.focus();
+    return;
+  }
+  if (linkedBankAccountId && !businessBankAccounts.some((account) => account.id === linkedBankAccountId)) {
+    showToast("Selecione uma conta bancária válida.");
+    $("#businessPaymentMethodLinkedAccount", container)?.focus();
+    return;
+  }
+  if (
+    normalizeText(canonicalName) === normalizeText("Pix") &&
+    $("#businessPaymentMethodActive", container)?.checked &&
+    businessFinanceSettings.receiptRules.requirePixKeyWhenActive &&
+    !businessPixInfo.key
+  ) {
+    showToast("Cadastre a chave Pix antes de ativar essa forma.");
+    return;
+  }
+
+  const methodPayload = createBusinessPaymentMethodRecord(
+    {
+      id: currentMethod?.id || getNextBusinessPaymentMethodId(),
+      name: canonicalName,
+      type: $("#businessPaymentMethodType", container)?.value,
+      active: Boolean($("#businessPaymentMethodActive", container)?.checked),
+      showInService: Boolean($("#businessPaymentMethodShowInService", container)?.checked),
+      showInProductSale: Boolean($("#businessPaymentMethodShowInProductSale", container)?.checked),
+      showInQuote: Boolean($("#businessPaymentMethodShowInQuote", container)?.checked),
+      showInInvoice: Boolean($("#businessPaymentMethodShowInInvoice", container)?.checked),
+      immediateSettlement,
+      settlementDays,
+      feePercent,
+      fixedFee,
+      linkedBankAccountId,
+      notes: $("#businessPaymentMethodNotes", container)?.value.trim() || "",
+      createdAt: currentMethod?.createdAt || getTodayISO(),
+      updatedAt: getTodayISO()
+    },
+    currentMethod?.id || getNextBusinessPaymentMethodId()
+  );
+
+  if (!methodPayload) {
+    showToast("Não foi possível salvar a forma de pagamento.");
+    return;
+  }
+
+  if (currentMethod) {
+    renameBusinessPaymentMethodReferences(currentMethod.name, methodPayload.name);
+    const index = businessPaymentMethods.findIndex((method) => method.id === currentMethod.id);
+    if (index >= 0) businessPaymentMethods[index] = methodPayload;
+  } else {
+    businessPaymentMethods.push(methodPayload);
+  }
+
+  businessPaymentMethods = normalizeBusinessPaymentMethods(businessPaymentMethods);
+  saveBusinessPaymentMethods();
+  selectedBusinessPaymentMethodId = null;
+  closeBusinessPaymentMethodDialog(false);
+  renderBusinessFinanceScreen(getBusinessFinanceScreenContainer());
+  showToast(currentMethod ? "Forma de pagamento atualizada." : "Forma de pagamento cadastrada.");
+}
+
+function bindBusinessFinanceControls(container) {
+  $("#openBusinessPaymentMethodDialogButton", container)?.addEventListener("click", () => openBusinessPaymentMethodDialog());
+  $$("[data-edit-business-payment-method]", container).forEach((button) => {
+    button.addEventListener("click", () => openBusinessPaymentMethodDialog(Number(button.dataset.editBusinessPaymentMethod)));
+  });
+  $$("[data-toggle-business-payment-method]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      const method = businessPaymentMethods.find((item) => item.id === Number(button.dataset.toggleBusinessPaymentMethod));
+      if (!method) return;
+      if (!method.active && normalizeText(method.name) === normalizeText("Pix") && businessFinanceSettings.receiptRules.requirePixKeyWhenActive && !businessPixInfo.key) {
+        showToast("Cadastre a chave Pix antes de ativar essa forma.");
+        return;
+      }
+      method.active = !method.active;
+      method.updatedAt = getTodayISO();
+      saveBusinessPaymentMethods();
+      renderBusinessFinanceScreen(container);
+      showToast(method.active ? "Forma de pagamento ativada." : "Forma de pagamento inativada.");
+    });
+  });
+  $$("[data-delete-business-payment-method]", container).forEach((button) => {
+    button.addEventListener("click", () => deleteBusinessPaymentMethod(Number(button.dataset.deleteBusinessPaymentMethod), container));
+  });
+
+  $("#businessBankAccountForm", container)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const bank = $("#businessBankName", container)?.value.trim() || "";
+    const agency = $("#businessBankAgency", container)?.value.trim() || "";
+    const account = $("#businessBankAccount", container)?.value.trim() || "";
+    if (!bank || !agency || !account) {
+      showToast("Informe banco, agência e conta.");
+      return;
+    }
+    businessBankAccounts.push({
+      id: getNextBusinessBankAccountId(),
+      bank,
+      type: $("#businessBankType", container)?.value || "Conta corrente",
+      agency,
+      account,
+      holder: $("#businessBankHolder", container)?.value.trim() || getBusinessDocumentName(),
+      showInInvoices: Boolean($("#businessBankShowInvoices", container)?.checked)
+    });
+    saveBusinessStorageItem(businessStorageKeys.bankAccounts, businessBankAccounts);
+    renderBusinessFinanceScreen(container);
+    showToast("Conta bancária cadastrada.");
+  });
+
+  $("#businessPixForm", container)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveBusinessPixInfo(container, false);
+  });
+  $("#generatePixQrButton", container)?.addEventListener("click", () => saveBusinessPixInfo(container, true));
+  $$("[data-business-account-invoice]", container).forEach((input) => {
+    input.addEventListener("change", () => {
+      const account = businessBankAccounts.find((item) => item.id === Number(input.dataset.businessAccountInvoice));
+      if (!account) return;
+      account.showInInvoices = input.checked;
+      saveBusinessStorageItem(businessStorageKeys.bankAccounts, businessBankAccounts);
+      showToast("Exibição em faturas atualizada.");
+    });
+  });
+  $$("[data-delete-business-account]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      const accountId = Number(button.dataset.deleteBusinessAccount);
+      const linkedMethods = businessPaymentMethods.filter((method) => Number(method.linkedBankAccountId || 0) === accountId);
+      if (linkedMethods.length) {
+        showToast(`Desvincule ${linkedMethods.map((method) => method.name).join(", ")} antes de excluir a conta.`);
+        return;
+      }
+      businessBankAccounts = businessBankAccounts.filter((account) => account.id !== accountId);
+      saveBusinessStorageItem(businessStorageKeys.bankAccounts, businessBankAccounts);
+      renderBusinessFinanceScreen(container);
+      showToast("Conta bancária removida.");
+    });
+  });
+}
+
+function renderBusinessFinanceScreen(container) {
+  const visibleAccounts = businessBankAccounts.filter((account) => account.showInInvoices).length;
+  const activeMethods = businessPaymentMethods.filter((method) => method.active).length;
+  const immediateMethods = businessPaymentMethods.filter((method) => method.active && method.immediateSettlement).length;
+  container.innerHTML = `
+    <section class="screen-metrics business-metrics" aria-label="Resumo financeiro do negócio">
+      ${[
+        { label: "Formas ativas", value: activeMethods, icon: "card" },
+        { label: "Liquidação imediata", value: immediateMethods, icon: "check" },
+        { label: "Contas cadastradas", value: businessBankAccounts.length, icon: "wallet" },
+        { label: "Exibir em faturas", value: visibleAccounts, icon: "invoice" },
+        { label: "Pix", value: businessPixInfo.key ? "Configurado" : "Pendente", icon: "cashflow" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+
+    <section class="business-finance-layout">
+      <article class="admin-panel business-finance-primary-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Recebimentos</p>
+            <h2>Formas de pagamento aceitas</h2>
+          </div>
+          <button class="new-vehicle-button" type="button" id="openBusinessPaymentMethodDialogButton">
+            <span data-icon="plus"></span>
+            <span>Nova forma de pagamento</span>
+          </button>
+        </div>
+        <p class="step-copy">Configure como seus clientes podem pagar, quais taxas incidem e o prazo previsto de recebimento.</p>
+        ${renderBusinessPaymentMethodsTable()}
+      </article>
+
+      <article class="admin-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Bancário</p>
+            <h2>Contas bancárias</h2>
+          </div>
+        </div>
+        <form class="business-form-grid" id="businessBankAccountForm">
+          <label class="login-field" for="businessBankName">
+            <span>Banco</span>
+            <input id="businessBankName" type="text" placeholder="Banco" />
+          </label>
+          <label class="login-field" for="businessBankType">
+            <span>Tipo de conta</span>
+            <select id="businessBankType">
+              <option>Conta corrente</option>
+              <option>Conta poupança</option>
+              <option>Conta pagamento</option>
+            </select>
+          </label>
+          <label class="login-field" for="businessBankAgency">
+            <span>Agência</span>
+            <input id="businessBankAgency" type="text" placeholder="0001" />
+          </label>
+          <label class="login-field" for="businessBankAccount">
+            <span>Conta</span>
+            <input id="businessBankAccount" type="text" placeholder="00000-0" />
+          </label>
+          <label class="login-field" for="businessBankHolder">
+            <span>Titular</span>
+            <input id="businessBankHolder" type="text" value="${escapeHtml(getBusinessDocumentName())}" placeholder="Titular da conta" />
+          </label>
+          <label class="switch-field business-switch-field" for="businessBankShowInvoices">
+            <input id="businessBankShowInvoices" type="checkbox" checked />
+            <span class="switch-control"></span>
+            <span>Exibir em faturas</span>
+          </label>
+          <div class="dialog-actions business-form-actions">
+            <button class="primary-button" type="submit">
+              <span data-icon="plus"></span>
+              <span>Adicionar conta</span>
+            </button>
+          </div>
+        </form>
+        <div class="business-account-list">
+          ${renderBusinessBankAccounts()}
+        </div>
+      </article>
+
+      <article class="admin-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Pix</p>
+            <h2>Chave e QR Code</h2>
+          </div>
+        </div>
+        <form class="business-form-grid" id="businessPixForm">
+          <label class="login-field" for="businessPixKeyType">
+            <span>Tipo de chave</span>
+            <select id="businessPixKeyType">
+              ${["CNPJ", "CPF", "E-mail", "Telefone", "Aleatória"].map((type) => `<option value="${type}" ${businessPixInfo.keyType === type ? "selected" : ""}>${type}</option>`).join("")}
+            </select>
+          </label>
+          <label class="login-field" for="businessPixKey">
+            <span>Chave Pix</span>
+            <input id="businessPixKey" type="text" value="${escapeHtml(businessPixInfo.key)}" placeholder="Chave Pix" />
+          </label>
+          <label class="login-field" for="businessPixReceiver">
+            <span>Favorecido</span>
+            <input id="businessPixReceiver" type="text" value="${escapeHtml(businessPixInfo.receiver || getBusinessDocumentName())}" placeholder="Favorecido" />
+          </label>
+          <label class="login-field" for="businessPixPaymentUrl">
+            <span>Link de pagamento</span>
+            <input id="businessPixPaymentUrl" type="url" value="${escapeHtml(businessPixInfo.paymentUrl)}" placeholder="https://..." />
+          </label>
+          <label class="login-field business-address-field" for="businessPixCopyPasteCode">
+            <span>Código Pix copia e cola</span>
+            <textarea id="businessPixCopyPasteCode" rows="4" placeholder="000201...">${escapeHtml(businessPixInfo.copyPasteCode || "")}</textarea>
+          </label>
+          <label class="switch-field business-switch-field" for="businessPixShowInvoices">
+            <input id="businessPixShowInvoices" type="checkbox" ${businessPixInfo.showInInvoices ? "checked" : ""} />
+            <span class="switch-control"></span>
+            <span>Exibir QR Code em faturas</span>
+          </label>
+          <div class="dialog-actions business-form-actions">
+            <button class="ghost-action" type="button" id="generatePixQrButton">
+              <span data-icon="invoice"></span>
+              <span>Gerar QR Code</span>
+            </button>
+            <button class="primary-button" type="submit">
+              <span data-icon="check"></span>
+              <span>Salvar Pix</span>
+            </button>
+          </div>
+          ${businessPixInfo.qrCodeDataUrl ? `<img class="business-pix-preview" src="${businessPixInfo.qrCodeDataUrl}" alt="QR Code Pix" />` : ""}
+        </form>
+      </article>
+
+      <article class="admin-panel business-finance-settings-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Parâmetros</p>
+            <h2>Regras e documentos</h2>
+          </div>
+        </div>
+        ${renderBusinessFinanceSettingsForm()}
+      </article>
+    </section>
+  `;
+
+  initIcons();
+  bindCurrencyInputs(container);
+  bindBusinessFinanceControls(container);
+  bindBusinessFinanceSettingsControls(container);
+}
+
+function getBusinessPaymentMethodChannelLabels(method) {
+  return [
+    method.showInService ? "Atendimento" : "",
+    method.showInProductSale ? "Venda" : "",
+    method.showInQuote ? "Orçamento" : "",
+    method.showInInvoice ? "Fatura" : ""
+  ].filter(Boolean);
+}
+
+function getBusinessPaymentMethodFeeSummary(method) {
+  const parts = [];
+  if (Number(method.feePercent || 0) > 0) parts.push(`${String(Number(method.feePercent || 0)).replace(".", ",")}%`);
+  if (Number(method.fixedFee || 0) > 0) parts.push(formatCurrency(method.fixedFee));
+  return parts.length ? parts.join(" + ") : "Sem taxa";
+}
+
+function getBusinessPaymentMethodSettlementSummary(method) {
+  if (method.immediateSettlement) return "Na hora";
+  const days = Math.max(0, Number(method.settlementDays || 0));
+  if (days === 1) return "1 dia";
+  return `${days} dias`;
 }
 
 function renderBusinessSocialScreen(container) {
@@ -7857,9 +10914,36 @@ function persistVehicleRegistration(container) {
     recordVehicleOwnerChange(vehicle, previousClientId, nextClientId);
   }
   syncPlateOwnership(vehicle.plate, nextClientId);
+  if (!persistVehicleSpecialCareFromRegistry(container, vehicle)) return null;
 
   selectedVehicleId = vehicle.id;
   return { ok: true, reason: selectedVehicle ? "updated" : "created", vehicle };
+}
+
+function persistVehicleSpecialCareFromRegistry(container, vehicle) {
+  const payload = readVehicleSpecialCareFormState(container, "vehicleSpecialCare");
+  if (!payload.enabled) {
+    selectedVehicleSpecialCareId = null;
+    return true;
+  }
+  if (!payload.type) {
+    showToast("Selecione o tipo do cuidado especial.");
+    return false;
+  }
+  if (!payload.description && !payload.restrictionTags.length && !payload.recommendedTags.length) {
+    showToast("Informe ao menos uma observação ou restrição do cuidado especial.");
+    return false;
+  }
+  if (selectedVehicleSpecialCareId) {
+    updateVehicleSpecialCareRecord(selectedVehicleSpecialCareId, payload);
+  } else {
+    createVehicleSpecialCareRecord(vehicle, payload, {
+      historyType: "vehicle_special_care_created",
+      historyDescription: `Cuidado especial registrado para ${vehicle.plate}: ${payload.type}.`
+    });
+  }
+  selectedVehicleSpecialCareId = null;
+  return true;
 }
 
 function updateVehicleRegistryCategoryState(container) {
@@ -8067,6 +11151,7 @@ function generateChecklistPdf(vehicleId, checklistId) {
 }
 
 function getChecklistPdfLines(vehicle, checklist) {
+  const activeCareRecords = getVehicleActiveSpecialCareRecords(vehicle);
   const groupedItems = (checklist.items || []).reduce((groups, item) => {
     groups[item.area] = groups[item.area] || [];
     groups[item.area].push(item);
@@ -8085,6 +11170,19 @@ function getChecklistPdfLines(vehicle, checklist) {
     `Data: ${formatDateBR(checklist.date)} ${checklist.time || ""}`,
     ""
   ];
+
+  if (activeCareRecords.length) {
+    lines.push("Cuidados especiais");
+    activeCareRecords.forEach((record) => {
+      lines.push(`${record.type} - ${record.attentionLevel}`);
+      if (record.restrictionTags?.length) {
+        lines.push(`Restrições: ${record.restrictionTags.map(getVehicleSpecialCareRestrictionLabel).join(", ")}`);
+      }
+      if (record.source) lines.push(`Origem: ${record.source}`);
+      if (record.description) lines.push(record.description);
+      lines.push("");
+    });
+  }
 
   Object.entries(groupedItems).forEach(([area, items]) => {
     lines.push(area);
@@ -8127,8 +11225,22 @@ function renderVehicleOwnerOptions(selectedClientId, clients = clientRegistry) {
 }
 
 function renderSelectOptions(options, selectedValue) {
+  const normalizedSelectedValue =
+    selectedValue && typeof selectedValue === "object" && !Array.isArray(selectedValue)
+      ? String(selectedValue.value ?? selectedValue.label ?? "")
+      : String(selectedValue ?? "");
   return options
-    .map((option) => `<option value="${escapeHtml(option)}" ${option === selectedValue ? "selected" : ""}>${escapeHtml(option)}</option>`)
+    .map((option) => {
+      const optionValue =
+        option && typeof option === "object" && !Array.isArray(option)
+          ? String(option.value ?? option.label ?? "")
+          : String(option ?? "");
+      const optionLabel =
+        option && typeof option === "object" && !Array.isArray(option)
+          ? String(option.label ?? option.value ?? "")
+          : String(option ?? "");
+      return `<option value="${escapeHtml(optionValue)}" ${optionValue === normalizedSelectedValue ? "selected" : ""}>${escapeHtml(optionLabel)}</option>`;
+    })
     .join("");
 }
 
@@ -8202,6 +11314,7 @@ function syncVehicleFromPatioEntry(vehicleEntry) {
     operator: activeSessionUser || "Operador"
   });
   upsertVehicleChecklistHistory(vehicleEntry, vehicle);
+  return vehicle;
 }
 
 function updateVehicleServiceStatus(patioVehicle) {
@@ -8285,6 +11398,430 @@ function findVehicleById(id) {
 
 function findVehicleByPlate(plate) {
   return vehicleRegistry.find((vehicle) => vehicle.plate === plate);
+}
+
+function getAnyVehicleRecord(vehicleId = null, plate = "") {
+  if (vehicleId) {
+    return findVehicleById(vehicleId) || patioVehicles.find((vehicle) => Number(vehicle.id) === Number(vehicleId)) || null;
+  }
+  const formattedPlate = formatPlate(plate);
+  if (!formattedPlate) return null;
+  return findVehicleByPlate(formattedPlate) || patioVehicles.find((vehicle) => formatPlate(vehicle.plate) === formattedPlate) || null;
+}
+
+function getVehicleSpecialCareRecords(vehicle, options = {}) {
+  if (!vehicle) return [];
+  const vehicleId = Number(vehicle.vehicleId || vehicle.id || 0) || null;
+  const plate = formatPlate(vehicle.vehiclePlate || vehicle.plate || "");
+  return vehicleSpecialCareRecords
+    .filter((record) => {
+      if (options.activeOnly && record.active === false) return false;
+      return (vehicleId && Number(record.vehicleId) === Number(vehicleId)) || (plate && formatPlate(record.vehiclePlate) === plate);
+    })
+    .sort((a, b) => Number(new Date(b.registeredAt || b.createdAt || 0)) - Number(new Date(a.registeredAt || a.createdAt || 0)));
+}
+
+function getVehicleActiveSpecialCareRecords(vehicle) {
+  return getVehicleSpecialCareRecords(vehicle, { activeOnly: true });
+}
+
+function getVehicleSpecialCareSummary(vehicle) {
+  const activeRecords = getVehicleActiveSpecialCareRecords(vehicle);
+  const highestPriority = { "Alto risco": 3, "Atenção": 2, Informativo: 1 };
+  const highestLevel =
+    activeRecords
+      .slice()
+      .sort((left, right) => (highestPriority[right.attentionLevel] || 0) - (highestPriority[left.attentionLevel] || 0))[0]?.attentionLevel || "";
+  return {
+    count: activeRecords.length,
+    highestLevel,
+    labels: activeRecords.map((record) => record.type),
+    restrictions: [...new Set(activeRecords.flatMap((record) => record.restrictionTags || []))]
+  };
+}
+
+function getVehicleSpecialCareCount(vehicle) {
+  return getVehicleSpecialCareSummary(vehicle).count;
+}
+
+function hasVehicleSpecialCare(vehicle) {
+  return getVehicleSpecialCareCount(vehicle) > 0;
+}
+
+function getVehicleSpecialCareLevelClass(level) {
+  if (level === "Alto risco") return "is-high";
+  if (level === "Atenção") return "is-attention";
+  return "is-info";
+}
+
+function getVehicleSpecialCareRestrictionLabel(tag) {
+  return vehicleSpecialCareRestrictionLabelMap[tag] || tag;
+}
+
+function getVehicleSpecialCareRecommendedLabel(tag) {
+  return vehicleSpecialCareRecommendedLabelMap[tag] || tag;
+}
+
+function createVehicleSpecialCareHistoryEntry(type, description) {
+  return {
+    id: `care-history-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    type,
+    description,
+    createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
+    author: activeSessionUser || "Administrador"
+  };
+}
+
+function createVehicleSpecialCareRecord(vehicle, payload = {}, options = {}) {
+  const sourceVehicle = vehicle ? getAnyVehicleRecord(vehicle.id, vehicle.plate) || vehicle : null;
+  const nowIso = new Date().toISOString();
+  const record = {
+    id: Math.max(0, ...vehicleSpecialCareRecords.map((item) => Number(item.id) || 0)) + 1,
+    companyId: "local-default",
+    vehicleId: Number(sourceVehicle?.id || payload.vehicleId || 0) || null,
+    vehiclePlate: formatPlate(sourceVehicle?.plate || payload.vehiclePlate || ""),
+    attendanceId: Number(options.attendanceId || payload.attendanceId || sourceVehicle?.attendanceId || 0) || null,
+    type: String(payload.type || vehicleSpecialCareTypes[0] || "Outro").trim(),
+    attentionLevel: vehicleSpecialCareAttentionLevels.includes(payload.attentionLevel) ? payload.attentionLevel : "Informativo",
+    description: String(payload.description || "").trim(),
+    restrictionTags: normalizeStringTagList(payload.restrictionTags, vehicleSpecialCareRestrictionOptions.map((option) => option.tag)),
+    recommendedTags: normalizeStringTagList(payload.recommendedTags, vehicleSpecialCareRecommendedOptions.map((option) => option.tag)),
+    source: vehicleSpecialCareSources.includes(payload.source) ? payload.source : "Outro",
+    sourceAttendanceId: Number(options.sourceAttendanceId || payload.sourceAttendanceId || 0) || null,
+    sourceServiceId: String(options.sourceServiceId || payload.sourceServiceId || "").trim(),
+    registeredAt: String(payload.registeredAt || nowIso).trim(),
+    validUntil: String(payload.validUntil || "").trim(),
+    active: payload.active !== false,
+    createdAt: nowIso,
+    updatedAt: nowIso,
+    createdBy: activeSessionUser || options.createdBy || "Administrador",
+    updatedBy: activeSessionUser || options.updatedBy || "Administrador",
+    deletedAt: "",
+    syncStatus: "local_only",
+    auditLogId: `care-${Date.now()}`,
+    history: [
+      createVehicleSpecialCareHistoryEntry(
+        options.historyType || "vehicle_special_care_created",
+        options.historyDescription || `Cuidado especial registrado: ${payload.type || vehicleSpecialCareTypes[0]}.`
+      )
+    ]
+  };
+  if (!record.vehicleId) return null;
+  vehicleSpecialCareRecords.unshift(record);
+  saveVehicleSpecialCareRecords();
+  return record;
+}
+
+function updateVehicleSpecialCareRecord(recordId, payload = {}, options = {}) {
+  const record = vehicleSpecialCareRecords.find((item) => Number(item.id) === Number(recordId));
+  if (!record) return null;
+  Object.assign(record, {
+    type: String(payload.type || record.type || "").trim(),
+    attentionLevel: vehicleSpecialCareAttentionLevels.includes(payload.attentionLevel) ? payload.attentionLevel : record.attentionLevel,
+    description: String(payload.description ?? record.description ?? "").trim(),
+    restrictionTags: normalizeStringTagList(payload.restrictionTags ?? record.restrictionTags, vehicleSpecialCareRestrictionOptions.map((option) => option.tag)),
+    recommendedTags: normalizeStringTagList(payload.recommendedTags ?? record.recommendedTags, vehicleSpecialCareRecommendedOptions.map((option) => option.tag)),
+    source: vehicleSpecialCareSources.includes(payload.source) ? payload.source : record.source,
+    validUntil: String(payload.validUntil ?? record.validUntil ?? "").trim(),
+    active: payload.active === undefined ? record.active : payload.active !== false,
+    updatedAt: new Date().toISOString(),
+    updatedBy: activeSessionUser || options.updatedBy || "Administrador"
+  });
+  if (!Array.isArray(record.history)) record.history = [];
+  record.history.unshift(
+    createVehicleSpecialCareHistoryEntry(
+      options.historyType || "vehicle_special_care_updated",
+      options.historyDescription || `Cuidado especial atualizado: ${record.type}.`
+    )
+  );
+  saveVehicleSpecialCareRecords();
+  return record;
+}
+
+function deactivateVehicleSpecialCareRecord(recordId, reason = "") {
+  const record = vehicleSpecialCareRecords.find((item) => Number(item.id) === Number(recordId));
+  if (!record) return null;
+  record.active = false;
+  record.deletedAt = new Date().toISOString();
+  record.updatedAt = record.deletedAt;
+  record.updatedBy = activeSessionUser || "Administrador";
+  if (!Array.isArray(record.history)) record.history = [];
+  record.history.unshift(
+    createVehicleSpecialCareHistoryEntry(
+      "vehicle_special_care_deactivated",
+      `Cuidado especial inativado${reason ? `: ${reason}` : "."}`
+    )
+  );
+  saveVehicleSpecialCareRecords();
+  return record;
+}
+
+function getSpecialCareTypeLabel(value) {
+  return vehicleSpecialCareTypes.includes(value) ? value : "Outro";
+}
+
+function getCareConflictSeverityLevel(records = [], hasUnknownTechnicalClassification = false) {
+  if (records.some((record) => record.attentionLevel === "Alto risco")) return "high";
+  if (records.some((record) => record.attentionLevel === "Atenção")) return "attention";
+  return hasUnknownTechnicalClassification ? "attention" : "info";
+}
+
+function getSpecialCareConflictRiskTagsForRestriction(tag) {
+  const mapping = {
+    avoid_acid: ["acid_product", "wheel_acid"],
+    avoid_strong_alkaline: ["strong_alkaline_product"],
+    use_ph_neutral: ["acid_product", "wheel_acid", "strong_alkaline_product"],
+    avoid_degreaser: ["degreaser"],
+    avoid_abrasive_brush: ["abrasive"],
+    avoid_high_pressure_close: ["high_pressure_close"],
+    avoid_solvent: ["solvent"],
+    avoid_heavy_polishing: ["heavy_polishing"],
+    avoid_engine_wash: ["engine_cleaner"],
+    avoid_film_contact: ["film_contact"],
+    avoid_abrasive_product: ["abrasive"],
+    avoid_silicone: ["silicone_based"]
+  };
+  return mapping[tag] || [];
+}
+
+function getSupplyRiskTags(supply) {
+  const tags = new Set(normalizeStringTagList(supply?.riskTags, supplyRiskTagOptions.map((option) => option.tag)));
+  if (supply?.phType === "acid") tags.add("acid_product");
+  if (supply?.phType === "alkaline" && supply?.aggressivenessLevel === "high") tags.add("strong_alkaline_product");
+  return [...tags];
+}
+
+function getServiceRiskTags(service) {
+  return normalizeStringTagList(service?.serviceRiskTags, serviceRiskTagOptions.map((option) => option.tag));
+}
+
+function isSupplyTechnicalClassificationUnknown(supply) {
+  if (!supply) return true;
+  return !getSupplyRiskTags(supply).length && supply.phType === "unknown" && supply.aggressivenessLevel === "unknown";
+}
+
+function doesVehicleRestrictionConflictWithRisk(restrictionTag, riskTags = [], supply = null) {
+  const tags = new Set(riskTags || []);
+  if (getSpecialCareConflictRiskTagsForRestriction(restrictionTag).some((tag) => tags.has(tag))) return true;
+  if (restrictionTag === "use_ph_neutral") return supply?.phType === "acid" || supply?.phType === "alkaline";
+  return false;
+}
+
+function getVehicleServiceConflictSignature(conflictResult = {}) {
+  const careIds = (conflictResult.vehicleCareRecords || []).map((record) => record.id).sort((left, right) => left - right).join("-");
+  const services = (conflictResult.conflictingServices || []).map((item) => item.serviceName).sort().join("-");
+  const restrictions = (conflictResult.messages || []).map((message) => message.restrictionTag).sort().join("-");
+  return [careIds, services, restrictions].filter(Boolean).join("|");
+}
+
+function checkVehicleServiceCareConflicts(vehicleId, serviceIds = []) {
+  const vehicle = getAnyVehicleRecord(vehicleId);
+  return checkVehicleServiceCareConflictsForVehicle(vehicle, serviceIds);
+}
+
+function checkVehicleServiceCareConflictsForVehicle(vehicle, serviceIds = [], extraCareRecords = []) {
+  const careRecords = [
+    ...getVehicleActiveSpecialCareRecords(vehicle),
+    ...(Array.isArray(extraCareRecords) ? extraCareRecords.filter(Boolean) : [])
+  ];
+  const uniqueCareRecords = careRecords.filter(
+    (record, index, collection) => index === collection.findIndex((item) => Number(item.id || 0) === Number(record.id || 0) && item.type === record.type)
+  );
+  const services = (serviceIds || [])
+    .map((serviceName) => findServiceDefinition(serviceName, vehicle?.type, vehicle?.category))
+    .filter(Boolean);
+  const conflictingServices = [];
+  const conflictingSupplies = [];
+  const unknownTechnicalClassification = [];
+  const messages = [];
+  uniqueCareRecords.forEach((record) => {
+    const restrictions = record.restrictionTags || [];
+    services.forEach((service) => {
+      const serviceTags = getServiceRiskTags(service);
+      restrictions.forEach((restrictionTag) => {
+        if (doesVehicleRestrictionConflictWithRisk(restrictionTag, serviceTags)) {
+          conflictingServices.push({ serviceName: service.name, restrictionTag, careType: record.type, source: "service" });
+          messages.push({
+            careType: record.type,
+            restrictionTag,
+            message: `O serviço ${service.name} pode exigir cuidado com a restrição "${getVehicleSpecialCareRestrictionLabel(restrictionTag)}".`
+          });
+        }
+      });
+
+      const supplyEntries = getServiceSupplyProfile(service);
+      if (!supplyEntries.length && (record.attentionLevel === "Atenção" || record.attentionLevel === "Alto risco")) {
+        unknownTechnicalClassification.push({ serviceName: service.name, itemType: "service", reason: "Sem ficha técnica cadastrada." });
+      }
+
+      supplyEntries.forEach((entry) => {
+        const supply = getSupplyById(entry.supplyId);
+        if (!supply) return;
+        const supplyTags = getSupplyRiskTags(supply);
+        if (isSupplyTechnicalClassificationUnknown(supply)) {
+          unknownTechnicalClassification.push({ serviceName: service.name, itemType: "supply", supplyName: supply.name, reason: "Insumo sem classificação técnica." });
+        }
+        restrictions.forEach((restrictionTag) => {
+          if (!doesVehicleRestrictionConflictWithRisk(restrictionTag, supplyTags, supply)) return;
+          conflictingSupplies.push({
+            serviceName: service.name,
+            supplyName: supply.name,
+            restrictionTag,
+            careType: record.type
+          });
+          messages.push({
+            careType: record.type,
+            restrictionTag,
+            message: `${supply.name} conflita com "${getVehicleSpecialCareRestrictionLabel(restrictionTag)}".`
+          });
+        });
+      });
+    });
+  });
+
+  const dedupedMessages = messages.filter(
+    (message, index, collection) =>
+      index ===
+      collection.findIndex(
+        (item) => item.careType === message.careType && item.restrictionTag === message.restrictionTag && item.message === message.message
+      )
+  );
+  const dedupedConflictingServices = conflictingServices.filter(
+    (item, index, collection) =>
+      index ===
+      collection.findIndex(
+        (entry) => entry.serviceName === item.serviceName && entry.restrictionTag === item.restrictionTag && entry.careType === item.careType
+      )
+  );
+  const dedupedConflictingSupplies = conflictingSupplies.filter(
+    (item, index, collection) =>
+      index ===
+      collection.findIndex(
+        (entry) =>
+          entry.serviceName === item.serviceName &&
+          entry.supplyName === item.supplyName &&
+          entry.restrictionTag === item.restrictionTag &&
+          entry.careType === item.careType
+      )
+  );
+  const highestLevel = getCareConflictSeverityLevel(uniqueCareRecords, Boolean(unknownTechnicalClassification.length));
+  return {
+    hasSpecialCare: uniqueCareRecords.length > 0,
+    hasConflicts: Boolean(dedupedConflictingServices.length || dedupedConflictingSupplies.length),
+    highestLevel,
+    vehicleCareRecords: uniqueCareRecords,
+    conflictingServices: dedupedConflictingServices,
+    conflictingSupplies: dedupedConflictingSupplies,
+    unknownTechnicalClassification,
+    messages: dedupedMessages,
+    signature: getVehicleServiceConflictSignature({
+      vehicleCareRecords: uniqueCareRecords,
+      conflictingServices: dedupedConflictingServices,
+      messages: dedupedMessages
+    })
+  };
+}
+
+function getVehicleCurrentCareConflictResult(vehicle, extraCareRecords = []) {
+  return checkVehicleServiceCareConflictsForVehicle(vehicle, getVehicleServices(vehicle), extraCareRecords);
+}
+
+function hasVehicleCareWarningAcknowledged(vehicle, conflictResult) {
+  if (!vehicle || !conflictResult?.signature) return false;
+  return (vehicle.specialCareWarningLog || []).some(
+    (entry) => entry.signature === conflictResult.signature && entry.acknowledged
+  );
+}
+
+function getVehicleCareWarningTitle(conflictResult, context) {
+  if (conflictResult.highestLevel === "high") return "Alerta de cuidado especial";
+  if (context === "attendance_save") return "Revisão antes de salvar";
+  if (context === "start_service") return "Confirmar início do serviço";
+  return "Cuidado especial do veículo";
+}
+
+function getVehicleCareWarningMessage(conflictResult, context) {
+  const types = [...new Set((conflictResult.vehicleCareRecords || []).map((record) => record.type))];
+  const typeText = types.length ? `Este veículo possui ${types.join(", ")}.` : "Este veículo possui cuidados especiais cadastrados.";
+  if (conflictResult.hasConflicts) {
+    return `${typeText} O serviço selecionado pode usar produtos ou métodos com restrição. Confira antes de executar${context === "attendance_save" ? " e confirme somente se estiver tudo certo" : ""}.`;
+  }
+  return `${typeText} Há insumos sem classificação técnica completa neste serviço. Faça a conferência antes de seguir.`;
+}
+
+async function showVehicleCareWarning(conflictResult, context) {
+  if (!conflictResult?.hasSpecialCare) return true;
+  const detailLines = [];
+  if (conflictResult.conflictingServices.length) {
+    detailLines.push(
+      ...conflictResult.conflictingServices.map(
+        (item) => `${item.serviceName}: ${getVehicleSpecialCareRestrictionLabel(item.restrictionTag)}`
+      )
+    );
+  }
+  if (conflictResult.conflictingSupplies.length) {
+    detailLines.push(
+      ...conflictResult.conflictingSupplies.map(
+        (item) => `${item.supplyName}: ${getVehicleSpecialCareRestrictionLabel(item.restrictionTag)}`
+      )
+    );
+  }
+  if (conflictResult.unknownTechnicalClassification.length) {
+    detailLines.push(
+      ...conflictResult.unknownTechnicalClassification.map(
+        (item) => `${item.serviceName}: ${item.supplyName || item.reason}`
+      )
+    );
+  }
+  const extraDetail = detailLines.length ? ` Detalhes: ${detailLines.slice(0, 3).join(" | ")}.` : "";
+  return showMessageBox({
+    title: getVehicleCareWarningTitle(conflictResult, context),
+    message: `${getVehicleCareWarningMessage(conflictResult, context)}${extraDetail}`,
+    eyebrow: "Segurança operacional",
+    confirmLabel: "Entendi e vou conferir",
+    cancelLabel: context === "attendance_save" ? "Revisar atendimento" : "Voltar",
+    confirmOnly: false
+  });
+}
+
+function registerVehicleCareWarningAcknowledgement(vehicle, conflictResult, context) {
+  if (!vehicle || !conflictResult?.signature) return;
+  if (!Array.isArray(vehicle.specialCareWarningLog)) vehicle.specialCareWarningLog = [];
+  if (!vehicle.specialCareWarningLog.some((entry) => entry.signature === conflictResult.signature && entry.acknowledged)) {
+    vehicle.specialCareWarningLog.unshift({
+      signature: conflictResult.signature,
+      acknowledged: true,
+      context,
+      acknowledgedAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
+      user: activeSessionUser || "Operador",
+      services: [...new Set((conflictResult.conflictingServices || []).map((item) => item.serviceName))],
+      restrictions: [...new Set((conflictResult.messages || []).map((item) => getVehicleSpecialCareRestrictionLabel(item.restrictionTag)))],
+      supplies: [...new Set((conflictResult.conflictingSupplies || []).map((item) => item.supplyName).filter(Boolean))]
+    });
+  }
+  vehicle.specialCareWarningsAcknowledged = true;
+  vehicle.specialCareWarningSignature = conflictResult.signature;
+  appendAttendanceHistory(
+    vehicle,
+    `O operador confirmou ciência sobre cuidados especiais do veículo (${context}).`,
+    "vehicle_special_care_warning_acknowledged"
+  );
+}
+
+async function ensureVehicleCareWarningAcknowledged(vehicle, conflictResult, context) {
+  if (!vehicle || !conflictResult?.hasSpecialCare) return true;
+  if (!conflictResult.hasConflicts && !conflictResult.unknownTechnicalClassification.length) return true;
+  if (hasVehicleCareWarningAcknowledged(vehicle, conflictResult)) return true;
+  appendAttendanceHistory(
+    vehicle,
+    `Sistema exibiu alerta técnico de cuidados especiais (${context}).`,
+    "vehicle_special_care_warning_shown"
+  );
+  const confirmed = await showVehicleCareWarning(conflictResult, context);
+  if (!confirmed) return false;
+  registerVehicleCareWarningAcknowledgement(vehicle, conflictResult, context);
+  renderAdminDashboard();
+  return true;
 }
 
 function getVehicleOwnerName(vehicle) {
@@ -9362,7 +12899,7 @@ function renderServicesScreen(container) {
         { label: "Serviços ativos", value: serviceCatalog.length, icon: "service" },
         { label: "Tipos de veículo", value: vehicleTypes.length, icon: "carFront" },
         { label: "Categorias", value: vehicleCategories.length, icon: "dashboard" },
-        { label: "Ticket médio", value: formatCurrency(getAverageServicePrice()), icon: "wallet" }
+        { label: "Fichas técnicas", value: `${getServiceTechnicalCoverageCount()}/${serviceCatalog.length}`, icon: "clipboard" }
       ]
         .map(renderScreenMetric)
         .join("")}
@@ -9443,6 +12980,9 @@ function bindServicesScreenControls(container) {
   $$("[data-edit-service]", container).forEach((button) => {
     button.addEventListener("click", () => openServiceDialog(Number(button.dataset.editService)));
   });
+  $$("[data-service-supplies]", container).forEach((button) => {
+    button.addEventListener("click", () => openInventoryDialog({ mode: "serviceSupplies", serviceIndex: Number(button.dataset.serviceSupplies) }));
+  });
 
   $("#addVehicleTypeButton", container).addEventListener("click", () => {
     addVehicleRegistryOption(container, "#newVehicleTypeName", vehicleTypes, "Tipo de veículo cadastrado.");
@@ -9473,6 +13013,7 @@ function renderServiceRows() {
           <td data-label="Ações">
             <span class="table-actions">
               <button type="button" data-edit-service="${index}">Editar</button>
+              <button type="button" data-service-supplies="${index}">Insumos</button>
             </span>
           </td>
         </tr>
@@ -9595,17 +13136,25 @@ function saveServiceRegistration(container) {
 
   const previousService = selectedServiceIndex !== null ? serviceCatalog[selectedServiceIndex] : null;
   const previousName = previousService?.name || "";
+  const previousProfileKey = previousService ? getServiceSupplyProfileKey(previousService) : "";
   const serviceData = { name, price, duration, vehicleType, vehicleCategory, status };
+  const nextProfileKey = getServiceSupplyProfileKey(serviceData);
 
   if (previousService) {
     serviceCatalog[selectedServiceIndex] = serviceData;
     syncRenamedService(previousName, name, price);
+    if (previousProfileKey && previousProfileKey !== nextProfileKey && serviceSupplyProfiles[previousProfileKey]) {
+      serviceSupplyProfiles[nextProfileKey] = serviceSupplyProfiles[previousProfileKey];
+      delete serviceSupplyProfiles[previousProfileKey];
+      saveServiceSupplyProfiles();
+    }
   } else {
     serviceCatalog.push(serviceData);
   }
 
   closeServiceDialog();
   renderServicesScreen($("#adminServicesContent"));
+  renderSuppliesScreen($("#adminSuppliesContent"));
   renderVehicleEntryOptions();
   renderPatio();
   showToast(previousService ? "Serviço atualizado." : "Serviço cadastrado.");
@@ -9667,9 +13216,43 @@ function renderRegistryChipList(list, kind) {
     .join("");
 }
 
-function renderRegistrySelectOptions(list, selectedValue) {
+function renderRegistrySelectOptions(list, selectedValue, config = {}) {
   const options = list.includes(selectedValue) || !selectedValue ? list : [selectedValue, ...list];
-  return renderSelectOptions(options, selectedValue || options[0] || "");
+  const value = selectedValue || options[0] || "";
+  const labelGetter = typeof config.labelGetter === "function" ? config.labelGetter : (option) => option;
+  return options
+    .map((option) => {
+      const label = labelGetter(option);
+      return `<option value="${escapeHtml(option)}" ${String(option) === String(value) ? "selected" : ""}>${escapeHtml(label)}</option>`;
+    })
+    .join("");
+}
+
+function renderChoiceChipGroup(options, selectedValues = [], config = {}) {
+  const values = new Set((selectedValues || []).map((value) => String(value)));
+  const name = config.name || "choice";
+  const twoColumns = config.twoColumns ? " is-two-columns" : "";
+  return `
+    <div class="choice-chip-group${twoColumns}">
+      ${options
+        .map((option, index) => {
+          const value = String(option.value ?? option.tag ?? option.label ?? "");
+          const label = String(option.label ?? option.value ?? option.tag ?? "");
+          const inputId = `${name}-${index}-${value.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+          return `
+            <label class="choice-chip" for="${escapeHtml(inputId)}">
+              <input id="${escapeHtml(inputId)}" type="checkbox" name="${escapeHtml(name)}" value="${escapeHtml(value)}" ${values.has(value) ? "checked" : ""} />
+              <span>${escapeHtml(label)}</span>
+            </label>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function getCheckedValuesByName(scope, name) {
+  return $$(`input[name="${cssEscape(name)}"]:checked`, scope).map((input) => input.value);
 }
 
 function addVehicleRegistryOption(container, selector, list, successMessage) {
@@ -9757,11 +13340,1520 @@ function getAdminScreenContent(view) {
     services: getServicesScreenContent,
     cashflow: getCashflowScreenContent,
     payables: getPayablesScreenContent,
-    invoices: getInvoicesScreenContent,
-    wallet: getWalletScreenContent
+    invoices: getInvoicesScreenContent
   };
 
   return screens[view] ? screens[view]() : null;
+}
+
+function getCombinedInventoryItems() {
+  return [
+    ...productCatalog.map((item) => ({ ...item, kind: "product", kindLabel: "Produto", priceLabel: formatCurrency(item.price) })),
+    ...supplyCatalog.map((item) => ({ ...item, kind: "supply", kindLabel: "Insumo", priceLabel: formatCurrency(item.cost) }))
+  ];
+}
+
+function getInventoryTotalValue() {
+  const productValue = productCatalog.reduce((total, item) => total + Number(item.stock || 0) * Number(item.cost || 0), 0);
+  const supplyValue = supplyCatalog.reduce((total, item) => total + Number(item.stock || 0) * Number(item.cost || 0), 0);
+  return productValue + supplyValue;
+}
+
+function getProductSalesRevenueTotal() {
+  return productSales.reduce((total, sale) => total + Number(sale.total || 0), 0);
+}
+
+function getProductSalesItemsTotal() {
+  return productSales.reduce(
+    (total, sale) => total + sale.items.reduce((itemsTotal, item) => itemsTotal + Number(item.quantity || 0), 0),
+    0
+  );
+}
+
+function getTopSoldProducts(limit = 3) {
+  const totals = new Map();
+  productSales.forEach((sale) => {
+    sale.items.forEach((item) => {
+      const key = item.name || `Produto ${item.productId}`;
+      totals.set(key, (totals.get(key) || 0) + Number(item.quantity || 0));
+    });
+  });
+  return Array.from(totals.entries())
+    .map(([name, quantity]) => ({ name, quantity }))
+    .sort((left, right) => right.quantity - left.quantity)
+    .slice(0, limit);
+}
+
+function getDocumentHistoryByCategory(category = "Todos") {
+  return documentHistory.filter((item) => category === "Todos" || normalizeText(item.category) === normalizeText(category));
+}
+
+function renderServiceEntryScreen(container) {
+  const queue = patioVehicles.filter((vehicle) => !isFinalizedStatus(vehicle.status));
+  const pendingQuotes = quoteEstimates.filter((quote) => quote.status === "Pendente");
+  const quickPayments = getActivePaymentMethodNames("service");
+  container.innerHTML = `
+    <section class="screen-metrics" aria-label="Resumo do atendimento">
+      ${[
+        { label: "Na fila hoje", value: queue.length, icon: "carFront" },
+        { label: "Agendados", value: countByStatus("agendado"), icon: "hourglass" },
+        { label: "Orçamentos pendentes", value: pendingQuotes.length, icon: "invoice" },
+        { label: "Receita prevista", value: formatCurrency(queue.reduce((total, vehicle) => total + getVehiclePaymentTotal(vehicle), 0)), icon: "wallet" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+
+    <section class="admin-screen-grid">
+      <article class="admin-panel screen-table-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Atalhos</p>
+            <h2>Iniciar atendimento</h2>
+          </div>
+        </div>
+        <div class="quick-action-grid">
+          <button class="primary-button" type="button" data-service-entry-action="new-entry">
+            <span data-icon="plus"></span>
+            <span>Novo veículo no pátio</span>
+          </button>
+          <button class="ghost-action" type="button" data-service-entry-action="quotes">
+            <span data-icon="invoice"></span>
+            <span>Ver orçamentos</span>
+          </button>
+          <button class="ghost-action" type="button" data-service-entry-action="patio">
+            <span data-icon="dashboard"></span>
+            <span>Acompanhar o pátio</span>
+          </button>
+        </div>
+        <div class="screen-side-list compact-top">
+          ${queue.length
+            ? queue
+                .slice(0, 5)
+                .map(
+                  (vehicle) => `
+                    <article class="screen-side-item">
+                      <span>${escapeHtml(getStatusGroupLabel(vehicle.status))}</span>
+                      <strong>${escapeHtml(vehicle.plate)} - ${escapeHtml(vehicle.service)}</strong>
+                      <p>${escapeHtml(vehicle.owner)} · ${formatCurrency(getVehiclePaymentTotal(vehicle))}</p>
+                    </article>
+                  `
+                )
+                .join("")
+            : '<p class="empty-alert">Nenhum atendimento aguardando abertura agora.</p>'}
+        </div>
+      </article>
+
+      <article class="admin-panel screen-side-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Operação</p>
+            <h2>Base rápida do turno</h2>
+          </div>
+        </div>
+        <div class="screen-side-list">
+          <article class="screen-side-item">
+            <span>Pagamentos ativos</span>
+            <strong>${escapeHtml(quickPayments.slice(0, 3).join(", ") || "Sem métodos ativos")}</strong>
+            <p>As formas disponíveis vêm das Configurações Financeiras.</p>
+          </article>
+          <article class="screen-side-item">
+            <span>Serviços com ficha técnica</span>
+            <strong>${getServiceTechnicalCoverageCount()} de ${serviceCatalog.length}</strong>
+            <p>${getServicesWithoutSupplyProfile().length ? "Ainda há serviços sem composição de insumos." : "Todos os serviços já têm composição configurada."}</p>
+          </article>
+          <article class="screen-side-item">
+            <span>Estoque sob atenção</span>
+            <strong>${getLowStockProducts().length + getLowStockSupplies().length} alerta(s)</strong>
+            <p>Produtos e insumos com estoque mínimo entram no radar da operação.</p>
+          </article>
+        </div>
+      </article>
+    </section>
+  `;
+  initIcons();
+  $$("[data-service-entry-action]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.dataset.serviceEntryAction;
+      if (action === "new-entry") openVehicleDialog("entry");
+      if (action === "quotes") showAdminView("quotes");
+      if (action === "patio") showAdminView("patio");
+    });
+  });
+}
+
+function renderProductsScreen(container) {
+  const lowStock = getLowStockProducts();
+  const averageMargin = productCatalog.length
+    ? `${(productCatalog.reduce((total, product) => total + getProductMarginPercent(product), 0) / productCatalog.length).toFixed(1).replace(".", ",")}%`
+    : "0%";
+  container.innerHTML = `
+    <section class="screen-metrics" aria-label="Resumo dos produtos">
+      ${[
+        { label: "Produtos ativos", value: productCatalog.filter((item) => item.active !== false).length, icon: "package" },
+        { label: "Baixo estoque", value: lowStock.length, icon: "alert" },
+        { label: "Margem média", value: averageMargin, icon: "wallet" },
+        { label: "Valor em estoque", value: formatCurrency(productCatalog.reduce((total, item) => total + Number(item.stock || 0) * Number(item.cost || 0), 0)), icon: "clipboard" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+    <section class="screen-toolbar inventory-toolbar" aria-label="Filtros dos produtos">
+      <label class="screen-search">
+        <span class="screen-search-icon">${icons.package}</span>
+        <input id="productSearchInput" type="search" placeholder="Buscar produto, SKU ou observação" />
+      </label>
+      <div class="screen-filters" id="productFilters">
+        ${["Todos", "Ativos", "Baixo estoque", "Inativos"]
+          .map((filter, index) => `<button class="${index === 0 ? "is-active" : ""}" type="button" data-product-filter="${escapeHtml(filter)}">${escapeHtml(filter)}</button>`)
+          .join("")}
+      </div>
+      <div class="toolbar-actions">
+        <button class="ghost-action" type="button" id="openProductAdjustmentsButton">
+          <span data-icon="clipboard"></span>
+          <span>Ajustar estoque</span>
+        </button>
+      </div>
+    </section>
+    <section class="admin-screen-grid inventory-screen-grid">
+      <article class="admin-panel screen-table-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Cadastro</p>
+            <h2>Produtos para venda</h2>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table inventory-table">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>SKU</th>
+                <th>Estoque</th>
+                <th>Custo</th>
+                <th>Venda</th>
+                <th>Margem</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${productCatalog
+                .map(
+                  (product) => `
+                    <tr data-product-row data-product-filter-value="${product.active !== false ? (isLowStockItem(product) ? "Baixo estoque" : "Ativos") : "Inativos"}">
+                      <td data-label="Produto"><strong>${escapeHtml(product.name)}</strong><small class="table-note">${escapeHtml(product.notes || "Produto de balcão.")}</small></td>
+                      <td data-label="SKU">${escapeHtml(product.sku)}</td>
+                      <td data-label="Estoque">${formatInventoryQuantity(product.stock, product.unit)}</td>
+                      <td data-label="Custo">${formatCurrency(product.cost)}</td>
+                      <td data-label="Venda">${formatCurrency(product.price)}</td>
+                      <td data-label="Margem">${getProductMarginPercent(product).toFixed(1).replace(".", ",")}%</td>
+                      <td data-label="Status"><span class="inventory-pill ${product.active !== false ? "is-active" : "is-inactive"}">${product.active !== false ? "Ativo" : "Inativo"}</span></td>
+                      <td data-label="Ações">
+                        <div class="cashflow-row-actions">
+                          <button class="ghost-action" type="button" data-edit-product="${product.id}">Editar</button>
+                          <button class="ghost-action" type="button" data-adjust-product="${product.id}">Estoque</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      </article>
+      <article class="admin-panel screen-side-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Atenção</p>
+            <h2>Produtos em foco</h2>
+          </div>
+        </div>
+        <div class="screen-side-list">
+          ${
+            lowStock.length
+              ? lowStock
+                  .map(
+                    (item) => `
+                      <article class="screen-side-item">
+                        <span>Baixo estoque</span>
+                        <strong>${escapeHtml(item.name)}</strong>
+                        <p>${formatInventoryQuantity(item.stock, item.unit)} em estoque · mínimo ${formatInventoryQuantity(item.minStock, item.unit)}</p>
+                      </article>
+                    `
+                  )
+                  .join("")
+              : '<p class="empty-alert">Todos os produtos estão acima do estoque mínimo.</p>'
+          }
+        </div>
+      </article>
+    </section>
+  `;
+  initIcons();
+  bindProductsScreenControls(container);
+}
+
+function renderSuppliesScreen(container) {
+  const lowStock = getLowStockSupplies();
+  container.innerHTML = `
+    <section class="screen-metrics" aria-label="Resumo dos insumos">
+      ${[
+        { label: "Insumos ativos", value: supplyCatalog.filter((item) => item.active !== false).length, icon: "flask" },
+        { label: "Baixo estoque", value: lowStock.length, icon: "alert" },
+        { label: "Custo imobilizado", value: formatCurrency(supplyCatalog.reduce((total, item) => total + Number(item.stock || 0) * Number(item.cost || 0), 0)), icon: "wallet" },
+        { label: "Serviços com ficha", value: getServiceTechnicalCoverageCount(), icon: "service" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+    <section class="screen-toolbar inventory-toolbar" aria-label="Filtros dos insumos">
+      <label class="screen-search">
+        <span class="screen-search-icon">${icons.flask}</span>
+        <input id="supplySearchInput" type="search" placeholder="Buscar insumo, fornecedor ou SKU" />
+      </label>
+      <div class="screen-filters" id="supplyFilters">
+        ${["Todos", "Ativos", "Baixo estoque", "Inativos"]
+          .map((filter, index) => `<button class="${index === 0 ? "is-active" : ""}" type="button" data-supply-filter="${escapeHtml(filter)}">${escapeHtml(filter)}</button>`)
+          .join("")}
+      </div>
+      <div class="toolbar-actions">
+        <button class="ghost-action" type="button" id="openSupplyAdjustmentsButton">
+          <span data-icon="clipboard"></span>
+          <span>Ajustar estoque</span>
+        </button>
+      </div>
+    </section>
+    <section class="admin-screen-grid inventory-screen-grid">
+      <article class="admin-panel screen-table-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Cadastro</p>
+            <h2>Insumos internos</h2>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table inventory-table">
+            <thead>
+              <tr>
+                <th>Insumo</th>
+                <th>SKU</th>
+                <th>Estoque</th>
+                <th>Custo</th>
+                <th>Fornecedor</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${supplyCatalog
+                .map(
+                  (item) => `
+                    <tr data-supply-row data-supply-filter-value="${item.active !== false ? (isLowStockItem(item) ? "Baixo estoque" : "Ativos") : "Inativos"}">
+                      <td data-label="Insumo"><strong>${escapeHtml(item.name)}</strong><small class="table-note">${escapeHtml(item.notes || "Consumo interno da operação.")}</small></td>
+                      <td data-label="SKU">${escapeHtml(item.sku)}</td>
+                      <td data-label="Estoque">${formatInventoryQuantity(item.stock, item.unit)}</td>
+                      <td data-label="Custo">${formatCurrency(item.cost)}</td>
+                      <td data-label="Fornecedor">${escapeHtml(item.supplier || "-")}</td>
+                      <td data-label="Status"><span class="inventory-pill ${item.active !== false ? "is-active" : "is-inactive"}">${item.active !== false ? "Ativo" : "Inativo"}</span></td>
+                      <td data-label="Ações">
+                        <div class="cashflow-row-actions">
+                          <button class="ghost-action" type="button" data-edit-supply="${item.id}">Editar</button>
+                          <button class="ghost-action" type="button" data-adjust-supply="${item.id}">Estoque</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      </article>
+      <article class="admin-panel screen-side-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Composição</p>
+            <h2>Ficha técnica dos serviços</h2>
+          </div>
+        </div>
+        <div class="screen-side-list">
+          ${
+            serviceCatalog.length
+              ? serviceCatalog
+                  .slice(0, 5)
+                  .map(
+                    (service, index) => `
+                      <article class="screen-side-item">
+                        <span>${getServiceSupplyProfile(service).length ? "Configurado" : "Pendente"}</span>
+                        <strong>${escapeHtml(service.name)}</strong>
+                        <p>${getServiceSupplyProfile(service).length ? `${getServiceSupplyProfile(service).length} insumo(s) vinculados.` : "Ainda sem composição cadastrada."}</p>
+                        <button class="ghost-action compact" type="button" data-open-service-supplies="${index}">Configurar insumos</button>
+                      </article>
+                    `
+                  )
+                  .join("")
+              : '<p class="empty-alert">Cadastre serviços para montar a ficha técnica.</p>'
+          }
+        </div>
+      </article>
+    </section>
+  `;
+  initIcons();
+  bindSuppliesScreenControls(container);
+}
+
+function renderInventoryScreen(container) {
+  const combinedItems = getCombinedInventoryItems();
+  container.innerHTML = `
+    <section class="screen-metrics" aria-label="Resumo do inventário">
+      ${[
+        { label: "Itens monitorados", value: combinedItems.length, icon: "clipboard" },
+        { label: "Produtos em alerta", value: getLowStockProducts().length, icon: "package" },
+        { label: "Insumos em alerta", value: getLowStockSupplies().length, icon: "flask" },
+        { label: "Valor total", value: formatCurrency(getInventoryTotalValue()), icon: "wallet" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+    <section class="screen-toolbar inventory-toolbar" aria-label="Filtros do inventário">
+      <label class="screen-search">
+        <span class="screen-search-icon">${icons.clipboard}</span>
+        <input id="inventorySearchInput" type="search" placeholder="Buscar item, SKU ou motivo de ajuste" />
+      </label>
+      <div class="screen-filters" id="inventoryFilters">
+        ${["Todos", "Produtos", "Insumos", "Baixo estoque"]
+          .map((filter, index) => `<button class="${index === 0 ? "is-active" : ""}" type="button" data-inventory-filter="${escapeHtml(filter)}">${escapeHtml(filter)}</button>`)
+          .join("")}
+      </div>
+    </section>
+    <section class="admin-screen-grid inventory-screen-grid">
+      <article class="admin-panel screen-table-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Inventário</p>
+            <h2>Posição atual dos estoques</h2>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table inventory-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Tipo</th>
+                <th>Estoque</th>
+                <th>Mínimo</th>
+                <th>Custo</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${combinedItems
+                .map(
+                  (item) => `
+                    <tr data-inventory-row data-inventory-filter-value="${isLowStockItem(item) ? "Baixo estoque" : item.kind === "product" ? "Produtos" : "Insumos"}">
+                      <td data-label="Item"><strong>${escapeHtml(item.name)}</strong><small class="table-note">${escapeHtml(item.sku)}</small></td>
+                      <td data-label="Tipo">${escapeHtml(item.kindLabel)}</td>
+                      <td data-label="Estoque">${formatInventoryQuantity(item.stock, item.unit)}</td>
+                      <td data-label="Mínimo">${formatInventoryQuantity(item.minStock, item.unit)}</td>
+                      <td data-label="Custo">${formatCurrency(item.cost)}</td>
+                      <td data-label="Status"><span class="inventory-pill ${isLowStockItem(item) ? "is-warning" : "is-active"}">${isLowStockItem(item) ? "Atenção" : "Saudável"}</span></td>
+                      <td data-label="Ações">
+                        <div class="cashflow-row-actions">
+                          <button class="ghost-action" type="button" data-adjust-inventory-kind="${item.kind}" data-adjust-inventory-id="${item.id}">Ajustar</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      </article>
+      <article class="admin-panel screen-side-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Histórico</p>
+            <h2>Últimos movimentos</h2>
+          </div>
+        </div>
+        <div class="screen-side-list">
+          ${
+            inventoryMovements.length
+              ? inventoryMovements
+                  .slice(0, 8)
+                  .map(
+                    (movement) => `
+                      <article class="screen-side-item">
+                        <span>${escapeHtml(getInventoryMovementLabel(movement.type))}</span>
+                        <strong>${escapeHtml(movement.itemName)}</strong>
+                        <p>${escapeHtml(movement.createdAt)} · ${formatInventoryQuantity(movement.quantity, movement.unit)} · saldo ${formatInventoryQuantity(movement.currentStock, movement.unit)}</p>
+                      </article>
+                    `
+                  )
+                  .join("")
+              : '<p class="empty-alert">Nenhum movimento de estoque registrado ainda.</p>'
+          }
+        </div>
+      </article>
+    </section>
+  `;
+  initIcons();
+  bindInventoryScreenControls(container);
+}
+
+function renderProductSalesScreen(container) {
+  const topProducts = getTopSoldProducts();
+  container.innerHTML = `
+    <section class="screen-metrics" aria-label="Resumo das vendas de produtos">
+      ${[
+        { label: "Vendas registradas", value: productSales.length, icon: "package" },
+        { label: "Itens vendidos", value: getProductSalesItemsTotal(), icon: "clipboard" },
+        { label: "Faturamento", value: formatCurrency(getProductSalesRevenueTotal()), icon: "wallet" },
+        { label: "Métodos ativos", value: getActivePaymentMethodNames("productSale").length, icon: "card" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+    <section class="screen-toolbar inventory-toolbar" aria-label="Filtros das vendas">
+      <label class="screen-search">
+        <span class="screen-search-icon">${icons.package}</span>
+        <input id="productSaleSearchInput" type="search" placeholder="Buscar venda, cliente, placa ou produto" />
+      </label>
+      <div class="screen-filters" id="productSaleFilters">
+        ${["Todos", "Hoje", "Com placa", "Sem placa"]
+          .map((filter, index) => `<button class="${index === 0 ? "is-active" : ""}" type="button" data-product-sale-filter="${escapeHtml(filter)}">${escapeHtml(filter)}</button>`)
+          .join("")}
+      </div>
+      <div class="toolbar-actions">
+        <button class="ghost-action" type="button" id="repeatLastProductSaleButton" ${productSales.length ? "" : "disabled"}>
+          <span data-icon="plus"></span>
+          <span>Replicar última venda</span>
+        </button>
+      </div>
+    </section>
+    <section class="admin-screen-grid inventory-screen-grid">
+      <article class="admin-panel screen-table-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Operação</p>
+            <h2>Vendas concluídas</h2>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table inventory-table">
+            <thead>
+              <tr>
+                <th>Venda</th>
+                <th>Cliente</th>
+                <th>Itens</th>
+                <th>Total</th>
+                <th>Pagamento</th>
+                <th>Documento</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                productSales.length
+                  ? productSales
+                      .map(
+                        (sale) => `
+                          <tr data-product-sale-row data-product-sale-filter-value="${sale.date === getTodayISO() ? "Hoje" : sale.plate ? "Com placa" : "Sem placa"}" data-product-sale-has-plate="${sale.plate ? "true" : "false"}">
+                            <td data-label="Venda"><strong>${escapeHtml(sale.code)}</strong><small class="table-note">${escapeHtml(formatDateBR(sale.date))} · ${escapeHtml(sale.time)}</small></td>
+                            <td data-label="Cliente">${escapeHtml(sale.clientName)}${sale.plate ? `<small class="table-note">${escapeHtml(sale.plate)}</small>` : ""}</td>
+                            <td data-label="Itens">${sale.items.length} item(ns)</td>
+                            <td data-label="Total">${formatCurrency(sale.total)}</td>
+                            <td data-label="Pagamento">${escapeHtml(sale.paymentMethod)}</td>
+                            <td data-label="Documento">${escapeHtml(sale.documentType)}</td>
+                            <td data-label="Ações">
+                              <div class="cashflow-row-actions">
+                                <button class="ghost-action" type="button" data-product-sale-receipt="${sale.id}">Comprovante</button>
+                              </div>
+                            </td>
+                          </tr>
+                        `
+                      )
+                      .join("")
+                  : '<tr><td colspan="7"><p class="empty-alert">Nenhuma venda de produto registrada ainda.</p></td></tr>'
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+      <article class="admin-panel screen-side-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Destaques</p>
+            <h2>Mais vendidos</h2>
+          </div>
+        </div>
+        <div class="screen-side-list">
+          ${
+            topProducts.length
+              ? topProducts
+                  .map(
+                    (item) => `
+                      <article class="screen-side-item">
+                        <span>Produto</span>
+                        <strong>${escapeHtml(item.name)}</strong>
+                        <p>${item.quantity} unidade(s) já registradas em vendas.</p>
+                      </article>
+                    `
+                  )
+                  .join("")
+              : '<p class="empty-alert">As vendas aparecerão aqui assim que forem registradas.</p>'
+          }
+        </div>
+      </article>
+    </section>
+  `;
+  initIcons();
+  bindProductSalesScreenControls(container);
+}
+
+function renderDocumentsScreen(container) {
+  const receiptsCount = documentHistory.filter((item) => normalizeText(item.category).includes("recibo")).length;
+  const reportsCount = documentHistory.filter((item) => normalizeText(item.category).includes("relatorio")).length;
+  container.innerHTML = `
+    <section class="screen-metrics" aria-label="Resumo dos documentos">
+      ${[
+        { label: "Documentos gerados", value: documentHistory.length, icon: "clipboard" },
+        { label: "Recibos", value: receiptsCount, icon: "invoice" },
+        { label: "Relatórios", value: reportsCount, icon: "dashboard" },
+        { label: "Hoje", value: documentHistory.filter((item) => normalizeText(item.createdAt).includes(normalizeText(formatDateBR(getTodayISO())))).length, icon: "clock" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+    <section class="screen-toolbar inventory-toolbar" aria-label="Filtros dos documentos">
+      <label class="screen-search">
+        <span class="screen-search-icon">${icons.clipboard}</span>
+        <input id="documentHistorySearchInput" type="search" placeholder="Buscar número, título ou responsável" />
+      </label>
+      <div class="screen-filters" id="documentHistoryFilters">
+        ${["Todos", "Recibo", "Relatório", "Documento"]
+          .map((filter, index) => `<button class="${index === 0 ? "is-active" : ""}" type="button" data-document-filter="${escapeHtml(filter)}">${escapeHtml(filter)}</button>`)
+          .join("")}
+      </div>
+    </section>
+    <section class="admin-screen-grid inventory-screen-grid">
+      <article class="admin-panel screen-table-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Histórico</p>
+            <h2>Recibos e documentos emitidos</h2>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table inventory-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Título</th>
+                <th>Número</th>
+                <th>Categoria</th>
+                <th>Responsável</th>
+                <th>Arquivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                documentHistory.length
+                  ? documentHistory
+                      .map(
+                        (item) => `
+                          <tr data-document-row data-document-filter-value="${escapeHtml(normalizeText(item.category).includes("recibo") ? "Recibo" : normalizeText(item.category).includes("relatorio") ? "Relatório" : "Documento")}">
+                            <td data-label="Data">${escapeHtml(item.createdAt)}</td>
+                            <td data-label="Título"><strong>${escapeHtml(item.title)}</strong><small class="table-note">${escapeHtml(item.summary || item.subtitle || "Documento gerado pelo LavaPrime.")}</small></td>
+                            <td data-label="Número">${escapeHtml(item.documentNumber || "-")}</td>
+                            <td data-label="Categoria">${escapeHtml(item.category)}</td>
+                            <td data-label="Responsável">${escapeHtml(item.responsible)}</td>
+                            <td data-label="Arquivo">${escapeHtml(item.fileName)}</td>
+                          </tr>
+                        `
+                      )
+                      .join("")
+                  : '<tr><td colspan="6"><p class="empty-alert">Os documentos emitidos passarão a aparecer aqui.</p></td></tr>'
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+      <article class="admin-panel screen-side-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Observação</p>
+            <h2>Padrão documental</h2>
+          </div>
+        </div>
+        <div class="screen-side-list">
+          <article class="screen-side-item">
+            <span>Papel timbrado</span>
+            <strong>Ativo em toda a rotina PDF</strong>
+            <p>Recibos, relatórios e comprovantes continuam saindo pelo mesmo gerador central do LavaPrime.</p>
+          </article>
+          <article class="screen-side-item">
+            <span>Financeiro</span>
+            <strong>Pix e contas bancárias</strong>
+            <p>Quando o documento é compatível com cobrança, os dados de pagamento definidos em Configurações Financeiras continuam disponíveis.</p>
+          </article>
+        </div>
+      </article>
+    </section>
+  `;
+  initIcons();
+  bindDocumentsScreenControls(container);
+}
+
+function formatInventoryQuantity(value, unit = "un") {
+  const amount = Number(value || 0);
+  const formatted = Number.isInteger(amount) ? String(amount) : amount.toFixed(2).replace(".", ",");
+  return `${formatted} ${unit}`;
+}
+
+function bindToolbarFilters(container, { inputSelector, rowSelector, filterContainerSelector, filterDatasetKey, filterMatcher }) {
+  const applyFilters = () => {
+    const query = normalizeText($(inputSelector, container)?.value || "");
+    const activeButton = $(`${filterContainerSelector} .is-active`, container);
+    const activeFilter = activeButton?.dataset[filterDatasetKey] || "Todos";
+    $$(rowSelector, container).forEach((row) => {
+      const textMatch = !query || normalizeText(row.textContent).includes(query);
+      const rowFilterValue = row.dataset[`${filterDatasetKey}Value`] || "Todos";
+      const filterMatch = filterMatcher ? filterMatcher(activeFilter, rowFilterValue, row) : activeFilter === "Todos" || rowFilterValue === activeFilter;
+      row.hidden = !textMatch || !filterMatch;
+    });
+  };
+
+  $(inputSelector, container)?.addEventListener("input", applyFilters);
+  $$(`${filterContainerSelector} button`, container).forEach((button) => {
+    button.addEventListener("click", () => {
+      $$(`${filterContainerSelector} button`, container).forEach((item) => item.classList.toggle("is-active", item === button));
+      applyFilters();
+    });
+  });
+}
+
+function bindProductsScreenControls(container) {
+  bindToolbarFilters(container, {
+    inputSelector: "#productSearchInput",
+    rowSelector: "[data-product-row]",
+    filterContainerSelector: "#productFilters",
+    filterDatasetKey: "productFilter"
+  });
+  $("#openProductAdjustmentsButton", container)?.addEventListener("click", () => {
+    const targetProduct = getLowStockProducts()[0] || productCatalog[0];
+    if (!targetProduct) {
+      showToast("Cadastre um produto antes de ajustar o estoque.");
+      return;
+    }
+    openInventoryDialog({ mode: "adjustment", kind: "product", id: targetProduct.id });
+  });
+  $$("[data-edit-product]", container).forEach((button) => {
+    button.addEventListener("click", () => openInventoryDialog({ mode: "product", id: Number(button.dataset.editProduct) }));
+  });
+  $$("[data-adjust-product]", container).forEach((button) => {
+    button.addEventListener("click", () => openInventoryDialog({ mode: "adjustment", kind: "product", id: Number(button.dataset.adjustProduct) }));
+  });
+}
+
+function bindSuppliesScreenControls(container) {
+  bindToolbarFilters(container, {
+    inputSelector: "#supplySearchInput",
+    rowSelector: "[data-supply-row]",
+    filterContainerSelector: "#supplyFilters",
+    filterDatasetKey: "supplyFilter"
+  });
+  $("#openSupplyAdjustmentsButton", container)?.addEventListener("click", () => {
+    const targetSupply = getLowStockSupplies()[0] || supplyCatalog[0];
+    if (!targetSupply) {
+      showToast("Cadastre um insumo antes de ajustar o estoque.");
+      return;
+    }
+    openInventoryDialog({ mode: "adjustment", kind: "supply", id: targetSupply.id });
+  });
+  $$("[data-edit-supply]", container).forEach((button) => {
+    button.addEventListener("click", () => openInventoryDialog({ mode: "supply", id: Number(button.dataset.editSupply) }));
+  });
+  $$("[data-adjust-supply]", container).forEach((button) => {
+    button.addEventListener("click", () => openInventoryDialog({ mode: "adjustment", kind: "supply", id: Number(button.dataset.adjustSupply) }));
+  });
+  $$("[data-open-service-supplies]", container).forEach((button) => {
+    button.addEventListener("click", () => openInventoryDialog({ mode: "serviceSupplies", serviceIndex: Number(button.dataset.openServiceSupplies) }));
+  });
+}
+
+function bindInventoryScreenControls(container) {
+  bindToolbarFilters(container, {
+    inputSelector: "#inventorySearchInput",
+    rowSelector: "[data-inventory-row]",
+    filterContainerSelector: "#inventoryFilters",
+    filterDatasetKey: "inventoryFilter"
+  });
+  $$("[data-adjust-inventory-id]", container).forEach((button) => {
+    button.addEventListener("click", () =>
+      openInventoryDialog({
+        mode: "adjustment",
+        kind: button.dataset.adjustInventoryKind,
+        id: Number(button.dataset.adjustInventoryId)
+      })
+    );
+  });
+}
+
+function bindProductSalesScreenControls(container) {
+  bindToolbarFilters(container, {
+    inputSelector: "#productSaleSearchInput",
+    rowSelector: "[data-product-sale-row]",
+    filterContainerSelector: "#productSaleFilters",
+    filterDatasetKey: "productSaleFilter",
+    filterMatcher: (activeFilter, rowFilterValue, row) => {
+      if (activeFilter === "Todos") return true;
+      if (activeFilter === "Com placa") return row.dataset.productSaleHasPlate === "true";
+      if (activeFilter === "Sem placa") return row.dataset.productSaleHasPlate !== "true";
+      return rowFilterValue === activeFilter;
+    }
+  });
+  $("#repeatLastProductSaleButton", container)?.addEventListener("click", () => {
+    if (!productSales.length) return;
+    openInventoryDialog({ mode: "sale", sale: productSales[0] });
+  });
+  $$("[data-product-sale-receipt]", container).forEach((button) => {
+    button.addEventListener("click", () => generateProductSaleReceiptPdf(Number(button.dataset.productSaleReceipt)));
+  });
+}
+
+function bindDocumentsScreenControls(container) {
+  bindToolbarFilters(container, {
+    inputSelector: "#documentHistorySearchInput",
+    rowSelector: "[data-document-row]",
+    filterContainerSelector: "#documentHistoryFilters",
+    filterDatasetKey: "documentFilter",
+    filterMatcher: (activeFilter, rowFilterValue) => activeFilter === "Todos" || rowFilterValue === activeFilter
+  });
+}
+
+function openInventoryDialog(options = {}) {
+  if (options.mode === "adjustment" && options.kind === "supply" && !businessFinanceSettings.inventory.allowManualSupplyAdjustment) {
+    showToast("Os ajustes manuais de insumos estão desativados nas Configurações Financeiras.");
+    return;
+  }
+  inventoryDialogState = { ...options };
+  const dialog = $("#inventoryDialog");
+  if (!dialog) return;
+  const mode = options.mode || "product";
+  if (mode === "product") dialog.innerHTML = renderInventoryItemDialog("product", getProductById(options.id));
+  if (mode === "supply") dialog.innerHTML = renderInventoryItemDialog("supply", getSupplyById(options.id));
+  if (mode === "adjustment") dialog.innerHTML = renderInventoryAdjustmentDialog(options.kind, options.kind === "product" ? getProductById(options.id) : getSupplyById(options.id));
+  if (mode === "sale") dialog.innerHTML = renderProductSaleDialog(options.sale || null);
+  if (mode === "serviceSupplies") dialog.innerHTML = renderServiceSuppliesDialog(options.serviceIndex);
+
+  initIcons();
+  bindCurrencyInputs(dialog);
+  bindInventoryDialogControls(dialog);
+  dialog.oncancel = (event) => {
+    event.preventDefault();
+    closeInventoryDialog();
+  };
+  if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+  else dialog.setAttribute("open", "");
+}
+
+function closeInventoryDialog() {
+  const dialog = $("#inventoryDialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function") dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+  inventoryDialogState = null;
+}
+
+function renderInventoryItemDialog(kind, item = null) {
+  const isProduct = kind === "product";
+  const title = isProduct ? (item ? "Editar produto" : "Novo produto") : item ? "Editar insumo" : "Novo insumo";
+  const eyebrow = isProduct ? "Produtos para venda" : "Insumos internos";
+  return `
+    <form class="vehicle-box service-box" id="inventoryItemForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">${escapeHtml(eyebrow)}</p>
+          <h2>${escapeHtml(title)}</h2>
+        </div>
+        <button class="icon-button" id="closeInventoryDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+      <div class="vehicle-form-grid service-dialog-grid inventory-form-grid">
+        <label class="login-field" for="inventoryItemName">
+          <span>${isProduct ? "Nome do produto" : "Nome do insumo"}</span>
+          <input id="inventoryItemName" type="text" value="${escapeHtml(item?.name || "")}" required />
+        </label>
+        <label class="login-field" for="inventoryItemSku">
+          <span>SKU</span>
+          <input id="inventoryItemSku" type="text" value="${escapeHtml(item?.sku || "")}" placeholder="${isProduct ? "PRD-001" : "INS-001"}" required />
+        </label>
+        <label class="login-field" for="inventoryItemUnit">
+          <span>Unidade</span>
+          <select id="inventoryItemUnit">
+            ${renderSelectOptions(["un", "ml", "L", "kg", "pct"], item?.unit || "un")}
+          </select>
+        </label>
+        <label class="login-field" for="inventoryItemStock">
+          <span>Estoque atual</span>
+          <input id="inventoryItemStock" type="number" min="0" step="0.01" value="${escapeHtml(String(item?.stock ?? 0))}" required />
+        </label>
+        <label class="login-field" for="inventoryItemMinStock">
+          <span>Estoque mínimo</span>
+          <input id="inventoryItemMinStock" type="number" min="0" step="0.01" value="${escapeHtml(String(item?.minStock ?? 0))}" />
+        </label>
+        <label class="login-field" for="inventoryItemCost">
+          <span>${isProduct ? "Custo unitário" : "Custo médio"}</span>
+          <input id="inventoryItemCost" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(formatCurrencyFieldValue(item?.cost || 0))}" required />
+        </label>
+        ${
+          isProduct
+            ? `
+              <label class="login-field" for="inventoryItemPrice">
+                <span>Preço de venda</span>
+                <input id="inventoryItemPrice" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(formatCurrencyFieldValue(item?.price || 0))}" required />
+              </label>
+            `
+            : `
+              <label class="login-field" for="inventoryItemSupplier">
+                <span>Fornecedor</span>
+                <input id="inventoryItemSupplier" type="text" value="${escapeHtml(item?.supplier || "")}" placeholder="Nome do fornecedor" />
+              </label>
+            `
+        }
+        <label class="login-field inventory-notes-field" for="inventoryItemNotes">
+          <span>Observações</span>
+          <textarea id="inventoryItemNotes" rows="3">${escapeHtml(item?.notes || "")}</textarea>
+        </label>
+        <label class="switch-field" for="inventoryItemActive">
+          <input id="inventoryItemActive" type="checkbox" ${item?.active !== false ? "checked" : ""} />
+          <span class="switch-control"></span>
+          <span>Item ativo</span>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button class="exit-button" id="cancelInventoryDialog" type="button">Cancelar</button>
+        <button class="primary-button" type="submit">
+          <span data-icon="check"></span>
+          <span>${item ? "Salvar alterações" : "Cadastrar item"}</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function renderInventoryAdjustmentDialog(kind, item) {
+  return `
+    <form class="vehicle-box service-box" id="inventoryAdjustmentForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Inventário</p>
+          <h2>Ajuste de estoque</h2>
+        </div>
+        <button class="icon-button" id="closeInventoryDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+      <p class="step-copy">${item ? `${item.name} · saldo atual ${formatInventoryQuantity(item.stock, item.unit)}` : "Selecione um item válido para ajustar o estoque."}</p>
+      <div class="vehicle-form-grid service-dialog-grid inventory-form-grid">
+        <label class="login-field" for="inventoryAdjustmentType">
+          <span>Tipo de movimento</span>
+          <select id="inventoryAdjustmentType">
+            ${renderSelectOptions(["Reposição", "Ajuste de entrada", "Ajuste de saída"], "Reposição")}
+          </select>
+        </label>
+        <label class="login-field" for="inventoryAdjustmentQuantity">
+          <span>Quantidade</span>
+          <input id="inventoryAdjustmentQuantity" type="number" min="0.01" step="0.01" placeholder="0" required />
+        </label>
+        <label class="login-field inventory-notes-field" for="inventoryAdjustmentReason">
+          <span>Motivo</span>
+          <textarea id="inventoryAdjustmentReason" rows="3" placeholder="Ex.: conferência física, reposição do fornecedor, perda operacional"></textarea>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button class="exit-button" id="cancelInventoryDialog" type="button">Cancelar</button>
+        <button class="primary-button" type="submit">
+          <span data-icon="check"></span>
+          <span>Salvar ajuste</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function renderProductSaleDialog(baseSale = null) {
+  const activeProducts = productCatalog.filter((item) => item.active !== false);
+  const defaultLines = baseSale?.items?.length
+    ? baseSale.items.map((item) => ({ productId: item.productId, quantity: item.quantity }))
+    : [{ productId: activeProducts[0]?.id || "", quantity: 1 }];
+  return `
+    <form class="vehicle-box service-box" id="productSaleForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Venda de produtos</p>
+          <h2>${baseSale ? "Replicar venda" : "Nova venda"}</h2>
+        </div>
+        <button class="icon-button" id="closeInventoryDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+      <div class="vehicle-form-grid service-dialog-grid inventory-form-grid">
+        <label class="login-field" for="productSaleClientName">
+          <span>Cliente</span>
+          <input id="productSaleClientName" type="text" value="${escapeHtml(baseSale?.clientName || "")}" placeholder="Cliente avulso" />
+        </label>
+        <label class="login-field" for="productSalePlate">
+          <span>Placa vinculada</span>
+          <input id="productSalePlate" type="text" value="${escapeHtml(baseSale?.plate || "")}" placeholder="Opcional" maxlength="8" />
+        </label>
+        <label class="login-field" for="productSalePaymentMethod">
+          <span>Forma de pagamento</span>
+          <select id="productSalePaymentMethod">
+            ${renderRegistrySelectOptions(getSelectablePaymentMethodNames("productSale", { allowBilled: false }), baseSale?.paymentMethod || getPreferredPaymentMethodName("productSale", false))}
+          </select>
+        </label>
+        <label class="login-field" for="productSaleDocumentType">
+          <span>Documento</span>
+          <select id="productSaleDocumentType">
+            ${renderSelectOptions(["Recibo", "Pedido", "Comprovante simples", "Orçamento"], baseSale?.documentType || businessFinanceSettings.documents.defaultProductDocumentType || "Recibo")}
+          </select>
+        </label>
+      </div>
+      <div class="sale-lines-block">
+        <div class="sale-lines-head">
+          <h3>Itens da venda</h3>
+          <button class="ghost-action compact" id="addProductSaleLineButton" type="button">
+            <span data-icon="plus"></span>
+            <span>Adicionar item</span>
+          </button>
+        </div>
+        <div id="productSaleLines">${defaultLines.map((line, index) => renderProductSaleLine(line, index)).join("")}</div>
+      </div>
+      <label class="login-field inventory-notes-field" for="productSaleNotes">
+        <span>Observações</span>
+        <textarea id="productSaleNotes" rows="3">${escapeHtml(baseSale?.notes || "")}</textarea>
+      </label>
+      <article class="cash-change-card partial-balance-card sale-total-card">
+        <span>Total previsto</span>
+        <strong id="productSaleTotal">${formatCurrency(0)}</strong>
+      </article>
+      <div class="dialog-actions">
+        <button class="exit-button" id="cancelInventoryDialog" type="button">Cancelar</button>
+        <button class="primary-button" type="submit" ${activeProducts.length ? "" : "disabled"}>
+          <span data-icon="check"></span>
+          <span>Registrar venda</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function renderProductSaleLine(line, index) {
+  const activeProducts = productCatalog.filter((item) => item.active !== false);
+  const fallbackId = activeProducts[0]?.id || "";
+  return `
+    <div class="sale-line-row" data-sale-line-row>
+      <label class="login-field" for="productSaleProduct${index}">
+        <span>Produto</span>
+        <select id="productSaleProduct${index}" data-product-sale-product>
+          ${renderRegistrySelectOptions(activeProducts.map((item) => String(item.id)), String(line.productId || fallbackId), { labelGetter: (value) => {
+            const product = getProductById(Number(value));
+            return product ? `${product.name} · ${formatCurrency(product.price)}` : value;
+          } })}
+        </select>
+      </label>
+      <label class="login-field" for="productSaleQuantity${index}">
+        <span>Quantidade</span>
+        <input id="productSaleQuantity${index}" data-product-sale-quantity type="number" min="1" step="1" value="${escapeHtml(String(line.quantity || 1))}" />
+      </label>
+      <button class="ghost-action compact sale-line-remove" type="button" data-remove-product-sale-line>
+        <span data-icon="x"></span>
+        <span>Remover</span>
+      </button>
+    </div>
+  `;
+}
+
+function renderServiceSuppliesDialog(serviceIndex) {
+  const service = serviceCatalog[serviceIndex];
+  const entries = service ? getServiceSupplyProfile(service) : [];
+  const activeSupplies = supplyCatalog.filter((item) => item.active !== false);
+  return `
+    <form class="vehicle-box service-box" id="serviceSuppliesForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Ficha técnica</p>
+          <h2>${service ? escapeHtml(service.name) : "Configurar insumos"}</h2>
+        </div>
+        <button class="icon-button" id="closeInventoryDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+      <p class="step-copy">${service ? `Defina a média de consumo usada ao concluir ${service.name}.` : "Selecione um serviço válido."}</p>
+      <div class="sale-lines-block">
+        <div class="sale-lines-head">
+          <h3>Composição do serviço</h3>
+          <button class="ghost-action compact" id="addServiceSupplyLineButton" type="button" ${activeSupplies.length ? "" : "disabled"}>
+            <span data-icon="plus"></span>
+            <span>Adicionar insumo</span>
+          </button>
+        </div>
+        <div id="serviceSupplyLines">
+          ${(entries.length ? entries : [{ supplyId: activeSupplies[0]?.id || "", quantity: 1, notes: "" }]).map((entry, index) => renderServiceSupplyLine(entry, index)).join("")}
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="exit-button" id="cancelInventoryDialog" type="button">Cancelar</button>
+        <button class="primary-button" type="submit" ${service ? "" : "disabled"}>
+          <span data-icon="check"></span>
+          <span>Salvar composição</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function renderServiceSupplyLine(entry, index) {
+  const activeSupplies = supplyCatalog.filter((item) => item.active !== false);
+  const fallbackId = activeSupplies[0]?.id || "";
+  return `
+    <div class="sale-line-row supply-line-row" data-service-supply-row>
+      <label class="login-field" for="serviceSupply${index}">
+        <span>Insumo</span>
+        <select id="serviceSupply${index}" data-service-supply-id>
+          ${renderRegistrySelectOptions(activeSupplies.map((item) => String(item.id)), String(entry.supplyId || fallbackId), {
+            labelGetter: (value) => {
+              const supply = getSupplyById(Number(value));
+              return supply ? `${supply.name} · ${formatInventoryQuantity(supply.stock, supply.unit)}` : value;
+            }
+          })}
+        </select>
+      </label>
+      <label class="login-field" for="serviceSupplyQuantity${index}">
+        <span>Quantidade média</span>
+        <input id="serviceSupplyQuantity${index}" data-service-supply-quantity type="number" min="0.01" step="0.01" value="${escapeHtml(String(entry.quantity || 1))}" />
+      </label>
+      <label class="login-field" for="serviceSupplyNotes${index}">
+        <span>Observação</span>
+        <input id="serviceSupplyNotes${index}" data-service-supply-notes type="text" value="${escapeHtml(entry.notes || "")}" placeholder="Uso padrão do serviço" />
+      </label>
+      <button class="ghost-action compact sale-line-remove" type="button" data-remove-service-supply-line>
+        <span data-icon="x"></span>
+        <span>Remover</span>
+      </button>
+    </div>
+  `;
+}
+
+function bindInventoryDialogControls(dialog) {
+  $("#closeInventoryDialog", dialog)?.addEventListener("click", closeInventoryDialog);
+  $("#cancelInventoryDialog", dialog)?.addEventListener("click", closeInventoryDialog);
+
+  if ($("#inventoryItemForm", dialog)) {
+    $("#inventoryItemForm", dialog).addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveInventoryItemForm(dialog);
+    });
+  }
+
+  if ($("#inventoryAdjustmentForm", dialog)) {
+    $("#inventoryAdjustmentForm", dialog).addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveInventoryAdjustment(dialog);
+    });
+  }
+
+  if ($("#productSaleForm", dialog)) {
+    $("#productSalePlate", dialog)?.addEventListener("input", (event) => {
+      event.currentTarget.value = formatPlate(event.currentTarget.value);
+    });
+    $("#addProductSaleLineButton", dialog)?.addEventListener("click", () => {
+      const lines = $("#productSaleLines", dialog);
+      const index = $$("[data-sale-line-row]", dialog).length;
+      lines.insertAdjacentHTML("beforeend", renderProductSaleLine({}, index));
+      initIcons();
+      bindProductSaleDialogControls(dialog);
+      updateProductSaleTotal(dialog);
+    });
+    $("#productSaleForm", dialog).addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveProductSale(dialog);
+    });
+    bindProductSaleDialogControls(dialog);
+    updateProductSaleTotal(dialog);
+  }
+
+  if ($("#serviceSuppliesForm", dialog)) {
+    $("#addServiceSupplyLineButton", dialog)?.addEventListener("click", () => {
+      const lines = $("#serviceSupplyLines", dialog);
+      const index = $$("[data-service-supply-row]", dialog).length;
+      lines.insertAdjacentHTML("beforeend", renderServiceSupplyLine({}, index));
+      initIcons();
+      bindServiceSuppliesDialogControls(dialog);
+    });
+    $("#serviceSuppliesForm", dialog).addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveServiceSupplies(dialog);
+    });
+    bindServiceSuppliesDialogControls(dialog);
+  }
+}
+
+function bindProductSaleDialogControls(dialog) {
+  $$("[data-remove-product-sale-line]", dialog).forEach((button) => {
+    button.onclick = () => {
+      const rows = $$("[data-sale-line-row]", dialog);
+      if (rows.length <= 1) {
+        showToast("Mantenha ao menos um item na venda.");
+        return;
+      }
+      button.closest("[data-sale-line-row]")?.remove();
+      updateProductSaleTotal(dialog);
+    };
+  });
+  $$("[data-product-sale-product], [data-product-sale-quantity]", dialog).forEach((field) => {
+    field.onchange = () => updateProductSaleTotal(dialog);
+    field.oninput = () => updateProductSaleTotal(dialog);
+  });
+}
+
+function bindServiceSuppliesDialogControls(dialog) {
+  $$("[data-remove-service-supply-line]", dialog).forEach((button) => {
+    button.onclick = () => {
+      button.closest("[data-service-supply-row]")?.remove();
+    };
+  });
+}
+
+function updateProductSaleTotal(dialog) {
+  const total = $$("[data-sale-line-row]", dialog).reduce((sum, row) => {
+    const productId = Number($("[data-product-sale-product]", row)?.value || 0);
+    const quantity = Math.max(0, Number($("[data-product-sale-quantity]", row)?.value || 0));
+    const product = getProductById(productId);
+    return sum + quantity * Number(product?.price || 0);
+  }, 0);
+  $("#productSaleTotal", dialog).textContent = formatCurrency(total);
+  return total;
+}
+
+function saveInventoryItemForm(dialog) {
+  const mode = inventoryDialogState?.mode || "product";
+  const isProduct = mode === "product";
+  const list = isProduct ? productCatalog : supplyCatalog;
+  const itemId = Number(inventoryDialogState?.id || 0);
+  const existingItem = list.find((item) => Number(item.id) === itemId) || null;
+  const name = $("#inventoryItemName", dialog).value.trim();
+  const sku = $("#inventoryItemSku", dialog).value.trim();
+  const stock = Number($("#inventoryItemStock", dialog).value || 0);
+  const minStock = Number($("#inventoryItemMinStock", dialog).value || 0);
+  const cost = getCurrencyInputValue("#inventoryItemCost", dialog);
+  const notes = $("#inventoryItemNotes", dialog).value.trim();
+  const basePayload = {
+    id: existingItem?.id || (isProduct ? getNextProductId() : getNextSupplyId()),
+    sku,
+    name,
+    unit: $("#inventoryItemUnit", dialog).value || "un",
+    stock,
+    minStock,
+    cost,
+    active: $("#inventoryItemActive", dialog).checked,
+    notes,
+    createdAt: existingItem?.createdAt || getTodayISO(),
+    updatedAt: getTodayISO()
+  };
+
+  if (!name || !sku) {
+    showToast("Preencha nome e SKU do item.");
+    return;
+  }
+  if (stock < 0 || minStock < 0 || cost < 0) {
+    showToast("Estoque, estoque mínimo e custo não podem ser negativos.");
+    return;
+  }
+  if (list.some((item) => Number(item.id) !== Number(existingItem?.id || 0) && normalizeText(item.sku) === normalizeText(sku))) {
+    showToast("Já existe um item com esse SKU.");
+    return;
+  }
+  if (isProduct) {
+    const price = getCurrencyInputValue("#inventoryItemPrice", dialog);
+    if (price < 0) {
+      showToast("O preço de venda não pode ser negativo.");
+      return;
+    }
+    const nextProduct = { ...basePayload, price };
+    if (existingItem) Object.assign(existingItem, nextProduct);
+    else productCatalog.unshift(nextProduct);
+    saveProductCatalog();
+    renderProductsScreen($("#adminProductsContent"));
+  } else {
+    const supplier = $("#inventoryItemSupplier", dialog).value.trim();
+    const nextSupply = { ...basePayload, supplier };
+    if (existingItem) Object.assign(existingItem, nextSupply);
+    else supplyCatalog.unshift(nextSupply);
+    saveSupplyCatalog();
+    serviceSupplyProfiles = normalizeServiceSupplyProfiles(serviceSupplyProfiles);
+    saveServiceSupplyProfiles();
+    renderSuppliesScreen($("#adminSuppliesContent"));
+  }
+  renderInventoryScreen($("#adminInventoryContent"));
+  closeInventoryDialog();
+  showToast(isProduct ? "Produto salvo." : "Insumo salvo.");
+}
+
+function registerInventoryMovement({ kind, itemId, itemName, type, quantity, previousStock, currentStock, unit, reason = "", sourceCode = "" }) {
+  const movement = {
+    id: getNextInventoryMovementId(),
+    kind,
+    itemId,
+    itemName,
+    type,
+    quantity,
+    previousStock,
+    currentStock,
+    unit,
+    reason,
+    sourceCode,
+    createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
+    operator: activeSessionUser || "Administrador"
+  };
+  inventoryMovements.unshift(movement);
+  saveInventoryMovements();
+  return movement;
+}
+
+function saveInventoryAdjustment(dialog) {
+  const kind = inventoryDialogState?.kind || "product";
+  const item = kind === "product" ? getProductById(inventoryDialogState?.id) : getSupplyById(inventoryDialogState?.id);
+  if (!item) {
+    showToast("Item de estoque não localizado.");
+    return;
+  }
+  const movementType = $("#inventoryAdjustmentType", dialog).value;
+  const rawQuantity = Number($("#inventoryAdjustmentQuantity", dialog).value || 0);
+  const reason = $("#inventoryAdjustmentReason", dialog).value.trim();
+  if (rawQuantity <= 0) {
+    showToast("Informe uma quantidade válida.");
+    return;
+  }
+  if (kind === "supply" && businessFinanceSettings.inventory.requireSupplyAdjustmentReason && !reason) {
+    showToast("Informe a justificativa do ajuste manual do insumo.");
+    $("#inventoryAdjustmentReason", dialog)?.focus();
+    return;
+  }
+  const delta = movementType === "Ajuste de saída" ? -rawQuantity : rawQuantity;
+  const nextStock = Number(item.stock || 0) + delta;
+  if (nextStock < 0 && !(kind === "supply" && businessFinanceSettings.inventory.allowSupplyNegativeStock) && !(kind === "product" && businessFinanceSettings.inventory.allowProductSaleWithoutStock)) {
+    showToast("O ajuste deixaria o estoque negativo e essa regra está bloqueada.");
+    return;
+  }
+  const previousStock = Number(item.stock || 0);
+  item.stock = nextStock;
+  item.updatedAt = getTodayISO();
+  if (kind === "product") saveProductCatalog();
+  else saveSupplyCatalog();
+  registerInventoryMovement({
+    kind,
+    itemId: item.id,
+    itemName: item.name,
+    type: movementType === "Reposição" ? "restock" : "adjustment",
+    quantity: delta,
+    previousStock,
+    currentStock: nextStock,
+    unit: item.unit,
+    reason
+  });
+  renderProductsScreen($("#adminProductsContent"));
+  renderSuppliesScreen($("#adminSuppliesContent"));
+  renderInventoryScreen($("#adminInventoryContent"));
+  closeInventoryDialog();
+  showToast("Ajuste de estoque salvo.");
+}
+
+function buildProductSaleCode() {
+  const datePart = getTodayISO().slice(0, 7).replace("-", "");
+  const maxSequence = productSales.reduce((max, sale) => {
+    const match = String(sale.code || "").match(new RegExp(`^VEN-${datePart}-(\\d+)$`));
+    return match ? Math.max(max, Number(match[1] || 0)) : max;
+  }, 0);
+  return `VEN-${datePart}-${String(maxSequence + 1).padStart(3, "0")}`;
+}
+
+function createCashEntryFromProductSale(sale) {
+  const financeSnapshot = getCashEntryFinanceSnapshot(sale.total, sale.paymentMethod, "Entrada", sale.date);
+  const entry = {
+    id: getNextCashEntryId(),
+    date: sale.date,
+    time: sale.time,
+    type: "Entrada",
+    description: `${sale.code} - venda de produtos`,
+    method: sale.paymentMethod,
+    value: sale.total,
+    category: "Produtos",
+    costCenter: "Loja",
+    status: getExpectedReceiptStatus(sale.paymentMethod, "Entrada"),
+    feePercent: financeSnapshot.feePercent,
+    fixedFee: financeSnapshot.fixedFee,
+    feeAmount: financeSnapshot.feeAmount,
+    netAmount: financeSnapshot.netAmount,
+    expectedReceiptDate: financeSnapshot.expectedReceiptDate,
+    methodImmediateSettlement: financeSnapshot.methodImmediateSettlement,
+    settlementDays: financeSnapshot.settlementDays,
+    linkedBankAccountName: financeSnapshot.linkedBankAccountName,
+    serviceAmount: 0,
+    productAmount: sale.total,
+    createdBy: activeSessionUser || "Administrador",
+    updatedBy: activeSessionUser || "Administrador"
+  };
+  cashEntries.unshift(entry);
+  saveCashEntries();
+  return entry;
+}
+
+function saveProductSale(dialog) {
+  const rows = $$("[data-sale-line-row]", dialog);
+  if (!rows.length) {
+    showToast("Inclua ao menos um item na venda.");
+    return;
+  }
+  const saleItems = rows
+    .map((row) => {
+      const productId = Number($("[data-product-sale-product]", row)?.value || 0);
+      const quantity = Math.max(0, Number($("[data-product-sale-quantity]", row)?.value || 0));
+      const product = getProductById(productId);
+      return product
+        ? {
+            product,
+            productId: product.id,
+            name: product.name,
+            quantity,
+            unitPrice: Number(product.price || 0),
+            lineTotal: quantity * Number(product.price || 0)
+          }
+        : null;
+    })
+    .filter((item) => item && item.quantity > 0);
+  if (!saleItems.length) {
+    showToast("Selecione itens válidos para a venda.");
+    return;
+  }
+  const invalidStock = saleItems.find(
+    (item) => Number(item.product.stock || 0) < item.quantity && !businessFinanceSettings.inventory.allowProductSaleWithoutStock
+  );
+  if (invalidStock) {
+    showToast(`Estoque insuficiente para ${invalidStock.name}.`);
+    return;
+  }
+  const sale = {
+    id: getNextProductSaleId(),
+    code: buildProductSaleCode(),
+    date: getTodayISO(),
+    time: getCurrentShortTime(),
+    clientName: $("#productSaleClientName", dialog).value.trim() || "Cliente avulso",
+    plate: $("#productSalePlate", dialog).value.trim(),
+    paymentMethod: $("#productSalePaymentMethod", dialog).value || getPreferredPaymentMethodName("productSale", false),
+    documentType: $("#productSaleDocumentType", dialog).value || businessFinanceSettings.documents.defaultProductDocumentType || "Recibo",
+    operator: activeSessionUser || "Administrador",
+    notes: $("#productSaleNotes", dialog).value.trim(),
+    status: "Confirmado",
+    items: saleItems.map((item) => ({
+      productId: item.productId,
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      lineTotal: item.lineTotal
+    })),
+    total: saleItems.reduce((sum, item) => sum + item.lineTotal, 0)
+  };
+
+  saleItems.forEach((item) => {
+    const previousStock = Number(item.product.stock || 0);
+    item.product.stock = previousStock - item.quantity;
+    item.product.updatedAt = getTodayISO();
+    registerInventoryMovement({
+      kind: "product",
+      itemId: item.product.id,
+      itemName: item.product.name,
+      type: "sale",
+      quantity: -item.quantity,
+      previousStock,
+      currentStock: item.product.stock,
+      unit: item.product.unit,
+      reason: `Venda ${sale.code}`,
+      sourceCode: sale.code
+    });
+  });
+
+  const cashEntry = createCashEntryFromProductSale(sale);
+  sale.cashEntryId = cashEntry.id;
+  productSales.unshift(sale);
+  saveProductCatalog();
+  saveProductSales();
+  closeInventoryDialog();
+  renderProductSalesScreen($("#adminProductSalesContent"));
+  renderProductsScreen($("#adminProductsContent"));
+  renderInventoryScreen($("#adminInventoryContent"));
+  refreshCashflowScreen();
+  renderAdminDashboard();
+  showToast(`Venda ${sale.code} registrada.`);
+}
+
+function saveServiceSupplies(dialog) {
+  const service = serviceCatalog[inventoryDialogState?.serviceIndex];
+  if (!service) {
+    showToast("Serviço não localizado.");
+    return;
+  }
+  const entries = $$("[data-service-supply-row]", dialog)
+    .map((row) => ({
+      supplyId: Number($("[data-service-supply-id]", row)?.value || 0),
+      quantity: Math.max(0, Number($("[data-service-supply-quantity]", row)?.value || 0)),
+      notes: $("[data-service-supply-notes]", row)?.value.trim() || ""
+    }))
+    .filter((entry) => entry.supplyId && entry.quantity > 0);
+  const key = getServiceSupplyProfileKey(service);
+  if (entries.length) serviceSupplyProfiles[key] = entries;
+  else delete serviceSupplyProfiles[key];
+  serviceSupplyProfiles = normalizeServiceSupplyProfiles(serviceSupplyProfiles);
+  saveServiceSupplyProfiles();
+  closeInventoryDialog();
+  renderServicesScreen($("#adminServicesContent"));
+  renderSuppliesScreen($("#adminSuppliesContent"));
+  renderPatio();
+  showToast("Ficha técnica do serviço atualizada.");
+}
+
+function generateProductSaleReceiptPdf(saleId) {
+  const sale = productSales.find((item) => Number(item.id) === Number(saleId));
+  if (!sale) return;
+  const lines = [
+    `Venda: ${sale.code}`,
+    `Cliente: ${sale.clientName}`,
+    sale.plate ? `Placa: ${sale.plate}` : "",
+    `Data: ${formatDateBR(sale.date)} às ${sale.time}`,
+    `Pagamento: ${sale.paymentMethod}`,
+    "",
+    ...sale.items.map((item) => `${item.name} - ${item.quantity} x ${formatCurrency(item.unitPrice)} = ${formatCurrency(item.lineTotal)}`),
+    "",
+    `Total: ${formatCurrency(sale.total)}`,
+    sale.notes ? `Observações: ${sale.notes}` : ""
+  ].filter(Boolean);
+  downloadPdfFile(`${sale.code.toLowerCase()}.pdf`, "COMPROVANTE DE VENDA", lines, {
+    subtitle: `Venda ${sale.code}`,
+    documentNumber: sale.code,
+    category: sale.documentType,
+    summary: `Venda de produtos para ${sale.clientName}.`,
+    reportTarget: "receipts",
+    sourceType: "productSale",
+    sourceId: String(sale.id)
+  });
+  showToast("Comprovante da venda gerado.");
 }
 
 function getClientsScreenContent() {
@@ -9782,7 +14874,7 @@ function getClientsScreenContent() {
       { label: "Faturados", value: billingClients.length, icon: "invoice" },
       { label: "Total em aberto", value: formatCurrency(getOpenInvoicesTotal()), icon: "wallet" }
     ],
-    kicker: "Carteira",
+    kicker: "Cadastros",
     tableTitle: "Clientes cadastrados",
     columns: ["Cliente", "Documento", "Telefone", "Faturas", "Aberto"],
     rows,
@@ -10061,7 +15153,7 @@ function requestSettlementPaymentInfo({
         <label class="login-field" for="settlementPaymentMethod">
           <span>Meio de pagamento</span>
           <select id="settlementPaymentMethod" required>
-            ${renderSelectOptions(getSettlementPaymentMethods(), defaultMethod)}
+            ${renderRegistrySelectOptions(getSettlementPaymentMethods(), defaultMethod)}
           </select>
         </label>
         <label class="login-field settlement-bank-field" for="settlementBankAccount" hidden>
@@ -10248,7 +15340,7 @@ async function settleOpenPayment(paymentId) {
   const settlement = await requestSettlementPaymentInfo({
     title: "Baixar pagamento em aberto",
     description: `${payment.clientName} / ${formatCurrency(payment.value)}`,
-    defaultMethod: payment.paymentMethod || "Pix",
+    defaultMethod: payment.paymentMethod || getPreferredPaymentMethodName("settlement", false),
     totalValue: payment.value,
     allowPartial: true
   });
@@ -10293,6 +15385,7 @@ async function settleOpenPayment(paymentId) {
       operator: activeSessionUser || "Administrador"
     });
   }
+  saveCashEntries();
 
   let remainingPayment = null;
   if (settlement.partial) {
@@ -10354,6 +15447,7 @@ function createRemainingOpenPaymentCashEntry(payment, settlement) {
     operator: activeSessionUser || "Administrador"
   };
   cashEntries.unshift(entry);
+  saveCashEntries();
   return entry;
 }
 
@@ -10368,9 +15462,9 @@ function createRemainingOpenPayment(payment, settlement, cashEntry) {
     service: payment.service || "",
     description: getRemainingOpenPaymentDescription(payment),
     value: settlement.balance,
-    paymentMethod: settlement.method || payment.paymentMethod || "Pix",
+    paymentMethod: settlement.method || payment.paymentMethod || getPreferredPaymentMethodName("service"),
     createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
-    dueDate: getTodayISO(),
+    dueDate: getDefaultOpenPaymentDueDate(),
     status: "Aberto",
     reminderFrequency: payment.reminderFrequency || "Diário",
     lastReminderAt: "",
@@ -10713,7 +15807,7 @@ function getCashflowRegistryConfig(kind) {
     paymentMethod: {
       title: "Formas de pagamento",
       label: "forma de pagamento",
-      list: paymentMethods,
+      list: getAllPaymentMethodNames(),
       placeholder: "Nova forma de pagamento",
       buttonLabel: "Adicionar forma",
       protectedValues: ["Dinheiro", "Faturado"]
@@ -11058,7 +16152,7 @@ function getCashflowScreenContent() {
     .reduce((total, entry) => total + entry.value, 0);
   const totalOut = Math.abs(cashEntries.filter((entry) => entry.value < 0).reduce((total, entry) => total + entry.value, 0));
   const zeroCurrency = formatCurrency(0);
-  const methodSummary = paymentMethods
+  const methodSummary = getCashflowPaymentMethods()
     .map((method) => {
       const confirmed = cashEntries
         .filter((entry) => entry.value > 0 && entry.method === method && entry.status === "Confirmado")
@@ -11165,7 +16259,7 @@ function renderCashflowDialogForm(entry, draft = null) {
         ${renderCashflowManagedSelectField({
           id: "cashEntryMethod",
           label: "Forma de Pagamento",
-          optionsHtml: renderSelectOptions(getCashflowPaymentMethods(), source.method || "Pix"),
+          optionsHtml: renderRegistrySelectOptions(getCashflowPaymentMethods(), source.method || getPreferredPaymentMethodName("cashflow")),
           registryKind: "paymentMethod",
           actionLabel: "Cadastrar forma de pagamento"
         })}
@@ -11237,11 +16331,15 @@ function renderCashflowDialogForm(entry, draft = null) {
 }
 
 function renderCashflowManagedSelectField({ id, label, optionsHtml, registryKind, actionLabel }) {
+  const buttonAttribute =
+    registryKind === "paymentMethod"
+      ? 'data-open-business-finance="payment-methods"'
+      : `data-open-cashflow-dialog-registry="${escapeHtml(registryKind)}"`;
   return `
     <div class="cashflow-managed-select">
       <div class="cashflow-managed-select-head">
         <span>${escapeHtml(label)}</span>
-        <button class="icon-button cashflow-add-option-button" type="button" data-open-cashflow-dialog-registry="${escapeHtml(registryKind)}" aria-label="${escapeHtml(actionLabel)}">
+        <button class="icon-button cashflow-add-option-button" type="button" ${buttonAttribute} aria-label="${escapeHtml(actionLabel)}">
           <span data-icon="plus"></span>
         </button>
       </div>
@@ -11269,6 +16367,13 @@ function bindCashflowDialogControls(dialog) {
       openCashflowRegistryDialog(button.dataset.openCashflowDialogRegistry, { returnToEntry: true });
     });
   });
+  $$("[data-open-business-finance]", dialog).forEach((button) => {
+    button.addEventListener("click", () => {
+      cashflowDialogDraft = getCashflowDialogDraft(dialog);
+      closeCashflowDialog();
+      showAdminView("businessFinance");
+    });
+  });
   $("#cashflowForm", dialog).addEventListener("submit", (event) => {
     event.preventDefault();
     saveCashEntry(dialog);
@@ -11283,7 +16388,7 @@ function getCashflowDialogDraft(dialog) {
     type,
     value: signedValue,
     description: $("#cashEntryDescription", dialog)?.value.trim() || "",
-    method: $("#cashEntryMethod", dialog)?.value || "Pix",
+    method: $("#cashEntryMethod", dialog)?.value || getPreferredPaymentMethodName("cashflow"),
     category: $("#cashEntryCategory", dialog)?.value || cashflowCategories[0] || "",
     costCenter: $("#cashEntryCostCenter", dialog)?.value || cashflowCostCenters[0] || "",
     status: $("#cashEntryStatus", dialog)?.value || "Confirmado",
@@ -11341,6 +16446,9 @@ function saveCashEntry(dialog) {
 
   const existingEntry = getCashEntryById(selectedCashEntryId);
   const signedValue = type === "Saída" ? -Math.abs(rawValue) : Math.abs(rawValue);
+  const referenceDate = isScheduled ? scheduledDate || getTodayISO() : existingEntry?.date || getTodayISO();
+  const financeSnapshot = getCashEntryFinanceSnapshot(rawValue, method, type, referenceDate);
+  const resolvedStatus = isScheduled ? "Pendente" : status === "Pendente" ? "Pendente" : getExpectedReceiptStatus(method, type);
   const payload = {
     id: existingEntry?.id || getNextCashEntryId(),
     date: isScheduled ? scheduledDate : existingEntry?.date || getTodayISO(),
@@ -11351,16 +16459,25 @@ function saveCashEntry(dialog) {
     value: signedValue,
     category,
     costCenter,
-    status: isScheduled ? "Pendente" : status,
+    status: resolvedStatus,
     scheduledDate: isScheduled ? scheduledDate : "",
     scheduledTime: isScheduled ? scheduledTime : "",
     attachment: file ? { name: file.name, type: getAttachmentTypeLabel(file.name) } : existingEntry?.attachment || null,
+    feePercent: financeSnapshot.feePercent,
+    fixedFee: financeSnapshot.fixedFee,
+    feeAmount: financeSnapshot.feeAmount,
+    netAmount: financeSnapshot.netAmount,
+    expectedReceiptDate: financeSnapshot.expectedReceiptDate,
+    methodImmediateSettlement: financeSnapshot.methodImmediateSettlement,
+    settlementDays: financeSnapshot.settlementDays,
+    linkedBankAccountName: financeSnapshot.linkedBankAccountName,
     createdBy: existingEntry?.createdBy || activeSessionUser || "Administrador",
     updatedBy: activeSessionUser || "Administrador"
   };
 
   if (existingEntry) Object.assign(existingEntry, payload);
   else cashEntries.unshift(payload);
+  saveCashEntries();
 
   closeCashflowDialog();
   renderAdminScreen("cashflow");
@@ -11382,6 +16499,7 @@ async function deleteCashEntry(entryId) {
   entry.deleted = true;
   entry.deletedAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
   entry.deletedBy = activeSessionUser || "Administrador";
+  saveCashEntries();
   closeCashflowDialog();
   renderAdminScreen("cashflow");
   renderAdminDashboard();
@@ -11396,6 +16514,7 @@ function cancelScheduledCashEntry(entryId) {
   entry.status = "Pendente";
   entry.canceledAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
   entry.canceledBy = activeSessionUser || "Administrador";
+  saveCashEntries();
   closeCashflowDialog();
   renderAdminScreen("cashflow");
   renderAdminDashboard();
@@ -11410,6 +16529,7 @@ function confirmScheduledCashEntry(entryId) {
   entry.time = getCurrentShortTime();
   entry.scheduledDate = "";
   entry.scheduledTime = "";
+  saveCashEntries();
   renderAdminScreen("cashflow");
   renderAdminDashboard();
   showToast("Lançamento agendado confirmado.");
@@ -11567,11 +16687,17 @@ function getCashEntryById(id) {
 }
 
 function getCashflowPaymentMethods() {
-  return [...paymentMethods];
+  const active = getSelectablePaymentMethodNames("cashflow", { allowBilled: true });
+  const historical = cashEntries.map((entry) => getCanonicalPaymentMethodName(entry.method)).filter(Boolean);
+  return [...new Set([...active, ...historical])];
 }
 
 function getSettlementPaymentMethods() {
-  return [...new Set([...paymentMethods.filter((method) => method !== "Faturado"), "Depósito bancário"])];
+  const active = getSelectablePaymentMethodNames("settlement", { allowBilled: false, includeBankDeposit: true });
+  const historical = [...openPayments, ...billingInvoices]
+    .map((item) => getCanonicalPaymentMethodName(item.settlementMethod || item.paymentMethod))
+    .filter((method) => method && normalizeText(method) !== normalizeText("Faturado"));
+  return [...new Set([...active, ...historical])];
 }
 
 function getAttachmentTypeLabel(fileName) {
@@ -11600,19 +16726,32 @@ function downloadTextFile(fileName, content, mimeType) {
 
 function downloadPdfFile(fileName, title, lines, options = {}) {
   const logoImage = getPdfLogoImage();
+  const documentPayload = {
+    fileName,
+    title,
+    subtitle: options.subtitle || getPdfDocumentSubtitle(title),
+    documentNumber: options.documentNumber || createPdfDocumentNumber(fileName),
+    responsible: options.responsible || activeSessionUser || "Sistema LavaPrime",
+    category: options.category || getPdfDocumentCategory(title),
+    summary: options.summary || getPdfDocumentSummary(title, lines),
+    reportTarget: options.reportTarget || getPdfDocumentReportTarget({ fileName, title, subtitle: options.subtitle, category: options.category }),
+    sourceType: options.sourceType || "",
+    sourceId: options.sourceId || ""
+  };
   if (options.reportLayout === "operatorProduction") {
     const pdf = createOperatorProductionPdfDocument({
       fileName,
       title,
       operator: options.operator,
-      subtitle: Object.prototype.hasOwnProperty.call(options, "subtitle") ? options.subtitle : getPdfDocumentSubtitle(title),
-      documentNumber: options.documentNumber || createPdfDocumentNumber(fileName),
-      responsible: options.responsible || activeSessionUser || "Sistema LavaPrime",
-      category: options.category || getPdfDocumentCategory(title),
-      summary: options.summary || getPdfDocumentSummary(title, lines),
-      reportTarget: options.reportTarget || getPdfDocumentReportTarget({ fileName, title, subtitle: options.subtitle, category: options.category })
+      subtitle: Object.prototype.hasOwnProperty.call(options, "subtitle") ? options.subtitle : documentPayload.subtitle,
+      documentNumber: documentPayload.documentNumber,
+      responsible: documentPayload.responsible,
+      category: documentPayload.category,
+      summary: documentPayload.summary,
+      reportTarget: documentPayload.reportTarget
     }, logoImage);
     downloadTextFile(fileName, pdf, "application/pdf");
+    recordGeneratedDocument(documentPayload);
     return;
   }
 
@@ -11621,14 +16760,15 @@ function downloadPdfFile(fileName, title, lines, options = {}) {
       fileName,
       title,
       operator: options.operator,
-      subtitle: Object.prototype.hasOwnProperty.call(options, "subtitle") ? options.subtitle : getPdfDocumentSubtitle(title),
-      documentNumber: options.documentNumber || createPdfDocumentNumber(fileName),
-      responsible: options.responsible || activeSessionUser || "Sistema LavaPrime",
-      category: options.category || getPdfDocumentCategory(title),
-      summary: options.summary || getPdfDocumentSummary(title, lines),
-      reportTarget: options.reportTarget || getPdfDocumentReportTarget({ fileName, title, subtitle: options.subtitle, category: options.category })
+      subtitle: Object.prototype.hasOwnProperty.call(options, "subtitle") ? options.subtitle : documentPayload.subtitle,
+      documentNumber: documentPayload.documentNumber,
+      responsible: documentPayload.responsible,
+      category: documentPayload.category,
+      summary: documentPayload.summary,
+      reportTarget: documentPayload.reportTarget
     }, logoImage);
     downloadTextFile(fileName, pdf, "application/pdf");
+    recordGeneratedDocument(documentPayload);
     return;
   }
 
@@ -11636,14 +16776,15 @@ function downloadPdfFile(fileName, title, lines, options = {}) {
     fileName,
     title,
     lines: Array.isArray(lines) ? lines : [lines],
-    subtitle: options.subtitle || getPdfDocumentSubtitle(title),
-    documentNumber: options.documentNumber || createPdfDocumentNumber(fileName),
-    responsible: options.responsible || activeSessionUser || "Sistema LavaPrime",
-    category: options.category || getPdfDocumentCategory(title),
-    summary: options.summary || getPdfDocumentSummary(title, lines),
-    reportTarget: options.reportTarget || getPdfDocumentReportTarget({ fileName, title, subtitle: options.subtitle, category: options.category })
+    subtitle: documentPayload.subtitle,
+    documentNumber: documentPayload.documentNumber,
+    responsible: documentPayload.responsible,
+    category: documentPayload.category,
+    summary: documentPayload.summary,
+    reportTarget: documentPayload.reportTarget
   }, logoImage);
   downloadTextFile(fileName, pdf, "application/pdf");
+  recordGeneratedDocument(documentPayload);
 }
 
 /*
@@ -13159,7 +18300,7 @@ async function settleInvoice(invoiceId) {
   const settlement = await requestSettlementPaymentInfo({
     title: "Baixar fatura",
     description: `${invoice.code} / ${getBillingClientName(invoice.clientId)} / ${formatCurrency(invoiceTotal)}`,
-    defaultMethod: invoice.settlementMethod || "Pix",
+    defaultMethod: invoice.settlementMethod || getPreferredPaymentMethodName("settlement", false),
     totalValue: invoiceTotal,
     allowPartial: true,
     partialDestinations: getInvoicePartialDestinationConfig(invoice)
@@ -13194,6 +18335,7 @@ async function settleInvoice(invoiceId) {
     invoiceId: invoice.id,
     operator: activeSessionUser || "Administrador"
   });
+  saveCashEntries();
   const balanceResult = settlement.partial ? routeInvoiceRemainingBalance(invoice, settlement) : null;
   if (balanceResult?.destinationLabel) invoice.remainingDestinationLabel = balanceResult.destinationLabel;
   triggerAutomatedMessage(
@@ -13212,7 +18354,7 @@ function getInvoicePartialDestinationConfig(invoice) {
       (item) => item.id !== invoice.id && item.clientId === invoice.clientId && item.status !== "Paga"
     ),
     defaultDestination: "new-invoice",
-    defaultDueDate: getTodayISO()
+    defaultDueDate: getDefaultInvoiceDueDate()
   };
 }
 
@@ -13326,9 +18468,9 @@ function createOpenPaymentFromInvoiceBalance(invoice, settlement) {
     service: "Fatura",
     description,
     value: settlement.balance,
-    paymentMethod: settlement.method || "Pix",
+    paymentMethod: settlement.method || getPreferredPaymentMethodName("service"),
     createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
-    dueDate: getTodayISO(),
+    dueDate: getDefaultOpenPaymentDueDate(),
     status: "Aberto",
     reminderFrequency: "Diário",
     lastReminderAt: "",
@@ -13341,6 +18483,7 @@ function createOpenPaymentFromInvoiceBalance(invoice, settlement) {
   };
 
   cashEntries.unshift(cashEntry);
+  saveCashEntries();
   openPayments.unshift(openPayment);
   return openPayment;
 }
@@ -13394,36 +18537,6 @@ function getInvoicesScreenContent() {
       value: formatDateBR(invoice.dueDate),
       detail: getBillingClientName(invoice.clientId)
     }))
-  };
-}
-
-function getWalletScreenContent() {
-  return {
-    searchIcon: "wallet",
-    searchPlaceholder: "Buscar forma de recebimento",
-    filters: ["Todas", "Ativas", "Cartões", "Caixa"],
-    metrics: [
-      { label: "Saldo total", value: formatCurrency(walletMethods.reduce((total, item) => total + item.balance, 0)), icon: "wallet" },
-      { label: "Métodos ativos", value: walletMethods.filter((item) => item.status === "Ativa").length, icon: "card" },
-      { label: "Liquidação imediata", value: "2", icon: "check" }
-    ],
-    kicker: "Recebimentos",
-    tableTitle: "Carteiras e métodos",
-    columns: ["Forma", "Tipo", "Saldo", "Liquidação", "Status"],
-    rows: walletMethods.map((method) => [
-      method.name,
-      method.type,
-      formatCurrency(method.balance),
-      method.settlement,
-      method.status
-    ]),
-    sideKicker: "Conciliação",
-    sideTitle: "Resumo por origem",
-    sideItems: [
-      { title: "Pix", value: "Imediato", detail: "Entrada direta no caixa" },
-      { title: "Cartões", value: "D+1 / D+30", detail: "Depende da modalidade" },
-      { title: "Dinheiro", value: "Manual", detail: "Conferência no fechamento" }
-    ]
   };
 }
 
@@ -13519,10 +18632,31 @@ function getServicePrice(vehicle) {
   }, 0);
 }
 
+function getVehicleSoldProducts(vehicle) {
+  if (!Array.isArray(vehicle?.productsSold)) vehicle.productsSold = [];
+  return vehicle.productsSold;
+}
+
+function getVehicleProductsTotal(vehicle) {
+  return getVehicleSoldProducts(vehicle).reduce((total, item) => total + Number(item.total || 0), 0);
+}
+
+function getVehicleProductsCostTotal(vehicle) {
+  return getVehicleSoldProducts(vehicle).reduce((total, item) => total + Number(item.totalCost || 0), 0);
+}
+
+function getVehicleSubtotalBeforeAdjustments(vehicle) {
+  return getServicePrice(vehicle) + getVehicleProductsTotal(vehicle);
+}
+
+function canManageAttendanceProducts(vehicle) {
+  return ["aguardando", "lavando", "pronto"].includes(vehicle?.status);
+}
+
 function getVehiclePaymentTotal(vehicle) {
   const extras = Number(vehicle.extraCharges || 0);
   const discount = Number(vehicle.discount || 0);
-  return Math.max(0, getServicePrice(vehicle) + extras - discount);
+  return Math.max(0, getVehicleSubtotalBeforeAdjustments(vehicle) + extras - discount);
 }
 
 function getDialogMoneyValue(selector) {
@@ -13537,7 +18671,7 @@ function readPaymentAdjustmentsFromDialog(vehicle) {
   const extraCharges = extraEnabled ? getDialogMoneyValue("#paymentExtraCharges") : 0;
   const discount = discountEnabled ? getDialogMoneyValue("#paymentDiscount") : 0;
   const cashReceived = getDialogMoneyValue("#paymentCashReceived");
-  const total = Math.max(0, getServicePrice(vehicle) + extraCharges - discount);
+  const total = Math.max(0, getVehicleSubtotalBeforeAdjustments(vehicle) + extraCharges - discount);
   const partialAmount = partialEnabled ? Math.min(getDialogMoneyValue("#paymentPartialAmount"), total) : 0;
   return {
     extraEnabled,
@@ -13583,11 +18717,9 @@ function getPaymentPillClass(vehicle) {
   return "payment-pending";
 }
 
-function renderPaymentOptions(selectedMethod, allowBilled = true) {
-  return paymentMethods
-    .filter((method) => allowBilled || method !== "Faturado")
-    .map((method) => `<option value="${escapeHtml(method)}" ${method === selectedMethod ? "selected" : ""}>${escapeHtml(method)}</option>`)
-    .join("");
+function renderPaymentOptions(selectedMethod, allowBilled = true, context = "service") {
+  const preferredMethod = getCanonicalPaymentMethodName(selectedMethod || "") || getPreferredPaymentMethodName(context, allowBilled);
+  return renderRegistrySelectOptions(getSelectablePaymentMethodNames(context, { selectedValue: preferredMethod, allowBilled }), preferredMethod);
 }
 
 function isMotoType(type) {
@@ -13944,6 +19076,7 @@ function getArrivalMinutes(value) {
 function renderVehicleCard(vehicle, queuePosition = 0) {
   const status = statusMeta[vehicle.status];
   const vehicleName = formatVehicleDisplayName(vehicle);
+  const specialCareSummary = getVehicleSpecialCareSummary(vehicle);
   const cardLabel =
     vehicle.status === "cancelado"
       ? `Serviço cancelado de ${vehicle.plate}`
@@ -13964,10 +19097,16 @@ function renderVehicleCard(vehicle, queuePosition = 0) {
         <h3>${escapeHtml(vehicle.plate)} - ${escapeHtml(vehicleName)} ${escapeHtml(vehicle.color || "")}</h3>
         <p>${vehicle.owner}</p>
         <p>${vehicle.service}</p>
+        ${getVehicleSoldProducts(vehicle).length ? `<p>Produtos: ${escapeHtml(getVehicleSoldProducts(vehicle).map((item) => item.productName).join(", "))}</p>` : ""}
         <span class="vehicle-meta">
           <span class="status-pill">${status.label}</span>
           <span class="time-pill">${getVehicleTimeLabel(vehicle)}</span>
           <span class="payment-pill ${getPaymentPillClass(vehicle)}">${escapeHtml(vehicle.payment)} / ${escapeHtml(getPaymentState(vehicle))}</span>
+          ${
+            specialCareSummary.count
+              ? `<span class="vehicle-care-badge ${getVehicleSpecialCareLevelClass(specialCareSummary.highestLevel)}">Cuidado especial</span>`
+              : ""
+          }
         </span>
       </span>
     </button>
@@ -14036,12 +19175,413 @@ function renderVehicleActionSummary(vehicle) {
   `;
 }
 
+function renderVehicleSpecialCareDetailCard(vehicle) {
+  const activeRecords = getVehicleActiveSpecialCareRecords(vehicle);
+  const conflictResult = getVehicleCurrentCareConflictResult(vehicle);
+  if (!activeRecords.length && !conflictResult.unknownTechnicalClassification.length) return "";
+  const acknowledged = hasVehicleCareWarningAcknowledged(vehicle, conflictResult);
+  return `
+    <article class="status-detail-card vehicle-special-care-detail-card">
+      <span>Cuidados especiais do veículo</span>
+      ${
+        activeRecords.length
+          ? activeRecords
+              .map(
+                (record) => `
+                  <div class="vehicle-special-care-detail-item">
+                    <strong>${escapeHtml(record.type)}</strong>
+                    <p>${escapeHtml(record.attentionLevel)}${record.source ? ` · ${escapeHtml(record.source)}` : ""}</p>
+                    ${
+                      record.restrictionTags?.length
+                        ? `<div class="vehicle-special-care-inline-tags">${record.restrictionTags
+                            .map((tag) => `<span>${escapeHtml(getVehicleSpecialCareRestrictionLabel(tag))}</span>`)
+                            .join("")}</div>`
+                        : ""
+                    }
+                    ${record.description ? `<small>${escapeHtml(record.description)}</small>` : ""}
+                  </div>
+                `
+              )
+              .join("")
+          : '<p>Nenhum cuidado especial ativo.</p>'
+      }
+      ${
+        conflictResult.hasConflicts || conflictResult.unknownTechnicalClassification.length
+          ? `<p class="vehicle-special-care-detail-alert ${acknowledged ? "is-acknowledged" : ""}">${
+              acknowledged
+                ? "Alerta técnico já confirmado neste atendimento."
+                : "Serviço selecionado exige conferência antes da execução."
+            }</p>`
+          : ""
+      }
+    </article>
+  `;
+}
+
+function appendAttendanceHistory(vehicle, description, type = "note") {
+  if (!Array.isArray(vehicle.attendanceHistory)) vehicle.attendanceHistory = [];
+  vehicle.attendanceHistory.unshift({
+    id: `${vehicle.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    type,
+    description,
+    createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
+    author: activeSessionUser || "Operador"
+  });
+}
+
+function renderVehicleDetailSections(vehicle, options = {}) {
+  const products = getVehicleSoldProducts(vehicle);
+  const allowProductRemoval = Boolean(options.allowProductRemoval) && !isFinalizedStatus(vehicle.status);
+  const financeSnapshot = getPaymentMethodFee(vehicle.payment, getVehiclePaymentTotal(vehicle), getTodayISO());
+  const serviceTotal = getServicePrice(vehicle);
+  const productsTotal = getVehicleProductsTotal(vehicle);
+  const extras = Number(vehicle.extraCharges || 0);
+  const discount = Number(vehicle.discount || 0);
+  return `
+    <section class="status-detail-grid">
+      <article class="status-detail-card">
+        <span>Dados do atendimento</span>
+        <strong>${escapeHtml(vehicle.owner || "Cliente avulso")}</strong>
+        <p>${escapeHtml(formatVehicleDisplayName(vehicle))} / ${escapeHtml(vehicle.plate)} / ${escapeHtml(statusMeta[vehicle.status]?.label || vehicle.status)}</p>
+        <p>Entrada: ${escapeHtml(getVehicleTimeLabel(vehicle))}</p>
+        <p>Pagamento: ${escapeHtml(vehicle.payment)} / ${escapeHtml(getPaymentState(vehicle))}</p>
+      </article>
+
+      ${renderVehicleSpecialCareDetailCard(vehicle)}
+
+      <article class="status-detail-card">
+        <span>Serviços contratados</span>
+        ${getVehicleServices(vehicle)
+          .map((serviceName) => {
+            const service = findServiceDefinition(serviceName, vehicle.type, vehicle.category);
+            return `
+              <div class="status-line-item">
+                <div>
+                  <strong>${escapeHtml(serviceName)}</strong>
+                  <p>${escapeHtml(service?.duration || "Serviço contratado")}</p>
+                </div>
+                <span>${formatCurrency(Number(service?.price || 0))}</span>
+              </div>
+            `;
+          })
+          .join("")}
+      </article>
+
+      <article class="status-detail-card">
+        <span>Produtos vendidos no atendimento</span>
+        ${
+          products.length
+            ? products
+                .map(
+                  (item) => `
+                    <div class="status-line-item">
+                      <div>
+                        <strong>${escapeHtml(item.productName)}</strong>
+                        <p>${item.quantity} x ${formatCurrency(item.unitPrice)}${item.discount ? ` / desconto ${formatCurrency(item.discount)}` : ""}</p>
+                      </div>
+                      <div class="status-line-item-actions">
+                        <span>${formatCurrency(item.total)}</span>
+                        ${
+                          allowProductRemoval
+                            ? `<button class="ghost-action compact" type="button" data-remove-attendance-product="${escapeHtml(item.id)}">Remover</button>`
+                            : ""
+                        }
+                      </div>
+                    </div>
+                  `
+                )
+                .join("")
+            : '<p class="empty-plates">Nenhum produto vendido neste atendimento.</p>'
+        }
+      </article>
+
+      <article class="status-detail-card">
+        <span>Resumo financeiro</span>
+        <div class="status-line-item">
+          <strong>Total de serviços</strong>
+          <span>${formatCurrency(serviceTotal)}</span>
+        </div>
+        <div class="status-line-item">
+          <strong>Total de produtos</strong>
+          <span>${formatCurrency(productsTotal)}</span>
+        </div>
+        <div class="status-line-item">
+          <strong>Avulsos</strong>
+          <span>${formatCurrency(extras)}</span>
+        </div>
+        <div class="status-line-item">
+          <strong>Descontos</strong>
+          <span>${formatCurrency(discount)}</span>
+        </div>
+        <div class="status-line-item">
+          <strong>Taxas previstas</strong>
+          <span>${formatCurrency(financeSnapshot.feeAmount)}</span>
+        </div>
+        <div class="status-line-item is-total">
+          <strong>Total geral</strong>
+          <span>${formatCurrency(getVehiclePaymentTotal(vehicle))}</span>
+        </div>
+        <p>Valor líquido estimado: ${formatCurrency(financeSnapshot.netAmount)}${financeSnapshot.immediateSettlement ? " / na hora" : ` / previsto para ${formatDateBR(financeSnapshot.expectedDate)}`}</p>
+      </article>
+    </section>
+  `;
+}
+
+function getFilteredAttendanceProducts(query = "") {
+  const normalizedQuery = normalizeText(query);
+  return productCatalog.filter((product) => {
+    if (product.active === false) return false;
+    if (!normalizedQuery) return true;
+    const haystack = normalizeText(`${product.name} ${product.sku} ${product.barcode || ""}`);
+    return haystack.includes(normalizedQuery);
+  });
+}
+
+function renderAttendanceProductSelectOptions(query = "", selectedProductId = "") {
+  const products = getFilteredAttendanceProducts(query);
+  const preferredId = String(selectedProductId || products[0]?.id || "");
+  return products.length
+    ? products
+        .map(
+          (product) =>
+            `<option value="${product.id}" ${String(product.id) === preferredId ? "selected" : ""}>${escapeHtml(product.name)} / ${escapeHtml(product.sku)} / ${formatCurrency(product.price)}</option>`
+        )
+        .join("")
+    : '<option value="">Nenhum produto encontrado</option>';
+}
+
+function getSelectedAttendanceProduct(scope = $("#statusOptions")) {
+  const productId = Number($("#attendanceProductSelect", scope)?.value || 0);
+  return getProductById(productId);
+}
+
+function renderAttendanceProductPanel(vehicle) {
+  const searchValue = $("#attendanceProductSearch")?.value || "";
+  const selectedProductId = $("#attendanceProductSelect")?.value || "";
+  const selectedProduct = getProductById(Number(selectedProductId || 0)) || getFilteredAttendanceProducts(searchValue)[0] || null;
+  const quantity = Number($("#attendanceProductQuantity")?.value || 1) || 1;
+  const discount = getDialogMoneyValue("#attendanceProductDiscount");
+  const total = Math.max(0, quantity * Number(selectedProduct?.price || 0) - discount);
+  $("#statusDialogEyebrow").textContent = "Adicionar produto";
+  $("#statusOptions").innerHTML = `
+    <div class="status-action-panel">
+      ${renderVehicleActionSummary(vehicle)}
+      ${renderVehicleDetailSections(vehicle)}
+      <section class="status-service-editor status-product-editor">
+        <label class="login-field" for="attendanceProductSearch">
+          <span>Buscar produto por nome ou código</span>
+          <input id="attendanceProductSearch" type="search" value="${escapeHtml(searchValue)}" placeholder="Ex.: lava seco ou PRD-001" />
+        </label>
+        <label class="login-field" for="attendanceProductSelect">
+          <span>Produto</span>
+          <select id="attendanceProductSelect">
+            ${renderAttendanceProductSelectOptions(searchValue, selectedProduct?.id)}
+          </select>
+        </label>
+        <label class="login-field" for="attendanceProductQuantity">
+          <span>Quantidade</span>
+          <input id="attendanceProductQuantity" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" />
+        </label>
+        <label class="login-field" for="attendanceProductDiscount">
+          <span>Desconto</span>
+          <input id="attendanceProductDiscount" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(formatCurrencyFieldValue(discount))}" />
+        </label>
+        <label class="login-field inventory-notes-field" for="attendanceProductNotes">
+          <span>Observação</span>
+          <textarea id="attendanceProductNotes" rows="2" placeholder="Ex.: cliente solicitou aromatizante premium"></textarea>
+        </label>
+        <article class="status-detail-card">
+          <span>Resumo do item</span>
+          <div class="status-line-item">
+            <strong>Estoque atual</strong>
+            <span id="attendanceProductStock">${selectedProduct ? formatInventoryQuantity(selectedProduct.stock, selectedProduct.unit) : "-"}</span>
+          </div>
+          <div class="status-line-item">
+            <strong>Preço unitário</strong>
+            <span id="attendanceProductPrice">${selectedProduct ? formatCurrency(selectedProduct.price) : formatCurrency(0)}</span>
+          </div>
+          <div class="status-line-item is-total">
+            <strong>Total do item</strong>
+            <span id="attendanceProductTotal">${formatCurrency(total)}</span>
+          </div>
+        </article>
+      </section>
+      <div class="dialog-actions status-dialog-actions">
+        <button class="exit-button" type="button" data-status-action="back-actions">Voltar</button>
+        <button class="primary-button" type="button" data-status-action="save-attendance-product">
+          <span data-icon="check"></span>
+          <span>Adicionar produto ao atendimento</span>
+        </button>
+      </div>
+    </div>
+  `;
+  initIcons();
+  bindCurrencyInputs($("#statusOptions"));
+}
+
+function updateAttendanceProductPanelPreview() {
+  const panel = $("#statusOptions");
+  if (!panel) return;
+  const query = $("#attendanceProductSearch", panel)?.value || "";
+  const select = $("#attendanceProductSelect", panel);
+  if (select) {
+    const currentValue = select.value;
+    select.innerHTML = renderAttendanceProductSelectOptions(query, currentValue);
+    if (!select.value && select.options.length) select.value = select.options[0].value;
+  }
+  const product = getSelectedAttendanceProduct(panel);
+  const quantity = Math.max(1, Number($("#attendanceProductQuantity", panel)?.value || 1));
+  const discount = getDialogMoneyValue("#attendanceProductDiscount");
+  $("#attendanceProductStock", panel).textContent = product ? formatInventoryQuantity(product.stock, product.unit) : "-";
+  $("#attendanceProductPrice", panel).textContent = product ? formatCurrency(product.price) : formatCurrency(0);
+  $("#attendanceProductTotal", panel).textContent = formatCurrency(Math.max(0, quantity * Number(product?.price || 0) - discount));
+}
+
+function saveAttendanceProductToVehicle() {
+  const vehicle = getPatioVehicleById();
+  if (!vehicle || !canManageAttendanceProducts(vehicle)) {
+    showToast("Este atendimento não permite adicionar produto neste status.");
+    return;
+  }
+  const panel = $("#statusOptions");
+  const product = getSelectedAttendanceProduct(panel);
+  const quantity = Math.max(1, Number($("#attendanceProductQuantity", panel)?.value || 1));
+  const discount = getDialogMoneyValue("#attendanceProductDiscount");
+  const notes = $("#attendanceProductNotes", panel)?.value.trim() || "";
+  if (!product) {
+    showToast("Selecione um produto válido.");
+    return;
+  }
+  if (Number(product.price || 0) <= 0) {
+    showToast("Este produto ainda não possui preço de venda.");
+    return;
+  }
+  if (Number(product.stock || 0) < quantity && !businessFinanceSettings.inventory.allowProductSaleWithoutStock) {
+    showToast(`Estoque insuficiente para ${product.name}.`);
+    return;
+  }
+
+  const previousStock = Number(product.stock || 0);
+  const nextStock = previousStock - quantity;
+  product.stock = nextStock;
+  product.updatedAt = getTodayISO();
+  const movement = registerInventoryMovement({
+    kind: "product",
+    itemId: product.id,
+    itemName: product.name,
+    type: "saida_venda_atendimento",
+    quantity: -quantity,
+    previousStock,
+    currentStock: nextStock,
+    unit: product.unit,
+    reason: `Venda vinculada ao atendimento ${vehicle.plate}`,
+    sourceCode: `PAT-${vehicle.id}`
+  });
+  getVehicleSoldProducts(vehicle).push({
+    id: `prd-${vehicle.id}-${Date.now()}`,
+    productId: product.id,
+    productName: product.name,
+    quantity,
+    unitPrice: Number(product.price || 0),
+    discount,
+    total: Math.max(0, quantity * Number(product.price || 0) - discount),
+    unitCost: Number(product.cost || 0),
+    totalCost: quantity * Number(product.cost || 0),
+    stockMovementId: movement?.id || null,
+    notes,
+    addedAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
+    addedBy: activeSessionUser || "Operador"
+  });
+  appendAttendanceHistory(vehicle, `${product.name} adicionado ao atendimento (${quantity} un).`, "product");
+  syncBillingFromVehicleProducts(vehicle);
+  saveProductCatalog();
+  renderProductsScreen($("#adminProductsContent"));
+  renderInventoryScreen($("#adminInventoryContent"));
+  renderAdminDashboard();
+  renderPatio();
+  renderStatusDialogContent(vehicle);
+  showToast(`Produto ${product.name} vinculado ao atendimento.`);
+}
+
+async function removeAttendanceProductFromVehicle(productLineId) {
+  const vehicle = getPatioVehicleById();
+  if (!vehicle) return;
+  const index = getVehicleSoldProducts(vehicle).findIndex((item) => String(item.id) === String(productLineId));
+  if (index < 0) return;
+  const item = vehicle.productsSold[index];
+  const confirmed = await showMessageBox({
+    title: "Remover produto do atendimento?",
+    message: "O estoque será estornado e o total do atendimento será recalculado.",
+    confirmLabel: "Remover",
+    cancelLabel: "Cancelar",
+    confirmOnly: false
+  });
+  if (!confirmed) return;
+  const product = getProductById(item.productId);
+  if (product) {
+    const previousStock = Number(product.stock || 0);
+    product.stock = previousStock + Number(item.quantity || 0);
+    product.updatedAt = getTodayISO();
+    registerInventoryMovement({
+      kind: "product",
+      itemId: product.id,
+      itemName: product.name,
+      type: "estorno_venda_atendimento",
+      quantity: Number(item.quantity || 0),
+      previousStock,
+      currentStock: product.stock,
+      unit: product.unit,
+      reason: `Remoção de produto do atendimento ${vehicle.plate}`,
+      sourceCode: `PAT-${vehicle.id}`
+    });
+    saveProductCatalog();
+  }
+  vehicle.productsSold.splice(index, 1);
+  appendAttendanceHistory(vehicle, `${item.productName} removido do atendimento.`, "product-reversal");
+  syncBillingFromVehicleProducts(vehicle);
+  renderProductsScreen($("#adminProductsContent"));
+  renderInventoryScreen($("#adminInventoryContent"));
+  renderAdminDashboard();
+  renderPatio();
+  renderStatusDialogContent(vehicle);
+  showToast("Produto removido do atendimento.");
+}
+
+function revertAttendanceProducts(vehicle, reason = "") {
+  const products = [...getVehicleSoldProducts(vehicle)];
+  if (!products.length) return;
+  products.forEach((item) => {
+    const product = getProductById(item.productId);
+    if (!product) return;
+    const previousStock = Number(product.stock || 0);
+    product.stock = previousStock + Number(item.quantity || 0);
+    product.updatedAt = getTodayISO();
+    registerInventoryMovement({
+      kind: "product",
+      itemId: product.id,
+      itemName: product.name,
+      type: "estorno_cancelamento_atendimento",
+      quantity: Number(item.quantity || 0),
+      previousStock,
+      currentStock: product.stock,
+      unit: product.unit,
+      reason: reason || `Cancelamento do atendimento ${vehicle.plate}`,
+      sourceCode: `PAT-${vehicle.id}`
+    });
+  });
+  vehicle.productsSold = [];
+  appendAttendanceHistory(vehicle, "Produtos vinculados ao atendimento foram estornados.", "product-cancel");
+  saveProductCatalog();
+}
+
 function renderPaymentConfirmationPanel(vehicle) {
   const isConfirmed = getPaymentState(vehicle) === "Confirmado";
   const isEntryPayment = Boolean(vehicle.paymentAtEntry);
-  const selectedPaymentMethod = vehicle.entryPaymentMethod || vehicle.payment || "Pix";
+  const selectedPaymentMethod = vehicle.entryPaymentMethod || vehicle.payment || getPreferredPaymentMethodName("service");
   const confirmLabel = isEntryPayment ? "Finalizar atendimento" : vehicle.payment === "Faturado" ? "Registrar faturado" : "Confirmar pagamento";
   const serviceValue = getServicePrice(vehicle);
+  const productsValue = getVehicleProductsTotal(vehicle);
+  const canAddProduct = canManageAttendanceProducts(vehicle);
   const extraCharges = Number(vehicle.extraCharges || 0);
   const discount = Number(vehicle.discount || 0);
   const hasExtraCharges = Boolean(vehicle.extraChargesEnabled || extraCharges || vehicle.extraDescription);
@@ -14067,7 +19607,7 @@ function renderPaymentConfirmationPanel(vehicle) {
               ? `Pagamento confirmado às ${escapeHtml(vehicle.paymentConfirmedAt || "agora")}.`
               : isEntryPayment
                 ? `Pagamento informado na entrada por ${escapeHtml(selectedPaymentMethod)}. Ajuste avulsos e desconto antes de lançar no Fluxo de caixa.`
-              : `Serviços: ${formatCurrency(serviceValue)}. Ajuste avulsos e desconto antes de lançar no Fluxo de caixa.`
+              : `Serviços: ${formatCurrency(serviceValue)} · Produtos: ${formatCurrency(productsValue)}. Ajuste avulsos e desconto antes de lançar no Fluxo de caixa.`
           }</p>
           <p id="paymentConfirmBreakdown">Avulsos: ${formatCurrency(extraCharges)} · Desconto: ${formatCurrency(discount)}</p>
         </div>
@@ -14078,6 +19618,8 @@ function renderPaymentConfirmationPanel(vehicle) {
           </select>
         </label>
       </section>
+
+      ${renderVehicleDetailSections(vehicle, { allowProductRemoval: canAddProduct })}
 
       <section class="payment-adjustment-grid">
         <label class="switch-field payment-adjustment-switch" for="paymentExtraEnabled">
@@ -14139,6 +19681,7 @@ function renderPaymentConfirmationPanel(vehicle) {
       </section>
 
       <div class="dialog-actions status-dialog-actions">
+        ${canAddProduct ? `<button class="ghost-action" type="button" data-status-action="show-product-editor"><span data-icon="package"></span><span>Adicionar produto</span></button>` : ""}
         <button class="exit-button" type="button" data-status-action="edit-services">Editar serviços</button>
         <button class="ghost-action" type="button" data-status-action="show-status">
           <span data-icon="dashboard"></span>
@@ -14178,14 +19721,15 @@ function renderReceiptPanel(vehicle) {
 }
 
 function generateReceiptPdf(vehicle) {
-  const receiptNumber = `REC-${String(vehicle.id).padStart(4, "0")}-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`;
+  const receiptPrefix = (businessFinanceSettings.documents.receiptNumberPrefix || "REC").trim().toUpperCase();
+  const receiptNumber = `${receiptPrefix}-${String(vehicle.id).padStart(4, "0")}-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`;
   const issuedAt = new Date().toLocaleString("pt-BR", {
     dateStyle: "short",
     timeStyle: "short"
   });
+  const products = getVehicleSoldProducts(vehicle);
+  const financeSnapshot = getPaymentMethodFee(vehicle.payment, getVehiclePaymentTotal(vehicle), getTodayISO());
   const lines = [
-    "LavaPrime",
-    "RECIBO DE ATENDIMENTO",
     `Recibo: ${receiptNumber}`,
     `Emissao: ${issuedAt}`,
     "",
@@ -14194,16 +19738,32 @@ function generateReceiptPdf(vehicle) {
     `Veiculo: ${formatVehicleDisplayName(vehicle)} - ${vehicle.color}`,
     `Cliente: ${vehicle.owner}`,
     `Telefone: ${vehicle.phone || "-"}`,
-    `Servicos: ${vehicle.service}`,
+    "",
+    "Servicos",
+    ...getVehicleServices(vehicle).map((serviceName) => {
+      const service = findServiceDefinition(serviceName, vehicle.type, vehicle.category);
+      return `${serviceName} - ${formatCurrency(Number(service?.price || 0))}`;
+    }),
+    `Total de servicos: ${formatCurrency(getServicePrice(vehicle))}`,
+    "",
+    "Produtos",
+    ...(products.length
+      ? products.map(
+          (item) => `${item.productName} - ${item.quantity} x ${formatCurrency(item.unitPrice)} = ${formatCurrency(item.total)}`
+        )
+      : ["Nenhum produto vendido neste atendimento."]),
+    `Total de produtos: ${formatCurrency(getVehicleProductsTotal(vehicle))}`,
+    "",
     `Forma de pagamento: ${vehicle.payment}`,
     `Situacao do pagamento: ${getPaymentState(vehicle)}`,
-    `Valor dos servicos: ${formatCurrency(getServicePrice(vehicle))}`,
     vehicle.extraCharges
       ? `Valores avulsos: ${formatCurrency(vehicle.extraCharges)}${vehicle.extraDescription ? ` - ${vehicle.extraDescription}` : ""}`
       : "",
     vehicle.discount
       ? `Desconto: ${formatCurrency(vehicle.discount)}${vehicle.discountDescription ? ` - ${vehicle.discountDescription}` : ""}`
       : "",
+    `Taxas previstas: ${formatCurrency(financeSnapshot.feeAmount)}`,
+    `Valor liquido estimado: ${formatCurrency(financeSnapshot.netAmount)}`,
     `Valor total: ${formatCurrency(getVehiclePaymentTotal(vehicle))}`,
     vehicle.partialPaymentOpen ? `Valor pago agora: ${formatCurrency(vehicle.partialPaidAmount || 0)}` : "",
     vehicle.partialPaymentOpen ? `Saldo em aberto: ${formatCurrency(vehicle.partialBalance || 0)}` : "",
@@ -14213,11 +19773,12 @@ function generateReceiptPdf(vehicle) {
     `Finalizacao: ${vehicle.finishedAt || vehicle.paymentConfirmedAt || "-"}`,
     `Operador: ${activeSessionUser || vehicle.operator || "Operador"}`,
     vehicle.billing ? `Fatura: ${vehicle.billing.invoiceCode} - vence ${formatDateBR(vehicle.billing.dueDate)}` : "",
+    hasVehicleSpecialCare(vehicle) ? "Veiculo com cuidado especial cadastrado." : "",
     "",
     "Este recibo foi gerado automaticamente pelo LavaPrime."
   ].filter((line) => line !== "");
 
-  downloadPdfFile(`${receiptNumber}-${vehicle.plate}.pdf`, "RECIBO DE ATENDIMENTO", lines.slice(2), {
+  downloadPdfFile(`${receiptNumber}-${vehicle.plate}.pdf`, "RECIBO DE ATENDIMENTO", lines, {
     subtitle: `Recibo ${receiptNumber}`,
     documentNumber: receiptNumber,
     category: "Recibo",
@@ -14256,12 +19817,14 @@ function escapePdfText(value) {
 }
 
 function renderStatusActionPanel(vehicle) {
+  const canAddProduct = canManageAttendanceProducts(vehicle);
   return `
     <div class="status-action-panel">
       ${renderVehicleActionSummary(vehicle)}
       <div class="status-action-list">
         ${vehicle.status === "agendado" ? renderScheduledEntryOption() : renderStatusOptions(vehicle.status)}
       </div>
+      ${renderVehicleDetailSections(vehicle, { allowProductRemoval: canAddProduct })}
       <button class="status-option edit-services-option" type="button" data-status-action="edit-services">
         <span class="status-dot-icon">${icons.service}</span>
         <span>
@@ -14269,6 +19832,19 @@ function renderStatusActionPanel(vehicle) {
           <small>Adicionar ou remover serviços e alterar a forma de pagamento</small>
         </span>
       </button>
+      ${
+        canAddProduct
+          ? `
+            <button class="status-option edit-services-option" type="button" data-status-action="show-product-editor">
+              <span class="status-dot-icon">${icons.package}</span>
+              <span>
+                <strong>Adicionar produto ao atendimento</strong><br />
+                <small>Vende produtos no mesmo atendimento e baixa o estoque na hora</small>
+              </span>
+            </button>
+          `
+          : ""
+      }
     </div>
   `;
 }
@@ -14383,6 +19959,16 @@ function handleStatusDialogAction(action) {
     return;
   }
 
+  if (action === "show-product-editor") {
+    renderAttendanceProductPanel(vehicle);
+    return;
+  }
+
+  if (action === "save-attendance-product") {
+    saveAttendanceProductToVehicle();
+    return;
+  }
+
   if (action === "confirm-payment") {
     confirmVehiclePayment();
     return;
@@ -14473,11 +20059,20 @@ function handleStatusDialogChange(event) {
   if (target.id === "statusBillingInvoiceSelect") {
     selectedStatusBillingInvoiceId = target.value;
     updateStatusBillingReadyState();
+    return;
+  }
+
+  if (target.id === "attendanceProductSelect") {
+    updateAttendanceProductPanelPreview();
   }
 }
 
 function handleStatusDialogInput(event) {
   const target = event.target;
+  if (target.id.startsWith("attendanceProduct")) {
+    updateAttendanceProductPanelPreview();
+    return;
+  }
   if (
     ![
       "paymentExtraCharges",
@@ -14579,7 +20174,7 @@ function renderServiceEditPanel(vehicle, options = {}) {
         <label class="login-field status-payment-field" for="statusPaymentSelect">
           <span>Forma de pagamento</span>
           <select id="statusPaymentSelect">
-            ${renderPaymentOptions(vehicle.payment || "Pix")}
+            ${renderPaymentOptions(vehicle.payment || getPreferredPaymentMethodName("service"), true, "service")}
           </select>
         </label>
       </section>
@@ -14782,6 +20377,7 @@ function finishStatusBillingFlow() {
 
   vehicle.payment = "Faturado";
   if (!vehicle.billing && !attachVehicleToInvoice(vehicle, invoice)) return;
+  if (!consumeServiceSuppliesForVehicle(vehicle)) return;
   const cashEntry = upsertCashEntryFromVehicle(vehicle);
   vehicle.cashEntryId = cashEntry.id;
   vehicle.paymentStatus = cashEntry.status;
@@ -14907,9 +20503,12 @@ function syncBillingValueAfterPaymentAdjustment(vehicle, previousValue) {
   }
 }
 
-function confirmVehiclePayment() {
+async function confirmVehiclePayment() {
   const vehicle = getPatioVehicleById();
   if (!vehicle) return;
+
+  const careConflictResult = getVehicleCurrentCareConflictResult(vehicle);
+  if (!(await ensureVehicleCareWarningAcknowledged(vehicle, careConflictResult, "finish_service"))) return;
 
   const previousPayment = vehicle.payment;
   const previousService = vehicle.service;
@@ -14930,6 +20529,7 @@ function confirmVehiclePayment() {
   }
 
   if (isEntryPayment) {
+    if (!consumeServiceSuppliesForVehicle(vehicle)) return;
     vehicle.payment = method;
     vehicle.entryPaymentMethod = method;
     if (previousPayment === "Faturado" && vehicle.billing) {
@@ -14988,6 +20588,7 @@ function confirmVehiclePayment() {
       return;
     }
 
+    if (!consumeServiceSuppliesForVehicle(vehicle)) return;
     vehicle.payment = method;
     if (previousPayment === "Faturado" && vehicle.billing) {
       detachVehicleFromBilling(vehicle, previousBillingValue, previousService);
@@ -15059,6 +20660,7 @@ function confirmVehiclePayment() {
   if (!keepPaymentOpen && method === "Faturado" && !vehicle.billing && !attachVehicleToOpenInvoice(vehicle)) return;
 
   if (keepPaymentOpen) {
+    if (!consumeServiceSuppliesForVehicle(vehicle)) return;
     vehicle.paymentOpen = true;
     vehicle.paymentStatus = "Pendente";
     vehicle.paymentConfirmed = false;
@@ -15078,6 +20680,7 @@ function confirmVehiclePayment() {
     return;
   }
 
+  if (!consumeServiceSuppliesForVehicle(vehicle)) return;
   const cashEntry = upsertCashEntryFromVehicle(vehicle);
   vehicle.cashEntryId = cashEntry.id;
   vehicle.paymentStatus = cashEntry.status;
@@ -15102,19 +20705,23 @@ function confirmVehiclePayment() {
 }
 
 function getPartialOpenPaymentDescription(vehicle) {
-  return `Saldo aberto referente ao serviço ${vehicle.service} realizado em ${formatDateBR(getTodayISO())}.`;
+  return `Saldo aberto referente ao atendimento ${vehicle.plate} (${vehicle.service}${getVehicleProductsTotal(vehicle) ? " + produtos" : ""}) realizado em ${formatDateBR(getTodayISO())}.`;
 }
 
 function upsertCashEntryFromVehicle(vehicle, options = {}) {
   const existingEntry = options.forceNew ? null : cashEntries.find((entry) => entry.id && entry.id === vehicle.cashEntryId);
-  const status = options.status || (vehicle.payment === "Faturado" || vehicle.paymentOpen ? "Pendente" : "Confirmado");
+  const method = options.method || vehicle.payment || getPreferredPaymentMethodName("service");
+  const status =
+    options.status ||
+    (vehicle.payment === "Faturado" || vehicle.paymentOpen ? "Pendente" : getExpectedReceiptStatus(method, "Entrada"));
   const value = Number.isFinite(Number(options.value)) ? Number(options.value) : getVehiclePaymentTotal(vehicle);
+  const financeSnapshot = getCashEntryFinanceSnapshot(value, method, "Entrada", getTodayISO());
   const payload = {
     date: getTodayISO(),
     time: getCurrentShortTime(),
     type: "Entrada",
-    description: options.description || `${vehicle.plate} - ${vehicle.service}`,
-    method: options.method || vehicle.payment,
+    description: options.description || `${vehicle.plate} - ${vehicle.service}${getVehicleProductsTotal(vehicle) ? " + produtos" : ""}`,
+    method,
     value,
     status,
     category: "Serviços",
@@ -15125,11 +20732,22 @@ function upsertCashEntryFromVehicle(vehicle, options = {}) {
     partialPayment: Boolean(options.partialPayment),
     partialPaidAmount: Number(options.partialPaidAmount || 0),
     partialBalance: Number(options.partialBalance || 0),
+    feePercent: financeSnapshot.feePercent,
+    fixedFee: financeSnapshot.fixedFee,
+    feeAmount: financeSnapshot.feeAmount,
+    netAmount: financeSnapshot.netAmount,
+    expectedReceiptDate: financeSnapshot.expectedReceiptDate,
+    methodImmediateSettlement: financeSnapshot.methodImmediateSettlement,
+    settlementDays: financeSnapshot.settlementDays,
+    linkedBankAccountName: financeSnapshot.linkedBankAccountName,
+    serviceAmount: getServicePrice(vehicle),
+    productAmount: getVehicleProductsTotal(vehicle),
     operator: activeSessionUser || "Operador"
   };
 
   if (existingEntry) {
     Object.assign(existingEntry, payload, { id: existingEntry.id });
+    saveCashEntries();
     return existingEntry;
   }
 
@@ -15138,6 +20756,7 @@ function upsertCashEntryFromVehicle(vehicle, options = {}) {
     ...payload
   };
   cashEntries.unshift(entry);
+  saveCashEntries();
   return entry;
 }
 
@@ -15157,9 +20776,9 @@ function upsertOpenPaymentFromVehicle(vehicle, cashEntry, options = {}) {
     service: options.service || vehicle.service,
     description: options.description || "",
     value,
-    paymentMethod: options.paymentMethod || vehicle.payment || "Pix",
+    paymentMethod: options.paymentMethod || vehicle.payment || getPreferredPaymentMethodName("service"),
     createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
-    dueDate: getTodayISO(),
+    dueDate: getDefaultOpenPaymentDueDate(),
     status: "Aberto",
     reminderFrequency: "Diário",
     operator: activeSessionUser || "Operador",
@@ -15191,12 +20810,13 @@ function syncCashEntryAfterPatioEdit(vehicle) {
   const entry = cashEntries.find((item) => item.id && item.id === vehicle.cashEntryId);
   if (!entry) return;
 
-  entry.description = `${vehicle.plate} - ${vehicle.service}`;
+  entry.description = `${vehicle.plate} - ${vehicle.service}${getVehicleProductsTotal(vehicle) ? " + produtos" : ""}`;
   entry.method = vehicle.payment;
   entry.value = vehicle.partialPaymentOpen ? Number(vehicle.partialPaidAmount || entry.value || 0) : getVehiclePaymentTotal(vehicle);
   entry.status = vehicle.partialPaymentOpen ? "Confirmado" : vehicle.payment === "Faturado" || vehicle.paymentOpen ? "Pendente" : "Confirmado";
   vehicle.paymentStatus = entry.status;
   vehicle.paymentConfirmed = vehicle.partialPaymentOpen ? false : entry.status === "Confirmado";
+  saveCashEntries();
 }
 
 function syncBillingAfterPatioEdit(vehicle, previousValue, previousService, previousPayment) {
@@ -15226,11 +20846,30 @@ function syncBillingAfterPatioEdit(vehicle, previousValue, previousService, prev
   const lineItem = findInvoiceLineItemForVehicle(vehicle, invoiceId, previousService);
   if (lineItem) {
     lineItem.service = vehicle.service;
+    lineItem.servicesTotal = getServicePrice(vehicle);
+    lineItem.productsTotal = getVehicleProductsTotal(vehicle);
+    lineItem.productSummary = getVehicleSoldProducts(vehicle).map((item) => item.productName).join(", ");
     lineItem.value = nextValue;
     lineItem.operator = activeSessionUser || lineItem.operator;
   }
   vehicle.paymentStatus = "Pendente";
   vehicle.paymentConfirmed = false;
+}
+
+function syncBillingFromVehicleProducts(vehicle) {
+  const invoiceId = vehicle.billing?.invoiceId;
+  if (!invoiceId) return;
+  const lineItem = findInvoiceLineItemForVehicle(vehicle, invoiceId, vehicle.service);
+  if (!lineItem) return;
+  const previousValue = Number(lineItem.value || 0);
+  const nextValue = getVehiclePaymentTotal(vehicle);
+  invoiceAmounts[invoiceId] = Math.max(0, (invoiceAmounts[invoiceId] || 0) - previousValue + nextValue);
+  lineItem.service = vehicle.service;
+  lineItem.servicesTotal = getServicePrice(vehicle);
+  lineItem.productsTotal = getVehicleProductsTotal(vehicle);
+  lineItem.productSummary = getVehicleSoldProducts(vehicle).map((item) => item.productName).join(", ");
+  lineItem.value = nextValue;
+  lineItem.operator = activeSessionUser || lineItem.operator;
 }
 
 function attachVehicleToOpenInvoice(vehicle) {
@@ -15258,6 +20897,9 @@ function attachVehicleToInvoice(vehicle, invoice) {
     vehicleId: vehicle.id,
     plate: vehicle.plate,
     service: vehicle.service,
+    servicesTotal: getServicePrice(vehicle),
+    productsTotal: getVehicleProductsTotal(vehicle),
+    productSummary: getVehicleSoldProducts(vehicle).map((item) => item.productName).join(", "),
     value: getVehiclePaymentTotal(vehicle),
     operator: activeSessionUser || "Operador"
   });
@@ -15334,16 +20976,32 @@ function confirmScheduledVehicleEntryWithChecklist() {
   updateVehicleStatus("aguardando");
 }
 
-function updateVehicleStatus(status) {
+async function updateVehicleStatus(status) {
   const vehicle = patioVehicles.find((item) => item.id === activeVehicleId);
   if (!vehicle || !statusMeta[status]) return;
   const previousStatus = vehicle.status;
   const wasScheduled = previousStatus === "agendado" && status === "aguardando";
   const wasCanceledSchedule = previousStatus === "agendado" && status === "cancelado";
+  const previousValue = getVehiclePaymentTotal(vehicle);
+  const previousService = vehicle.service;
+
+  if (["lavando", "pronto"].includes(status)) {
+    const careConflictResult = getVehicleCurrentCareConflictResult(vehicle);
+    const careContext = status === "lavando" ? "start_service" : "finish_service";
+    if (!(await ensureVehicleCareWarningAcknowledged(vehicle, careConflictResult, careContext))) return;
+  }
+
+  if (status === "cancelado") {
+    if (vehicle.billing) detachVehicleFromBilling(vehicle, previousValue, previousService);
+    revertAttendanceProducts(vehicle, `Cancelamento do atendimento ${vehicle.plate}`);
+  }
 
   vehicle.status = status;
   if (wasScheduled) vehicle.entry = getCurrentShortTime();
   updateVehicleServiceStatus(vehicle);
+  renderProductsScreen($("#adminProductsContent"));
+  renderInventoryScreen($("#adminInventoryContent"));
+  renderAdminDashboard();
   renderPatio();
   closeStatusDialog();
   if (wasScheduled) triggerAutomatedMessage("yard-entry", getMessageContextFromVehicle(vehicle));

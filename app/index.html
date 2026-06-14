@@ -91,7 +91,7 @@
           <div class="section-actions">
             <button class="new-vehicle-button" id="newVehicleButton" type="button">
               <span data-icon="plus"></span>
-              <span>Novo veículo</span>
+              <span>Novo Atendimento</span>
             </button>
           </div>
         </div>
@@ -111,18 +111,30 @@
 
         <nav class="admin-nav" aria-label="Navegação principal">
           <div class="admin-nav-group">
-            <p>Operação</p>
+            <p>Início</p>
             <button class="admin-nav-button is-active" type="button" data-admin-view="dashboard">
               <span data-icon="dashboard"></span>
-              <span>Dashboard</span>
+              <span>Visão Geral</span>
             </button>
             <button class="admin-nav-button" type="button" data-admin-view="patio">
               <span data-icon="carFront"></span>
-              <span>Pátio</span>
+              <span>Pátio de Atendimento</span>
             </button>
+          </div>
+
+          <div class="admin-nav-group">
+            <p>Vendas e Atendimentos</p>
             <button class="admin-nav-button" type="button" data-admin-view="quotes">
               <span data-icon="invoice"></span>
-              <span>Orçamentos</span>
+              <span>Orçamentos e Pré-vendas</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="productSales">
+              <span data-icon="package"></span>
+              <span>Venda de Produtos</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="documents">
+              <span data-icon="clipboard"></span>
+              <span>Recibos e Documentos</span>
             </button>
           </div>
 
@@ -140,29 +152,25 @@
               <span data-icon="service"></span>
               <span>Serviços</span>
             </button>
+            <button class="admin-nav-button" type="button" data-admin-view="operators">
+              <span data-icon="badge"></span>
+              <span>Equipe e Usuários</span>
+            </button>
           </div>
 
           <div class="admin-nav-group">
-            <p>Meu Negócio</p>
-            <button class="admin-nav-button" type="button" data-admin-view="business">
-              <span data-icon="shield"></span>
-              <span>Dados do Negócio</span>
+            <p>Produtos e Estoque</p>
+            <button class="admin-nav-button" type="button" data-admin-view="products">
+              <span data-icon="package"></span>
+              <span>Produtos para Venda</span>
             </button>
-            <button class="admin-nav-button" type="button" data-admin-view="businessFinance">
-              <span data-icon="wallet"></span>
-              <span>Informações Financeiras</span>
+            <button class="admin-nav-button" type="button" data-admin-view="supplies">
+              <span data-icon="flask"></span>
+              <span>Insumos de Uso Interno</span>
             </button>
-            <button class="admin-nav-button" type="button" data-admin-view="businessSocial">
-              <span data-icon="users"></span>
-              <span>Comunicação</span>
-            </button>
-            <button class="admin-nav-button" type="button" data-admin-view="businessMessages">
-              <span data-icon="message"></span>
-              <span>Central de Mensagens</span>
-            </button>
-            <button class="admin-nav-button" type="button" data-admin-view="operators">
-              <span data-icon="badge"></span>
-              <span>Operadores</span>
+            <button class="admin-nav-button" type="button" data-admin-view="inventory">
+              <span data-icon="clipboard"></span>
+              <span>Inventário de Estoque</span>
             </button>
           </div>
 
@@ -174,7 +182,7 @@
             </button>
             <button class="admin-nav-button" type="button" data-admin-view="openPayments">
               <span data-icon="alert"></span>
-              <span>Pagamento em Aberto</span>
+              <span>Recebimentos em Aberto</span>
             </button>
             <button class="admin-nav-button" type="button" data-admin-view="payables">
               <span data-icon="payable"></span>
@@ -182,11 +190,27 @@
             </button>
             <button class="admin-nav-button" type="button" data-admin-view="invoices">
               <span data-icon="invoice"></span>
-              <span>Central de Faturas</span>
+              <span>Faturas e Cobranças</span>
             </button>
-            <button class="admin-nav-button" type="button" data-admin-view="wallet">
+          </div>
+
+          <div class="admin-nav-group">
+            <p>Gestão da Empresa</p>
+            <button class="admin-nav-button" type="button" data-admin-view="business">
+              <span data-icon="shield"></span>
+              <span>Dados da Empresa</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="businessFinance">
               <span data-icon="wallet"></span>
-              <span>Carteira</span>
+              <span>Configurações Financeiras</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="businessSocial">
+              <span data-icon="users"></span>
+              <span>Comunicação com Clientes</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="businessMessages">
+              <span data-icon="message"></span>
+              <span>Mensagens e Avisos</span>
             </button>
           </div>
         </nav>
@@ -202,7 +226,7 @@
           <header class="admin-header">
             <div>
               <p class="eyebrow">Painel do dia</p>
-              <h1 id="adminDashboardTitle">Dashboard</h1>
+              <h1 id="adminDashboardTitle">Visão Geral</h1>
             </div>
           </header>
 
@@ -235,7 +259,7 @@
           <header class="admin-header">
             <div>
               <p class="eyebrow">Veículos</p>
-              <h1 id="adminPatioTitle">Pátio</h1>
+              <h1 id="adminPatioTitle">Pátio de Atendimento</h1>
             </div>
           </header>
 
@@ -250,7 +274,7 @@
               <div class="section-actions">
                 <button class="new-vehicle-button" id="adminNewVehicleButton" type="button">
                   <span data-icon="plus"></span>
-                  <span>Novo veículo</span>
+                  <span>Novo Atendimento</span>
                 </button>
               </div>
             </div>
@@ -262,7 +286,7 @@
           <header class="admin-header">
             <div>
               <p class="eyebrow">Operação</p>
-              <h1 id="adminQuotesTitle">Orçamentos</h1>
+              <h1 id="adminQuotesTitle">Orçamentos e Pré-vendas</h1>
             </div>
           </header>
           <section class="admin-screen-content admin-quotes-content" id="adminQuotesContent" aria-label="Orçamentos emitidos"></section>
@@ -296,11 +320,49 @@
           <div class="admin-screen-content" id="adminVehiclesContent"></div>
         </section>
 
+        <section class="admin-view admin-sketch-view" id="adminProductsView" aria-labelledby="adminProductsTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Produtos e Estoque</p>
+              <h1 id="adminProductsTitle">Produtos para Venda</h1>
+            </div>
+            <button class="new-vehicle-button" id="startProductFormButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Novo produto</span>
+            </button>
+          </header>
+          <div class="admin-screen-content" id="adminProductsContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminSuppliesView" aria-labelledby="adminSuppliesTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Produtos e Estoque</p>
+              <h1 id="adminSuppliesTitle">Insumos de Uso Interno</h1>
+            </div>
+            <button class="new-vehicle-button" id="startSupplyFormButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Novo insumo</span>
+            </button>
+          </header>
+          <div class="admin-screen-content" id="adminSuppliesContent"></div>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminInventoryView" aria-labelledby="adminInventoryTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Produtos e Estoque</p>
+              <h1 id="adminInventoryTitle">Inventário de Estoque</h1>
+            </div>
+          </header>
+          <div class="admin-screen-content" id="adminInventoryContent"></div>
+        </section>
+
         <section class="admin-view admin-sketch-view" id="adminBusinessView" aria-labelledby="adminBusinessTitle" hidden>
           <header class="admin-header">
             <div>
-              <p class="eyebrow">Meu Negócio</p>
-              <h1 id="adminBusinessTitle">Dados do Negócio</h1>
+              <p class="eyebrow">Gestão da Empresa</p>
+              <h1 id="adminBusinessTitle">Dados da Empresa</h1>
             </div>
           </header>
           <div class="admin-screen-content" id="adminBusinessContent"></div>
@@ -309,8 +371,8 @@
         <section class="admin-view admin-sketch-view" id="adminBusinessFinanceView" aria-labelledby="adminBusinessFinanceTitle" hidden>
           <header class="admin-header">
             <div>
-              <p class="eyebrow">Meu Negócio</p>
-              <h1 id="adminBusinessFinanceTitle">Informações Financeiras</h1>
+              <p class="eyebrow">Gestão da Empresa</p>
+              <h1 id="adminBusinessFinanceTitle">Configurações Financeiras</h1>
             </div>
           </header>
           <div class="admin-screen-content" id="adminBusinessFinanceContent"></div>
@@ -319,8 +381,8 @@
         <section class="admin-view admin-sketch-view" id="adminBusinessSocialView" aria-labelledby="adminBusinessSocialTitle" hidden>
           <header class="admin-header">
             <div>
-              <p class="eyebrow">Meu Negócio</p>
-              <h1 id="adminBusinessSocialTitle">Comunicação</h1>
+              <p class="eyebrow">Gestão da Empresa</p>
+              <h1 id="adminBusinessSocialTitle">Comunicação com Clientes</h1>
             </div>
           </header>
           <div class="admin-screen-content" id="adminBusinessSocialContent"></div>
@@ -329,8 +391,8 @@
         <section class="admin-view admin-sketch-view" id="adminBusinessMessagesView" aria-labelledby="adminBusinessMessagesTitle" hidden>
           <header class="admin-header">
             <div>
-              <p class="eyebrow">Meu Negócio</p>
-              <h1 id="adminBusinessMessagesTitle">Central de Mensagens</h1>
+              <p class="eyebrow">Gestão da Empresa</p>
+              <h1 id="adminBusinessMessagesTitle">Mensagens e Avisos</h1>
             </div>
           </header>
           <div class="admin-screen-content" id="adminBusinessMessagesContent"></div>
@@ -339,8 +401,8 @@
         <section class="admin-view admin-sketch-view" id="adminOperatorsView" aria-labelledby="adminOperatorsTitle" hidden>
           <header class="admin-header">
             <div>
-              <p class="eyebrow">Meu Negócio</p>
-              <h1 id="adminOperatorsTitle">Operadores</h1>
+              <p class="eyebrow">Cadastros</p>
+              <h1 id="adminOperatorsTitle">Equipe e Usuários</h1>
             </div>
             <button class="new-vehicle-button" id="startOperatorFormButton" type="button">
               <span data-icon="plus"></span>
@@ -378,7 +440,7 @@
           <header class="admin-header">
             <div>
               <p class="eyebrow">Financeiro</p>
-              <h1 id="adminOpenPaymentsTitle">Pagamento em Aberto</h1>
+              <h1 id="adminOpenPaymentsTitle">Recebimentos em Aberto</h1>
             </div>
           </header>
           <div class="admin-screen-content" id="adminOpenPaymentsContent"></div>
@@ -402,7 +464,7 @@
           <header class="admin-header">
             <div>
               <p class="eyebrow">Financeiro</p>
-              <h1 id="adminInvoicesTitle">Central de Faturas</h1>
+              <h1 id="adminInvoicesTitle">Faturas e Cobranças</h1>
             </div>
             <button class="new-vehicle-button admin-action-button" type="button">
               <span data-icon="plus"></span>
@@ -412,19 +474,30 @@
           <div class="admin-screen-content" id="adminInvoicesContent"></div>
         </section>
 
-        <section class="admin-view admin-sketch-view" id="adminWalletView" aria-labelledby="adminWalletTitle" hidden>
+        <section class="admin-view admin-sketch-view" id="adminProductSalesView" aria-labelledby="adminProductSalesTitle" hidden>
           <header class="admin-header">
             <div>
-              <p class="eyebrow">Financeiro</p>
-              <h1 id="adminWalletTitle">Carteira</h1>
+              <p class="eyebrow">Vendas</p>
+              <h1 id="adminProductSalesTitle">Venda de Produtos</h1>
             </div>
-            <button class="new-vehicle-button admin-action-button" type="button">
+            <button class="new-vehicle-button" id="startProductSaleButton" type="button">
               <span data-icon="plus"></span>
-              <span>Nova forma</span>
+              <span>Nova venda</span>
             </button>
           </header>
-          <div class="admin-screen-content" id="adminWalletContent"></div>
+          <div class="admin-screen-content" id="adminProductSalesContent"></div>
         </section>
+
+        <section class="admin-view admin-sketch-view" id="adminDocumentsView" aria-labelledby="adminDocumentsTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Documentos</p>
+              <h1 id="adminDocumentsTitle">Recibos e Documentos</h1>
+            </div>
+          </header>
+          <div class="admin-screen-content" id="adminDocumentsContent"></div>
+        </section>
+
       </section>
     </main>
 
@@ -434,6 +507,8 @@
     <dialog class="vehicle-registry-dialog" id="vehicleHistoryDialog"></dialog>
     <dialog class="schedule-dialog" id="scheduleDialog"></dialog>
     <dialog class="service-dialog" id="serviceDialog"></dialog>
+    <dialog class="service-dialog" id="inventoryDialog"></dialog>
+    <dialog class="service-dialog" id="businessPaymentMethodDialog"></dialog>
     <dialog class="cashflow-dialog" id="cashflowDialog"></dialog>
     <dialog class="vehicle-dialog quote-dialog" id="quoteDialog"></dialog>
 
@@ -534,6 +609,7 @@
               </div>
               <div class="selected-services-list" id="vehicleServicesList" aria-label="Serviços contratados"></div>
             </div>
+            <div id="entryVehicleSpecialCareMount" class="entry-special-care-mount"></div>
           </div>
 
           <div class="dialog-actions">
