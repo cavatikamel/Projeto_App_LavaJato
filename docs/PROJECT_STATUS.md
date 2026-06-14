@@ -2,16 +2,18 @@
 
 ## Estado atual
 
-O projeto esta ativo, com repositorio principal funcional, publicacao no GitHub validada e base web migrada para React + Vite com compatibilidade legada.
+O projeto esta ativo, com repositorio principal funcional, publicacao no GitHub validada, base web migrada para React + Vite com compatibilidade legada e base inicial de backend preparada para Supabase.
 
 ## Modulos presentes no repositorio
 
 - app principal migrado para base React + Vite com compatibilidade legada
+- pipeline de deploy com verificacao de assets criticos para Netlify
 - financeiro com fluxo de caixa e pagamentos em aberto
 - central de mensagens
 - cadastro e historico de veiculos
 - check-list veicular com exportacao
 - base local FIPE para autocomplete
+- migrations iniciais de backend para Supabase
 - materiais de apoio da landing page
 
 ## Estado operacional do repositorio
@@ -20,10 +22,13 @@ O projeto esta ativo, com repositorio principal funcional, publicacao no GitHub 
 - historico principal consolidado em `Projeto_App_LavaJato`
 - `LavaPrime/` ignorado neste repositorio
 - backlog em planilha mantido fora do Git
+- deploy web preparado para publicar a pasta `dist/`
+- backend ainda nao conectado a um projeto Supabase real
 
 ## Pendencias conhecidas
 
 - migrar gradualmente a interface e a logica de `app/main.js` para componentes e modulos React
+- conectar autenticacao, banco e storage do frontend ao Supabase
 - reduzir dependencia de conhecimento fora do repositorio
 - melhorar a granularidade de `app/main.js`
 - ampliar validacoes automaticas conforme o projeto evoluir

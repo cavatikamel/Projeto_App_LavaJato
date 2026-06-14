@@ -48,7 +48,9 @@ Para garantir handoff completo para qualquer dev futuro, use estes arquivos como
 - `docs/HANDOFF.md` - guia rapido para entender o projeto e por onde comecar
 - `docs/ARCHITECTURE.md` - arquitetura atual e decisoes tecnicas principais
 - `docs/DEVELOPMENT.md` - rotina de desenvolvimento, validacao, commit e publicacao
+- `docs/DEPLOYMENT.md` - fluxo de publicacao web e checklist de release
 - `docs/PROJECT_STATUS.md` - estado atual do produto, modulos e pendencias conhecidas
+- `docs/SUPABASE_BACKEND.md` - plano do backend, seguranca e estrutura do Supabase
 - `docs/DECISIONS.md` - registro de decisoes estruturais do projeto
 
 ## Como rodar localmente
@@ -114,6 +116,20 @@ O deploy atual esta preparado para entrega como site estatico com Nginx:
 - o resultado de `dist/` e copiado para `/usr/share/nginx/html`
 - `nginx.conf` faz fallback para `index.html`
 - arquivos estaticos recebem cache publico
+- `netlify.toml` define build, fallback SPA e headers basicos de seguranca
+
+## Supabase
+
+O repositorio agora inclui a base inicial para o backend no Supabase:
+
+- migration inicial em `supabase/migrations/`
+- documentacao operacional em `docs/SUPABASE_BACKEND.md`
+- variaveis esperadas em `.env.example`
+
+Importante:
+
+- o frontend ainda nao esta ligado ao Supabase
+- a publicacao real do backend depende de criar o projeto, aplicar as migrations e conectar a aplicacao
 
 ## Observacoes
 

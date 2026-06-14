@@ -1,4 +1,4 @@
-﻿const icons = {
+const icons = {
   shield: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.7-2.8 8.6-7 10-4.2-1.4-7-5.3-7-10V6l7-3z"/><path d="M9 12l2 2 4-5"/></svg>',
   user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg>',
   login: '<svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/></svg>',
@@ -86,7 +86,7 @@ const vehicleOwnerTransferSearchModes = [
 
 const billingClients = [
   { id: 1, name: "Frota Prime Ltda", document: "12.345.678/0001-90", phone: "(11) 91111-0001" },
-  { id: 2, name: "CondomÃ­nio Reserva Azul", document: "98.765.432/0001-10", phone: "(11) 92222-0002" },
+  { id: 2, name: "Condomínio Reserva Azul", document: "98.765.432/0001-10", phone: "(11) 92222-0002" },
   { id: 3, name: "Auto Center Vila Norte", document: "23.456.789/0001-20", phone: "(11) 93333-0003" }
 ];
 
@@ -103,66 +103,66 @@ const invoiceAmounts = {
 };
 
 const invoiceLineItems = [
-  { invoiceId: 1, clientId: 1, plate: "KML7D10", service: "VitrificaÃ§Ã£o", value: 490, operator: "Carlos" },
+  { invoiceId: 1, clientId: 1, plate: "KML7D10", service: "Vitrificação", value: 490, operator: "Carlos" },
   { invoiceId: 2, clientId: 2, plate: "AGD4H22", service: "Lavagem Prime", value: 65, operator: "Carlos" },
   { invoiceId: 3, clientId: 3, plate: "LVP3E72", service: "Detailing completo", value: 320, operator: "Juliana" }
 ];
 
 const billingCycles = ["Mensal", "Bimestral", "Trimestral", "Semestral"];
 const paymentMethodTypeOptions = [
-  { value: "instantÃ¢neo", label: "InstantÃ¢neo" },
+  { value: "instantâneo", label: "Instantâneo" },
   { value: "dinheiro", label: "Dinheiro" },
-  { value: "cartÃ£o", label: "CartÃ£o" },
-  { value: "transferÃªncia", label: "TransferÃªncia" },
+  { value: "cartão", label: "Cartão" },
+  { value: "transferência", label: "Transferência" },
   { value: "boleto", label: "Boleto" },
   { value: "faturado", label: "Faturado" },
   { value: "outro", label: "Outro" }
 ];
 const vehicleSpecialCareTypes = [
-  "VitrificaÃ§Ã£o / coating cerÃ¢mico",
+  "Vitrificação / coating cerâmico",
   "Enceramento recente",
   "Pintura fosca",
-  "Pintura sensÃ­vel ou repintada",
+  "Pintura sensível ou repintada",
   "Envelopamento",
-  "PPF / pelÃ­cula de proteÃ§Ã£o",
-  "PelÃ­cula recÃ©m-instalada",
-  "Couro tratado ou sensÃ­vel",
+  "PPF / película de proteção",
+  "Película recém-instalada",
+  "Couro tratado ou sensível",
   "Interior delicado",
   "Rodas especiais / diamantadas",
-  "Motor com restriÃ§Ã£o de lavagem",
-  "Sensor, cÃ¢mera ou componente sensÃ­vel",
-  "RestriÃ§Ã£o informada pelo cliente",
+  "Motor com restrição de lavagem",
+  "Sensor, câmera ou componente sensível",
+  "Restrição informada pelo cliente",
   "Outro"
 ];
-const vehicleSpecialCareAttentionLevels = ["Informativo", "AtenÃ§Ã£o", "Alto risco"];
+const vehicleSpecialCareAttentionLevels = ["Informativo", "Atenção", "Alto risco"];
 const vehicleSpecialCareSources = [
   "Informado pelo cliente",
   "Identificado pelo operador",
-  "ServiÃ§o realizado neste lava jato",
-  "ServiÃ§o realizado em outro estabelecimento",
+  "Serviço realizado neste lava jato",
+  "Serviço realizado em outro estabelecimento",
   "Outro"
 ];
 const vehicleSpecialCareRestrictionOptions = [
-  { tag: "avoid_acid", label: "Evitar produto Ã¡cido" },
+  { tag: "avoid_acid", label: "Evitar produto ácido" },
   { tag: "avoid_strong_alkaline", label: "Evitar produto alcalino forte" },
   { tag: "use_ph_neutral", label: "Usar preferencialmente pH neutro" },
   { tag: "avoid_degreaser", label: "Evitar desengraxante agressivo" },
   { tag: "avoid_abrasive_brush", label: "Evitar escova abrasiva" },
-  { tag: "avoid_high_pressure_close", label: "Evitar alta pressÃ£o muito prÃ³xima" },
+  { tag: "avoid_high_pressure_close", label: "Evitar alta pressão muito próxima" },
   { tag: "avoid_solvent", label: "Evitar solvente" },
   { tag: "avoid_heavy_polishing", label: "Evitar polimento agressivo" },
   { tag: "avoid_engine_wash", label: "Evitar lavagem de motor" },
-  { tag: "avoid_film_contact", label: "Evitar produto em pelÃ­cula/vidro" },
+  { tag: "avoid_film_contact", label: "Evitar produto em película/vidro" },
   { tag: "avoid_abrasive_product", label: "Evitar produto abrasivo" },
-  { tag: "avoid_silicone", label: "Evitar produto Ã  base de silicone" },
+  { tag: "avoid_silicone", label: "Evitar produto à base de silicone" },
   { tag: "custom", label: "Outro" }
 ];
 const vehicleSpecialCareRecommendedOptions = [
   { tag: "prefer_ph_neutral", label: "Preferir produto pH neutro" },
   { tag: "prefer_low_aggression", label: "Usar baixa agressividade" },
   { tag: "prefer_soft_touch", label: "Usar toque macio" },
-  { tag: "protect_sensitive_area", label: "Proteger Ã¡rea sensÃ­vel" },
-  { tag: "manual_review", label: "ConferÃªncia manual antes de iniciar" }
+  { tag: "protect_sensitive_area", label: "Proteger área sensível" },
+  { tag: "manual_review", label: "Conferência manual antes de iniciar" }
 ];
 const vehicleSpecialCareRestrictionLabelMap = vehicleSpecialCareRestrictionOptions.reduce((accumulator, option) => {
   accumulator[option.tag] = option.label;
@@ -174,25 +174,25 @@ const vehicleSpecialCareRecommendedLabelMap = vehicleSpecialCareRecommendedOptio
 }, {});
 const vehicleSpecialCareCombinedRestrictionOptions = [...vehicleSpecialCareRestrictionOptions, ...vehicleSpecialCareRecommendedOptions];
 const supplyRiskTagOptions = [
-  { tag: "acid_product", label: "Produto Ã¡cido" },
+  { tag: "acid_product", label: "Produto ácido" },
   { tag: "strong_alkaline_product", label: "Alcalino forte" },
   { tag: "degreaser", label: "Desengraxante" },
   { tag: "solvent", label: "Solvente" },
   { tag: "abrasive", label: "Abrasivo" },
-  { tag: "silicone_based", label: "Ã€ base de silicone" },
+  { tag: "silicone_based", label: "A base de silicone" },
   { tag: "engine_cleaner", label: "Limpeza de motor" },
-  { tag: "wheel_acid", label: "Ãcido de roda" },
+  { tag: "wheel_acid", label: "Ácido de roda" },
   { tag: "heavy_cleaner", label: "Limpeza pesada" }
 ];
 const serviceAutoCareTypeOptions = [
-  { value: "", label: "NÃ£o sugerir" },
-  { value: "VitrificaÃ§Ã£o / coating cerÃ¢mico", label: "VitrificaÃ§Ã£o / coating cerÃ¢mico" },
-  { value: "Couro tratado ou sensÃ­vel", label: "Couro tratado ou sensÃ­vel" },
-  { value: "Pintura sensÃ­vel ou repintada", label: "Pintura sensÃ­vel ou repintada" },
+  { value: "", label: "Não sugerir" },
+  { value: "Vitrificação / coating cerâmico", label: "Vitrificação / coating cerâmico" },
+  { value: "Couro tratado ou sensível", label: "Couro tratado ou sensível" },
+  { value: "Pintura sensível ou repintada", label: "Pintura sensível ou repintada" },
   { value: "Outro", label: "Outro" }
 ];
-const checklistUnverifiedCondition = "NÃ£o Verificado";
-const checklistConditions = ["Conforme", "Arranhado", "Amassado", "Quebrado", "Faltando", "NÃ£o AplicÃ¡vel"];
+const checklistUnverifiedCondition = "Não Verificado";
+const checklistConditions = ["Conforme", "Arranhado", "Amassado", "Quebrado", "Faltando", "Não Aplicável"];
 const checklistConditionIconMap = {
   [checklistUnverifiedCondition]: "assets/checklist-icons/nao-verificado.svg",
   Conforme: "assets/checklist-icons/conforme.svg",
@@ -200,7 +200,7 @@ const checklistConditionIconMap = {
   Amassado: "assets/checklist-icons/amassado.svg",
   Quebrado: "assets/checklist-icons/quebrado.svg",
   Faltando: "assets/checklist-icons/faltando.svg",
-  "NÃ£o AplicÃ¡vel": "assets/checklist-icons/nao-aplicavel.svg"
+  "Não Aplicável": "assets/checklist-icons/nao-aplicavel.svg"
 };
 const pdfDocumentStandard = {
   templateReference: "assets/templates/lavaprime-papel-timbrado.html",
@@ -253,16 +253,16 @@ const businessSocialChannels = [
   { key: "site", label: "Site", placeholder: "https://site.com.br" }
 ];
 const businessSocialReportTargets = [
-  { key: "all", label: "Todos os relatÃ³rios" },
+  { key: "all", label: "Todos os relatórios" },
   { key: "financial", label: "Financeiro geral" },
   { key: "cashflow", label: "Fluxo de caixa" },
   { key: "openPayments", label: "Pagamentos em aberto" },
   { key: "invoices", label: "Faturas" },
   { key: "receipts", label: "Recibos" },
   { key: "checklists", label: "Check-list veicular" },
-  { key: "operatorProduction", label: "ProduÃ§Ã£o do operador" },
-  { key: "operatorCommission", label: "ComissÃ£o do operador" },
-  { key: "operatorAttendance", label: "FrequÃªncia do operador" }
+  { key: "operatorProduction", label: "Produção do operador" },
+  { key: "operatorCommission", label: "Comissão do operador" },
+  { key: "operatorAttendance", label: "Frequência do operador" }
 ];
 const businessProfileReportFieldKeys = ["cnpj", "legalName", "tradeName", "phone", "email", "address"];
 let businessProfile = normalizeBusinessProfile(loadBusinessStorageItem(businessStorageKeys.profile, getDefaultBusinessProfile()));
@@ -287,99 +287,99 @@ function getDefaultMessageTemplates() {
   return [
     {
       key: "schedule-confirmation",
-      category: "ServiÃ§o",
-      title: "ConfirmaÃ§Ã£o de agendamento",
-      text: "OlÃ¡, {cliente}. Seu agendamento na {empresa} para o veÃ­culo {placa} estÃ¡ confirmado para {data} Ã s {hora}. ServiÃ§o: {servico}."
+      category: "Serviço",
+      title: "Confirmação de agendamento",
+      text: "Olá, {cliente}. Seu agendamento na {empresa} para o veículo {placa} está confirmado para {data} às {hora}. Serviço: {servico}."
     },
     {
       key: "yard-entry",
-      category: "ServiÃ§o",
-      title: "Entrada do veÃ­culo no pÃ¡tio",
-      text: "OlÃ¡, {cliente}. Seu veÃ­culo {placa} deu entrada no pÃ¡tio da {empresa}. Vamos iniciar o acompanhamento do serviÃ§o: {servico}."
+      category: "Serviço",
+      title: "Entrada do veículo no pátio",
+      text: "Olá, {cliente}. Seu veículo {placa} deu entrada no pátio da {empresa}. Vamos iniciar o acompanhamento do serviço: {servico}."
     },
     {
       key: "vehicle-ready",
-      category: "ServiÃ§o",
-      title: "VeÃ­culo pronto",
-      text: "OlÃ¡, {cliente}. Seu veÃ­culo {placa} estÃ¡ pronto para retirada na {empresa}. Valor: {valor}. Forma de pagamento: {pagamento}."
+      category: "Serviço",
+      title: "Veículo pronto",
+      text: "Olá, {cliente}. Seu veículo {placa} está pronto para retirada na {empresa}. Valor: {valor}. Forma de pagamento: {pagamento}."
     },
     {
       key: "schedule-canceled",
-      category: "ServiÃ§o",
+      category: "Serviço",
       title: "Cancelamento de agendamento",
-      text: "OlÃ¡, {cliente}. Seu agendamento para o veÃ­culo {placa} foi cancelado. Se desejar, podemos remarcar para outro horÃ¡rio."
+      text: "Olá, {cliente}. Seu agendamento para o veículo {placa} foi cancelado. Se desejar, podemos remarcar para outro horário."
     },
     {
       key: "service-canceled",
-      category: "ServiÃ§o",
-      title: "Cancelamento de serviÃ§o",
-      text: "OlÃ¡, {cliente}. O serviÃ§o do veÃ­culo {placa} foi cancelado. A equipe da {empresa} permanece Ã  disposiÃ§Ã£o."
+      category: "Serviço",
+      title: "Cancelamento de serviço",
+      text: "Olá, {cliente}. O serviço do veículo {placa} foi cancelado. A equipe da {empresa} permanece à disposição."
     },
     {
       key: "payment-confirmation",
-      category: "ServiÃ§o",
-      title: "ConfirmaÃ§Ã£o de pagamento",
-      text: "OlÃ¡, {cliente}. Confirmamos o pagamento do serviÃ§o {servico} do veÃ­culo {placa}, no valor de {valor}. Forma de pagamento: {pagamento}. Obrigado pela preferÃªncia."
+      category: "Serviço",
+      title: "Confirmação de pagamento",
+      text: "Olá, {cliente}. Confirmamos o pagamento do serviço {servico} do veículo {placa}, no valor de {valor}. Forma de pagamento: {pagamento}. Obrigado pela preferência."
     },
     {
       key: "partial-yard-payment",
       category: "Financeiro",
-      title: "Pagamento parcial no pÃ¡tio",
-      text: "OlÃ¡, {cliente}. Registramos o pagamento parcial do serviÃ§o {servico}, veÃ­culo {placa}, na {empresa}. Valor pago: {valor_pago}. Saldo em aberto: {saldo}. Forma de pagamento: {pagamento}."
+      title: "Pagamento parcial no pátio",
+      text: "Olá, {cliente}. Registramos o pagamento parcial do serviço {servico}, veículo {placa}, na {empresa}. Valor pago: {valor_pago}. Saldo em aberto: {saldo}. Forma de pagamento: {pagamento}."
     },
     {
       key: "open-invoice",
       category: "Financeiro",
       title: "Aviso de fatura em aberto",
-      text: "OlÃ¡, {cliente}. Identificamos uma fatura em aberto na {empresa}. Valor: {valor}. Vencimento: {vencimento}. Podemos ajudar com os dados para pagamento?"
+      text: "Olá, {cliente}. Identificamos uma fatura em aberto na {empresa}. Valor: {valor}. Vencimento: {vencimento}. Podemos ajudar com os dados para pagamento?"
     },
     {
       key: "partial-invoice-payment",
       category: "Financeiro",
       title: "Pagamento parcial de fatura",
-      text: "OlÃ¡, {cliente}. Registramos a baixa parcial da fatura {fatura} na {empresa}. Valor pago: {valor_pago}. Saldo remanescente: {saldo}. Destino do saldo: {destino}."
+      text: "Olá, {cliente}. Registramos a baixa parcial da fatura {fatura} na {empresa}. Valor pago: {valor_pago}. Saldo remanescente: {saldo}. Destino do saldo: {destino}."
     },
     {
       key: "open-service-payment",
       category: "Financeiro",
-      title: "Aviso de serviÃ§o com pagamento em aberto",
-      text: "OlÃ¡, {cliente}. Consta um pagamento em aberto referente ao serviÃ§o {servico}, veÃ­culo {placa}, no valor de {valor}. Podemos confirmar a melhor forma de pagamento?"
+      title: "Aviso de serviço com pagamento em aberto",
+      text: "Olá, {cliente}. Consta um pagamento em aberto referente ao serviço {servico}, veículo {placa}, no valor de {valor}. Podemos confirmar a melhor forma de pagamento?"
     },
     {
       key: "partial-open-payment",
       category: "Financeiro",
       title: "Baixa parcial de pagamento em aberto",
-      text: "OlÃ¡, {cliente}. Recebemos um pagamento parcial referente a {servico}. Valor pago: {valor_pago}. Saldo em aberto: {saldo}. Forma de pagamento: {pagamento}."
+      text: "Olá, {cliente}. Recebemos um pagamento parcial referente a {servico}. Valor pago: {valor_pago}. Saldo em aberto: {saldo}. Forma de pagamento: {pagamento}."
     },
     {
       key: "loyalty-client",
       category: "Relacionamento com o cliente",
       title: "Cliente fidelidade",
-      text: "OlÃ¡, {cliente}. VocÃª faz parte dos clientes especiais da {empresa}. Temos condiÃ§Ãµes exclusivas para seu prÃ³ximo serviÃ§o."
+      text: "Olá, {cliente}. Você faz parte dos clientes especiais da {empresa}. Temos condições exclusivas para seu próximo serviço."
     },
     {
       key: "inactive-client",
       category: "Relacionamento com o cliente",
-      title: "Cliente hÃ¡ muito tempo sem realizar novos serviÃ§os",
-      text: "OlÃ¡, {cliente}. Sentimos sua falta na {empresa}. Quando quiser, podemos agendar uma nova lavagem para o veÃ­culo {placa}."
+      title: "Cliente há muito tempo sem realizar novos serviços",
+      text: "Olá, {cliente}. Sentimos sua falta na {empresa}. Quando quiser, podemos agendar uma nova lavagem para o veículo {placa}."
     },
     {
       key: "promotion",
       category: "Relacionamento com o cliente",
-      title: "PromoÃ§Ãµes",
-      text: "OlÃ¡, {cliente}. A {empresa} estÃ¡ com uma condiÃ§Ã£o especial: {promocao}. Posso reservar um horÃ¡rio para vocÃª?"
+      title: "Promoções",
+      text: "Olá, {cliente}. A {empresa} está com uma condição especial: {promocao}. Posso reservar um horário para você?"
     },
     {
       key: "satisfaction",
       category: "Relacionamento com o cliente",
-      title: "Pesquisa de satisfaÃ§Ã£o",
-      text: "OlÃ¡, {cliente}. Como foi sua experiÃªncia com o serviÃ§o {servico} na {empresa}? Sua avaliaÃ§Ã£o ajuda nossa equipe a melhorar."
+      title: "Pesquisa de satisfação",
+      text: "Olá, {cliente}. Como foi sua experiência com o serviço {servico} na {empresa}? Sua avaliação ajuda nossa equipe a melhorar."
     },
     {
       key: "maintenance-reminder",
       category: "Relacionamento com o cliente",
-      title: "Lembrete de manutenÃ§Ã£o estÃ©tica",
-      text: "OlÃ¡, {cliente}. JÃ¡ faz um tempo desde o Ãºltimo cuidado no veÃ­culo {placa}. Podemos sugerir um novo serviÃ§o de conservaÃ§Ã£o?"
+      title: "Lembrete de manutenção estética",
+      text: "Olá, {cliente}. Já faz um tempo desde o último cuidado no veículo {placa}. Podemos sugerir um novo serviço de conservação?"
     }
   ];
 }
@@ -406,20 +406,20 @@ function normalizeBusinessMessageTemplates(templates) {
 function getMessageTriggerLabel(key) {
   const labels = {
     "schedule-confirmation": "Ao salvar agendamento",
-    "yard-entry": "Ao registrar entrada no pÃ¡tio",
+    "yard-entry": "Ao registrar entrada no pátio",
     "vehicle-ready": "Ao mover para Pronto",
     "schedule-canceled": "Ao cancelar agendamento",
-    "service-canceled": "Ao cancelar serviÃ§o",
+    "service-canceled": "Ao cancelar serviço",
     "payment-confirmation": "Ao confirmar/baixar pagamento",
-    "partial-yard-payment": "Ao registrar pagamento parcial no pÃ¡tio",
+    "partial-yard-payment": "Ao registrar pagamento parcial no pátio",
     "open-invoice": "Ao enviar lembrete de fatura",
     "partial-invoice-payment": "Ao baixar fatura parcialmente",
-    "open-service-payment": "Ao lanÃ§ar ou lembrar pagamento em aberto",
+    "open-service-payment": "Ao lançar ou lembrar pagamento em aberto",
     "partial-open-payment": "Ao baixar pagamento em aberto parcialmente",
     "loyalty-client": "Relacionamento manual no cadastro",
     "inactive-client": "Relacionamento manual no cadastro",
     promotion: "Relacionamento manual no cadastro",
-    satisfaction: "ApÃ³s atendimento ou manual",
+    satisfaction: "Após atendimento ou manual",
     "maintenance-reminder": "Relacionamento manual no cadastro"
   };
   return labels[key] || "Gatilho manual";
@@ -429,7 +429,7 @@ const vehicleChecklistTemplates = {
   default: [
     {
       area: "Dianteira",
-      parts: ["Parachoque dianteiro", "CapÃ´", "Grade", "Para-brisa", "Farol esquerdo", "Farol direito", "Paralama esquerdo", "Paralama direito"]
+      parts: ["Parachoque dianteiro", "Capô", "Grade", "Para-brisa", "Farol esquerdo", "Farol direito", "Paralama esquerdo", "Paralama direito"]
     },
     {
       area: "Traseira",
@@ -463,7 +463,7 @@ const vehicleChecklistTemplates = {
     },
     {
       area: "Superior",
-      parts: ["Tanque", "Assento", "GuidÃ£o", "Comandos", "BaÃº/suporte"]
+      parts: ["Tanque", "Assento", "Guidão", "Comandos", "Baú/suporte"]
     }
   ]
 };
@@ -475,14 +475,14 @@ const statusMeta = {
     summary: "Entrada agendada"
   },
   aguardando: {
-    label: "Aguardando ServiÃ§o",
+    label: "Aguardando Serviço",
     icon: "clock",
-    summary: "Aguardando ServiÃ§o"
+    summary: "Aguardando Serviço"
   },
   lavando: {
-    label: "Em ServiÃ§o",
+    label: "Em Serviço",
     icon: "drop",
-    summary: "ServiÃ§o em execuÃ§Ã£o"
+    summary: "Serviço em execução"
   },
   pronto: {
     label: "Pronto",
@@ -497,7 +497,7 @@ const statusMeta = {
   cancelado: {
     label: "Cancelado",
     icon: "cancel",
-    summary: "ServiÃ§o cancelado"
+    summary: "Serviço cancelado"
   }
 };
 
@@ -543,8 +543,8 @@ const patioVehicles = [
     color: "Prata",
     owner: "Rafael Nunes",
     phone: "(21) 97777-2041",
-    service: "HigienizaÃ§Ã£o interna",
-    payment: "CartÃ£o de dÃ©bito",
+    service: "Higienização interna",
+    payment: "Cartão de débito",
     entry: "09:15",
     status: "lavando"
   },
@@ -556,7 +556,7 @@ const patioVehicles = [
     owner: "Camila Torres",
     phone: "(31) 96666-3072",
     service: "Detailing completo",
-    payment: "CartÃ£o de crÃ©dito",
+    payment: "Cartão de crédito",
     entry: "10:05",
     status: "pronto"
   },
@@ -567,7 +567,7 @@ const patioVehicles = [
     color: "Preto",
     owner: "Pedro Martins",
     phone: "(41) 95555-7010",
-    service: "VitrificaÃ§Ã£o",
+    service: "Vitrificação",
     payment: "Faturado",
     entry: "11:20",
     status: "cancelado"
@@ -592,7 +592,7 @@ const quoteEstimates = [
     phone: "(11) 97777-1200",
     payment: "Pix",
     services: ["Lavagem Prime"],
-    extraItems: [{ description: "RemoÃ§Ã£o de manchas no banco", value: 90 }],
+    extraItems: [{ description: "Remoção de manchas no banco", value: 90 }],
     status: "Pendente",
     operator: "Administrador"
   },
@@ -611,9 +611,9 @@ const quoteEstimates = [
     category: "Sedan",
     owner: "Diego Almeida",
     phone: "(11) 96666-3344",
-    payment: "CartÃ£o de crÃ©dito",
-    services: ["HigienizaÃ§Ã£o interna"],
-    extraItems: [{ description: "Oxi-sanitizaÃ§Ã£o", value: 70 }],
+    payment: "Cartão de crédito",
+    services: ["Higienização interna"],
+    extraItems: [{ description: "Oxi-sanitização", value: 70 }],
     status: "Aprovado",
     approvedAt: "03/06/2026 10:45",
     operator: "Administrador"
@@ -633,7 +633,7 @@ const quoteEstimates = [
     category: "SUV",
     owner: "Renata Moura",
     phone: "(31) 95555-2210",
-    payment: "TransferÃªncia",
+    payment: "Transferência",
     services: ["Detailing completo"],
     extraItems: [],
     status: "Pendente",
@@ -655,9 +655,9 @@ const quoteEstimates = [
     owner: "Marcelo Rocha",
     phone: "(21) 94444-7100",
     payment: "Boleto",
-    services: ["VitrificaÃ§Ã£o"],
-    extraItems: [{ description: "Polimento tÃ©cnico", value: 180 }],
-    status: "NÃ£o aprovado",
+    services: ["Vitrificação"],
+    extraItems: [{ description: "Polimento técnico", value: 180 }],
+    status: "Não aprovado",
     rejectedAt: "05/06/2026 09:30",
     operator: "Administrador"
   }
@@ -673,7 +673,7 @@ const clientRegistry = [
     legalName: "Frota Prime Ltda",
     document: "12.345.678/0001-90",
     phone: "(11) 91111-0001",
-    address: "Av. Paulista, 1000 - SÃ£o Paulo/SP",
+    address: "Av. Paulista, 1000 - São Paulo/SP",
     email: "financeiro@frotaprime.com.br",
     responsible: "Roberto Silva",
     approver: "Ana Admin",
@@ -688,12 +688,12 @@ const clientRegistry = [
     personType: "PJ",
     billing: true,
     name: "",
-    legalName: "CondomÃ­nio Reserva Azul",
+    legalName: "Condomínio Reserva Azul",
     document: "98.765.432/0001-10",
     phone: "(11) 92222-0002",
-    address: "Rua das AcÃ¡cias, 450 - SÃ£o Paulo/SP",
+    address: "Rua das Acácias, 450 - São Paulo/SP",
     email: "administracao@reservaazul.com.br",
-    responsible: "LÃ­via Ramos",
+    responsible: "Lívia Ramos",
     approver: "Ana Admin",
     billingApproved: true,
     billingCycle: "Mensal",
@@ -709,7 +709,7 @@ const clientRegistry = [
     legalName: "Auto Center Vila Norte",
     document: "23.456.789/0001-20",
     phone: "(11) 93333-0003",
-    address: "Rua Norte, 78 - SÃ£o Paulo/SP",
+    address: "Rua Norte, 78 - São Paulo/SP",
     email: "contas@autocentervn.com.br",
     responsible: "Diego Melo",
     approver: "Ana Admin",
@@ -768,9 +768,9 @@ const vehicleRegistry = [
     category: "Hatch",
     fuel: "Flex",
     currentClientId: 4,
-    notes: "VeÃ­culo de cliente avulso com recorrÃªncia mensal.",
-    ownerHistory: [{ date: "2026-05-18", owner: "Marina Alves", note: "ProprietÃ¡ria atual" }],
-    serviceHistory: [{ date: "2026-05-18", service: "Lavagem Prime", status: "Aguardando serviÃ§o", value: 65 }]
+    notes: "Veículo de cliente avulso com recorrência mensal.",
+    ownerHistory: [{ date: "2026-05-18", owner: "Marina Alves", note: "Proprietária atual" }],
+    serviceHistory: [{ date: "2026-05-18", service: "Lavagem Prime", status: "Aguardando serviço", value: 65 }]
   },
   {
     id: 2,
@@ -783,9 +783,9 @@ const vehicleRegistry = [
     category: "Sedan",
     fuel: "Flex",
     currentClientId: 5,
-    notes: "Cliente prefere higienizaÃ§Ã£o interna trimestral.",
-    ownerHistory: [{ date: "2026-05-18", owner: "Rafael Nunes", note: "ProprietÃ¡rio atual" }],
-    serviceHistory: [{ date: "2026-05-18", service: "HigienizaÃ§Ã£o interna", status: "Em ServiÃ§o", value: 140 }]
+    notes: "Cliente prefere higienização interna trimestral.",
+    ownerHistory: [{ date: "2026-05-18", owner: "Rafael Nunes", note: "Proprietário atual" }],
+    serviceHistory: [{ date: "2026-05-18", service: "Higienização interna", status: "Em Serviço", value: 140 }]
   },
   {
     id: 3,
@@ -813,12 +813,12 @@ const vehicleRegistry = [
     category: "Sedan",
     fuel: "Flex",
     currentClientId: 1,
-    notes: "HistÃ³rico preservado mesmo com serviÃ§o cancelado.",
+    notes: "Histórico preservado mesmo com serviço cancelado.",
     ownerHistory: [
-      { date: "2025-11-10", owner: "Pedro Martins", note: "ProprietÃ¡rio anterior" },
+      { date: "2025-11-10", owner: "Pedro Martins", note: "Proprietário anterior" },
       { date: "2026-05-18", owner: "Frota Prime Ltda", note: "Transferido para cliente faturado" }
     ],
-    serviceHistory: [{ date: "2026-05-18", service: "VitrificaÃ§Ã£o", status: "Cancelado", value: 490 }]
+    serviceHistory: [{ date: "2026-05-18", service: "Vitrificação", status: "Cancelado", value: 490 }]
   },
   {
     id: 5,
@@ -831,8 +831,8 @@ const vehicleRegistry = [
     category: "SUV",
     fuel: "Flex",
     currentClientId: 2,
-    notes: "Entrada agendada aguardando confirmaÃ§Ã£o.",
-    ownerHistory: [{ date: "2026-05-18", owner: "CondomÃ­nio Reserva Azul", note: "Cliente faturado atual" }],
+    notes: "Entrada agendada aguardando confirmação.",
+    ownerHistory: [{ date: "2026-05-18", owner: "Condomínio Reserva Azul", note: "Cliente faturado atual" }],
     serviceHistory: [{ date: "2026-05-18", service: "Lavagem Prime", status: "Agendado", value: 65 }]
   }
 ];
@@ -848,7 +848,7 @@ const adminOperators = [
     password: "lava123",
     commissionType: "fixed",
     commissionValue: 12,
-    role: "Operador de pÃ¡tio",
+    role: "Operador de pátio",
     shift: "08:00 - 17:00",
     today: 6,
     status: "Ativo",
@@ -864,11 +864,11 @@ const adminOperators = [
         attendance: "Presente",
         items: [
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
-          { service: "HigienizaÃ§Ã£o interna", duration: "1h20", value: 140 },
+          { service: "Higienização interna", duration: "1h20", value: 140 },
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
           { service: "Lavagem com cera", duration: "50 min", value: 95 },
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
-          { service: "Polimento tÃ©cnico parcial", duration: "1h10", value: 90 }
+          { service: "Polimento técnico parcial", duration: "1h10", value: 90 }
         ]
       },
       {
@@ -878,12 +878,12 @@ const adminOperators = [
         attendance: "Presente",
         items: [
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
-          { service: "HigienizaÃ§Ã£o interna", duration: "1h20", value: 140 },
+          { service: "Higienização interna", duration: "1h20", value: 140 },
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
           { service: "Lavagem de motor", duration: "45 min", value: 60 },
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
-          { service: "CristalizaÃ§Ã£o rÃ¡pida", duration: "1h30", value: 155 },
-          { service: "Lavagem tÃ©cnica externa", duration: "40 min", value: 60 }
+          { service: "Cristalização rápida", duration: "1h30", value: 155 },
+          { service: "Lavagem técnica externa", duration: "40 min", value: 60 }
         ]
       }
     ]
@@ -915,7 +915,7 @@ const adminOperators = [
         items: [
           { service: "Detailing completo", duration: "3h00", value: 320 },
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
-          { service: "Lavagem tÃ©cnica externa", duration: "40 min", value: 45 },
+          { service: "Lavagem técnica externa", duration: "40 min", value: 45 },
           { service: "Acabamento final", duration: "25 min", value: 30 }
         ]
       },
@@ -925,11 +925,11 @@ const adminOperators = [
         revenue: 530,
         attendance: "Presente",
         items: [
-          { service: "HigienizaÃ§Ã£o interna", duration: "1h20", value: 140 },
+          { service: "Higienização interna", duration: "1h20", value: 140 },
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
           { service: "Detailing parcial", duration: "2h00", value: 180 },
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
-          { service: "RevitalizaÃ§Ã£o de plÃ¡sticos", duration: "50 min", value: 80 }
+          { service: "Revitalização de plásticos", duration: "50 min", value: 80 }
         ]
       }
     ]
@@ -960,7 +960,7 @@ const adminOperators = [
         attendance: "Presente",
         items: [
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
-          { service: "HigienizaÃ§Ã£o leve", duration: "55 min", value: 115 }
+          { service: "Higienização leve", duration: "55 min", value: 115 }
         ]
       },
       {
@@ -971,7 +971,7 @@ const adminOperators = [
         items: [
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
           { service: "Lavagem Prime", duration: "35 min", value: 65 },
-          { service: "PreparaÃ§Ã£o de veÃ­culo", duration: "1h00", value: 130 }
+          { service: "Preparação de veículo", duration: "1h00", value: 130 }
         ]
       }
     ]
@@ -992,13 +992,13 @@ const serviceCatalog = [
     maintenanceDate: ""
   },
   {
-    name: "HigienizaÃ§Ã£o interna",
+    name: "Higienização interna",
     price: 140,
     duration: "1h20",
     vehicleType: "Carro",
     vehicleCategory: "Sedan",
     status: "Ativo",
-    autoCreateVehicleCareType: "Couro tratado ou sensÃ­vel",
+    autoCreateVehicleCareType: "Couro tratado ou sensível",
     maintenanceRequired: true,
     maintenanceInterval: "semiannual",
     maintenanceDate: ""
@@ -1016,24 +1016,24 @@ const serviceCatalog = [
     maintenanceDate: ""
   },
   {
-    name: "VitrificaÃ§Ã£o",
+    name: "Vitrificação",
     price: 490,
     duration: "4h00",
     vehicleType: "Caminhonete",
     vehicleCategory: "Picape",
     status: "Ativo",
-    autoCreateVehicleCareType: "VitrificaÃ§Ã£o / coating cerÃ¢mico",
+    autoCreateVehicleCareType: "Vitrificação / coating cerâmico",
     maintenanceRequired: true,
     maintenanceInterval: "annual",
     maintenanceDate: ""
   }
 ];
 
-const vehicleTypes = ["Carro", "Moto", "Caminhonete", "Van", "UtilitÃ¡rio"];
+const vehicleTypes = ["Carro", "Moto", "Caminhonete", "Van", "Utilitário"];
 const vehicleCategories = ["Hatch", "Sedan", "SUV", "Picape", "Executivo", "Comercial", "Outro"];
 
-const cashflowCategories = ["ServiÃ§os", "Produtos", "Insumos", "Faturamento", "Taxas", "ManutenÃ§Ã£o", "Outros"];
-const cashflowCostCenters = ["Unidade principal", "Lavagem", "Loja", "EstÃ©tica", "Administrativo", "Financeiro"];
+const cashflowCategories = ["Serviços", "Produtos", "Insumos", "Faturamento", "Taxas", "Manutenção", "Outros"];
+const cashflowCostCenters = ["Unidade principal", "Lavagem", "Loja", "Estética", "Administrativo", "Financeiro"];
 
 function getDefaultCashEntries() {
   return [
@@ -1045,21 +1045,21 @@ function getDefaultCashEntries() {
       description: "Lavagem Prime",
       method: "Pix",
       value: 65,
-      category: "ServiÃ§os",
+      category: "Serviços",
       costCenter: "Lavagem",
       status: "Confirmado",
-      attachment: { name: "pix-lavagem-prime.pdf", type: "Comprovante bancÃ¡rio" }
+      attachment: { name: "pix-lavagem-prime.pdf", type: "Comprovante bancário" }
     },
     {
       id: 2,
       date: "2026-05-25",
       time: "09:48",
       type: "Entrada",
-      description: "HigienizaÃ§Ã£o interna",
-      method: "CartÃ£o de dÃ©bito",
+      description: "Higienização interna",
+      method: "Cartão de débito",
       value: 140,
-      category: "ServiÃ§os",
-      costCenter: "EstÃ©tica",
+      category: "Serviços",
+      costCenter: "Estética",
       status: "Confirmado",
       attachment: null
     },
@@ -1069,10 +1069,10 @@ function getDefaultCashEntries() {
       time: "10:30",
       type: "Entrada",
       description: "Detailing completo",
-      method: "CartÃ£o de crÃ©dito",
+      method: "Cartão de crédito",
       value: 320,
-      category: "ServiÃ§os",
-      costCenter: "EstÃ©tica",
+      category: "Serviços",
+      costCenter: "Estética",
       status: "Pendente",
       attachment: null
     },
@@ -1080,8 +1080,8 @@ function getDefaultCashEntries() {
       id: 4,
       date: "2026-05-25",
       time: "12:20",
-      type: "SaÃ­da",
-      description: "Produtos quÃ­micos",
+      type: "Saída",
+      description: "Produtos químicos",
       method: "Carteira",
       value: -86.5,
       category: "Insumos",
@@ -1093,9 +1093,9 @@ function getDefaultCashEntries() {
       id: 5,
       date: "2026-05-25",
       time: "16:00",
-      type: "SaÃ­da",
-      description: "ReposiÃ§Ã£o de shampoo automotivo",
-      method: "TransferÃªncia",
+      type: "Saída",
+      description: "Reposição de shampoo automotivo",
+      method: "Transferência",
       value: -260,
       category: "Insumos",
       costCenter: "Lavagem",
@@ -1114,13 +1114,13 @@ const openPayments = [
     clientName: "Rafael Nunes",
     phone: "(21) 97777-2041",
     plate: "BRT8C41",
-    service: "HigienizaÃ§Ã£o interna",
+    service: "Higienização interna",
     value: 140,
     paymentMethod: "Pix",
     createdAt: "2026-05-25 10:30",
     dueDate: "2026-05-26",
     status: "Aberto",
-    reminderFrequency: "DiÃ¡rio",
+    reminderFrequency: "Diário",
     lastReminderAt: "",
     operator: "Carlos",
     vehicleId: 2,
@@ -1162,7 +1162,7 @@ function showToast(message) {
   toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 2400);
 }
 
-function showMessageBox({ title, message, eyebrow = "AtenÃ§Ã£o", confirmLabel = "Entendi", cancelLabel = "", confirmOnly = true }) {
+function showMessageBox({ title, message, eyebrow = "Atenção", confirmLabel = "Entendi", cancelLabel = "", confirmOnly = true }) {
   const dialog = $("#messageDialog");
   $("#messageDialogEyebrow").textContent = eyebrow;
   $("#messageDialogTitle").textContent = title;
@@ -1280,7 +1280,7 @@ function bindEvents() {
     sendMaintenanceWhatsapp(button.dataset.sendMaintenanceWhatsapp);
   });
   $$(".admin-action-button").forEach((button) => {
-    button.addEventListener("click", () => showToast("AÃ§Ã£o pronta para detalhamento na prÃ³xima etapa."));
+    button.addEventListener("click", () => showToast("Ação pronta para detalhamento na próxima etapa."));
   });
   $("#closeVehicleDialog").addEventListener("click", closeVehicleDialog);
   $("#cancelVehicleEntry").addEventListener("click", closeVehicleDialog);
@@ -1467,7 +1467,7 @@ function returnToLogin() {
     button.classList.remove("is-selected");
     button.setAttribute("aria-pressed", "false");
   });
-  showToast("SessÃ£o encerrada.");
+  showToast("Sessão encerrada.");
 }
 
 function openVehicleDialog(mode = "entry") {
@@ -1540,15 +1540,15 @@ function renderScheduleDialog() {
         <div class="schedule-selected-card" id="scheduleSelectedVehicle"></div>
 
         <div class="services-field schedule-services-field">
-          <span>ServiÃ§os contratados</span>
+          <span>Serviços contratados</span>
           <div class="service-dropdown-row">
-            <select id="scheduleServiceSelect" aria-label="Selecionar serviÃ§o contratado"></select>
+            <select id="scheduleServiceSelect" aria-label="Selecionar serviço contratado"></select>
             <button class="ghost-action" id="addScheduleServiceButton" type="button">
               <span data-icon="plus"></span>
-              <span>Adicionar serviÃ§o</span>
+              <span>Adicionar serviço</span>
             </button>
           </div>
-          <div class="selected-services-list" id="scheduleServicesList" aria-label="ServiÃ§os contratados"></div>
+          <div class="selected-services-list" id="scheduleServicesList" aria-label="Serviços contratados"></div>
         </div>
 
         <div class="vehicle-form-grid">
@@ -1626,12 +1626,12 @@ function renderSchedulePlateResults(query) {
         <p>Nenhuma placa cadastrada para ${escapeHtml(plate)}.</p>
         <button class="ghost-action" type="button" id="scheduleNewVehicleButton">
           <span data-icon="plus"></span>
-          <span>Novo veÃ­culo</span>
+          <span>Novo veículo</span>
         </button>
       </article>
     `;
   } else {
-    list.innerHTML = '<p class="empty-plates">Nenhuma placa encontrada atÃ© aqui.</p>';
+    list.innerHTML = '<p class="empty-plates">Nenhuma placa encontrada até aqui.</p>';
   }
 
   initIcons();
@@ -1650,7 +1650,7 @@ function renderSchedulePlateResults(query) {
 
 function renderScheduleVehicleOption(vehicle) {
   const owner = getVehicleOwnerName(vehicle);
-  const description = [vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(" ") || vehicle.model || "VeÃ­culo";
+  const description = [vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(" ") || vehicle.model || "Veículo";
   return `
     <button class="schedule-plate-option" type="button" data-schedule-vehicle-id="${vehicle.id}">
       <strong>${escapeHtml(vehicle.plate)}</strong>
@@ -1676,7 +1676,7 @@ function selectScheduleVehicle(vehicleId) {
 
 function renderScheduleSelectedVehicle(vehicle) {
   const owner = getVehicleOwnerName(vehicle);
-  const description = [vehicle.brand, vehicle.model, vehicle.color].filter(Boolean).join(" / ") || vehicle.model || "VeÃ­culo";
+  const description = [vehicle.brand, vehicle.model, vehicle.color].filter(Boolean).join(" / ") || vehicle.model || "Veículo";
   return `
     <span>Placa selecionada</span>
     <strong>${escapeHtml(vehicle.plate)}</strong>
@@ -1700,7 +1700,7 @@ function renderScheduleServiceOptions(registryVehicle, selectedServices = []) {
             `<option value="${escapeHtml(service.name)}">${escapeHtml(formatServiceOptionLabel(service))}</option>`
         )
         .join("")
-    : '<option value="">Nenhum serviÃ§o ativo</option>';
+    : '<option value="">Nenhum serviço ativo</option>';
 
   const validSelectedServices = selectedServices.filter((serviceName) => services.some((service) => service.name === serviceName));
   renderSelectedScheduleServices(validSelectedServices.length ? validSelectedServices : [services[0]?.name].filter(Boolean));
@@ -1710,13 +1710,13 @@ function addScheduleServiceFromDropdown() {
   const select = $("#scheduleServiceSelect");
   const service = select?.value || "";
   if (!service) {
-    showToast("Selecione um serviÃ§o contratado.");
+    showToast("Selecione um serviço contratado.");
     return;
   }
 
   const selectedServices = getSelectedScheduleServices();
   if (selectedServices.includes(service)) {
-    showToast("ServiÃ§o jÃ¡ incluÃ­do.");
+    showToast("Serviço já incluído.");
     return;
   }
 
@@ -1736,7 +1736,7 @@ function renderSelectedScheduleServices(services) {
     ? services
         .map((service) => {
           const registeredService = findServiceDefinition(service);
-          const details = registeredService ? formatServiceDetails(registeredService) : "ServiÃ§o contratado";
+          const details = registeredService ? formatServiceDetails(registeredService) : "Serviço contratado";
           return `
             <span class="selected-service-chip">
               <input type="hidden" name="scheduleServices" value="${escapeHtml(service)}" />
@@ -1751,7 +1751,7 @@ function renderSelectedScheduleServices(services) {
           `;
         })
         .join("")
-    : '<p class="empty-plates">Nenhum serviÃ§o contratado.</p>';
+    : '<p class="empty-plates">Nenhum serviço contratado.</p>';
 
   $$("[data-remove-schedule-service]", list).forEach((button) => {
     button.addEventListener("click", () => {
@@ -1778,13 +1778,13 @@ function updateScheduleBillingPanel() {
   const registryClient = getApprovedScheduleBillingClient(registryVehicle);
   if (!registryClient) {
     hint.textContent =
-      "Esta placa nÃ£o possui cliente faturado aprovado. Cadastre e aprove o cliente em Cadastros > Clientes antes de agendar como Faturado.";
+      "Esta placa não possui cliente faturado aprovado. Cadastre e aprove o cliente em Cadastros > Clientes antes de agendar como Faturado.";
     return;
   }
 
   const invoices = getOpenInvoicesByRegistryClient(registryClient);
   if (!invoices.length) {
-    hint.textContent = "Cliente faturado aprovado, mas sem fatura aberta disponÃ­vel para este agendamento.";
+    hint.textContent = "Cliente faturado aprovado, mas sem fatura aberta disponível para este agendamento.";
     return;
   }
 
@@ -1814,7 +1814,7 @@ async function createScheduleFromSelectedVehicle() {
     return;
   }
   if (!services.length) {
-    showToast("Selecione ao menos um serviÃ§o contratado.");
+    showToast("Selecione ao menos um serviço contratado.");
     return;
   }
   if (!paymentInput.reportValidity() || !dateInput.reportValidity() || !timeInput.reportValidity()) return;
@@ -1833,9 +1833,9 @@ async function createScheduleFromSelectedVehicle() {
     const invoice = billingInvoices.find((item) => String(item.id) === String(invoiceId));
     if (!invoice) {
       await showMessageBox({
-        title: "Fatura obrigatÃ³ria",
+        title: "Fatura obrigatória",
         message:
-          "Para agendar como Faturado, selecione uma fatura aberta do cliente. Se nÃ£o houver fatura disponÃ­vel, abra uma nova na Central de Faturas apÃ³s aprovaÃ§Ã£o do administrador.",
+          "Para agendar como Faturado, selecione uma fatura aberta do cliente. Se não houver fatura disponível, abra uma nova na Central de Faturas após aprovação do administrador.",
         eyebrow: "Financeiro",
         confirmLabel: "Entendi"
       });
@@ -1843,7 +1843,7 @@ async function createScheduleFromSelectedVehicle() {
     }
 
     if (!attachVehicleToInvoice(scheduledVehicle, invoice)) {
-      showToast("NÃ£o foi possÃ­vel vincular a fatura ao agendamento.");
+      showToast("Não foi possível vincular a fatura ao agendamento.");
       return;
     }
   }
@@ -1860,11 +1860,11 @@ function buildScheduledVehicleFromRegistry(registryVehicle, scheduledDate, sched
     id: getNextPatioVehicleId(),
     plate: registryVehicle.plate,
     brand: registryVehicle.brand || "",
-    model: registryVehicle.model || registryVehicle.brand || "VeÃ­culo",
-    color: registryVehicle.color || "NÃ£o informada",
+    model: registryVehicle.model || registryVehicle.brand || "Veículo",
+    color: registryVehicle.color || "Não informada",
     type: registryVehicle.type || "",
     category: registryVehicle.category || "",
-    owner: client ? getClientDisplayName(client) : "Cliente nÃ£o vinculado",
+    owner: client ? getClientDisplayName(client) : "Cliente não vinculado",
     phone: client?.phone || "",
     services,
     service: formatServices(services),
@@ -1928,7 +1928,7 @@ function bindLocalVehicleModelLookup({ container = document, modelSelector, bran
         return;
       }
 
-      renderLocalVehicleMessage(results, "Buscando no banco local de veÃ­culos...");
+      renderLocalVehicleMessage(results, "Buscando no banco local de veículos...");
 
       try {
         const typeKey = getLocalVehicleTypeKey(typeInput?.value);
@@ -1937,7 +1937,7 @@ function bindLocalVehicleModelLookup({ container = document, modelSelector, bran
         renderLocalVehicleResults(results, matches, query);
       } catch (error) {
         if (currentRequestId !== requestId) return;
-        renderLocalVehicleMessage(results, "Banco local indisponÃ­vel. Continue preenchendo manualmente.");
+        renderLocalVehicleMessage(results, "Banco local indisponível. Continue preenchendo manualmente.");
       }
     }, 180);
   };
@@ -2001,7 +2001,7 @@ function renderLocalVehicleResults(results, matches, query) {
           data-local-vehicle-brand="${escapeHtml(vehicle.brand)}"
         >
           <strong>${escapeHtml(vehicle.model)}</strong>
-          <span>${escapeHtml(vehicle.brand)} Â· ${escapeHtml(vehicle.typeLabel || "VeÃ­culo")}</span>
+          <span>${escapeHtml(vehicle.brand)} · ${escapeHtml(vehicle.typeLabel || "Veículo")}</span>
         </button>
       `
     )
@@ -2151,7 +2151,7 @@ function renderScheduleLookupTimeOptions() {
 
 function getScheduleTimeOptionsHtml(selectedValue = "") {
   const slots = getScheduleTimeSlots();
-  return ['<option value="">Selecione o horÃ¡rio</option>']
+  return ['<option value="">Selecione o horário</option>']
     .concat(slots.map((slot) => `<option value="${slot}" ${slot === selectedValue ? "selected" : ""}>${slot}</option>`))
     .join("");
 }
@@ -2196,7 +2196,7 @@ function validateScheduleSlot(plate, date, time, ignoredVehicleId = null) {
   );
 
   if (hasConflict) {
-    showToast("Este veÃ­culo jÃ¡ possui agendamento para este horÃ¡rio.");
+    showToast("Este veículo já possui agendamento para este horário.");
     return false;
   }
 
@@ -2213,9 +2213,9 @@ function updateVehicleDialogMode() {
     toggle.disabled = isClientRegistration;
   }
   if (scheduleField) scheduleField.hidden = isClientRegistration;
-  $("#vehicleDialogEyebrow").textContent = isClientRegistration ? "Cadastro de cliente" : isSchedule ? "Agendamento" : "Entrada no pÃ¡tio";
-  $("#vehicleDialogTitle").textContent = isClientRegistration ? "Novo veÃ­culo do cliente" : isSchedule ? "Novo veÃ­culo para agendamento" : "Novo veÃ­culo";
-  $("#vehicleEntryStepCopy").textContent = "Dados do veÃ­culo";
+  $("#vehicleDialogEyebrow").textContent = isClientRegistration ? "Cadastro de cliente" : isSchedule ? "Agendamento" : "Entrada no pátio";
+  $("#vehicleDialogTitle").textContent = isClientRegistration ? "Novo veículo do cliente" : isSchedule ? "Novo veículo para agendamento" : "Novo veículo";
+  $("#vehicleEntryStepCopy").textContent = "Dados do veículo";
   $("#vehicleDialog .services-field")?.toggleAttribute("hidden", isClientRegistration);
   const entryPaymentField = $("#vehicleEntryPaymentField");
   const paidAtEntryInput = $("#vehiclePaidAtEntry");
@@ -2229,7 +2229,7 @@ function updateVehicleDialogMode() {
     nextIcon.dataset.icon = isClientRegistration ? "check" : "login";
     nextIcon.innerHTML = icons[nextIcon.dataset.icon] || nextIcon.innerHTML;
   }
-  if (nextLabel) nextLabel.textContent = isClientRegistration ? "Salvar veÃ­culo" : "PrÃ³ximo";
+  if (nextLabel) nextLabel.textContent = isClientRegistration ? "Salvar veículo" : "Próximo";
 
   setScheduleDateMin("#vehicleScheduleDate");
   renderScheduleTimeOptions();
@@ -2294,13 +2294,13 @@ function addEntryServiceFromDropdown() {
   const select = $("#vehicleServiceSelect");
   const service = select.value;
   if (!service) {
-    showToast("Selecione um serviÃ§o contratado.");
+    showToast("Selecione um serviço contratado.");
     return;
   }
 
   const selectedServices = getSelectedEntryServices();
   if (selectedServices.includes(service)) {
-    showToast("ServiÃ§o jÃ¡ incluÃ­do.");
+    showToast("Serviço já incluído.");
     return;
   }
 
@@ -2314,7 +2314,7 @@ function renderSelectedEntryServices(services) {
     ? services
         .map((service) => {
           const registeredService = findServiceDefinition(service);
-          const details = registeredService ? formatServiceDetails(registeredService) : "ServiÃ§o contratado";
+          const details = registeredService ? formatServiceDetails(registeredService) : "Serviço contratado";
           return `
             <span class="selected-service-chip">
               <input type="hidden" name="services" value="${escapeHtml(service)}" />
@@ -2329,7 +2329,7 @@ function renderSelectedEntryServices(services) {
           `;
         })
         .join("")
-    : '<p class="empty-plates">Nenhum serviÃ§o contratado.</p>';
+    : '<p class="empty-plates">Nenhum serviço contratado.</p>';
 
   $$("[data-remove-entry-service]", list).forEach((button) => {
     button.addEventListener("click", () => {
@@ -2354,7 +2354,7 @@ function goToVehicleClientStep() {
   if (!isValid) return;
 
   if (!getSelectedEntryServices().length) {
-    showToast("Selecione ao menos um serviÃ§o contratado.");
+    showToast("Selecione ao menos um serviço contratado.");
     return;
   }
 
@@ -2375,7 +2375,7 @@ function saveClientVehicleRegistrationFromDialog() {
   const plate = formatPlate(data.get("plate"));
   const linkedClient = getClientLinkedToPlate(plate);
   if (linkedClient && linkedClient.id !== selectedClientId) {
-    showToast(`${plate} jÃ¡ estÃ¡ vinculada a ${getClientDisplayName(linkedClient)}.`);
+    showToast(`${plate} já está vinculada a ${getClientDisplayName(linkedClient)}.`);
     $("#vehiclePlate").focus();
     return;
   }
@@ -2388,7 +2388,7 @@ function saveClientVehicleRegistrationFromDialog() {
     const type = String(data.get("type") || "").trim() || "Carro";
 
     if (!color) {
-      showToast("Informe a cor do veÃ­culo.");
+      showToast("Informe a cor do veículo.");
       $("#vehicleOtherColor").focus();
       return;
     }
@@ -2446,9 +2446,9 @@ async function handleVehicleEntrySubmit() {
     const billingClient = getApprovedBillingClientForEntry(vehicle);
     if (!billingClient) {
       await showMessageBox({
-        title: "Cadastro faturado obrigatÃ³rio",
+        title: "Cadastro faturado obrigatório",
         message:
-          "Para lanÃ§ar como Faturado, o cliente precisa estar cadastrado como faturado e aprovado por um administrador na tela Cadastros > Clientes.",
+          "Para lançar como Faturado, o cliente precisa estar cadastrado como faturado e aprovado por um administrador na tela Cadastros > Clientes.",
         confirmLabel: "Entendi"
       });
       return;
@@ -2488,20 +2488,20 @@ function buildVehicleFromForm(data, { requireSchedule = vehicleEntryMode === "sc
   const scheduledTime = String(data.get("scheduleTime") || "").trim();
   const selectedColor = String(data.get("color")).trim();
   const otherColor = String(data.get("otherColor")).trim();
-  const color = selectedRegistryVehicle ? selectedRegistryVehicle.color || "NÃ£o informada" : selectedColor === "Outra" ? otherColor : selectedColor;
+  const color = selectedRegistryVehicle ? selectedRegistryVehicle.color || "Não informada" : selectedColor === "Outra" ? otherColor : selectedColor;
   const services = data.getAll("services").map((service) => String(service).trim()).filter(Boolean);
   const type = selectedRegistryVehicle?.type || String(data.get("type") || "").trim();
   const category = selectedRegistryVehicle?.category || String(data.get("category") || "").trim();
   const brand = selectedRegistryVehicle?.brand || String(data.get("brand") || "").trim();
 
   if (!color) {
-    showToast("Informe a cor do veÃ­culo.");
+    showToast("Informe a cor do veículo.");
     $("#vehicleOtherColor").focus();
     return null;
   }
 
   if (!services.length) {
-    showToast("Selecione ao menos um serviÃ§o contratado.");
+    showToast("Selecione ao menos um serviço contratado.");
     showVehicleStep("entry");
     return null;
   }
@@ -2596,10 +2596,10 @@ async function resolveEntryOwnership(vehicle) {
   if (linkedClient && entryOwnerWasChanged(vehicle, linkedClient)) {
     const shouldTransfer = await showMessageBox({
       title: "Transferir placa?",
-      message: `${vehicle.plate} estÃ¡ vinculada a ${getClientDisplayName(linkedClient)}. Deseja transferir esta placa para o cadastro informado agora? O histÃ³rico do veÃ­culo serÃ¡ mantido.`,
-      eyebrow: "ProprietÃ¡rio diferente",
+      message: `${vehicle.plate} está vinculada a ${getClientDisplayName(linkedClient)}. Deseja transferir esta placa para o cadastro informado agora? O histórico do veículo será mantido.`,
+      eyebrow: "Proprietário diferente",
       confirmLabel: "Sim, transferir",
-      cancelLabel: "NÃ£o",
+      cancelLabel: "Não",
       confirmOnly: false
     });
 
@@ -2613,9 +2613,9 @@ async function resolveEntryOwnership(vehicle) {
 
     if (vehicle.payment === "Faturado" && !isClientBillingApproved(typedClient)) {
       await showMessageBox({
-        title: "TransferÃªncia faturada nÃ£o permitida",
+        title: "Transferência faturada não permitida",
         message:
-          "Para transferir uma placa e lanÃ§ar como Faturado, o novo proprietÃ¡rio precisa estar cadastrado como cliente faturado aprovado por um administrador.",
+          "Para transferir uma placa e lançar como Faturado, o novo proprietário precisa estar cadastrado como cliente faturado aprovado por um administrador.",
         confirmLabel: "Entendi"
       });
       return false;
@@ -2636,9 +2636,9 @@ async function resolveEntryOwnership(vehicle) {
   if (vehicle.payment === "Faturado") {
     if (!isClientBillingApproved(typedClient)) {
       await showMessageBox({
-        title: "Cliente faturado nÃ£o aprovado",
+        title: "Cliente faturado não aprovado",
         message:
-          "Esta placa ainda nÃ£o tem cadastro faturado aprovado. Cadastre o cliente em Cadastros > Clientes, marque Cliente faturado e ative a aprovaÃ§Ã£o do administrador.",
+          "Esta placa ainda não tem cadastro faturado aprovado. Cadastre o cliente em Cadastros > Clientes, marque Cliente faturado e ative a aprovação do administrador.",
         confirmLabel: "Entendi"
       });
       return false;
@@ -2667,7 +2667,7 @@ async function confirmOpenPaymentsForEntry(vehicle) {
   const total = pendingPayments.reduce((sum, payment) => sum + Number(payment.value || 0), 0);
   return showMessageBox({
     title: "Cliente com pagamento em aberto",
-    message: `${getClientDisplayName(client)} possui ${pendingPayments.length} pagamento(s) em aberto, totalizando ${formatCurrency(total)}. Deseja continuar com a entrada deste novo serviÃ§o?`,
+    message: `${getClientDisplayName(client)} possui ${pendingPayments.length} pagamento(s) em aberto, totalizando ${formatCurrency(total)}. Deseja continuar com a entrada deste novo serviço?`,
     eyebrow: "Financeiro",
     confirmLabel: "Continuar",
     cancelLabel: "Cancelar entrada",
@@ -2718,20 +2718,20 @@ function renderEntryNewClientOption(plate) {
     <button class="schedule-plate-option entry-plate-option" type="button" id="entryNewClientButton">
       <strong>${escapeHtml(plate)}</strong>
       <span>Cadastrar novo cliente</span>
-      <small>Complete os dados do veÃ­culo e avance para o cadastro do cliente.</small>
+      <small>Complete os dados do veículo e avance para o cadastro do cliente.</small>
     </button>
   `;
 }
 
 function handleEntryNewClientAction() {
   clearEntryPlateResults();
-  showToast("Complete os dados do veÃ­culo e avance para cadastrar o cliente.");
+  showToast("Complete os dados do veículo e avance para cadastrar o cliente.");
   $("#vehicleModel").focus();
 }
 
 function renderEntryVehicleOption(vehicle) {
   const owner = getVehicleOwnerName(vehicle);
-  const description = [vehicle.brand, vehicle.model, vehicle.color].filter(Boolean).join(" / ") || vehicle.model || "VeÃ­culo";
+  const description = [vehicle.brand, vehicle.model, vehicle.color].filter(Boolean).join(" / ") || vehicle.model || "Veículo";
   return `
     <button class="schedule-plate-option entry-plate-option" type="button" data-entry-vehicle-id="${vehicle.id}">
       <strong>${escapeHtml(vehicle.plate)}</strong>
@@ -2821,7 +2821,7 @@ function renderEntryLinkedRegistration(vehicle) {
   }
 
   const client = vehicle.currentClientId ? getClientById(vehicle.currentClientId) : findClientByPlate(vehicle.plate);
-  const owner = client ? getClientDisplayName(client) : "Cliente nÃ£o vinculado";
+  const owner = client ? getClientDisplayName(client) : "Cliente não vinculado";
   panel.hidden = false;
   panel.innerHTML = `
     <div>
@@ -2832,7 +2832,7 @@ function renderEntryLinkedRegistration(vehicle) {
     <div class="entry-linked-actions">
       <button class="ghost-action" type="button" data-edit-entry-vehicle="${vehicle.id}">
         <span data-icon="carFront"></span>
-        <span>Editar veÃ­culo</span>
+        <span>Editar veículo</span>
       </button>
       ${
         client
@@ -2853,7 +2853,7 @@ function formatEntryLinkedVehicleDetails(vehicle) {
   const vehicleDescription = formatVehicleDisplayName(vehicle);
   return [
     vehicleDescription,
-    vehicle.color ? `Cor: ${vehicle.color}` : "Cor nÃ£o informada",
+    vehicle.color ? `Cor: ${vehicle.color}` : "Cor não informada",
     formatVehicleScope(vehicle.type, vehicle.category)
   ]
     .filter(Boolean)
@@ -2864,7 +2864,7 @@ function formatVehicleDisplayName(vehicle) {
   const brand = vehicle?.brand || "";
   const model = vehicle?.model || "";
   if (brand && model && normalizeText(brand) !== normalizeText(model)) return `${brand} ${model}`;
-  return model || brand || "VeÃ­culo";
+  return model || brand || "Veículo";
 }
 
 function setEntryRegistrationReadonly(isReadonly) {
@@ -2900,8 +2900,8 @@ function openEntryVehicleRegistryEditor(vehicleId) {
   }
 
   showMessageBox({
-    title: "EdiÃ§Ã£o restrita",
-    message: "A ediÃ§Ã£o do cadastro do veÃ­culo deve ser feita por um administrador em Cadastros > VeÃ­culos.",
+    title: "Edição restrita",
+    message: "A edição do cadastro do veículo deve ser feita por um administrador em Cadastros > Veículos.",
     confirmLabel: "Entendi"
   });
 }
@@ -2914,8 +2914,8 @@ function openEntryClientRegistryEditor(clientId) {
   }
 
   showMessageBox({
-    title: "EdiÃ§Ã£o restrita",
-    message: "A ediÃ§Ã£o do cadastro do cliente deve ser feita por um administrador em Cadastros > Clientes.",
+    title: "Edição restrita",
+    message: "A edição do cadastro do cliente deve ser feita por um administrador em Cadastros > Clientes.",
     confirmLabel: "Entendi"
   });
 }
@@ -2944,7 +2944,7 @@ function refreshLinkedRegistrationAfterEdit() {
 function openEntryVehicleRegistryDialog(vehicleId) {
   const vehicle = findVehicleById(vehicleId);
   if (!vehicle) {
-    showToast("VeÃ­culo nÃ£o localizado.");
+    showToast("Veículo não localizado.");
     return;
   }
 
@@ -3287,7 +3287,7 @@ function renderVehicleRegistryOwnerField(vehicle) {
   if (!vehicle) {
     return `
       <label class="login-field" for="vehicleRegistryClient">
-        <span>ProprietÃ¡rio atual</span>
+        <span>Proprietário atual</span>
         <select id="vehicleRegistryClient">
           ${renderVehicleOwnerOptions("")}
         </select>
@@ -3298,7 +3298,7 @@ function renderVehicleRegistryOwnerField(vehicle) {
   return `
     <div class="vehicle-owner-field">
       <div class="vehicle-owner-field-head">
-        <span>ProprietÃ¡rio atual</span>
+        <span>Proprietário atual</span>
         <button class="ghost-action compact" id="openVehicleOwnerTransferButton" type="button">
           <span data-icon="users"></span>
           <span>Alterar cliente associado</span>
@@ -3359,15 +3359,15 @@ function renderVehicleSpecialCareFields(prefix, state, options = {}) {
         </label>
       </div>
       <div class="vehicle-special-care-choice-block">
-        <span>RestriÃ§Ãµes</span>
+        <span>Restrições</span>
         ${renderChoiceChipGroup(vehicleSpecialCareCombinedRestrictionOptions, selectedTags, {
           name: `${prefix}Restriction`,
           twoColumns: true
         })}
       </div>
       <label class="login-field inventory-notes-field vehicle-special-care-description-field" for="${escapeHtml(prefix)}Description">
-        <span>ObservaÃ§Ãµes</span>
-        <textarea id="${escapeHtml(prefix)}Description" rows="${compact ? "2" : "3"}" placeholder="Ex.: Cliente informou vitrificaÃ§Ã£o feita em outro local.">${escapeHtml(state.description || "")}</textarea>
+        <span>Observações</span>
+        <textarea id="${escapeHtml(prefix)}Description" rows="${compact ? "2" : "3"}" placeholder="Ex.: Cliente informou vitrificação feita em outro local.">${escapeHtml(state.description || "")}</textarea>
       </label>
     </div>
   `;
@@ -3385,8 +3385,8 @@ function renderVehicleSpecialCareRecordCard(record, options = {}) {
         </div>
         <span class="vehicle-special-care-status">${record.active !== false ? "Ativo" : "Inativo"}</span>
       </div>
-      <p>${escapeHtml(record.description || "Sem observaÃ§Ã£o complementar.")}</p>
-      <small>${escapeHtml(record.source)}${record.validUntil ? ` Â· revisÃ£o ${formatDateBR(record.validUntil)}` : ""}</small>
+      <p>${escapeHtml(record.description || "Sem observação complementar.")}</p>
+      <small>${escapeHtml(record.source)}${record.validUntil ? ` · revisão ${formatDateBR(record.validUntil)}` : ""}</small>
       ${restrictionLabels.length ? `<div class="vehicle-special-care-inline-tags">${restrictionLabels.map((label) => `<span>${escapeHtml(label)}</span>`).join("")}</div>` : ""}
       ${
         canManage
@@ -3415,7 +3415,7 @@ function renderVehicleRegistrySpecialCareSection(vehicle) {
     <section class="vehicle-special-care-section">
       <div class="vehicle-special-care-head">
         <div>
-          <p class="eyebrow">SeguranÃ§a operacional</p>
+          <p class="eyebrow">Segurança operacional</p>
           <h3>Cuidados especiais</h3>
         </div>
         ${vehicle ? `<span class="client-status-label">${activeRecords.length} ativo(s)</span>` : '<span class="client-status-label">Novo</span>'}
@@ -3424,14 +3424,14 @@ function renderVehicleRegistrySpecialCareSection(vehicle) {
         vehicle
           ? activeRecords.length
             ? `<div class="vehicle-special-care-record-list">${activeRecords.map((record) => renderVehicleSpecialCareRecordCard(record, { canManage: true })).join("")}</div>`
-            : '<p class="empty-plates">Nenhum cuidado especial ativo para este veÃ­culo.</p>'
-          : '<p class="empty-plates">Salve o veÃ­culo para manter histÃ³rico completo. VocÃª jÃ¡ pode registrar o primeiro cuidado especial.</p>'
+            : '<p class="empty-plates">Nenhum cuidado especial ativo para este veículo.</p>'
+          : '<p class="empty-plates">Salve o veículo para manter histórico completo. Você já pode registrar o primeiro cuidado especial.</p>'
       }
       ${
         inactiveRecords.length
           ? `
             <div class="vehicle-special-care-history">
-              <span>HistÃ³rico inativo</span>
+              <span>Histórico inativo</span>
               <div class="vehicle-special-care-record-list is-compact">${inactiveRecords
                 .map((record) => renderVehicleSpecialCareRecordCard(record, { canManage: true }))
                 .join("")}</div>
@@ -3455,7 +3455,7 @@ function readVehicleSpecialCareFormState(container, prefix) {
   return {
     enabled,
     type: $(`#${prefix}Type`, container)?.value || vehicleSpecialCareTypes[0] || "Outro",
-    attentionLevel: $(`#${prefix}AttentionLevel`, container)?.value || "AtenÃ§Ã£o",
+    attentionLevel: $(`#${prefix}AttentionLevel`, container)?.value || "Atenção",
     source: $(`#${prefix}Source`, container)?.value || vehicleSpecialCareSources[0] || "Informado pelo cliente",
     restrictionTags: selectedRestrictions,
     recommendedTags: [],
@@ -3550,19 +3550,19 @@ function maybeShowEntryVehicleCareSelectionAlert() {
   if (!signature || signature === lastEntryCareConflictSignature) return;
   lastEntryCareConflictSignature = signature;
   showMessageBox({
-    eyebrow: "SeguranÃƒÂ§a operacional",
-    title: "ServiÃ§o incompatÃ­vel com restriÃ§Ã£o",
-    message: "O serviÃ§o selecionado possui insumo com tag de risco incompatÃ­vel com o cuidado especial registrado. Confira os produtos antes de continuar.",
+    eyebrow: "SeguranÒ§a operacional",
+    title: "Serviço incompatível com restrição",
+    message: "O serviço selecionado possui insumo com tag de risco incompatível com o cuidado especial registrado. Confira os produtos antes de continuar.",
     confirmLabel: "Entendi"
   });
 }
 
 function getVehicleSpecialCareSummaryText(vehicle) {
   const summary = getVehicleSpecialCareSummary(vehicle);
-  if (!summary.count) return "Nenhum cuidado especial ativo para este veÃ­culo.";
+  if (!summary.count) return "Nenhum cuidado especial ativo para este veículo.";
   const labels = summary.labels.slice(0, 2).join(", ");
   const suffix = summary.labels.length > 2 ? ` e mais ${summary.labels.length - 2}` : "";
-  return `Este veÃ­culo possui ${summary.count} cuidado(s) ativo(s): ${labels}${suffix}.`;
+  return `Este veículo possui ${summary.count} cuidado(s) ativo(s): ${labels}${suffix}.`;
 }
 
 function renderEntryVehicleSpecialCareSection() {
@@ -3582,7 +3582,7 @@ function renderEntrySpecialCareDialog(draft = getEntryVehicleSpecialCareDraftSta
     <form class="vehicle-box service-box" id="entrySpecialCareForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">SeguranÃ§a operacional</p>
+          <p class="eyebrow">Segurança operacional</p>
           <h2>Registrar cuidado especial</h2>
         </div>
         <button class="icon-button" id="closeEntrySpecialCareDialog" type="button" aria-label="Fechar">
@@ -3665,7 +3665,7 @@ function persistEntryVehicleSpecialCareFromDraft(attendanceVehicle, registryVehi
     historyDescription: `Cuidado especial informado na entrada do atendimento ${attendanceVehicle.plate}.`
   });
   if (!record) return null;
-  appendAttendanceHistory(attendanceVehicle, `Cuidado especial registrado no veÃ­culo: ${record.type}.`, "vehicle_special_care_created");
+  appendAttendanceHistory(attendanceVehicle, `Cuidado especial registrado no veículo: ${record.type}.`, "vehicle_special_care_created");
   return record;
 }
 
@@ -3732,8 +3732,8 @@ function renderVehicleRegistryDialogForm(vehicle = null) {
     <form class="vehicle-box vehicle-registry-dialog-box" id="vehicleRegistryForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">${selectedVehicle ? "EdiÃ§Ã£o" : "Cadastro"}</p>
-          <h2>${selectedVehicle ? escapeHtml(selectedVehicle.plate) : "Novo veÃ­culo"}</h2>
+          <p class="eyebrow">${selectedVehicle ? "Edição" : "Cadastro"}</p>
+          <h2>${selectedVehicle ? escapeHtml(selectedVehicle.plate) : "Novo veículo"}</h2>
         </div>
         <span class="client-status-label">${selectedVehicle ? "Editando" : "Novo"}</span>
         <button class="icon-button" id="closeVehicleRegistryDialog" type="button" aria-label="Fechar">
@@ -3774,7 +3774,7 @@ function renderVehicleRegistryDialogForm(vehicle = null) {
           <input id="vehicleRegistryColor" type="text" placeholder="Branco" value="${escapeHtml(selectedVehicle?.color || "")}" />
         </label>
         <label class="login-field" for="vehicleRegistryType">
-          <span>Tipo de veÃ­culo</span>
+          <span>Tipo de veículo</span>
           <select id="vehicleRegistryType">
             ${renderSelectOptions(vehicleTypes, selectedVehicle?.type || "")}
           </select>
@@ -3786,15 +3786,15 @@ function renderVehicleRegistryDialogForm(vehicle = null) {
           </select>
         </label>
         <label class="login-field" for="vehicleRegistryFuel">
-          <span>CombustÃ­vel</span>
+          <span>Combustível</span>
           <select id="vehicleRegistryFuel">
-            ${renderSelectOptions(["Flex", "Gasolina", "Etanol", "Diesel", "HÃ­brido", "ElÃ©trico", "Outro"], selectedVehicle?.fuel || "")}
+            ${renderSelectOptions(["Flex", "Gasolina", "Etanol", "Diesel", "Híbrido", "Elétrico", "Outro"], selectedVehicle?.fuel || "")}
           </select>
         </label>
         ${renderVehicleRegistryOwnerField(selectedVehicle)}
         <label class="login-field vehicle-notes-field" for="vehicleRegistryNotes">
-          <span>ObservaÃ§Ãµes do veÃ­culo</span>
-          <input id="vehicleRegistryNotes" type="text" placeholder="PreferÃªncias, restriÃ§Ãµes, histÃ³rico relevante" value="${escapeHtml(selectedVehicle?.notes || "")}" />
+          <span>Observações do veículo</span>
+          <input id="vehicleRegistryNotes" type="text" placeholder="Preferências, restrições, histórico relevante" value="${escapeHtml(selectedVehicle?.notes || "")}" />
         </label>
       </div>
 
@@ -3804,7 +3804,7 @@ function renderVehicleRegistryDialogForm(vehicle = null) {
         <button class="exit-button" id="cancelVehicleRegistryDialog" type="button">Cancelar</button>
         <button class="primary-button" type="submit">
           <span data-icon="check"></span>
-          <span>${selectedVehicle ? "Atualizar veÃ­culo" : "Salvar veÃ­culo"}</span>
+          <span>${selectedVehicle ? "Atualizar veículo" : "Salvar veículo"}</span>
         </button>
       </div>
     </form>
@@ -3837,7 +3837,7 @@ function bindEntryVehicleRegistryDialogControls(container) {
 function saveEntryVehicleRegistryDialog(container) {
   const result = persistVehicleRegistration(container);
   if (!result?.ok) return;
-  showToast(`${result.vehicle.plate} salvo no cadastro de veÃ­culos.`);
+  showToast(`${result.vehicle.plate} salvo no cadastro de veículos.`);
   closeEntryVehicleRegistryDialog();
 }
 
@@ -3895,8 +3895,8 @@ function bindVehicleSpecialCareRegistryControls(container) {
     if (!deactivateButton) return;
     const confirmed = await showMessageBox({
       title: "Inativar cuidado especial?",
-      message: "O histÃ³rico serÃ¡ preservado e o registro deixarÃ¡ de gerar alertas ativos.",
-      eyebrow: "Cadastro de veÃ­culos",
+      message: "O histórico será preservado e o registro deixará de gerar alertas ativos.",
+      eyebrow: "Cadastro de veículos",
       confirmLabel: "Inativar",
       cancelLabel: "Cancelar",
       confirmOnly: false
@@ -3924,13 +3924,13 @@ function saveAdminVehicleRegistryDialog(container) {
     initIcons();
     bindAdminVehicleRegistryDialogControls(container);
     window.setTimeout(() => $("#vehicleRegistryBrand", container)?.focus(), 0);
-    showToast(`${result.vehicle.plate} jÃ¡ estÃ¡ cadastrada. Ficha aberta para ediÃ§Ã£o.`);
+    showToast(`${result.vehicle.plate} já está cadastrada. Ficha aberta para edição.`);
     return;
   }
 
   refreshVehiclesScreenIfVisible();
   renderAdminDashboard();
-  showToast(`${result.vehicle.plate} salvo no cadastro de veÃ­culos.`);
+  showToast(`${result.vehicle.plate} salvo no cadastro de veículos.`);
   closeAdminVehicleRegistryDialog();
 }
 
@@ -3949,7 +3949,7 @@ async function notifyOpenInvoicesForVehicle(vehicle) {
   lastOpenInvoiceNoticePlate = vehicle.plate;
   await showMessageBox({
     title: "Fatura em aberto",
-    message: `${getClientDisplayName(client)} possui ${openInvoices.length} fatura(s) em aberto. Confira a Central de Faturas antes de lanÃ§ar novos serviÃ§os faturados.`,
+    message: `${getClientDisplayName(client)} possui ${openInvoices.length} fatura(s) em aberto. Confira a Central de Faturas antes de lançar novos serviços faturados.`,
     eyebrow: "Financeiro",
     confirmLabel: "Entendi"
   });
@@ -3976,7 +3976,7 @@ function addVehicleToPatio(vehicle) {
   renderPatio();
   renderAdminDashboard();
   triggerAutomatedMessage(vehicle.status === "agendado" ? "schedule-confirmation" : "yard-entry", getMessageContextFromVehicle(vehicle));
-  showToast(vehicle.status === "agendado" ? `Agendamento de ${vehicle.plate} criado.` : `${vehicle.plate} entrou no pÃ¡tio.`);
+  showToast(vehicle.status === "agendado" ? `Agendamento de ${vehicle.plate} criado.` : `${vehicle.plate} entrou no pátio.`);
 }
 
 function selectVehicleColor(button) {
@@ -4033,12 +4033,12 @@ function updatePaymentAction() {
     $("#vehiclePrimaryIcon").hidden = false;
     $("#vehiclePrimaryIcon").dataset.icon = "check";
     $("#vehiclePrimaryIcon").innerHTML = icons.check || $("#vehiclePrimaryIcon").innerHTML;
-    $("#vehiclePrimaryLabel").textContent = "Salvar veÃ­culo";
+    $("#vehiclePrimaryLabel").textContent = "Salvar veículo";
     return;
   }
   const isBilled = $("#vehiclePayment").value === "Faturado";
   $("#vehiclePrimaryIcon").hidden = isBilled;
-  $("#vehiclePrimaryLabel").textContent = isBilled ? "AvanÃ§ar >>" : vehicleEntryMode === "schedule" ? "PrÃ³ximo" : "Adicionar";
+  $("#vehiclePrimaryLabel").textContent = isBilled ? "Avançar >>" : vehicleEntryMode === "schedule" ? "Próximo" : "Adicionar";
 }
 
 function showVehicleStep(step) {
@@ -4064,7 +4064,7 @@ function showVehicleStep(step) {
   renderVehicleChecklistForStep(step, pendingVehicle?.checklist || null);
 
   const billedActionLabel = $("#finishBilledEntryButton span:last-child");
-  if (billedActionLabel) billedActionLabel.textContent = vehicleEntryMode === "schedule" ? "PrÃ³ximo" : "Adicionar";
+  if (billedActionLabel) billedActionLabel.textContent = vehicleEntryMode === "schedule" ? "Próximo" : "Adicionar";
 }
 
 function renderBillingSelectors() {
@@ -4117,7 +4117,7 @@ async function handleNewBillingClientFromEntry() {
   await showMessageBox({
     title: "Cadastro faturado no Administrador",
     message:
-      "Novos clientes faturados precisam ser cadastrados em Cadastros > Clientes, com Cliente faturado marcado, aprovaÃ§Ã£o do administrador ativa e ciclo de faturamento definido.",
+      "Novos clientes faturados precisam ser cadastrados em Cadastros > Clientes, com Cliente faturado marcado, aprovação do administrador ativa e ciclo de faturamento definido.",
     confirmLabel: "Entendi"
   });
 }
@@ -4158,14 +4158,14 @@ function openBillingInvoice() {
   }
 
   if (!isClientBillingApproved(registryClient)) {
-    showToast("Cliente sem aprovaÃ§Ã£o de faturamento.");
+    showToast("Cliente sem aprovação de faturamento.");
     $("#invoiceClientSelect").focus();
     return;
   }
 
   const openInvoices = getOpenInvoicesByRegistryClient(registryClient);
   if (openInvoices.length && !registryClient.allowMultipleOpenInvoices) {
-    showToast("Cliente nÃ£o permite mais de uma fatura em aberto.");
+    showToast("Cliente não permite mais de uma fatura em aberto.");
     return;
   }
 
@@ -4255,7 +4255,7 @@ function formatDateBR(value) {
 
 function formatScheduleDateTime(date, time) {
   if (!date || !time) return "";
-  return `${formatDateBR(date)} Ã s ${time}`;
+  return `${formatDateBR(date)} às ${time}`;
 }
 
 function formatCurrency(value) {
@@ -4326,7 +4326,7 @@ function bindCurrencyInputs(container = document) {
 
 function getOperatorCommissionInputValue(container) {
   const input = $("#operatorCommissionValue", container);
-  const commissionType = getCommissionTypeValue($("#operatorCommissionType", container)?.value || "Valor fixo por serviÃ§o");
+  const commissionType = getCommissionTypeValue($("#operatorCommissionType", container)?.value || "Valor fixo por serviço");
   if (commissionType === "fixed") return getCurrencyInputValue(input);
   return Number(String(input?.value || "").replace(",", "."));
 }
@@ -4339,7 +4339,7 @@ function updateOperatorCommissionInputMode(container) {
 
   const isFixed = getCommissionTypeValue(typeSelect.value) === "fixed";
   input.dataset.moneyInput = isFixed ? "true" : "false";
-  if (label) label.textContent = isFixed ? "Valor da comissÃ£o" : "Percentual";
+  if (label) label.textContent = isFixed ? "Valor da comissão" : "Percentual";
   input.placeholder = isFixed ? "R$ 0,00" : "Ex.: 8";
 
   if (isFixed) {
@@ -4512,7 +4512,7 @@ function getDefaultBusinessPaymentMethods() {
     {
       id: 1,
       name: "Pix",
-      type: "instantÃ¢neo",
+      type: "instantâneo",
       active: true,
       showInService: true,
       showInProductSale: true,
@@ -4541,14 +4541,14 @@ function getDefaultBusinessPaymentMethods() {
       feePercent: 0,
       fixedFee: 0,
       linkedBankAccountId: null,
-      notes: "Recebimento em caixa fÃ­sico.",
+      notes: "Recebimento em caixa físico.",
       createdAt: today,
       updatedAt: today
     },
     {
       id: 3,
-      name: "CartÃ£o de dÃ©bito",
-      type: "cartÃ£o",
+      name: "Cartão de débito",
+      type: "cartão",
       active: true,
       showInService: true,
       showInProductSale: true,
@@ -4565,8 +4565,8 @@ function getDefaultBusinessPaymentMethods() {
     },
     {
       id: 4,
-      name: "CartÃ£o de crÃ©dito",
-      type: "cartÃ£o",
+      name: "Cartão de crédito",
+      type: "cartão",
       active: true,
       showInService: true,
       showInProductSale: true,
@@ -4583,8 +4583,8 @@ function getDefaultBusinessPaymentMethods() {
     },
     {
       id: 5,
-      name: "TransferÃªncia bancÃ¡ria",
-      type: "transferÃªncia",
+      name: "Transferência bancária",
+      type: "transferência",
       active: true,
       showInService: true,
       showInProductSale: true,
@@ -4595,7 +4595,7 @@ function getDefaultBusinessPaymentMethods() {
       feePercent: 0,
       fixedFee: 0,
       linkedBankAccountId: null,
-      notes: "Recebimento por transferÃªncia.",
+      notes: "Recebimento por transferência.",
       createdAt: today,
       updatedAt: today
     },
@@ -4693,7 +4693,7 @@ function getDefaultProductCatalog() {
       cost: 8.5,
       price: 24.9,
       active: true,
-      notes: "Item de balcÃ£o para vendas rÃ¡pidas.",
+      notes: "Item de balcão para vendas rápidas.",
       createdAt: today,
       updatedAt: today
     },
@@ -4707,7 +4707,7 @@ function getDefaultProductCatalog() {
       cost: 12,
       price: 32,
       active: true,
-      notes: "Produto de vitrine com saÃ­da recorrente.",
+      notes: "Produto de vitrine com saída recorrente.",
       createdAt: today,
       updatedAt: today
     },
@@ -4721,7 +4721,7 @@ function getDefaultProductCatalog() {
       cost: 9.2,
       price: 22,
       active: true,
-      notes: "TambÃ©m pode ser usada em kits promocionais.",
+      notes: "Também pode ser usada em kits promocionais.",
       createdAt: today,
       updatedAt: today
     }
@@ -4762,7 +4762,7 @@ function getDefaultSupplyCatalog() {
       cost: 0.04,
       active: true,
       supplier: "Distribuidora Prime Clean",
-      notes: "Uso em rodas e Ã¡reas crÃ­ticas.",
+      notes: "Uso em rodas e áreas críticas.",
       phType: "alkaline",
       phApproximate: "12",
       aggressivenessLevel: "high",
@@ -4783,7 +4783,7 @@ function getDefaultSupplyCatalog() {
       cost: 0.035,
       active: true,
       supplier: "Glass Care",
-      notes: "AplicaÃ§Ã£o final em vidros e espelhos.",
+      notes: "Aplicação final em vidros e espelhos.",
       phType: "neutral",
       phApproximate: "7",
       aggressivenessLevel: "low",
@@ -4797,7 +4797,7 @@ function getDefaultSupplyCatalog() {
     {
       id: 4,
       sku: "INS-004",
-      name: "Pano descartÃ¡vel",
+      name: "Pano descartável",
       unit: "un",
       stock: 120,
       minStock: 40,
@@ -4821,17 +4821,17 @@ function getDefaultSupplyCatalog() {
 function getDefaultServiceSupplyProfiles() {
   return {
     [getServiceSupplyProfileKey({ name: "Lavagem Prime", vehicleType: "Carro", vehicleCategory: "Hatch" })]: [
-      { supplyId: 1, quantity: 50, notes: "DiluiÃ§Ã£o padrÃ£o da cuba." },
+      { supplyId: 1, quantity: 50, notes: "Diluição padrão da cuba." },
       { supplyId: 3, quantity: 18, notes: "Acabamento dos vidros." },
       { supplyId: 4, quantity: 1, notes: "Secagem final." }
     ],
-    [getServiceSupplyProfileKey({ name: "HigienizaÃ§Ã£o interna", vehicleType: "Carro", vehicleCategory: "Sedan" })]: [
+    [getServiceSupplyProfileKey({ name: "Higienização interna", vehicleType: "Carro", vehicleCategory: "Sedan" })]: [
       { supplyId: 2, quantity: 30, notes: "Apoio na limpeza pesada." },
-      { supplyId: 4, quantity: 2, notes: "AplicaÃ§Ã£o nos bancos e painÃ©is." }
+      { supplyId: 4, quantity: 2, notes: "Aplicação nos bancos e painéis." }
     ],
     [getServiceSupplyProfileKey({ name: "Detailing completo", vehicleType: "Carro", vehicleCategory: "SUV" })]: [
       { supplyId: 1, quantity: 60, notes: "Base neutra para a lavagem." },
-      { supplyId: 2, quantity: 25, notes: "Uso pontual em Ã¡reas crÃ­ticas." },
+      { supplyId: 2, quantity: 25, notes: "Uso pontual em áreas críticas." },
       { supplyId: 4, quantity: 2, notes: "Acabamento final." }
     ]
   };
@@ -4846,9 +4846,9 @@ function getDefaultVehicleSpecialCareRecords() {
       vehicleId: 3,
       vehiclePlate: "LVP3E72",
       attendanceId: null,
-      type: "VitrificaÃ§Ã£o / coating cerÃ¢mico",
-      attentionLevel: "AtenÃ§Ã£o",
-      description: "Cliente informou proteÃ§Ã£o cerÃ¢mica recente e preferÃªncia por manutenÃ§Ã£o com baixa agressividade.",
+      type: "Vitrificação / coating cerâmico",
+      attentionLevel: "Atenção",
+      description: "Cliente informou proteção cerâmica recente e preferência por manutenção com baixa agressividade.",
       restrictionTags: ["avoid_acid", "avoid_strong_alkaline", "use_ph_neutral"],
       recommendedTags: ["prefer_ph_neutral", "prefer_low_aggression"],
       source: "Informado pelo cliente",
@@ -5016,7 +5016,7 @@ function normalizeCashEntries(entries = []) {
       id: Number(entry.id || index + 1),
       date: String(entry.date || getTodayISO()).trim(),
       time: String(entry.time || getCurrentShortTime()).trim(),
-      type: entry.type === "SaÃ­da" ? "SaÃ­da" : "Entrada",
+      type: entry.type === "Saída" ? "Saída" : "Entrada",
       description: String(entry.description || "").trim(),
       method: getCanonicalPaymentMethodName(entry.method || "") || String(entry.method || "").trim(),
       value: Number(entry.value || 0),
@@ -5189,9 +5189,9 @@ function getInventoryMovementLabel(type) {
     saida_venda_atendimento: "Venda no atendimento",
     estorno_venda_atendimento: "Estorno de venda no atendimento",
     estorno_cancelamento_atendimento: "Estorno por cancelamento",
-    serviceConsumption: "Consumo em serviÃ§o",
+    serviceConsumption: "Consumo em serviço",
     adjustment: "Ajuste manual",
-    restock: "ReposiÃ§Ã£o"
+    restock: "Reposição"
   };
   return labels[type] || type || "Movimento";
 }
@@ -5262,7 +5262,7 @@ function consumeServiceSuppliesForVehicle(vehicle) {
 
   const validation = validateSupplyAvailabilityForVehicle(vehicle);
   if (!validation.valid) {
-    showToast(`Estoque insuficiente para concluir: ${validation.issues.join(" Â· ")}`);
+    showToast(`Estoque insuficiente para concluir: ${validation.issues.join(" · ")}`);
     return false;
   }
 
@@ -5282,7 +5282,7 @@ function consumeServiceSuppliesForVehicle(vehicle) {
       previousStock,
       currentStock: nextStock,
       unit: supply.unit,
-      reason: `Consumo automÃ¡tico em ${vehicle.plate} Â· ${entry.serviceNames.join(", ")}`
+      reason: `Consumo automático em ${vehicle.plate} · ${entry.serviceNames.join(", ")}`
     });
   });
 
@@ -5302,16 +5302,16 @@ function getCanonicalPaymentMethodName(name) {
   const aliases = {
     pix: "Pix",
     dinheiro: "Dinheiro",
-    "cartao de debito": "CartÃ£o de dÃ©bito",
-    "cartÃ£o de debito": "CartÃ£o de dÃ©bito",
-    "cartao de crÃ©dito": "CartÃ£o de crÃ©dito",
-    "cartÃ£o de crÃ©dito": "CartÃ£o de crÃ©dito",
-    "cartao de credito": "CartÃ£o de crÃ©dito",
-    "cartÃ£o de credito": "CartÃ£o de crÃ©dito",
-    transferencia: "TransferÃªncia bancÃ¡ria",
-    "transferÃªncia": "TransferÃªncia bancÃ¡ria",
-    "transferencia bancaria": "TransferÃªncia bancÃ¡ria",
-    "transferÃªncia bancÃ¡ria": "TransferÃªncia bancÃ¡ria",
+    "cartao de debito": "Cartão de débito",
+    "cartão de debito": "Cartão de débito",
+    "cartao de crédito": "Cartão de crédito",
+    "cartão de crédito": "Cartão de crédito",
+    "cartao de credito": "Cartão de crédito",
+    "cartão de credito": "Cartão de crédito",
+    transferencia: "Transferência bancária",
+    "transferência": "Transferência bancária",
+    "transferencia bancaria": "Transferência bancária",
+    "transferência bancária": "Transferência bancária",
     faturado: "Faturado",
     boleto: "Boleto",
     carteira: "Carteira (legado)"
@@ -5482,7 +5482,7 @@ function calculatePaymentNetAmount(grossAmount, methodName, referenceDate = getT
 
 function getExpectedReceiptStatus(methodName, type = "Entrada") {
   const method = getPaymentMethodByName(methodName);
-  if (!method || type === "SaÃ­da") return "Confirmado";
+  if (!method || type === "Saída") return "Confirmado";
   if (normalizeText(method.name) === normalizeText("Faturado")) return "Pendente";
   if (method.immediateSettlement) return "Confirmado";
   return "Pendente";
@@ -5558,7 +5558,7 @@ function migrateExistingPaymentMethodReferences() {
           showInQuote: false,
           showInInvoice: false,
           immediateSettlement: false,
-          notes: "Forma importada do histÃ³rico."
+          notes: "Forma importada do histórico."
         },
         getNextBusinessPaymentMethodId()
       )
@@ -5616,7 +5616,7 @@ function getSelectablePaymentMethodNames(context = "service", options = {}) {
 
   if (selectedValue) pushName(selectedValue);
   getActivePaymentMethodNames(context, allowBilled).forEach(pushName);
-  if (includeBankDeposit) pushName("DepÃ³sito bancÃ¡rio");
+  if (includeBankDeposit) pushName("Depósito bancário");
   return uniqueNames;
 }
 
@@ -5646,8 +5646,8 @@ function getCashEntryFinanceSnapshot(value, method, type = "Entrada", referenceD
   return {
     feePercent: fee.feePercent,
     fixedFee: fee.fixedFee,
-    feeAmount: type === "SaÃ­da" ? 0 : fee.feeAmount,
-    netAmount: type === "SaÃ­da" ? grossValue : fee.netAmount,
+    feeAmount: type === "Saída" ? 0 : fee.feeAmount,
+    netAmount: type === "Saída" ? grossValue : fee.netAmount,
     expectedReceiptDate: fee.expectedDate,
     methodImmediateSettlement: fee.immediateSettlement,
     settlementDays: fee.settlementDays,
@@ -5690,7 +5690,7 @@ function saveBusinessStorageItem(key, value) {
   try {
     window.localStorage?.setItem(key, JSON.stringify(value));
   } catch (error) {
-    showToast("NÃ£o foi possÃ­vel salvar no navegador.");
+    showToast("Não foi possível salvar no navegador.");
   }
 }
 
@@ -5713,7 +5713,7 @@ function getBusinessDocumentContactLine(reportTarget = "all") {
     items.push(`Telefone ${index + 2}: ${phone.value}`);
   });
   if (shouldIncludeBusinessProfileFieldInReport("email", reportTarget) && businessProfile.email) items.push(`E-mail: ${businessProfile.email}`);
-  if (shouldIncludeBusinessProfileFieldInReport("address", reportTarget) && businessProfile.address) items.push(`EndereÃ§o: ${businessProfile.address}`);
+  if (shouldIncludeBusinessProfileFieldInReport("address", reportTarget) && businessProfile.address) items.push(`Endereço: ${businessProfile.address}`);
   return items.join(" | ");
 }
 
@@ -5731,7 +5731,7 @@ function getBusinessReportIdentityDetails(reportTarget = "all", primaryName = ""
     details.push(`Nome Fantasia: ${businessProfile.tradeName}`);
   }
   if (shouldIncludeBusinessProfileFieldInReport("legalName", reportTarget) && businessProfile.legalName && businessProfile.legalName !== primaryName) {
-    details.push(`RazÃ£o Social: ${businessProfile.legalName}`);
+    details.push(`Razão Social: ${businessProfile.legalName}`);
   }
   return details;
 }
@@ -5750,7 +5750,7 @@ function getBusinessSocialReportTarget(value) {
 }
 
 function getBusinessSocialReportTargetLabel(value) {
-  return businessSocialReportTargets.find((target) => target.key === getBusinessSocialReportTarget(value))?.label || "Todos os relatÃ³rios";
+  return businessSocialReportTargets.find((target) => target.key === getBusinessSocialReportTarget(value))?.label || "Todos os relatórios";
 }
 
 function shouldIncludeReportTarget(selectedTarget, reportTarget) {
@@ -5924,7 +5924,7 @@ function renderPatioSummary() {
   const summary = [
     { label: "Agendados", value: countByStatus("agendado") },
     { label: "Aguardando", value: countByStatus("aguardando") },
-    { label: "Em ServiÃ§o", value: countByStatus("lavando") },
+    { label: "Em Serviço", value: countByStatus("lavando") },
     { label: "Prontos", value: countByStatus("pronto") },
     { label: "Finalizados", value: countByStatus("finalizado") }
   ];
@@ -5954,22 +5954,22 @@ function renderPatioQuotes() {
   const totalOpenValue = activeQuotes.reduce((total, quote) => total + getQuoteTotal(quote), 0);
 
   container.innerHTML = `
-    <section class="screen-metrics quote-metrics" aria-label="Resumo dos orÃ§amentos">
+    <section class="screen-metrics quote-metrics" aria-label="Resumo dos orçamentos">
       ${[
-        { label: "OrÃ§amentos", value: quoteEstimates.length, icon: "invoice" },
+        { label: "Orçamentos", value: quoteEstimates.length, icon: "invoice" },
         { label: "Aprovados", value: approvedQuotes.length, icon: "check" },
         { label: "Vencidos", value: expiredQuotes.length, icon: "alert" },
-        { label: "Valor em negociaÃ§Ã£o", value: formatCurrency(totalOpenValue), icon: "wallet" }
+        { label: "Valor em negociação", value: formatCurrency(totalOpenValue), icon: "wallet" }
       ]
         .map(renderScreenMetric)
         .join("")}
     </section>
 
-    <section class="screen-toolbar quote-toolbar" aria-label="Filtros de orÃ§amentos">
+    <section class="screen-toolbar quote-toolbar" aria-label="Filtros de orçamentos">
       <label class="login-field quote-filter-param-field" for="quoteFilterParam">
         <span>Buscar por</span>
         <select id="quoteFilterParam">
-          ${renderSelectOptions(["Todos", "PerÃ­odo", "Cliente", "Placa", "ServiÃ§o", "Valor", "Status"], "Todos")}
+          ${renderSelectOptions(["Todos", "Período", "Cliente", "Placa", "Serviço", "Valor", "Status"], "Todos")}
         </select>
       </label>
       <div class="quote-dynamic-filter" id="quoteDynamicFilter">
@@ -5978,7 +5978,7 @@ function renderPatioQuotes() {
       <div class="cashflow-export-actions quote-actions">
         <button class="new-vehicle-button" id="newQuoteButton" type="button">
           <span data-icon="plus"></span>
-          <span>Novo orÃ§amento</span>
+          <span>Novo orçamento</span>
         </button>
       </div>
     </section>
@@ -5986,22 +5986,22 @@ function renderPatioQuotes() {
     <article class="admin-panel screen-table-panel cashflow-table-panel quote-table-panel">
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">OrÃ§amentos</p>
-          <h2>OrÃ§amentos emitidos</h2>
+          <p class="eyebrow">Orçamentos</p>
+          <h2>Orçamentos emitidos</h2>
         </div>
       </div>
       <div class="admin-table-wrap">
         <table class="admin-table quote-table">
           <thead>
             <tr>
-              <th>EmissÃ£o</th>
+              <th>Emissão</th>
               <th>Cliente</th>
-              <th>Placa / veÃ­culo</th>
-              <th>ServiÃ§os</th>
+              <th>Placa / veículo</th>
+              <th>Serviços</th>
               <th>Valor</th>
               <th>Validade</th>
               <th>Status</th>
-              <th>AÃ§Ãµes</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -6032,7 +6032,7 @@ function renderQuoteRow(quote) {
       data-quote-services="${escapeHtml(normalizeText(services))}"
       data-quote-value="${getQuoteTotal(quote)}"
       data-quote-status="${escapeHtml(statusKey)}">
-      <td data-label="EmissÃ£o">
+      <td data-label="Emissão">
         <strong>${escapeHtml(quote.code)}</strong><br />
         <small>${formatDateBR(quote.date)} ${escapeHtml(quote.time || "")}</small>
       </td>
@@ -6040,18 +6040,18 @@ function renderQuoteRow(quote) {
         <strong>${escapeHtml(quote.owner || "-")}</strong><br />
         <small>${escapeHtml(quote.phone || "-")}</small>
       </td>
-      <td data-label="Placa / veÃ­culo">
+      <td data-label="Placa / veículo">
         <span class="table-plate-chip">${escapeHtml(quote.plate || "-")}</span><br />
         <small>${escapeHtml(vehicleName)}${quote.color ? ` / ${escapeHtml(quote.color)}` : ""}</small>
       </td>
-      <td data-label="ServiÃ§os">${renderQuoteServiceCell(quote)}</td>
+      <td data-label="Serviços">${renderQuoteServiceCell(quote)}</td>
       <td data-label="Valor">${formatCurrency(getQuoteTotal(quote))}</td>
       <td data-label="Validade">
         <span>${formatDateBR(quote.dueDate)}</span><br />
         <small>${escapeHtml(formatQuoteValidity(quote))}</small>
       </td>
       <td data-label="Status"><span class="quote-status-pill is-${escapeHtml(statusKey)}">${escapeHtml(status)}</span></td>
-      <td data-label="AÃ§Ãµes">
+      <td data-label="Ações">
         <div class="cashflow-row-actions quote-row-actions">
           ${renderQuoteRowActions(quote, status)}
         </div>
@@ -6065,7 +6065,7 @@ function renderQuoteServiceCell(quote) {
   const extras = getQuoteExtraItems(quote);
   const serviceLines = services.length
     ? services.map((service) => `<span>${escapeHtml(service)}</span>`).join("")
-    : "<span>ServiÃ§os avulsos</span>";
+    : "<span>Serviços avulsos</span>";
   const extraLines = extras.length
     ? `<small class="open-payment-description">Avulsos: ${escapeHtml(extras.map((item) => `${item.description} (${formatCurrency(item.value)})`).join(", "))}</small>`
     : "";
@@ -6076,15 +6076,15 @@ function renderQuoteRowActions(quote, status) {
   if (status === "Pendente") {
     return `
       <button class="primary-button compact-action" type="button" data-approve-quote="${quote.id}">Aprovar</button>
-      <button class="exit-button compact" type="button" data-reject-quote="${quote.id}">NÃ£o aprovado</button>
+      <button class="exit-button compact" type="button" data-reject-quote="${quote.id}">Não aprovado</button>
     `;
   }
   if (status === "Aprovado") {
     return quote.usedAt
       ? `<span class="table-plate-chip">Usado em ${escapeHtml(quote.usedAt)}</span>`
-      : `<button class="primary-button compact-action" type="button" data-use-quote="${quote.id}">Entrada no pÃ¡tio</button>`;
+      : `<button class="primary-button compact-action" type="button" data-use-quote="${quote.id}">Entrada no pátio</button>`;
   }
-  if (status === "Vencido") return '<span class="table-plate-chip quote-renewal-chip">Novo orÃ§amento necessÃ¡rio</span>';
+  if (status === "Vencido") return '<span class="table-plate-chip quote-renewal-chip">Novo orçamento necessário</span>';
   if (status === "Usado") return `<span class="table-plate-chip">Usado em ${escapeHtml(quote.usedAt || "-")}</span>`;
   return '<span class="table-plate-chip">Encerrado</span>';
 }
@@ -6110,7 +6110,7 @@ function renderQuoteDynamicFilter(parameter = "Todos") {
       <label class="login-field" for="quoteFilterStatus">
         <span>Status</span>
         <select id="quoteFilterStatus">
-          ${renderSelectOptions(["Todos", "Pendente", "Aprovado", "NÃ£o aprovado", "Vencido", "Usado"], "Todos")}
+          ${renderSelectOptions(["Todos", "Pendente", "Aprovado", "Não aprovado", "Vencido", "Usado"], "Todos")}
         </select>
       </label>
     `;
@@ -6118,7 +6118,7 @@ function renderQuoteDynamicFilter(parameter = "Todos") {
   if (filter === "valor") {
     return `
       <label class="login-field" for="quoteFilterValue">
-        <span>Valor mÃ­nimo</span>
+        <span>Valor mínimo</span>
         <input id="quoteFilterValue" type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" />
       </label>
     `;
@@ -6127,12 +6127,12 @@ function renderQuoteDynamicFilter(parameter = "Todos") {
     const labels = {
       cliente: "Cliente",
       placa: "Placa",
-      servico: "ServiÃ§o"
+      servico: "Serviço"
     };
     const placeholders = {
       cliente: "Nome do cliente",
       placa: "ABC1D23",
-      servico: "Nome do serviÃ§o"
+      servico: "Nome do serviço"
     };
     return `
       <label class="login-field" for="quoteFilterText">
@@ -6141,7 +6141,7 @@ function renderQuoteDynamicFilter(parameter = "Todos") {
       </label>
     `;
   }
-  return '<p class="quote-filter-placeholder">Exibindo todos os orÃ§amentos.</p>';
+  return '<p class="quote-filter-placeholder">Exibindo todos os orçamentos.</p>';
 }
 
 function bindPatioQuoteControls(container) {
@@ -6262,26 +6262,26 @@ function approveQuote(id) {
   const quote = getQuoteById(id);
   if (!quote) return;
   if (getQuoteStatus(quote) === "Vencido") {
-    showToast("OrÃ§amento vencido. Emita um novo orÃ§amento para aprovaÃ§Ã£o.");
+    showToast("Orçamento vencido. Emita um novo orçamento para aprovação.");
     return;
   }
   quote.status = "Aprovado";
   quote.approvedAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
   renderPatioQuotes();
-  showToast(`OrÃ§amento ${quote.code} aprovado.`);
+  showToast(`Orçamento ${quote.code} aprovado.`);
 }
 
 function rejectQuote(id) {
   const quote = getQuoteById(id);
   if (!quote) return;
   if (getQuoteStatus(quote) === "Vencido") {
-    showToast("OrÃ§amento vencido. Emita um novo orÃ§amento para continuar.");
+    showToast("Orçamento vencido. Emita um novo orçamento para continuar.");
     return;
   }
-  quote.status = "NÃ£o aprovado";
+  quote.status = "Não aprovado";
   quote.rejectedAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
   renderPatioQuotes();
-  showToast(`OrÃ§amento ${quote.code} marcado como nÃ£o aprovado.`);
+  showToast(`Orçamento ${quote.code} marcado como não aprovado.`);
 }
 
 async function createPatioEntryFromQuote(id) {
@@ -6289,11 +6289,11 @@ async function createPatioEntryFromQuote(id) {
   if (!quote) return;
   const status = getQuoteStatus(quote);
   if (status === "Vencido") {
-    showToast("OrÃ§amento vencido. Emita um novo orÃ§amento para usar no pÃ¡tio.");
+    showToast("Orçamento vencido. Emita um novo orçamento para usar no pátio.");
     return;
   }
   if (status !== "Aprovado") {
-    showToast("Apenas orÃ§amentos aprovados podem virar entrada no pÃ¡tio.");
+    showToast("Apenas orçamentos aprovados podem virar entrada no pátio.");
     return;
   }
 
@@ -6308,8 +6308,8 @@ async function createPatioEntryFromQuote(id) {
     category: getVehicleCategoryValue(quote.type || "Carro", quote.category || ""),
     owner: quote.owner,
     phone: quote.phone,
-    services: quote.services?.length ? [...quote.services] : ["ServiÃ§os avulsos"],
-    service: quote.services?.length ? formatServices(quote.services) : "ServiÃ§os avulsos",
+    services: quote.services?.length ? [...quote.services] : ["Serviços avulsos"],
+    service: quote.services?.length ? formatServices(quote.services) : "Serviços avulsos",
     payment: quote.payment || "Pix",
     extraChargesEnabled: extraItems.length > 0,
     extraCharges: getQuoteExtraTotal(quote),
@@ -6321,10 +6321,10 @@ async function createPatioEntryFromQuote(id) {
 
   const shouldOpenChecklist = await showMessageBox({
     title: "Fazer check-list?",
-    message: `Deseja realizar o check-list do veÃ­culo ${quote.plate} antes de confirmar a entrada no pÃ¡tio?`,
-    eyebrow: "Entrada no pÃ¡tio",
+    message: `Deseja realizar o check-list do veículo ${quote.plate} antes de confirmar a entrada no pátio?`,
+    eyebrow: "Entrada no pátio",
     confirmLabel: "Sim, fazer check-list",
-    cancelLabel: "NÃ£o, entrar direto",
+    cancelLabel: "Não, entrar direto",
     confirmOnly: false
   });
 
@@ -6341,13 +6341,13 @@ function openQuoteEntryChecklist(quote, vehicle) {
   pendingQuotePatioQuoteId = quote.id;
   activeVehicleId = null;
 
-  $("#statusDialogEyebrow").textContent = "Entrada pelo orÃ§amento";
+  $("#statusDialogEyebrow").textContent = "Entrada pelo orçamento";
   $("#statusVehicleTitle").textContent = `${vehicle.plate} - ${formatVehicleDisplayName(vehicle)} ${vehicle.color || ""}`.trim();
   $("#statusOptions").innerHTML = `
     <div class="status-action-panel">
       ${renderVehicleActionSummary(vehicle)}
       <section class="status-billing-panel">
-        <p class="billing-warning">Preencha o check-list e confirme para registrar a entrada no pÃ¡tio.</p>
+        <p class="billing-warning">Preencha o check-list e confirme para registrar a entrada no pátio.</p>
       </section>
       ${renderChecklistPanel("quoteEntryChecklist", vehicle.type, { enabled: true, items: [] })}
       <div class="dialog-actions status-dialog-actions">
@@ -6383,7 +6383,7 @@ function finishQuotePatioEntry(quote, vehicle) {
   closeStatusDialog();
   addVehicleToPatio(vehicle);
   renderPatioQuotes();
-  showToast(`OrÃ§amento ${quote.code} enviado para o pÃ¡tio.`);
+  showToast(`Orçamento ${quote.code} enviado para o pátio.`);
 }
 
 function openQuoteDialog() {
@@ -6443,7 +6443,7 @@ function handleQuotePlateLookup(plateValue, dialog = $("#quoteDialog")) {
         <button class="schedule-plate-option entry-plate-option" type="button" id="quoteNewPlateButton">
           <strong>${escapeHtml(plate)}</strong>
           <span>Placa nova</span>
-          <small>Complete modelo, cor e cliente para emitir o orÃ§amento.</small>
+          <small>Complete modelo, cor e cliente para emitir o orçamento.</small>
         </button>
       `;
       $("#quoteNewPlateButton", list)?.addEventListener("click", () => {
@@ -6465,7 +6465,7 @@ function handleQuotePlateLookup(plateValue, dialog = $("#quoteDialog")) {
 
 function renderQuoteVehicleOption(vehicle) {
   const owner = getVehicleOwnerName(vehicle);
-  const description = [vehicle.brand, vehicle.model, vehicle.color].filter(Boolean).join(" / ") || vehicle.model || "VeÃ­culo";
+  const description = [vehicle.brand, vehicle.model, vehicle.color].filter(Boolean).join(" / ") || vehicle.model || "Veículo";
   return `
     <button class="schedule-plate-option entry-plate-option" type="button" data-quote-vehicle-id="${vehicle.id}">
       <strong>${escapeHtml(vehicle.plate)}</strong>
@@ -6545,12 +6545,12 @@ function renderQuoteLinkedRegistration(vehicle, dialog = $("#quoteDialog")) {
     <div>
       <strong>Cadastro localizado</strong>
       <span>${escapeHtml(vehicle.plate)} - ${escapeHtml(formatEntryLinkedVehicleDetails(vehicle))}</span>
-      <small>${escapeHtml(client ? getClientDisplayName(client) : "Cliente nÃ£o vinculado")}${client?.phone ? ` / ${escapeHtml(client.phone)}` : ""}</small>
+      <small>${escapeHtml(client ? getClientDisplayName(client) : "Cliente não vinculado")}${client?.phone ? ` / ${escapeHtml(client.phone)}` : ""}</small>
     </div>
     <div class="entry-linked-actions">
       <button class="ghost-action" type="button" data-edit-quote-vehicle="${vehicle.id}">
         <span data-icon="carFront"></span>
-        <span>Editar veÃ­culo</span>
+        <span>Editar veículo</span>
       </button>
       ${
         client
@@ -6575,8 +6575,8 @@ function openQuoteVehicleRegistryEditor(vehicleId) {
   }
 
   showMessageBox({
-    title: "EdiÃ§Ã£o restrita",
-    message: "A ediÃ§Ã£o do cadastro do veÃ­culo deve ser feita por um administrador.",
+    title: "Edição restrita",
+    message: "A edição do cadastro do veículo deve ser feita por um administrador.",
     confirmLabel: "Entendi"
   });
 }
@@ -6589,8 +6589,8 @@ function openQuoteClientRegistryEditor(clientId, vehicleId = selectedQuoteVehicl
   }
 
   showMessageBox({
-    title: "EdiÃ§Ã£o restrita",
-    message: "A ediÃ§Ã£o do cadastro do cliente deve ser feita por um administrador.",
+    title: "Edição restrita",
+    message: "A edição do cadastro do cliente deve ser feita por um administrador.",
     confirmLabel: "Entendi"
   });
 }
@@ -6681,8 +6681,8 @@ function renderQuoteDialog() {
     <form class="vehicle-box quote-box" id="quoteForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">OrÃ§amentos</p>
-          <h2>Novo orÃ§amento</h2>
+          <p class="eyebrow">Orçamentos</p>
+          <h2>Novo orçamento</h2>
         </div>
         <button class="icon-button" id="closeQuoteDialog" type="button" aria-label="Fechar">
           <span data-icon="x"></span>
@@ -6690,7 +6690,7 @@ function renderQuoteDialog() {
       </div>
 
       <section class="quote-step is-active" data-quote-step="vehicle">
-        <p class="step-copy">Dados do veÃ­culo</p>
+        <p class="step-copy">Dados do veículo</p>
         <div class="vehicle-form-grid">
           <div class="plate-lookup-field">
             <label class="login-field" for="quoteVehiclePlate">
@@ -6711,7 +6711,7 @@ function renderQuoteDialog() {
           <div class="color-field quote-color-field">
             <span>Cor</span>
             <input id="quoteVehicleColor" name="quoteColor" type="hidden" value="Branco" required />
-            <div class="color-grid" aria-label="Escolha a cor do veÃ­culo">
+            <div class="color-grid" aria-label="Escolha a cor do veículo">
               <button class="color-swatch quote-color-swatch is-selected" type="button" data-quote-color="Branco" aria-pressed="true">
                 <span class="swatch swatch-white"></span>
                 <span>Branco</span>
@@ -6751,13 +6751,13 @@ function renderQuoteDialog() {
             <input id="quoteVehicleOtherColor" name="quoteOtherColor" type="text" placeholder="Digite a cor" disabled />
           </label>
           <label class="login-field" for="quoteVehicleType">
-            <span>Tipo de veÃ­culo</span>
+            <span>Tipo de veículo</span>
             <select id="quoteVehicleType" name="quoteType" required>
               ${renderSelectOptions(vehicleTypes, vehicleTypes[0] || "Carro")}
             </select>
           </label>
           <label class="login-field" for="quoteVehicleCategory">
-            <span>Categoria de veÃ­culo</span>
+            <span>Categoria de veículo</span>
             <select id="quoteVehicleCategory" name="quoteCategory" required>
               ${renderSelectOptions(vehicleCategories, vehicleCategories[0] || "")}
             </select>
@@ -6767,7 +6767,7 @@ function renderQuoteDialog() {
           <button class="exit-button" id="cancelQuoteDialog" type="button">Cancelar</button>
           <button class="primary-button" id="quoteNextClientButton" type="button">
             <span data-icon="login"></span>
-            <span>PrÃ³ximo</span>
+            <span>Próximo</span>
           </button>
         </div>
       </section>
@@ -6794,37 +6794,37 @@ function renderQuoteDialog() {
           <button class="exit-button" id="quoteBackVehicleButton" type="button">Voltar</button>
           <button class="primary-button" id="quoteNextServicesButton" type="button">
             <span data-icon="login"></span>
-            <span>PrÃ³ximo</span>
+            <span>Próximo</span>
           </button>
         </div>
       </section>
 
       <section class="quote-step" data-quote-step="services" hidden>
-        <p class="step-copy">ServiÃ§os, avulsos e validade</p>
+        <p class="step-copy">Serviços, avulsos e validade</p>
         <div class="quote-service-stack">
           <div class="services-field quote-services-field">
-            <span>ServiÃ§os cadastrados</span>
+            <span>Serviços cadastrados</span>
             <div class="service-dropdown-row">
-              <select id="quoteServiceSelect" aria-label="Selecionar serviÃ§o do orÃ§amento"></select>
+              <select id="quoteServiceSelect" aria-label="Selecionar serviço do orçamento"></select>
               <button class="ghost-action" id="quoteAddServiceButton" type="button">
                 <span data-icon="plus"></span>
-                <span>Adicionar serviÃ§o</span>
+                <span>Adicionar serviço</span>
               </button>
             </div>
-            <div class="selected-services-list" id="quoteServicesList" aria-label="ServiÃ§os do orÃ§amento"></div>
+            <div class="selected-services-list" id="quoteServicesList" aria-label="Serviços do orçamento"></div>
           </div>
 
           <label class="switch-field quote-extra-switch" for="quoteExtraToggle">
             <input id="quoteExtraToggle" type="checkbox" />
             <span class="switch-control"></span>
-            <span>Adicionar serviÃ§os avulsos</span>
+            <span>Adicionar serviços avulsos</span>
           </label>
 
-          <section class="quote-extra-panel" id="quoteExtraPanel" aria-label="ServiÃ§os avulsos" hidden>
+          <section class="quote-extra-panel" id="quoteExtraPanel" aria-label="Serviços avulsos" hidden>
             <div class="quote-extra-head">
               <div>
                 <p class="eyebrow">Avulsos</p>
-                <h3>ServiÃ§os avulsos</h3>
+                <h3>Serviços avulsos</h3>
               </div>
               <button class="ghost-action" id="quoteAddExtraButton" type="button">
                 <span data-icon="plus"></span>
@@ -6844,16 +6844,16 @@ function renderQuoteDialog() {
           </div>
 
           <section class="quote-total-card">
-            <span>Total do orÃ§amento</span>
+            <span>Total do orçamento</span>
             <strong id="quoteTotalValue">${formatCurrency(0)}</strong>
-            <p id="quoteTotalBreakdown">ServiÃ§os: ${formatCurrency(0)} Â· Avulsos: ${formatCurrency(0)}</p>
+            <p id="quoteTotalBreakdown">Serviços: ${formatCurrency(0)} · Avulsos: ${formatCurrency(0)}</p>
           </section>
         </div>
         <div class="dialog-actions">
           <button class="exit-button" id="quoteBackClientButton" type="button">Voltar</button>
           <button class="primary-button" type="submit">
             <span data-icon="check"></span>
-            <span>Emitir orÃ§amento</span>
+            <span>Emitir orçamento</span>
           </button>
         </div>
       </section>
@@ -6865,7 +6865,7 @@ function renderQuoteExtraRow(index, item = {}) {
   return `
     <div class="quote-extra-row" data-quote-extra-row>
       <label class="login-field" for="quoteExtraDescription${index}">
-        <span>ServiÃ§o avulso</span>
+        <span>Serviço avulso</span>
         <input id="quoteExtraDescription${index}" data-quote-extra-description type="text" placeholder="Ex.: Polimento localizado" value="${escapeHtml(item.description || "")}" />
       </label>
       <label class="login-field" for="quoteExtraValue${index}">
@@ -6991,7 +6991,7 @@ function renderQuoteServiceOptions(dialog = $("#quoteDialog"), options = {}) {
     : [];
 
   if (!services.length) {
-    select.innerHTML = '<option value="">Nenhum serviÃ§o cadastrado</option>';
+    select.innerHTML = '<option value="">Nenhum serviço cadastrado</option>';
     select.disabled = true;
     if (addButton) addButton.disabled = true;
     renderSelectedQuoteServices(selectedServices, dialog);
@@ -7011,7 +7011,7 @@ function addQuoteServiceFromDropdown(dialog = $("#quoteDialog")) {
   if (!select?.value) return;
   const selectedServices = getSelectedQuoteServices(dialog);
   if (selectedServices.includes(select.value)) {
-    showToast("ServiÃ§o jÃ¡ incluÃ­do no orÃ§amento.");
+    showToast("Serviço já incluído no orçamento.");
     return;
   }
   selectedServices.push(select.value);
@@ -7031,7 +7031,7 @@ function renderSelectedQuoteServices(services, dialog = $("#quoteDialog")) {
     ? uniqueServices
         .map((service) => {
           const registeredService = findServiceDefinition(service);
-          const details = registeredService ? formatServiceOptionLabel(registeredService) : "ServiÃ§o contratado";
+          const details = registeredService ? formatServiceOptionLabel(registeredService) : "Serviço contratado";
           return `
             <article class="selected-service-chip">
               <input type="hidden" name="quoteServices" value="${escapeHtml(service)}" />
@@ -7046,7 +7046,7 @@ function renderSelectedQuoteServices(services, dialog = $("#quoteDialog")) {
           `;
         })
         .join("")
-    : '<p class="empty-group">Nenhum serviÃ§o cadastrado incluÃ­do.</p>';
+    : '<p class="empty-group">Nenhum serviço cadastrado incluído.</p>';
 }
 
 function addQuoteExtraRow(dialog = $("#quoteDialog")) {
@@ -7101,7 +7101,7 @@ function collectQuoteExtras(dialog = $("#quoteDialog"), { validate = false } = {
     extras.push({ description, value });
   });
   if (validate && invalidField) {
-    showToast("Informe o nome e o valor de cada serviÃ§o avulso.");
+    showToast("Informe o nome e o valor de cada serviço avulso.");
     invalidField.focus();
     return false;
   }
@@ -7117,7 +7117,7 @@ function updateQuoteTotalPreview(dialog = $("#quoteDialog")) {
   const totalOutput = $("#quoteTotalValue", dialog);
   const breakdown = $("#quoteTotalBreakdown", dialog);
   if (totalOutput) totalOutput.textContent = formatCurrency(total);
-  if (breakdown) breakdown.textContent = `ServiÃ§os: ${formatCurrency(serviceTotal)} Â· Avulsos: ${formatCurrency(extrasTotal)}`;
+  if (breakdown) breakdown.textContent = `Serviços: ${formatCurrency(serviceTotal)} · Avulsos: ${formatCurrency(extrasTotal)}`;
 }
 
 function saveQuoteFromDialog(dialog = $("#quoteDialog")) {
@@ -7126,14 +7126,14 @@ function saveQuoteFromDialog(dialog = $("#quoteDialog")) {
   const extras = collectQuoteExtras(dialog, { validate: true });
   if (extras === false) return;
   if (!services.length && !extras.length) {
-    showToast("Inclua ao menos um serviÃ§o cadastrado ou avulso no orÃ§amento.");
+    showToast("Inclua ao menos um serviço cadastrado ou avulso no orçamento.");
     showQuoteDialogStep("services", dialog);
     return;
   }
 
   const validityDays = getPositiveIntegerValue("#quoteValidityDays", dialog);
   if (!validityDays) {
-    showToast("Informe o prazo em dias para o orÃ§amento.");
+    showToast("Informe o prazo em dias para o orçamento.");
     $("#quoteValidityDays", dialog)?.focus();
     return;
   }
@@ -7164,7 +7164,7 @@ function saveQuoteFromDialog(dialog = $("#quoteDialog")) {
   quoteEstimates.unshift(quote);
   closeQuoteDialog();
   renderPatioQuotes();
-  showToast(`OrÃ§amento ${quote.code} emitido com validade atÃ© ${formatDateBR(quote.dueDate)}.`);
+  showToast(`Orçamento ${quote.code} emitido com validade até ${formatDateBR(quote.dueDate)}.`);
 }
 
 function getPositiveIntegerValue(selector, container = document) {
@@ -7258,7 +7258,7 @@ function getUpcomingServiceMaintenances() {
 
 function renderMaintenanceDashboardPanel() {
   const items = getUpcomingServiceMaintenances().slice(0, 8);
-  if (!items.length) return '<p class="empty-alert">Nenhuma manutenÃ§Ã£o prÃ³xima ao vencimento.</p>';
+  if (!items.length) return '<p class="empty-alert">Nenhuma manutenção próxima ao vencimento.</p>';
   return items
     .map((item, index) => {
       const clientName = item.client ? getClientDisplayName(item.client) : item.vehicle.owner || "Cliente";
@@ -7267,7 +7267,7 @@ function renderMaintenanceDashboardPanel() {
         <article class="maintenance-card ${item.overdue ? "is-overdue" : ""}">
           <div>
             <strong>${escapeHtml(clientName)}</strong>
-            <span>${escapeHtml(item.vehicle.plate)} Â· ${escapeHtml(item.serviceName)}</span>
+            <span>${escapeHtml(item.vehicle.plate)} · ${escapeHtml(item.serviceName)}</span>
             <small>${item.overdue ? "Vencida" : "Vence"} em ${formatDateBR(item.dueDate)}</small>
           </div>
           <button class="ghost-action compact" type="button" data-send-maintenance-whatsapp="${index}" ${phone ? "" : "disabled"}>
@@ -7288,7 +7288,7 @@ function sendMaintenanceWhatsapp(index) {
     return;
   }
   const clientName = item.client ? getClientDisplayName(item.client) : item.vehicle.owner || "cliente";
-  const text = `OlÃ¡, ${clientName}! A manutenÃ§Ã£o do serviÃ§o ${item.serviceName} do veÃ­culo ${item.vehicle.plate} estÃ¡ prevista para ${formatDateBR(item.dueDate)}. Podemos agendar?`;
+  const text = `Olá, ${clientName}! A manutenção do serviço ${item.serviceName} do veículo ${item.vehicle.plate} está prevista para ${formatDateBR(item.dueDate)}. Podemos agendar?`;
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank", "noreferrer");
 }
 
@@ -7321,17 +7321,17 @@ function renderAdminDashboard() {
     { label: "Receita prevista", value: formatCurrency(expectedRevenue), icon: "wallet" },
     { label: "Vendas de produtos", value: formatCurrency(getProductSalesRevenueTotal()), icon: "package" },
     { label: "Taxas previstas", value: formatCurrency(estimatedFees), icon: "card" },
-    { label: "LÃ­quido estimado", value: formatCurrency(estimatedNet), icon: "clipboard" },
-    { label: "VeÃ­culos no pÃ¡tio", value: activeVehicles.length, icon: "carFront" },
+    { label: "Líquido estimado", value: formatCurrency(estimatedNet), icon: "clipboard" },
+    { label: "Veículos no pátio", value: activeVehicles.length, icon: "carFront" },
     { label: "Agendados", value: countByStatus("agendado"), icon: "hourglass" },
-    { label: "Em ServiÃ§o", value: countByStatus("lavando"), icon: "drop" },
+    { label: "Em Serviço", value: countByStatus("lavando"), icon: "drop" },
     { label: "Prontos", value: countByStatus("pronto"), icon: "sparkle" },
     { label: "Finalizados", value: countByStatus("finalizado"), icon: "check" },
     { label: "Faturado aberto", value: formatCurrency(billedOpen), icon: "wallet" },
     { label: "Com cuidado especial", value: patioVehiclesWithSpecialCare, icon: "alert" },
     { label: "Alertas confirmados", value: acknowledgedCareWarnings, icon: "shield" },
     { label: "Alertas de estoque", value: lowStockAlerts, icon: "alert" },
-    { label: "ServiÃ§os sem ficha", value: servicesWithoutProfile, icon: "service" }
+    { label: "Serviços sem ficha", value: servicesWithoutProfile, icon: "service" }
   ];
 
   metricsContainer.innerHTML = metrics
@@ -7381,29 +7381,29 @@ function renderAdminAlerts(billedOpen) {
   ).length;
   const alerts = [
     countByStatus("agendado")
-      ? `${countByStatus("agendado")} agendamento(s) aguardando confirmaÃ§Ã£o de entrada.`
+      ? `${countByStatus("agendado")} agendamento(s) aguardando confirmação de entrada.`
       : "",
     scheduledCashDue.length
-      ? `${scheduledCashDue.length} lanÃ§amento(s) de caixa agendado(s) para hoje aguardam confirmaÃ§Ã£o.`
+      ? `${scheduledCashDue.length} lançamento(s) de caixa agendado(s) para hoje aguardam confirmação.`
       : "",
-    countByStatus("pronto") ? `${countByStatus("pronto")} veÃ­culo(s) pronto(s) para entrega.` : "",
-    countByStatus("lavando") ? `${countByStatus("lavando")} serviÃ§o(s) em execuÃ§Ã£o agora.` : "",
-    billedOpen ? `${formatCurrency(billedOpen)} em lanÃ§amentos faturados abertos.` : "",
-    patioCareCount ? `${patioCareCount} veÃ­culo(s) no pÃ¡tio exigem cuidado especial.` : "",
-    acknowledgedCareWarnings ? `${acknowledgedCareWarnings} atendimento(s) jÃ¡ tiveram alerta tÃ©cnico confirmado.` : "",
+    countByStatus("pronto") ? `${countByStatus("pronto")} veículo(s) pronto(s) para entrega.` : "",
+    countByStatus("lavando") ? `${countByStatus("lavando")} serviço(s) em execução agora.` : "",
+    billedOpen ? `${formatCurrency(billedOpen)} em lançamentos faturados abertos.` : "",
+    patioCareCount ? `${patioCareCount} veículo(s) no pátio exigem cuidado especial.` : "",
+    acknowledgedCareWarnings ? `${acknowledgedCareWarnings} atendimento(s) já tiveram alerta técnico confirmado.` : "",
     getActiveOpenPayments().length
-      ? `${getActiveOpenPayments().length} pagamento(s) em aberto exigem lembrete diÃ¡rio ao gestor.`
+      ? `${getActiveOpenPayments().length} pagamento(s) em aberto exigem lembrete diário ao gestor.`
       : "",
     countByStatus("finalizado") ? `${countByStatus("finalizado")} atendimento(s) em Finalizados.` : "",
-    lowStockProducts.length ? `${lowStockProducts.length} produto(s) em estoque mÃ­nimo pedem reposiÃ§Ã£o.` : "",
-    lowStockSupplies.length ? `${lowStockSupplies.length} insumo(s) em estoque mÃ­nimo podem travar a operaÃ§Ã£o.` : "",
+    lowStockProducts.length ? `${lowStockProducts.length} produto(s) em estoque mínimo pedem reposição.` : "",
+    lowStockSupplies.length ? `${lowStockSupplies.length} insumo(s) em estoque mínimo podem travar a operação.` : "",
     getServicesWithoutSupplyProfile().length
-      ? `${getServicesWithoutSupplyProfile().length} serviÃ§o(s) ainda estÃ£o sem ficha tÃ©cnica de insumos.`
+      ? `${getServicesWithoutSupplyProfile().length} serviço(s) ainda estão sem ficha técnica de insumos.`
       : ""
   ].filter(Boolean);
 
   if (!alerts.length) {
-    return '<p class="empty-alert">OperaÃ§Ã£o sem prioridades abertas.</p>';
+    return '<p class="empty-alert">Operação sem prioridades abertas.</p>';
   }
 
   return alerts
@@ -7594,7 +7594,7 @@ function renderBusinessReportControls({ id, checked = false, switchData = "" }) 
       <label class="switch-field business-report-switch" for="${escapeHtml(switchId)}">
         <input id="${escapeHtml(switchId)}" type="checkbox" ${switchData} ${checked ? "checked" : ""} />
         <span class="switch-control"></span>
-        <span>Exibir em relatÃ³rios</span>
+        <span>Exibir em relatórios</span>
       </label>
     </div>
   `;
@@ -7646,11 +7646,11 @@ function renderBusinessScreen(container) {
   const logoDimensions = getBusinessLogoDimensions();
 
   container.innerHTML = `
-    <section class="screen-metrics business-metrics" aria-label="Resumo do negÃ³cio">
+    <section class="screen-metrics business-metrics" aria-label="Resumo do negócio">
       ${[
         { label: "Cadastro", value: `${completeness}%`, icon: "shield" },
-        { label: "Nome em relatÃ³rios", value: displayName, icon: "invoice" },
-        { label: "Logomarca", value: businessProfile.logoDataUrl ? "Personalizada" : "PadrÃ£o", icon: "badge" }
+        { label: "Nome em relatórios", value: displayName, icon: "invoice" },
+        { label: "Logomarca", value: businessProfile.logoDataUrl ? "Personalizada" : "Padrão", icon: "badge" }
       ]
         .map(renderScreenMetric)
         .join("")}
@@ -7661,7 +7661,7 @@ function renderBusinessScreen(container) {
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Cadastro</p>
-            <h2>Dados do negÃ³cio</h2>
+            <h2>Dados do negócio</h2>
           </div>
         </div>
         <form class="business-form-grid" id="businessProfileForm">
@@ -7673,9 +7673,9 @@ function renderBusinessScreen(container) {
           })}
           ${renderBusinessProfileReportField({
             fieldKey: "legalName",
-            label: "RazÃ£o Social",
+            label: "Razão Social",
             inputId: "businessLegalName",
-            controlHtml: `<input id="businessLegalName" type="text" value="${escapeHtml(businessProfile.legalName)}" placeholder="RazÃ£o social" />`
+            controlHtml: `<input id="businessLegalName" type="text" value="${escapeHtml(businessProfile.legalName)}" placeholder="Razão social" />`
           })}
           ${renderBusinessProfileReportField({
             fieldKey: "tradeName",
@@ -7697,10 +7697,10 @@ function renderBusinessScreen(container) {
           })}
           ${renderBusinessProfileReportField({
             fieldKey: "address",
-            label: "EndereÃ§o",
+            label: "Endereço",
             inputId: "businessAddress",
             fullWidth: true,
-            controlHtml: `<textarea id="businessAddress" rows="3" placeholder="Rua, nÃºmero, bairro, cidade">${escapeHtml(businessProfile.address)}</textarea>`
+            controlHtml: `<textarea id="businessAddress" rows="3" placeholder="Rua, número, bairro, cidade">${escapeHtml(businessProfile.address)}</textarea>`
           })}
           ${renderBusinessAdditionalPhones()}
           <div class="dialog-actions business-form-actions">
@@ -7716,19 +7716,19 @@ function renderBusinessScreen(container) {
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Documentos</p>
-            <h2>Logomarca padrÃ£o</h2>
+            <h2>Logomarca padrão</h2>
           </div>
         </div>
         <div class="business-logo-preview business-logo-report-preview">
           <div class="business-logo-report-header">
             <div class="business-logo-report-slot">
-              <img id="businessLogoReportPreviewImage" src="${escapeHtml(logoSource)}" alt="Logomarca do negÃ³cio" style="--logo-width: ${logoDimensions.x}%; --logo-height: ${logoDimensions.y}%;" />
+              <img id="businessLogoReportPreviewImage" src="${escapeHtml(logoSource)}" alt="Logomarca do negócio" style="--logo-width: ${logoDimensions.x}%; --logo-height: ${logoDimensions.y}%;" />
             </div>
             <div class="business-logo-report-copy">
               <strong>${escapeHtml(displayName)}</strong>
               <span>${escapeHtml(getBusinessDocumentContactLine("all") || "Documento gerado pelo sistema")}</span>
             </div>
-            <span>RELATÃ“RIO</span>
+            <span>RELATORIO</span>
           </div>
         </div>
         <label class="login-field" for="businessLogoFile">
@@ -7752,7 +7752,7 @@ function renderBusinessScreen(container) {
         <div class="dialog-actions business-logo-actions">
           <button class="ghost-action" type="button" id="removeBusinessLogoButton" ${businessProfile.logoDataUrl ? "" : "disabled"}>
             <span data-icon="x"></span>
-            <span>Usar padrÃ£o LavaPrime</span>
+            <span>Usar padrão LavaPrime</span>
           </button>
         </div>
       </article>
@@ -7796,7 +7796,7 @@ function bindBusinessScreenControls(container) {
     saveBusinessStorageItem(businessStorageKeys.profile, businessProfile);
     resetPdfLogoCache();
     renderBusinessScreen(container);
-    showToast("Dados do negÃ³cio salvos.");
+    showToast("Dados do negócio salvos.");
   });
   $$("[data-business-logo-axis]", container).forEach((input) => {
     input.addEventListener("input", () => updateBusinessLogoSizeDisplay(container));
@@ -7804,7 +7804,7 @@ function bindBusinessScreenControls(container) {
       businessProfile = getBusinessProfileFormValues(container);
       saveBusinessStorageItem(businessStorageKeys.profile, businessProfile);
       updateBusinessLogoSizeDisplay(container);
-      showToast("DimensÃµes da logomarca salvas.");
+      showToast("Dimensões da logomarca salvas.");
     });
   });
   $("#businessLogoFile", container).addEventListener("change", (event) => handleBusinessLogoUpload(event, container));
@@ -7813,7 +7813,7 @@ function bindBusinessScreenControls(container) {
     saveBusinessStorageItem(businessStorageKeys.profile, businessProfile);
     resetPdfLogoCache();
     renderBusinessScreen(container);
-    showToast("Logomarca padrÃ£o LavaPrime restaurada.");
+    showToast("Logomarca padrão LavaPrime restaurada.");
   });
 }
 
@@ -7844,7 +7844,7 @@ function handleBusinessLogoUpload(event, container) {
     return;
   }
   if (file.size > 900000) {
-    showToast("Use uma logomarca pequena, atÃ© 900 KB.");
+    showToast("Use uma logomarca pequena, até 900 KB.");
     event.currentTarget.value = "";
     return;
   }
@@ -7962,11 +7962,11 @@ function renderBusinessFinanceSettingsForm() {
         </div>
         <div class="business-form-grid">
           <label class="login-field" for="businessInvoiceDefaultDueDays">
-            <span>Prazo padrÃ£o de fatura</span>
+            <span>Prazo padrão de fatura</span>
             <input id="businessInvoiceDefaultDueDays" type="number" min="0" step="1" value="${escapeHtml(String(settings.receiptRules.invoiceDefaultDueDays || 0))}" />
           </label>
           <label class="login-field" for="businessOpenPaymentDueDays">
-            <span>Prazo padrÃ£o de recebimento em aberto</span>
+            <span>Prazo padrão de recebimento em aberto</span>
             <input id="businessOpenPaymentDueDays" type="number" min="0" step="1" value="${escapeHtml(String(settings.receiptRules.openPaymentDueDays || 0))}" />
           </label>
           <label class="switch-field business-switch-field" for="businessRequirePixKeyWhenActive">
@@ -7979,16 +7979,16 @@ function renderBusinessFinanceSettingsForm() {
 
       <section class="business-settings-group">
         <div class="business-settings-head">
-          <p class="eyebrow">GestÃ£o</p>
-          <h3>Margens e custos padrÃ£o</h3>
+          <p class="eyebrow">Gestão</p>
+          <h3>Margens e custos padrão</h3>
         </div>
         <div class="business-form-grid">
           <label class="login-field" for="businessServiceMarginPercent">
-            <span>Margem padrÃ£o de serviÃ§os (%)</span>
+            <span>Margem padrão de serviços (%)</span>
             <input id="businessServiceMarginPercent" type="number" min="0" max="99.99" step="0.01" value="${escapeHtml(String(settings.margins.serviceMarginPercent || 0))}" />
           </label>
           <label class="login-field" for="businessProductMarginPercent">
-            <span>Margem padrÃ£o de produtos (%)</span>
+            <span>Margem padrão de produtos (%)</span>
             <input id="businessProductMarginPercent" type="number" min="0" max="99.99" step="0.01" value="${escapeHtml(String(settings.margins.productMarginPercent || 0))}" />
           </label>
           <label class="login-field" for="businessMonthlyOperationalCost">
@@ -8000,15 +8000,15 @@ function renderBusinessFinanceSettingsForm() {
             <input id="businessProductiveHoursMonthly" type="number" min="1" step="1" value="${escapeHtml(String(settings.margins.productiveHoursMonthly || 176))}" />
           </label>
           <label class="login-field" for="businessAverageCommissionPercent">
-            <span>ComissÃ£o mÃ©dia (%)</span>
+            <span>Comissão média (%)</span>
             <input id="businessAverageCommissionPercent" type="number" min="0" max="100" step="0.01" value="${escapeHtml(String(settings.margins.averageCommissionPercent || 0))}" />
           </label>
           <label class="login-field" for="businessAverageTaxPercent">
-            <span>Imposto mÃ©dio (%)</span>
+            <span>Imposto médio (%)</span>
             <input id="businessAverageTaxPercent" type="number" min="0" max="100" step="0.01" value="${escapeHtml(String(settings.margins.averageTaxPercent || 0))}" />
           </label>
           <label class="login-field business-address-field" for="businessMarginsNotes">
-            <span>ObservaÃ§Ãµes gerenciais</span>
+            <span>Observações gerenciais</span>
             <textarea id="businessMarginsNotes" rows="3">${escapeHtml(settings.margins.notes || "")}</textarea>
           </label>
         </div>
@@ -8033,17 +8033,17 @@ function renderBusinessFinanceSettingsForm() {
           <label class="switch-field business-switch-field" for="businessAlertProductMinStock">
             <input id="businessAlertProductMinStock" type="checkbox" ${settings.inventory.alertProductMinStock ? "checked" : ""} />
             <span class="switch-control"></span>
-            <span>Alertar estoque mÃ­nimo de produtos</span>
+            <span>Alertar estoque mínimo de produtos</span>
           </label>
           <label class="switch-field business-switch-field" for="businessAlertSupplyMinStock">
             <input id="businessAlertSupplyMinStock" type="checkbox" ${settings.inventory.alertSupplyMinStock ? "checked" : ""} />
             <span class="switch-control"></span>
-            <span>Alertar estoque mÃ­nimo de insumos</span>
+            <span>Alertar estoque mínimo de insumos</span>
           </label>
           <label class="switch-field business-switch-field" for="businessAutoConsumeSupplies">
             <input id="businessAutoConsumeSupplies" type="checkbox" ${settings.inventory.autoConsumeSuppliesOnServiceCompletion ? "checked" : ""} />
             <span class="switch-control"></span>
-            <span>Baixar insumos automaticamente ao concluir serviÃ§o</span>
+            <span>Baixar insumos automaticamente ao concluir serviço</span>
           </label>
           <label class="switch-field business-switch-field" for="businessAllowManualSupplyAdjustment">
             <input id="businessAllowManualSupplyAdjustment" type="checkbox" ${settings.inventory.allowManualSupplyAdjustment ? "checked" : ""} />
@@ -8058,10 +8058,10 @@ function renderBusinessFinanceSettingsForm() {
           <label class="switch-field business-switch-field" for="businessReserveStockOnQuote">
             <input id="businessReserveStockOnQuote" type="checkbox" ${settings.inventory.reserveStockOnQuote ? "checked" : ""} />
             <span class="switch-control"></span>
-            <span>Reservar estoque em orÃ§amento</span>
+            <span>Reservar estoque em orçamento</span>
           </label>
           <label class="login-field" for="businessDefaultQuoteValidityDays">
-            <span>Validade padrÃ£o do orÃ§amento (dias)</span>
+            <span>Validade padrão do orçamento (dias)</span>
             <input id="businessDefaultQuoteValidityDays" type="number" min="1" step="1" value="${escapeHtml(String(settings.inventory.defaultQuoteValidityDays || 15))}" />
           </label>
         </div>
@@ -8074,15 +8074,15 @@ function renderBusinessFinanceSettingsForm() {
         </div>
         <div class="business-form-grid">
           <label class="login-field" for="businessDefaultProductDocumentType">
-            <span>Documento padrÃ£o de venda de produto</span>
+            <span>Documento padrão de venda de produto</span>
             <select id="businessDefaultProductDocumentType">
-              ${renderSelectOptions(["Recibo", "Pedido", "Comprovante simples", "OrÃ§amento"], settings.documents.defaultProductDocumentType || "Recibo")}
+              ${renderSelectOptions(["Recibo", "Pedido", "Comprovante simples", "Orçamento"], settings.documents.defaultProductDocumentType || "Recibo")}
             </select>
           </label>
           <label class="login-field" for="businessDefaultServiceDocumentType">
-            <span>Documento padrÃ£o de serviÃ§o</span>
+            <span>Documento padrão de serviço</span>
             <select id="businessDefaultServiceDocumentType">
-              ${renderSelectOptions(["Recibo", "Comprovante simples", "OrÃ§amento", "Pedido"], settings.documents.defaultServiceDocumentType || "Recibo")}
+              ${renderSelectOptions(["Recibo", "Comprovante simples", "Orçamento", "Pedido"], settings.documents.defaultServiceDocumentType || "Recibo")}
             </select>
           </label>
           <label class="login-field" for="businessReceiptNumberPrefix">
@@ -8090,7 +8090,7 @@ function renderBusinessFinanceSettingsForm() {
             <input id="businessReceiptNumberPrefix" type="text" value="${escapeHtml(settings.documents.receiptNumberPrefix || "REC")}" />
           </label>
           <label class="login-field" for="businessQuoteNumberPrefix">
-            <span>Prefixo de orÃ§amentos</span>
+            <span>Prefixo de orçamentos</span>
             <input id="businessQuoteNumberPrefix" type="text" value="${escapeHtml(settings.documents.quoteNumberPrefix || "ORC")}" />
           </label>
           <label class="login-field" for="businessOrderNumberPrefix">
@@ -8105,7 +8105,7 @@ function renderBusinessFinanceSettingsForm() {
           <label class="switch-field business-switch-field" for="businessShowBankAccountsInInvoices">
             <input id="businessShowBankAccountsInInvoices" type="checkbox" ${settings.documents.showBankAccountsInInvoices ? "checked" : ""} />
             <span class="switch-control"></span>
-            <span>Permitir contas bancÃ¡rias nos documentos</span>
+            <span>Permitir contas bancárias nos documentos</span>
           </label>
           <label class="switch-field business-switch-field" for="businessShowBusinessDataInDocuments">
             <input id="businessShowBusinessDataInDocuments" type="checkbox" ${settings.documents.showBusinessDataInDocuments ? "checked" : ""} />
@@ -8113,11 +8113,11 @@ function renderBusinessFinanceSettingsForm() {
             <span>Exibir dados da empresa nos documentos</span>
           </label>
           <label class="login-field business-address-field" for="businessReceiptDefaultNote">
-            <span>ObservaÃ§Ã£o padrÃ£o de recibos</span>
+            <span>Observação padrão de recibos</span>
             <textarea id="businessReceiptDefaultNote" rows="3">${escapeHtml(settings.documents.receiptDefaultNote || "")}</textarea>
           </label>
           <label class="login-field business-address-field" for="businessQuoteDefaultNote">
-            <span>ObservaÃ§Ã£o padrÃ£o de orÃ§amentos</span>
+            <span>Observação padrão de orçamentos</span>
             <textarea id="businessQuoteDefaultNote" rows="3">${escapeHtml(settings.documents.quoteDefaultNote || "")}</textarea>
           </label>
         </div>
@@ -8126,7 +8126,7 @@ function renderBusinessFinanceSettingsForm() {
       <div class="dialog-actions business-form-actions">
         <button class="primary-button" type="submit">
           <span data-icon="check"></span>
-          <span>Salvar configuraÃ§Ãµes</span>
+          <span>Salvar configurações</span>
         </button>
       </div>
     </form>
@@ -8159,7 +8159,7 @@ function renderBusinessPaymentMethodsTable() {
             <th>Prazo de recebimento</th>
             <th>Usar em</th>
             <th>Conta vinculada</th>
-            <th>AÃ§Ãµes</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -8182,7 +8182,7 @@ function renderBusinessPaymentMethodsTable() {
                   <td data-label="Prazo de recebimento">${escapeHtml(getBusinessPaymentMethodSettlementSummary(method))}</td>
                   <td data-label="Usar em">${escapeHtml(getBusinessPaymentMethodUsageLabel(method))}</td>
                   <td data-label="Conta vinculada">${linkedAccount ? escapeHtml(linkedAccount.bank) : "Sem conta vinculada"}</td>
-                  <td data-label="AÃ§Ãµes">
+                  <td data-label="Ações">
                     <div class="cashflow-row-actions business-payment-method-actions">
                       <button class="ghost-action compact" type="button" data-edit-business-payment-method="${method.id}">
                         <span data-icon="edit"></span>
@@ -8212,7 +8212,7 @@ function renderBusinessPaymentMethodDialogForm() {
     <form class="vehicle-box service-box" id="businessPaymentMethodForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">ConfiguraÃ§Ãµes financeiras</p>
+          <p class="eyebrow">Configurações financeiras</p>
           <h2>${paymentMethodForm.id ? "Editar forma de pagamento" : "Nova forma de pagamento"}</h2>
         </div>
         <button class="icon-button" id="closeBusinessPaymentMethodDialog" type="button" aria-label="Fechar">
@@ -8231,7 +8231,7 @@ function renderBusinessPaymentMethodDialogForm() {
           </select>
         </label>
         <label class="login-field" for="businessPaymentMethodLinkedAccount">
-          <span>Conta bancÃ¡ria vinculada</span>
+          <span>Conta bancária vinculada</span>
           <select id="businessPaymentMethodLinkedAccount">
             ${renderBusinessPaymentMethodLinkedBankOptions(paymentMethodForm.linkedBankAccountId)}
           </select>
@@ -8256,7 +8256,7 @@ function renderBusinessPaymentMethodDialogForm() {
         <label class="switch-field business-switch-field" for="businessPaymentMethodImmediate">
           <input id="businessPaymentMethodImmediate" type="checkbox" ${paymentMethodForm.immediateSettlement ? "checked" : ""} />
           <span class="switch-control"></span>
-          <span>LiquidaÃ§Ã£o imediata</span>
+          <span>Liquidação imediata</span>
         </label>
         <label class="switch-field business-switch-field" for="businessPaymentMethodShowInService">
           <input id="businessPaymentMethodShowInService" type="checkbox" ${paymentMethodForm.showInService ? "checked" : ""} />
@@ -8271,7 +8271,7 @@ function renderBusinessPaymentMethodDialogForm() {
         <label class="switch-field business-switch-field" for="businessPaymentMethodShowInQuote">
           <input id="businessPaymentMethodShowInQuote" type="checkbox" ${paymentMethodForm.showInQuote ? "checked" : ""} />
           <span class="switch-control"></span>
-          <span>Usar em orÃ§amento</span>
+          <span>Usar em orçamento</span>
         </label>
         <label class="switch-field business-switch-field" for="businessPaymentMethodShowInInvoice">
           <input id="businessPaymentMethodShowInInvoice" type="checkbox" ${paymentMethodForm.showInInvoice ? "checked" : ""} />
@@ -8279,7 +8279,7 @@ function renderBusinessPaymentMethodDialogForm() {
           <span>Usar em fatura</span>
         </label>
         <label class="login-field inventory-notes-field" for="businessPaymentMethodNotes">
-          <span>ObservaÃ§Ãµes</span>
+          <span>Observações</span>
           <textarea id="businessPaymentMethodNotes" rows="3">${escapeHtml(paymentMethodForm.notes || "")}</textarea>
         </label>
       </div>
@@ -8308,7 +8308,7 @@ function renderBusinessPaymentMethods() {
           <div class="business-payment-method-head">
             <div>
               <strong>${escapeHtml(method.name)}</strong>
-              <p>${escapeHtml(capitalize(method.type || "outro"))} Â· ${escapeHtml(getBusinessPaymentMethodSettlementSummary(method))}</p>
+              <p>${escapeHtml(capitalize(method.type || "outro"))} · ${escapeHtml(getBusinessPaymentMethodSettlementSummary(method))}</p>
             </div>
             <span class="business-payment-method-status ${method.active ? "is-active" : "is-inactive"}">${method.active ? "Ativa" : "Inativa"}</span>
           </div>
@@ -8316,7 +8316,7 @@ function renderBusinessPaymentMethods() {
             <span>${escapeHtml(getBusinessPaymentMethodFeeSummary(method))}</span>
             <span>${linkedAccount ? `Conta: ${escapeHtml(linkedAccount.bank)}` : "Sem conta vinculada"}</span>
             <span>${channels.length ? `Usada em: ${escapeHtml(channels.join(", "))}` : "Sem contexto ativo"}</span>
-            <span>${usageTotal ? `${usageTotal} lanÃ§amento(s) vinculado(s)` : "Sem movimentaÃ§Ã£o vinculada"}</span>
+            <span>${usageTotal ? `${usageTotal} lançamento(s) vinculado(s)` : "Sem movimentação vinculada"}</span>
           </div>
           ${method.notes ? `<p class="business-payment-method-notes">${escapeHtml(method.notes)}</p>` : ""}
           <div class="business-account-actions business-payment-method-actions">
@@ -8337,7 +8337,7 @@ function renderBusinessPaymentMethods() {
 }
 
 function renderBusinessBankAccounts() {
-  if (!businessBankAccounts.length) return '<p class="empty-alert">Nenhuma conta bancÃ¡ria cadastrada.</p>';
+  if (!businessBankAccounts.length) return '<p class="empty-alert">Nenhuma conta bancária cadastrada.</p>';
   return businessBankAccounts
     .map(
       (account) => {
@@ -8346,7 +8346,7 @@ function renderBusinessBankAccounts() {
         <article class="business-account-card">
           <div>
             <strong>${escapeHtml(account.bank)}</strong>
-            <p>${escapeHtml(account.type)} / AgÃªncia ${escapeHtml(account.agency)} / Conta ${escapeHtml(account.account)}</p>
+            <p>${escapeHtml(account.type)} / Agência ${escapeHtml(account.agency)} / Conta ${escapeHtml(account.account)}</p>
             <span>${escapeHtml(account.holder || getBusinessDocumentName())}</span>
             ${linkedMethods.length ? `<small>${escapeHtml(`Vinculada a: ${linkedMethods.map((method) => method.name).join(", ")}`)}</small>` : ""}
           </div>
@@ -8376,7 +8376,7 @@ function renderBusinessPixQr() {
     <div class="business-qr-panel">
       <img src="${escapeHtml(qrSource)}" alt="QR Code Pix" />
       <label class="login-field" for="businessPixPayload">
-        <span>CÃ³digo gerado para o QR Code</span>
+        <span>Código gerado para o QR Code</span>
         <textarea id="businessPixPayload" rows="4" readonly>${escapeHtml(payload)}</textarea>
       </label>
       ${businessPixInfo.paymentUrl ? `<a class="ghost-action business-payment-link" href="${escapeHtml(businessPixInfo.paymentUrl)}" target="_blank" rel="noreferrer">Abrir link de pagamento</a>` : ""}
@@ -8394,10 +8394,10 @@ function deleteBusinessPaymentMethod(methodId, container) {
       saveBusinessPaymentMethods();
       if (Number(selectedBusinessPaymentMethodId) === method.id) selectedBusinessPaymentMethodId = null;
       renderBusinessFinanceScreen(container);
-      showToast("Forma de pagamento inativada para preservar o histÃ³rico.");
+      showToast("Forma de pagamento inativada para preservar o histórico.");
       return;
     }
-    showToast("Esta forma jÃ¡ estÃ¡ inativa e segue preservada para o histÃ³rico.");
+    showToast("Esta forma já está inativa e segue preservada para o histórico.");
     return;
   }
 
@@ -8422,13 +8422,13 @@ function saveBusinessPixInfo(container, shouldGenerateQr) {
   if (shouldGenerateQr) {
     const normalizedCopyPaste = normalizePixCopyPaste(nextPixInfo.copyPasteCode);
     if (normalizedCopyPaste && !isValidPixCopyPastePayload(normalizedCopyPaste)) {
-      showToast("Pix copia e cola invÃ¡lido. Confira o cÃ³digo gerado pelo banco.");
+      showToast("Pix copia e cola inválido. Confira o código gerado pelo banco.");
       return;
     }
 
     const payload = getBusinessPixQrPayload(nextPixInfo);
     if (!payload) {
-      showToast("Informe uma chave Pix ou cole um Pix copia e cola vÃ¡lido.");
+      showToast("Informe uma chave Pix ou cole um Pix copia e cola válido.");
       return;
     }
     nextPixInfo.qrPayload = payload;
@@ -8443,7 +8443,7 @@ function saveBusinessPixInfo(container, shouldGenerateQr) {
   businessPixInfo = nextPixInfo;
   saveBusinessStorageItem(businessStorageKeys.pix, businessPixInfo);
   renderBusinessFinanceScreen(container);
-  showToast(shouldGenerateQr ? "QR Code Pix gerado." : "InformaÃ§Ãµes Pix salvas.");
+  showToast(shouldGenerateQr ? "QR Code Pix gerado." : "Informações Pix salvas.");
 }
 
 function getBusinessFinanceScreenContainer() {
@@ -8503,12 +8503,12 @@ function saveBusinessPaymentMethod(container) {
     return;
   }
   if (canonicalName === "Carteira (legado)" && !currentMethod) {
-    showToast("Carteira Ã© apenas um registro legado. Cadastre uma forma real de pagamento.");
+    showToast("Carteira é apenas um registro legado. Cadastre uma forma real de pagamento.");
     $("#businessPaymentMethodName", container)?.focus();
     return;
   }
   if (businessPaymentMethods.some((method) => method.id !== currentMethod?.id && normalizeText(method.name) === normalizeText(canonicalName))) {
-    showToast("JÃ¡ existe uma forma de pagamento com esse nome.");
+    showToast("Já existe uma forma de pagamento com esse nome.");
     $("#businessPaymentMethodName", container)?.focus();
     return;
   }
@@ -8518,12 +8518,12 @@ function saveBusinessPaymentMethod(container) {
     return;
   }
   if (fixedFee < 0) {
-    showToast("A taxa fixa nÃ£o pode ser negativa.");
+    showToast("A taxa fixa não pode ser negativa.");
     $("#businessPaymentMethodFixedFee", container)?.focus();
     return;
   }
   if (linkedBankAccountId && !businessBankAccounts.some((account) => account.id === linkedBankAccountId)) {
-    showToast("Selecione uma conta bancÃ¡ria vÃ¡lida.");
+    showToast("Selecione uma conta bancária válida.");
     $("#businessPaymentMethodLinkedAccount", container)?.focus();
     return;
   }
@@ -8560,7 +8560,7 @@ function saveBusinessPaymentMethod(container) {
   );
 
   if (!methodPayload) {
-    showToast("NÃ£o foi possÃ­vel salvar a forma de pagamento.");
+    showToast("Não foi possível salvar a forma de pagamento.");
     return;
   }
 
@@ -8610,7 +8610,7 @@ function bindBusinessFinanceControls(container) {
     const agency = $("#businessBankAgency", container)?.value.trim() || "";
     const account = $("#businessBankAccount", container)?.value.trim() || "";
     if (!bank || !agency || !account) {
-      showToast("Informe banco, agÃªncia e conta.");
+      showToast("Informe banco, agência e conta.");
       return;
     }
     businessBankAccounts.push({
@@ -8624,7 +8624,7 @@ function bindBusinessFinanceControls(container) {
     });
     saveBusinessStorageItem(businessStorageKeys.bankAccounts, businessBankAccounts);
     renderBusinessFinanceScreen(container);
-    showToast("Conta bancÃ¡ria cadastrada.");
+    showToast("Conta bancária cadastrada.");
   });
 
   $("#businessPixForm", container)?.addEventListener("submit", (event) => {
@@ -8638,7 +8638,7 @@ function bindBusinessFinanceControls(container) {
       if (!account) return;
       account.showInInvoices = input.checked;
       saveBusinessStorageItem(businessStorageKeys.bankAccounts, businessBankAccounts);
-      showToast("ExibiÃ§Ã£o em faturas atualizada.");
+      showToast("Exibição em faturas atualizada.");
     });
   });
   $$("[data-delete-business-account]", container).forEach((button) => {
@@ -8652,7 +8652,7 @@ function bindBusinessFinanceControls(container) {
       businessBankAccounts = businessBankAccounts.filter((account) => account.id !== accountId);
       saveBusinessStorageItem(businessStorageKeys.bankAccounts, businessBankAccounts);
       renderBusinessFinanceScreen(container);
-      showToast("Conta bancÃ¡ria removida.");
+      showToast("Conta bancária removida.");
     });
   });
 }
@@ -8662,10 +8662,10 @@ function renderBusinessFinanceScreen(container) {
   const activeMethods = businessPaymentMethods.filter((method) => method.active).length;
   const immediateMethods = businessPaymentMethods.filter((method) => method.active && method.immediateSettlement).length;
   container.innerHTML = `
-    <section class="screen-metrics business-metrics" aria-label="Resumo financeiro do negÃ³cio">
+    <section class="screen-metrics business-metrics" aria-label="Resumo financeiro do negócio">
       ${[
         { label: "Formas ativas", value: activeMethods, icon: "card" },
-        { label: "LiquidaÃ§Ã£o imediata", value: immediateMethods, icon: "check" },
+        { label: "Liquidação imediata", value: immediateMethods, icon: "check" },
         { label: "Contas cadastradas", value: businessBankAccounts.length, icon: "wallet" },
         { label: "Exibir em faturas", value: visibleAccounts, icon: "invoice" },
         { label: "Pix", value: businessPixInfo.key ? "Configurado" : "Pendente", icon: "cashflow" }
@@ -8693,8 +8693,8 @@ function renderBusinessFinanceScreen(container) {
       <article class="admin-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">BancÃ¡rio</p>
-            <h2>Contas bancÃ¡rias</h2>
+            <p class="eyebrow">Bancário</p>
+            <h2>Contas bancárias</h2>
           </div>
         </div>
         <form class="business-form-grid" id="businessBankAccountForm">
@@ -8706,12 +8706,12 @@ function renderBusinessFinanceScreen(container) {
             <span>Tipo de conta</span>
             <select id="businessBankType">
               <option>Conta corrente</option>
-              <option>Conta poupanÃ§a</option>
+              <option>Conta poupança</option>
               <option>Conta pagamento</option>
             </select>
           </label>
           <label class="login-field" for="businessBankAgency">
-            <span>AgÃªncia</span>
+            <span>Agência</span>
             <input id="businessBankAgency" type="text" placeholder="0001" />
           </label>
           <label class="login-field" for="businessBankAccount">
@@ -8750,7 +8750,7 @@ function renderBusinessFinanceScreen(container) {
           <label class="login-field" for="businessPixKeyType">
             <span>Tipo de chave</span>
             <select id="businessPixKeyType">
-              ${["CNPJ", "CPF", "E-mail", "Telefone", "AleatÃ³ria"].map((type) => `<option value="${type}" ${businessPixInfo.keyType === type ? "selected" : ""}>${type}</option>`).join("")}
+              ${["CNPJ", "CPF", "E-mail", "Telefone", "Aleatória"].map((type) => `<option value="${type}" ${businessPixInfo.keyType === type ? "selected" : ""}>${type}</option>`).join("")}
             </select>
           </label>
           <label class="login-field" for="businessPixKey">
@@ -8766,7 +8766,7 @@ function renderBusinessFinanceScreen(container) {
             <input id="businessPixPaymentUrl" type="url" value="${escapeHtml(businessPixInfo.paymentUrl)}" placeholder="https://..." />
           </label>
           <label class="login-field business-address-field" for="businessPixCopyPasteCode">
-            <span>CÃ³digo Pix copia e cola</span>
+            <span>Código Pix copia e cola</span>
             <textarea id="businessPixCopyPasteCode" rows="4" placeholder="000201...">${escapeHtml(businessPixInfo.copyPasteCode || "")}</textarea>
           </label>
           <label class="switch-field business-switch-field" for="businessPixShowInvoices">
@@ -8791,7 +8791,7 @@ function renderBusinessFinanceScreen(container) {
       <article class="admin-panel business-finance-settings-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">ParÃ¢metros</p>
+            <p class="eyebrow">Parâmetros</p>
             <h2>Regras e documentos</h2>
           </div>
         </div>
@@ -8810,7 +8810,7 @@ function getBusinessPaymentMethodChannelLabels(method) {
   return [
     method.showInService ? "Atendimento" : "",
     method.showInProductSale ? "Venda" : "",
-    method.showInQuote ? "OrÃ§amento" : "",
+    method.showInQuote ? "Orçamento" : "",
     method.showInInvoice ? "Fatura" : ""
   ].filter(Boolean);
 }
@@ -8832,10 +8832,10 @@ function getBusinessPaymentMethodSettlementSummary(method) {
 function renderBusinessSocialScreen(container) {
   const visibleChannels = businessSocialChannels.filter((channel) => businessSocialLinks[channel.key]?.showInFooter).length;
   container.innerHTML = `
-    <section class="screen-metrics business-metrics" aria-label="Resumo de comunicaÃ§Ã£o">
+    <section class="screen-metrics business-metrics" aria-label="Resumo de comunicação">
       ${[
         { label: "Canais", value: businessSocialChannels.length, icon: "users" },
-        { label: "No relatÃ³rio", value: visibleChannels, icon: "invoice" },
+        { label: "No relatório", value: visibleChannels, icon: "invoice" },
         { label: "WhatsApp", value: businessSocialLinks.whatsapp?.value ? "Configurado" : "Pendente", icon: "card" }
       ]
         .map(renderScreenMetric)
@@ -8845,8 +8845,8 @@ function renderBusinessSocialScreen(container) {
     <article class="admin-panel">
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">ComunicaÃ§Ã£o</p>
-          <h2>Canais do negÃ³cio</h2>
+          <p class="eyebrow">Comunicação</p>
+          <h2>Canais do negócio</h2>
         </div>
       </div>
       <form class="business-social-grid" id="businessSocialForm">
@@ -8863,10 +8863,10 @@ function renderBusinessSocialScreen(container) {
                 <label class="switch-field" for="businessSocialShow${socialId}">
                   <input id="businessSocialShow${socialId}" data-social-report="${channel.key}" type="checkbox" ${item.showInFooter ? "checked" : ""} />
                   <span class="switch-control"></span>
-                  <span>Inserir no relatÃ³rio</span>
+                  <span>Inserir no relatório</span>
                 </label>
                 <label class="login-field business-social-report-field" for="businessSocialReport${socialId}">
-                  <span>RelatÃ³rio</span>
+                  <span>Relatório</span>
                   <select id="businessSocialReport${socialId}" data-social-report-target="${channel.key}" ${item.showInFooter ? "" : "disabled"}>
                     ${renderBusinessSocialReportTargetOptions(item.reportTarget)}
                   </select>
@@ -8911,7 +8911,7 @@ function bindBusinessSocialControls(container) {
     });
     saveBusinessStorageItem(businessStorageKeys.social, businessSocialLinks);
     renderBusinessSocialScreen(container);
-    showToast("ComunicaÃ§Ã£o salva.");
+    showToast("Comunicação salva.");
   });
 }
 
@@ -8978,25 +8978,25 @@ function renderBusinessMessagesScreen(container) {
           <label class="switch-field message-active-switch" for="messageTemplateActive">
             <input id="messageTemplateActive" type="checkbox" ${selectedTemplate.active ? "checked" : ""} />
             <span class="switch-control"></span>
-            <span>Mensagem ativa para envio automÃ¡tico</span>
+            <span>Mensagem ativa para envio automático</span>
           </label>
           <label class="login-field" for="messageTemplateTitle">
-            <span>TÃ­tulo interno</span>
+            <span>Título interno</span>
             <input id="messageTemplateTitle" type="text" value="${escapeHtml(selectedTemplate.title)}" required />
           </label>
           <label class="login-field message-template-text-field" for="messageTemplateText">
             <span>Mensagem</span>
             <textarea id="messageTemplateText" rows="7" required>${escapeHtml(selectedTemplate.text)}</textarea>
           </label>
-          <div class="message-format-toolbar" aria-label="FormataÃ§Ã£o WhatsApp">
+          <div class="message-format-toolbar" aria-label="Formatação WhatsApp">
             <button class="icon-button message-format-button" type="button" data-message-format="bold" title="Negrito">B</button>
-            <button class="icon-button message-format-button" type="button" data-message-format="italic" title="ItÃ¡lico">I</button>
+            <button class="icon-button message-format-button" type="button" data-message-format="italic" title="Itálico">I</button>
             <button class="icon-button message-format-button" type="button" data-message-format="strike" title="Riscado">S</button>
             <button class="ghost-action message-format-mono" type="button" data-message-format="mono">Mono</button>
           </div>
           <section class="message-token-panel" aria-label="Dados disponiveis para a mensagem">
             <div class="message-token-header">
-              <strong>Dados disponÃ­veis</strong>
+              <strong>Dados disponíveis</strong>
               <div class="message-token-picker">
                 <select id="messageTokenSelect" aria-label="Adicionar outro dado">
                   ${getMessageTokenOptions()
@@ -9023,7 +9023,7 @@ function renderBusinessMessagesScreen(container) {
             </div>
           </section>
           <article class="message-preview-card">
-            <span>PrÃ©via</span>
+            <span>Prévia</span>
             <p id="messagePreviewText">${renderWhatsappPreview(applyMessageTemplateTokens(selectedTemplate.text, sample))}</p>
           </article>
           <div class="dialog-actions message-actions">
@@ -9083,25 +9083,25 @@ function getMessageTokenOptions() {
     { key: "telefone", label: "Telefone", description: "Telefone do cliente." },
     { key: "documento", label: "Documento", description: "CPF, CNPJ ou documento cadastrado." },
     { key: "email", label: "Email", description: "Email cadastrado para o cliente." },
-    { key: "empresa", label: "Empresa", description: "Nome Fantasia cadastrado em Dados do NegÃ³cio." },
-    { key: "placa", label: "Placa", description: "Placa do veÃ­culo." },
-    { key: "veiculo", label: "VeÃ­culo", description: "Marca e modelo do veÃ­culo." },
-    { key: "modelo", label: "Modelo", description: "Modelo do veÃ­culo." },
-    { key: "cor", label: "Cor", description: "Cor do veÃ­culo." },
-    { key: "tipo_veiculo", label: "Tipo", description: "Tipo do veÃ­culo." },
-    { key: "categoria_veiculo", label: "Categoria", description: "Categoria do veÃ­culo." },
-    { key: "servico", label: "ServiÃ§o", description: "ServiÃ§o ou descriÃ§Ã£o financeira." },
-    { key: "valor", label: "Valor", description: "Valor principal da operaÃ§Ã£o." },
+    { key: "empresa", label: "Empresa", description: "Nome Fantasia cadastrado em Dados do Negócio." },
+    { key: "placa", label: "Placa", description: "Placa do veículo." },
+    { key: "veiculo", label: "Veículo", description: "Marca e modelo do veículo." },
+    { key: "modelo", label: "Modelo", description: "Modelo do veículo." },
+    { key: "cor", label: "Cor", description: "Cor do veículo." },
+    { key: "tipo_veiculo", label: "Tipo", description: "Tipo do veículo." },
+    { key: "categoria_veiculo", label: "Categoria", description: "Categoria do veículo." },
+    { key: "servico", label: "Serviço", description: "Serviço ou descrição financeira." },
+    { key: "valor", label: "Valor", description: "Valor principal da operação." },
     { key: "valor_pago", label: "Valor pago", description: "Valor recebido em pagamentos parciais." },
     { key: "saldo", label: "Saldo", description: "Saldo remanescente em aberto." },
     { key: "pagamento", label: "Forma de pagamento", description: "Meio de pagamento usado ou previsto." },
-    { key: "fatura", label: "Fatura", description: "CÃ³digo da fatura." },
+    { key: "fatura", label: "Fatura", description: "Código da fatura." },
     { key: "destino", label: "Destino do saldo", description: "Destino escolhido para saldo remanescente." },
     { key: "data", label: "Data", description: "Data do evento ou agendamento." },
     { key: "hora", label: "Hora", description: "Hora do evento ou agendamento." },
     { key: "vencimento", label: "Vencimento", description: "Data de vencimento quando houver." },
-    { key: "operador", label: "Operador", description: "Operador ou administrador responsÃ¡vel." },
-    { key: "promocao", label: "PromoÃ§Ã£o", description: "Texto de promoÃ§Ã£o configurado para relacionamento." }
+    { key: "operador", label: "Operador", description: "Operador ou administrador responsável." },
+    { key: "promocao", label: "Promoção", description: "Texto de promoção configurado para relacionamento." }
   ];
 }
 
@@ -9194,7 +9194,7 @@ function getMessageSampleContext(phone = "") {
     hora: vehicle.scheduledTime || vehicle.entry || getCurrentShortTime(),
     vencimento: formatDateBR(getTodayISO()),
     operador: activeSessionUser || "Administrador",
-    promocao: "promoÃ§Ã£o vigente",
+    promocao: "promoção vigente",
     phone: phone || vehicle.phone || businessSocialLinks.whatsapp?.value || ""
   };
 }
@@ -9225,7 +9225,7 @@ function getMessageContextFromVehicle(vehicle) {
     hora: vehicle.scheduledTime || vehicle.entry || getCurrentShortTime(),
     vencimento: vehicle.billing?.dueDate ? formatDateBR(vehicle.billing.dueDate) : formatDateBR(getTodayISO()),
     operador: vehicle.operator || activeSessionUser || "",
-    promocao: "promoÃ§Ã£o vigente",
+    promocao: "promoção vigente",
     phone: vehicle.phone || ""
   };
 }
@@ -9256,7 +9256,7 @@ function getMessageContextFromOpenPayment(payment) {
     hora: getCurrentShortTime(),
     vencimento: payment.dueDate ? formatDateBR(payment.dueDate) : formatDateBR(getTodayISO()),
     operador: payment.operator || payment.settledBy || activeSessionUser || "",
-    promocao: "promoÃ§Ã£o vigente",
+    promocao: "promoção vigente",
     phone: payment.phone || ""
   };
 }
@@ -9289,7 +9289,7 @@ function getMessageContextFromInvoice(invoice) {
     hora: getCurrentShortTime(),
     vencimento: formatDateBR(invoice.dueDate),
     operador: invoice.settledBy || invoice.approvedBy || activeSessionUser || "",
-    promocao: "promoÃ§Ã£o vigente",
+    promocao: "promoção vigente",
     phone: billingClient?.phone || ""
   };
 }
@@ -9327,7 +9327,7 @@ function getMessageContextFromClient(client, plate = "") {
     cor: vehicle?.color || "",
     tipo_veiculo: vehicle?.type || "",
     categoria_veiculo: vehicle?.category || "",
-    servico: lastService?.service || "serviÃ§o",
+    servico: lastService?.service || "serviço",
     valor: lastService?.value ? formatCurrency(lastService.value) : formatCurrency(0),
     valor_pago: "",
     saldo: "",
@@ -9338,7 +9338,7 @@ function getMessageContextFromClient(client, plate = "") {
     hora: getCurrentShortTime(),
     vencimento: formatDateBR(getTodayISO()),
     operador: activeSessionUser || "",
-    promocao: "promoÃ§Ã£o vigente",
+    promocao: "promoção vigente",
     phone: client.phone || ""
   };
 }
@@ -9373,7 +9373,7 @@ function sendManualMessage(key, context) {
 function openWhatsappTemplateMessage(template, context) {
   const phone = normalizeWhatsappPhone(context?.phone || "");
   if (!phone) {
-    showToast("Mensagem ativa, mas o cliente nÃ£o possui telefone cadastrado.");
+    showToast("Mensagem ativa, mas o cliente não possui telefone cadastrado.");
     return false;
   }
   const text = applyMessageTemplateTokens(template.text || "", context || {});
@@ -9432,7 +9432,7 @@ function renderClientsScreen(container) {
               <th>Documento</th>
               <th>Faturamento</th>
               <th>Placas</th>
-              <th>AÃ§Ãµes</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody id="clientTableBody">
@@ -9472,7 +9472,7 @@ function sendClientRelationshipMessage(key, clientId, plate = "") {
 function openClientMessageDialog(clientId) {
   const client = getClientById(clientId);
   if (!client) {
-    showToast("Cliente nÃ£o localizado.");
+    showToast("Cliente não localizado.");
     return;
   }
 
@@ -9538,7 +9538,7 @@ function renderClientMessageDialog(dialog = $("#clientMessageDialog")) {
   syncClientMessageDialogSelection(client);
   const templates = getClientMessageTemplatesByCategory(selectedClientMessageCategory);
   const template = templates.find((item) => item.key === selectedClientMessageTemplateKey) || templates[0] || null;
-  const preview = template ? applyMessageTemplateTokens(template.text || "", getMessageContextFromClient(client, selectedClientMessagePlate)) : "Nenhuma mensagem disponÃ­vel.";
+  const preview = template ? applyMessageTemplateTokens(template.text || "", getMessageContextFromClient(client, selectedClientMessagePlate)) : "Nenhuma mensagem disponível.";
 
   dialog.innerHTML = `
     <form class="message-box client-message-box" id="clientMessageForm" novalidate>
@@ -9554,13 +9554,13 @@ function renderClientMessageDialog(dialog = $("#clientMessageDialog")) {
 
       <article class="schedule-selected-card client-message-summary">
         <span>Telefone</span>
-        <strong>${escapeHtml(client.phone || "NÃ£o informado")}</strong>
+        <strong>${escapeHtml(client.phone || "Não informado")}</strong>
         <p>${escapeHtml(client.plates?.length ? `${client.plates.length} placa(s) vinculada(s)` : "Sem placa vinculada no cadastro.")}</p>
       </article>
 
       <div class="business-form-grid client-message-form">
         <label class="login-field" for="clientMessagePlateSelect">
-          <span>Placa de referÃªncia</span>
+          <span>Placa de referência</span>
           <select id="clientMessagePlateSelect">
             ${renderClientMessagePlateOptions(client)}
           </select>
@@ -9580,7 +9580,7 @@ function renderClientMessageDialog(dialog = $("#clientMessageDialog")) {
       </div>
 
       <article class="message-preview-card">
-        <span>PrÃ©via da mensagem</span>
+        <span>Prévia da mensagem</span>
         <p id="clientMessagePreviewText">${renderWhatsappPreview(preview)}</p>
       </article>
 
@@ -9611,7 +9611,7 @@ function renderClientMessagePlateOptions(client) {
 }
 
 function renderClientMessageTemplateOptions(templates, selectedKey) {
-  if (!templates.length) return '<option value="">Nenhuma mensagem disponÃ­vel</option>';
+  if (!templates.length) return '<option value="">Nenhuma mensagem disponível</option>';
   return templates
     .map(
       (template) =>
@@ -9690,7 +9690,7 @@ function bindClientDialogControls(container) {
 function openClientDialog(clientId = null) {
   if (clientId && !canEditClientRegistrations()) {
     showMessageBox({
-      title: "EdiÃ§Ã£o restrita",
+      title: "Edição restrita",
       message: "Somente administradores podem editar o cadastro de clientes.",
       confirmLabel: "Entendi"
     });
@@ -9699,7 +9699,7 @@ function openClientDialog(clientId = null) {
 
   const client = clientId ? getClientById(clientId) : null;
   if (clientId && !client) {
-    showToast("Cliente nÃ£o localizado.");
+    showToast("Cliente não localizado.");
     return;
   }
 
@@ -9740,7 +9740,7 @@ function renderClientDialogForm(client) {
     <form class="vehicle-box client-box" id="clientForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">${client ? "EdiÃ§Ã£o" : "Cadastro"}</p>
+          <p class="eyebrow">${client ? "Edição" : "Cadastro"}</p>
           <h2>${client ? escapeHtml(getClientDisplayName(client)) : "Novo cliente"}</h2>
         </div>
         <span class="client-status-label" id="clientBillingState">${client ? "Editando" : "Avulso"}</span>
@@ -9751,8 +9751,8 @@ function renderClientDialogForm(client) {
 
       <div class="client-control-row">
         <div class="segmented-control" aria-label="Tipo de pessoa">
-          <button class="is-active" type="button" data-client-type="PF">Pessoa fÃ­sica</button>
-          <button type="button" data-client-type="PJ">Pessoa jurÃ­dica</button>
+          <button class="is-active" type="button" data-client-type="PF">Pessoa física</button>
+          <button type="button" data-client-type="PJ">Pessoa jurídica</button>
         </div>
 
         <label class="toggle-field" for="clientBilling">
@@ -9767,8 +9767,8 @@ function renderClientDialogForm(client) {
           <input id="clientName" name="clientName" type="text" placeholder="Nome do cliente" />
         </label>
         <label class="login-field client-pj-name" for="clientLegalName" hidden>
-          <span>RazÃ£o social</span>
-          <input id="clientLegalName" name="clientLegalName" type="text" placeholder="RazÃ£o social" disabled />
+          <span>Razão social</span>
+          <input id="clientLegalName" name="clientLegalName" type="text" placeholder="Razão social" disabled />
         </label>
         <label class="login-field client-cpf-field" for="clientCpf" hidden>
           <span>CPF</span>
@@ -9783,16 +9783,16 @@ function renderClientDialogForm(client) {
           <input id="clientPhone" name="clientPhone" type="tel" inputmode="tel" placeholder="(11) 99999-9999" maxlength="15" required />
         </label>
         <label class="login-field client-billing-field" for="clientAddress" hidden>
-          <span>EndereÃ§o</span>
-          <input id="clientAddress" name="clientAddress" type="text" placeholder="Rua, nÃºmero, bairro e cidade" disabled />
+          <span>Endereço</span>
+          <input id="clientAddress" name="clientAddress" type="text" placeholder="Rua, número, bairro e cidade" disabled />
         </label>
         <label class="login-field client-billing-field" for="clientEmail" hidden>
           <span>Email</span>
           <input id="clientEmail" name="clientEmail" type="email" placeholder="financeiro@cliente.com.br" disabled />
         </label>
         <label class="login-field client-billing-field" for="clientResponsible" hidden>
-          <span>Pessoa responsÃ¡vel</span>
-          <input id="clientResponsible" name="clientResponsible" type="text" placeholder="ResponsÃ¡vel pelo cadastro" disabled />
+          <span>Pessoa responsável</span>
+          <input id="clientResponsible" name="clientResponsible" type="text" placeholder="Responsável pelo cadastro" disabled />
         </label>
         <label class="switch-field client-billing-field" for="clientBillingApproved" hidden>
           <input id="clientBillingApproved" name="clientBillingApproved" type="checkbox" disabled />
@@ -9801,7 +9801,7 @@ function renderClientDialogForm(client) {
         </label>
         <div class="client-approval-static-field" id="clientApproverStatic" hidden>
           <span>Aprovador do faturamento</span>
-          <strong id="clientApproverName">Pendente de aprovaÃ§Ã£o</strong>
+          <strong id="clientApproverName">Pendente de aprovação</strong>
         </div>
         <label class="login-field client-approval-setting-field" for="clientBillingCycle" hidden>
           <span>Ciclo de faturamento</span>
@@ -9860,7 +9860,7 @@ function updateClientFormMode(container) {
   const approverName = getClientApprovalDisplayName();
   $$(".client-approval-setting-field", container).forEach((field) => setClientFieldState(container, field, isBillingApproved, isBillingApproved));
   setClientFieldState(container, ".client-approval-static-field", isBillingApproved, false);
-  $("#clientApproverName", container).textContent = isBillingApproved ? approverName : "Pendente de aprovaÃ§Ã£o";
+  $("#clientApproverName", container).textContent = isBillingApproved ? approverName : "Pendente de aprovação";
 }
 
 function setClientFieldState(container, target, isVisible, isRequired) {
@@ -9887,7 +9887,7 @@ function addClientPlate(container) {
   }
 
   if (pendingClientPlates.includes(plate)) {
-    showToast(`${plate} jÃ¡ foi adicionada a este cadastro.`);
+    showToast(`${plate} já foi adicionada a este cadastro.`);
     input.value = "";
     input.focus();
     return;
@@ -9895,7 +9895,7 @@ function addClientPlate(container) {
 
   const linkedClient = getClientLinkedToPlate(plate);
   if (linkedClient && linkedClient.id !== selectedClientId) {
-    showToast(`${plate} jÃ¡ estÃ¡ vinculada a ${getClientDisplayName(linkedClient)}.`);
+    showToast(`${plate} já está vinculada a ${getClientDisplayName(linkedClient)}.`);
     input.focus();
     return;
   }
@@ -9922,7 +9922,7 @@ function startClientVehicleRegistration(container, plate) {
   $("#vehiclePlate").value = plate;
   handleEntryPlateLookup(plate);
   $("#vehicleModel").focus();
-  showToast("Cadastre os dados do veÃ­culo para vincular a placa ao cliente.");
+  showToast("Cadastre os dados do veículo para vincular a placa ao cliente.");
 }
 
 function reopenClientDialogAfterVehicleRegistration(completedPlate = "") {
@@ -9993,7 +9993,7 @@ function populateClientForm(container, client) {
 async function editClientRegistration(container, clientId) {
   if (!canEditClientRegistrations()) {
     await showMessageBox({
-      title: "EdiÃ§Ã£o restrita",
+      title: "Edição restrita",
       message: "Somente administradores podem editar o cadastro de clientes.",
       confirmLabel: "Entendi"
     });
@@ -10025,7 +10025,7 @@ function saveClientRegistration(container) {
   });
   if (duplicatePlate) {
     const existingClient = findClientByPlate(duplicatePlate);
-    showToast(`${duplicatePlate} jÃ¡ estÃ¡ vinculada a ${getClientDisplayName(existingClient)}.`);
+    showToast(`${duplicatePlate} já está vinculada a ${getClientDisplayName(existingClient)}.`);
     return;
   }
 
@@ -10155,7 +10155,7 @@ function renderClientRows() {
           <td data-label="Documento">${escapeHtml(client.document || "-")}</td>
           <td data-label="Faturamento">${escapeHtml(getClientBillingLabel(client))}</td>
           <td data-label="Placas"><span class="table-plate-list">${plates}</span></td>
-          <td data-label="AÃ§Ãµes">
+          <td data-label="Ações">
             <span class="table-actions">
               <button type="button" data-edit-client="${client.id}">Editar</button>
               <button type="button" data-open-client-message-dialog="${client.id}">Mensagem</button>
@@ -10203,8 +10203,8 @@ function getClientDisplayName(client) {
 
 function getClientBillingLabel(client) {
   if (!client.billing) return "-";
-  if (!client.billingApproved) return "Pendente de aprovaÃ§Ã£o";
-  const multi = client.allowMultipleOpenInvoices ? "mÃºltiplas faturas" : "uma fatura aberta";
+  if (!client.billingApproved) return "Pendente de aprovação";
+  const multi = client.allowMultipleOpenInvoices ? "múltiplas faturas" : "uma fatura aberta";
   return `Aprovado por ${client.approver} / ${client.billingCycle} / ${multi}`;
 }
 
@@ -10296,7 +10296,7 @@ function transferPlateToClient(plate, nextClientId) {
       category: getVehicleCategoryValue($("#vehicleType")?.value || "Carro", $("#vehicleCategory")?.value || "Outro"),
       fuel: "Outro",
       currentClientId: nextClientId,
-      notes: "Criado automaticamente pela entrada no pÃ¡tio.",
+      notes: "Criado automaticamente pela entrada no pátio.",
       ownerHistory: [],
       serviceHistory: [],
       checklistHistory: []
@@ -10341,17 +10341,17 @@ function getCurrentEntryColor() {
 
 function renderVehiclesScreen(container) {
   container.innerHTML = `
-    <section class="screen-toolbar" aria-label="Filtros de veÃ­culos">
+    <section class="screen-toolbar" aria-label="Filtros de veículos">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.carFront}</span>
-        <input id="vehicleSearchInput" type="search" placeholder="Buscar placa, modelo ou proprietÃ¡rio" />
+        <input id="vehicleSearchInput" type="search" placeholder="Buscar placa, modelo ou proprietário" />
       </label>
       <div class="screen-filters" id="vehicleFilters">
         <button class="is-active" type="button" data-vehicle-filter="all">Todos</button>
         <button type="button" data-vehicle-filter="linked">Com cliente</button>
         <button type="button" data-vehicle-filter="unlinked">Sem cliente</button>
-        <button type="button" data-vehicle-filter="history">Com histÃ³rico</button>
-        <button type="button" data-vehicle-filter="patio">No pÃ¡tio</button>
+        <button type="button" data-vehicle-filter="history">Com histórico</button>
+        <button type="button" data-vehicle-filter="patio">No pátio</button>
       </div>
     </section>
 
@@ -10359,7 +10359,7 @@ function renderVehiclesScreen(container) {
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Base</p>
-          <h2>VeÃ­culos cadastrados</h2>
+          <h2>Veículos cadastrados</h2>
         </div>
         <span class="client-status-label">${vehicleRegistry.length} registro(s)</span>
       </div>
@@ -10368,11 +10368,11 @@ function renderVehiclesScreen(container) {
           <thead>
             <tr>
               <th>Placa</th>
-              <th>VeÃ­culo</th>
-              <th>ProprietÃ¡rio atual</th>
+              <th>Veículo</th>
+              <th>Proprietário atual</th>
               <th>Ano / Cor</th>
-              <th>HistÃ³rico</th>
-              <th>AÃ§Ãµes</th>
+              <th>Histórico</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody id="vehicleRegistryTableBody">
@@ -10421,7 +10421,7 @@ function persistVehicleRegistration(container) {
   const selectedVehicle = selectedVehicleId ? findVehicleById(selectedVehicleId) : null;
   const plate = selectedVehicle ? selectedVehicle.plate : formatPlate($("#vehicleRegistryPlate", container).value);
   if (!plate) {
-    showToast("Informe a placa do veÃ­culo.");
+    showToast("Informe a placa do veículo.");
     $("#vehicleRegistryPlate", container).focus();
     return null;
   }
@@ -10477,7 +10477,7 @@ function persistVehicleSpecialCareFromRegistry(container, vehicle) {
     return false;
   }
   if (!payload.description && !payload.restrictionTags.length && !payload.recommendedTags.length) {
-    showToast("Informe ao menos uma observaÃ§Ã£o ou restriÃ§Ã£o do cuidado especial.");
+    showToast("Informe ao menos uma observação ou restrição do cuidado especial.");
     return false;
   }
   if (selectedVehicleSpecialCareId) {
@@ -10551,7 +10551,7 @@ function renderVehicleRegistryRows() {
           <td>
             <span class="table-actions">
               <button type="button" data-edit-vehicle="${vehicle.id}">Editar</button>
-              <button type="button" data-history-vehicle="${vehicle.id}">HistÃ³rico</button>
+              <button type="button" data-history-vehicle="${vehicle.id}">Histórico</button>
             </span>
           </td>
         </tr>
@@ -10565,11 +10565,11 @@ function renderVehicleHistoryPanel(vehicle) {
     return `
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">HistÃ³rico</p>
-          <h2>Nenhum veÃ­culo</h2>
+          <p class="eyebrow">Histórico</p>
+          <h2>Nenhum veículo</h2>
         </div>
       </div>
-      <p class="empty-alert">Cadastre um veÃ­culo para iniciar o histÃ³rico.</p>
+      <p class="empty-alert">Cadastre um veículo para iniciar o histórico.</p>
     `;
   }
 
@@ -10588,7 +10588,7 @@ function renderVehicleHistoryPanel(vehicle) {
           `
         )
         .join("")
-    : '<p class="empty-alert">Nenhum serviÃ§o registrado para este veÃ­culo.</p>';
+    : '<p class="empty-alert">Nenhum serviço registrado para este veículo.</p>';
 
   const ownerItems = vehicle.ownerHistory.length
     ? vehicle.ownerHistory
@@ -10604,7 +10604,7 @@ function renderVehicleHistoryPanel(vehicle) {
           `
         )
         .join("")
-    : '<p class="empty-alert">Nenhuma troca de proprietÃ¡rio registrada.</p>';
+    : '<p class="empty-alert">Nenhuma troca de proprietário registrada.</p>';
 
   const checklistHistory = getVehicleChecklistHistory(vehicle);
   const checklistItems = checklistHistory.length
@@ -10622,22 +10622,22 @@ function renderVehicleHistoryPanel(vehicle) {
           `
         )
         .join("")
-    : '<p class="empty-alert">Nenhum check-list registrado para este veÃ­culo.</p>';
+    : '<p class="empty-alert">Nenhum check-list registrado para este veículo.</p>';
 
   return `
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">HistÃ³rico</p>
+        <p class="eyebrow">Histórico</p>
         <h2>${escapeHtml(vehicle.plate)}</h2>
       </div>
     </div>
     <div class="vehicle-file-summary">
-      <span>${escapeHtml([vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(" ") || vehicle.model || "VeÃ­culo")}</span>
+      <span>${escapeHtml([vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(" ") || vehicle.model || "Veículo")}</span>
       <strong>${escapeHtml(getVehicleOwnerName(vehicle))}</strong>
-      <p>${escapeHtml(vehicle.notes || "Sem observaÃ§Ãµes registradas.")}</p>
+      <p>${escapeHtml(vehicle.notes || "Sem observações registradas.")}</p>
     </div>
     <div class="history-section">
-      <h3>ServiÃ§os realizados</h3>
+      <h3>Serviços realizados</h3>
       ${serviceItems}
     </div>
     <div class="history-section">
@@ -10645,7 +10645,7 @@ function renderVehicleHistoryPanel(vehicle) {
       ${checklistItems}
     </div>
     <div class="history-section">
-      <h3>ProprietÃ¡rios</h3>
+      <h3>Proprietários</h3>
       ${ownerItems}
     </div>
   `;
@@ -10657,7 +10657,7 @@ function renderVehicleHistoryDialog(vehicle) {
       <div class="dialog-head">
         <div>
           <p class="eyebrow">Cadastro</p>
-          <h2>HistÃ³rico do veÃ­culo</h2>
+          <h2>Histórico do veículo</h2>
         </div>
         <button class="icon-button" id="closeVehicleHistoryDialog" type="button" aria-label="Fechar">
           <span data-icon="x"></span>
@@ -10688,7 +10688,7 @@ function generateChecklistPdf(vehicleId, checklistId) {
   const checklistHistory = getVehicleChecklistHistory(vehicle);
   const checklist = checklistHistory.find((item) => item.id === checklistId) || checklistHistory[0];
   if (!vehicle || !checklist) {
-    showToast("Check-list nÃ£o localizado no histÃ³rico do veÃ­culo.");
+    showToast("Check-list não localizado no histórico do veículo.");
     return;
   }
 
@@ -10722,7 +10722,7 @@ function getChecklistPdfLines(vehicle, checklist) {
     activeCareRecords.forEach((record) => {
       lines.push(`${record.type} - ${record.attentionLevel}`);
       if (record.restrictionTags?.length) {
-        lines.push(`RestriÃ§Ãµes: ${record.restrictionTags.map(getVehicleSpecialCareRestrictionLabel).join(", ")}`);
+        lines.push(`Restrições: ${record.restrictionTags.map(getVehicleSpecialCareRestrictionLabel).join(", ")}`);
       }
       if (record.source) lines.push(`Origem: ${record.source}`);
       if (record.description) lines.push(record.description);
@@ -10837,7 +10837,7 @@ function syncVehicleFromPatioEntry(vehicleEntry) {
       category: getVehicleCategoryValue(vehicleEntry.type || "Carro", vehicleEntry.category || "Outro"),
       fuel: "Outro",
       currentClientId: linkedClient?.id || null,
-      notes: "Criado automaticamente pela entrada no pÃ¡tio.",
+      notes: "Criado automaticamente pela entrada no pátio.",
       ownerHistory: [],
       serviceHistory: [],
       checklistHistory: []
@@ -10930,7 +10930,7 @@ function syncPlateOwnership(plate, nextClientId) {
 }
 
 function recordVehicleOwnerChange(vehicle, previousClientId, nextClientId) {
-  const previousOwner = previousClientId ? getClientDisplayNameById(previousClientId) : "Sem proprietÃ¡rio anterior";
+  const previousOwner = previousClientId ? getClientDisplayNameById(previousClientId) : "Sem proprietário anterior";
   const nextOwner = nextClientId ? getClientDisplayNameById(nextClientId) : "Sem cliente vinculado";
   const note = nextClientId ? `Transferido de ${previousOwner}` : `Desvinculado de ${previousOwner}`;
 
@@ -10976,7 +10976,7 @@ function getVehicleActiveSpecialCareRecords(vehicle) {
 
 function getVehicleSpecialCareSummary(vehicle) {
   const activeRecords = getVehicleActiveSpecialCareRecords(vehicle);
-  const highestPriority = { "Alto risco": 3, "AtenÃ§Ã£o": 2, Informativo: 1 };
+  const highestPriority = { "Alto risco": 3, "Atenção": 2, Informativo: 1 };
   const highestLevel =
     activeRecords
       .slice()
@@ -10999,7 +10999,7 @@ function hasVehicleSpecialCare(vehicle) {
 
 function getVehicleSpecialCareLevelClass(level) {
   if (level === "Alto risco") return "is-high";
-  if (level === "AtenÃ§Ã£o") return "is-attention";
+  if (level === "Atenção") return "is-attention";
   return "is-info";
 }
 
@@ -11111,7 +11111,7 @@ function getSpecialCareTypeLabel(value) {
 
 function getCareConflictSeverityLevel(records = [], hasUnknownTechnicalClassification = false) {
   if (records.some((record) => record.attentionLevel === "Alto risco")) return "high";
-  if (records.some((record) => record.attentionLevel === "AtenÃ§Ã£o")) return "attention";
+  if (records.some((record) => record.attentionLevel === "Atenção")) return "attention";
   return hasUnknownTechnicalClassification ? "attention" : "info";
 }
 
@@ -11189,7 +11189,7 @@ function checkVehicleServiceCareConflictsForVehicle(vehicle, serviceIds = [], ex
           messages.push({
             careType: record.type,
             restrictionTag,
-            message: `O serviÃ§o ${service.name} pode exigir cuidado com a restriÃ§Ã£o "${getVehicleSpecialCareRestrictionLabel(restrictionTag)}".`
+            message: `O serviço ${service.name} pode exigir cuidado com a restrição "${getVehicleSpecialCareRestrictionLabel(restrictionTag)}".`
           });
         }
       });
@@ -11273,18 +11273,18 @@ function hasVehicleCareWarningAcknowledged(vehicle, conflictResult) {
 
 function getVehicleCareWarningTitle(conflictResult, context) {
   if (conflictResult.highestLevel === "high") return "Alerta de cuidado especial";
-  if (context === "attendance_save") return "RevisÃ£o antes de salvar";
-  if (context === "start_service") return "Confirmar inÃ­cio do serviÃ§o";
-  return "Cuidado especial do veÃ­culo";
+  if (context === "attendance_save") return "Revisão antes de salvar";
+  if (context === "start_service") return "Confirmar início do serviço";
+  return "Cuidado especial do veículo";
 }
 
 function getVehicleCareWarningMessage(conflictResult, context) {
   const types = [...new Set((conflictResult.vehicleCareRecords || []).map((record) => record.type))];
-  const typeText = types.length ? `Este veÃ­culo possui ${types.join(", ")}.` : "Este veÃ­culo possui cuidados especiais cadastrados.";
+  const typeText = types.length ? `Este veículo possui ${types.join(", ")}.` : "Este veículo possui cuidados especiais cadastrados.";
   if (conflictResult.hasConflicts) {
-    return `${typeText} O serviÃ§o selecionado pode usar produtos ou mÃ©todos com restriÃ§Ã£o. Confira antes de executar${context === "attendance_save" ? " e confirme somente se estiver tudo certo" : ""}.`;
+    return `${typeText} O serviço selecionado pode usar produtos ou métodos com restrição. Confira antes de executar${context === "attendance_save" ? " e confirme somente se estiver tudo certo" : ""}.`;
   }
-  return `${typeText} HÃ¡ insumos sem classificaÃ§Ã£o tÃ©cnica completa neste serviÃ§o. FaÃ§a a conferÃªncia antes de seguir.`;
+  return `${typeText} Há insumos sem classificação técnica completa neste serviço. Faça a conferência antes de seguir.`;
 }
 
 async function showVehicleCareWarning(conflictResult, context) {
@@ -11315,7 +11315,7 @@ async function showVehicleCareWarning(conflictResult, context) {
   return showMessageBox({
     title: getVehicleCareWarningTitle(conflictResult, context),
     message: `${getVehicleCareWarningMessage(conflictResult, context)}${extraDetail}`,
-    eyebrow: "SeguranÃ§a operacional",
+    eyebrow: "Segurança operacional",
     confirmLabel: "Entendi e vou conferir",
     cancelLabel: context === "attendance_save" ? "Revisar atendimento" : "Voltar",
     confirmOnly: false
@@ -11341,7 +11341,7 @@ function registerVehicleCareWarningAcknowledgement(vehicle, conflictResult, cont
   vehicle.specialCareWarningSignature = conflictResult.signature;
   appendAttendanceHistory(
     vehicle,
-    `O operador confirmou ciÃªncia sobre cuidados especiais do veÃ­culo (${context}).`,
+    `O operador confirmou ciência sobre cuidados especiais do veículo (${context}).`,
     "vehicle_special_care_warning_acknowledged"
   );
 }
@@ -11352,7 +11352,7 @@ async function ensureVehicleCareWarningAcknowledged(vehicle, conflictResult, con
   if (hasVehicleCareWarningAcknowledged(vehicle, conflictResult)) return true;
   appendAttendanceHistory(
     vehicle,
-    `Sistema exibiu alerta tÃ©cnico de cuidados especiais (${context}).`,
+    `Sistema exibiu alerta técnico de cuidados especiais (${context}).`,
     "vehicle_special_care_warning_shown"
   );
   const confirmed = await showVehicleCareWarning(conflictResult, context);
@@ -11375,10 +11375,10 @@ async function maybeSuggestVehicleCareFromCompletedServices(vehicle) {
   if (!suggestedService || !registryVehicle) return;
   const confirmed = await showMessageBox({
     title: "Registrar cuidado especial?",
-    message: `${suggestedService.name} foi concluÃ­do. Deseja registrar ${suggestedService.autoCreateVehicleCareType} para alertas futuros deste veÃ­culo?`,
-    eyebrow: "PÃ³s-serviÃ§o",
+    message: `${suggestedService.name} foi concluído. Deseja registrar ${suggestedService.autoCreateVehicleCareType} para alertas futuros deste veículo?`,
+    eyebrow: "Pós-serviço",
     confirmLabel: "Registrar",
-    cancelLabel: "Agora nÃ£o",
+    cancelLabel: "Agora não",
     confirmOnly: false
   });
   if (!confirmed) return;
@@ -11386,19 +11386,19 @@ async function maybeSuggestVehicleCareFromCompletedServices(vehicle) {
     registryVehicle,
     {
       type: suggestedService.autoCreateVehicleCareType,
-      attentionLevel: "AtenÃ§Ã£o",
-      source: "ServiÃ§o realizado neste lava jato",
-      description: `Registrado apÃ³s a conclusÃ£o de ${suggestedService.name}.`
+      attentionLevel: "Atenção",
+      source: "Serviço realizado neste lava jato",
+      description: `Registrado após a conclusão de ${suggestedService.name}.`
     },
     {
       attendanceId: vehicle.id,
       sourceAttendanceId: vehicle.id,
       sourceServiceId: suggestedService.name,
-      historyDescription: `Cuidado especial sugerido apÃ³s a conclusÃ£o de ${suggestedService.name}.`
+      historyDescription: `Cuidado especial sugerido após a conclusão de ${suggestedService.name}.`
     }
   );
   if (!record) return;
-  appendAttendanceHistory(vehicle, `Cuidado especial criado apÃ³s ${suggestedService.name}.`, "vehicle_special_care_created");
+  appendAttendanceHistory(vehicle, `Cuidado especial criado após ${suggestedService.name}.`, "vehicle_special_care_created");
   renderPatio();
   renderAdminDashboard();
   showToast(`${record.type} registrado para ${vehicle.plate}.`);
@@ -11414,7 +11414,7 @@ function getClientById(id) {
 
 function getClientDisplayNameById(id) {
   const client = getClientById(id);
-  return client ? getClientDisplayName(client) : "Cliente nÃ£o localizado";
+  return client ? getClientDisplayName(client) : "Cliente não localizado";
 }
 
 function getNextVehicleId() {
@@ -11447,7 +11447,7 @@ function renderOperatorRows() {
           <td>${escapeHtml(operator.username)}<br /><small>Senha: ${escapeHtml(operator.password)}</small></td>
           <td>${escapeHtml(operator.phone)}</td>
           <td>${escapeHtml(formatCommissionRule(operator))}</td>
-          <td>${totals.services} serviÃ§o(s)<br /><small>${formatCurrency(totals.revenue)}</small></td>
+          <td>${totals.services} serviço(s)<br /><small>${formatCurrency(totals.revenue)}</small></td>
           <td>${escapeHtml(operator.status)}</td>
           <td>
             <span class="table-actions">
@@ -11465,7 +11465,7 @@ function renderOperatorHistoryPanel(operator) {
     return `
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">HistÃ³rico</p>
+          <p class="eyebrow">Histórico</p>
           <h2>Acessos</h2>
         </div>
       </div>
@@ -11477,14 +11477,14 @@ function renderOperatorHistoryPanel(operator) {
   return `
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">HistÃ³rico de acessos</p>
+        <p class="eyebrow">Histórico de acessos</p>
         <h2>${escapeHtml(operator.name)}</h2>
       </div>
     </div>
     <div class="operator-summary">
       <span>${escapeHtml(operator.accessProfile)}</span>
       <strong>${formatCurrency(getOperatorCommission(operator))}</strong>
-      <p>${totals.services} serviÃ§o(s) / ${formatCurrency(totals.revenue)} em produÃ§Ã£o registrada</p>
+      <p>${totals.services} serviço(s) / ${formatCurrency(totals.revenue)} em produção registrada</p>
     </div>
     <div class="history-section">
       ${operator.accessHistory
@@ -11557,7 +11557,7 @@ function expandOperatorAggregateProduction(operator, entry) {
     normalizeOperatorProductionRow(operator, {
       id: `${operator.id}-${entry.date}-aggregate-${index}`,
       date: entry.date,
-      service: "ProduÃ§Ã£o registrada",
+      service: "Produção registrada",
       duration: "A definir",
       value: averageValue
     })
@@ -11587,7 +11587,7 @@ function getCashEntryOperatorProductionRows(operator) {
 
 function extractServiceNameFromProductionEntry(description) {
   const text = String(description || "").trim();
-  if (!text) return "ServiÃ§o registrado";
+  if (!text) return "Serviço registrado";
   const parts = text.split(" - ").map((part) => part.trim()).filter(Boolean);
   return parts.length > 1 ? parts.slice(1).join(" - ") : text;
 }
@@ -11599,7 +11599,7 @@ function normalizeOperatorProductionRow(operator, row) {
     id: row.id || `${operator.id}-${row.date}-${row.service}`,
     sourceId: row.sourceId || row.id || "",
     date: row.date || getTodayISO(),
-    service: row.service || "ServiÃ§o registrado",
+    service: row.service || "Serviço registrado",
     duration: row.duration || getProductionServiceDuration(row.service),
     value,
     commission,
@@ -11672,16 +11672,16 @@ function getOperatorsCommissionTotal() {
 
 function formatCommissionRule(operator) {
   return operator.commissionType === "percent"
-    ? `${operator.commissionValue}% por serviÃ§o`
-    : `${formatCurrency(operator.commissionValue)} por serviÃ§o`;
+    ? `${operator.commissionValue}% por serviço`
+    : `${formatCurrency(operator.commissionValue)} por serviço`;
 }
 
 function getCommissionTypeLabel(value) {
-  return value === "percent" ? "Percentual por serviÃ§o" : "Valor fixo por serviÃ§o";
+  return value === "percent" ? "Percentual por serviço" : "Valor fixo por serviço";
 }
 
 function getCommissionTypeValue(label) {
-  return label === "Percentual por serviÃ§o" ? "percent" : "fixed";
+  return label === "Percentual por serviço" ? "percent" : "fixed";
 }
 
 function findOperatorById(id) {
@@ -11713,7 +11713,7 @@ function saveOperatorRegistration(container) {
   const status = $("#operatorStatus", container).value;
 
   if (!name || !cpf || !phone || !username || !password || Number.isNaN(commissionValue)) {
-    showToast("Preencha nome, CPF, telefone, login, senha e comissÃ£o.");
+    showToast("Preencha nome, CPF, telefone, login, senha e comissão.");
     return;
   }
 
@@ -11721,7 +11721,7 @@ function saveOperatorRegistration(container) {
     (operator) => operator.id !== selectedOperatorId && normalizeText(operator.username) === normalizeText(username)
   );
   if (duplicateLogin) {
-    showToast("Login jÃ¡ utilizado por outro operador.");
+    showToast("Login já utilizado por outro operador.");
     return;
   }
 
@@ -11778,89 +11778,89 @@ function emitOperatorReport(type) {
   const selectedId = Number($("#operatorReportSelect")?.value || selectedReportOperatorId);
   const operator = findOperatorById(selectedId) || adminOperators[0];
   if (!operator) {
-    showToast("Selecione um operador para emitir relatÃ³rio.");
+    showToast("Selecione um operador para emitir relatório.");
     return;
   }
 
   const reportMap = {
-    production: "RelatÃ³rio de produÃ§Ã£o",
-    commission: "RelatÃ³rio de comissÃ£o",
-    attendance: "RelatÃ³rio de frequÃªncia"
+    production: "Relatório de produção",
+    commission: "Relatório de comissão",
+    attendance: "Relatório de frequência"
   };
 
   if (type === "production") {
     const fileName = `producao-${createReportFileSlug(operator.name)}-${getTodayISO()}.pdf`;
-    downloadPdfFile(fileName, "RELATÃ“RIO DE PRODUÃ‡ÃƒO", [], {
+    downloadPdfFile(fileName, "RELATORIO DE PRODUCAO", [], {
       reportLayout: "operatorProduction",
       operator,
       subtitle: "",
       documentNumber: `PROD-${String(operator.id).padStart(3, "0")}-${getTodayISO().replace(/-/g, "")}`,
-      category: "RelatÃ³rio",
+      category: "Relatório",
       responsible: activeSessionUser || "Sistema LavaPrime",
-      summary: `ProduÃ§Ã£o individual de ${operator.name}, com valores lÃ­quidos descontando comissÃ£o.`
+      summary: `Produção individual de ${operator.name}, com valores líquidos descontando comissão.`
     });
-    showToast("RelatÃ³rio de produÃ§Ã£o emitido.");
+    showToast("Relatório de produção emitido.");
     return;
   }
 
   if (type === "commission") {
     const fileName = `comissao-${createReportFileSlug(operator.name)}-${getTodayISO()}.pdf`;
-    downloadPdfFile(fileName, "RELATÃ“RIO DE COMISSÃƒO", [], {
+    downloadPdfFile(fileName, "RELATORIO DE COMISSAO", [], {
       reportLayout: "operatorCommission",
       operator,
       subtitle: "",
       documentNumber: `COM-${String(operator.id).padStart(3, "0")}-${getTodayISO().replace(/-/g, "")}`,
-      category: "RelatÃ³rio",
+      category: "Relatório",
       responsible: activeSessionUser || "Sistema LavaPrime",
-      summary: `ComissÃµes de ${operator.name} por serviÃ§os executados.`
+      summary: `Comissões de ${operator.name} por serviços executados.`
     });
-    showToast("RelatÃ³rio de comissÃ£o emitido.");
+    showToast("Relatório de comissão emitido.");
     return;
   }
 
   const totals = getOperatorProductionTotals(operator);
   const lines = [
     "LavaPrime",
-    reportMap[type] || "RelatÃ³rio de operador",
+    reportMap[type] || "Relatório de operador",
     `Operador: ${operator.name}`,
     `CPF: ${operator.cpf}`,
     `Perfil: ${operator.accessProfile}`,
     `Login: ${operator.username}`,
     `Emitido em: ${new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}`,
     "",
-    `ServiÃ§os registrados: ${totals.services}`,
-    `ProduÃ§Ã£o total: ${formatCurrency(totals.revenue)}`,
-    `Regra de comissÃ£o: ${formatCommissionRule(operator)}`,
-    `ComissÃ£o prevista: ${formatCurrency(getOperatorCommission(operator))}`,
+    `Serviços registrados: ${totals.services}`,
+    `Produção total: ${formatCurrency(totals.revenue)}`,
+    `Regra de comissão: ${formatCommissionRule(operator)}`,
+    `Comissão prevista: ${formatCurrency(getOperatorCommission(operator))}`,
     "",
-    "ProduÃ§Ã£o e frequÃªncia:",
+    "Produção e frequência:",
     ...operator.production.map(
       (item) =>
-        `${formatDateBR(item.date)} - ${item.services} serviÃ§o(s) - ${formatCurrency(item.revenue)} - ${item.attendance}`
+        `${formatDateBR(item.date)} - ${item.services} serviço(s) - ${formatCurrency(item.revenue)} - ${item.attendance}`
     ),
     "",
-    "HistÃ³rico de acessos:",
+    "Histórico de acessos:",
     ...operator.accessHistory.map(
-      (item) => `${formatDateBR(item.date)} - ${item.login} Ã s ${item.logout} - ${item.device} - ${item.result}`
+      (item) => `${formatDateBR(item.date)} - ${item.login} às ${item.logout} - ${item.device} - ${item.result}`
     )
   ];
 
-  downloadPdfFile(`${type}-${operator.name.replace(/\s+/g, "-").toLowerCase()}.pdf`, reportMap[type] || "RelatÃ³rio de operador", lines.slice(2), {
+  downloadPdfFile(`${type}-${operator.name.replace(/\s+/g, "-").toLowerCase()}.pdf`, reportMap[type] || "Relatório de operador", lines.slice(2), {
     subtitle: `Operador: ${operator.name}`,
-    category: "RelatÃ³rio",
-    summary: `RelatÃ³rio administrativo de ${operator.name}.`
+    category: "Relatório",
+    summary: `Relatório administrativo de ${operator.name}.`
   });
   showToast(`${reportMap[type]} emitido.`);
 }
 
 function renderServicesScreen(container) {
   container.innerHTML = `
-    <section class="screen-metrics service-metrics" aria-label="Resumo de serviÃ§os">
+    <section class="screen-metrics service-metrics" aria-label="Resumo de serviços">
       ${[
-        { label: "ServiÃ§os ativos", value: serviceCatalog.length, icon: "service" },
-        { label: "Tipos de veÃ­culo", value: vehicleTypes.length, icon: "carFront" },
+        { label: "Serviços ativos", value: serviceCatalog.length, icon: "service" },
+        { label: "Tipos de veículo", value: vehicleTypes.length, icon: "carFront" },
         { label: "Categorias", value: vehicleCategories.length, icon: "dashboard" },
-        { label: "Fichas tÃ©cnicas", value: `${getServiceTechnicalCoverageCount()}/${serviceCatalog.length}`, icon: "clipboard" }
+        { label: "Fichas técnicas", value: `${getServiceTechnicalCoverageCount()}/${serviceCatalog.length}`, icon: "clipboard" }
       ]
         .map(renderScreenMetric)
         .join("")}
@@ -11870,21 +11870,21 @@ function renderServicesScreen(container) {
       <article class="admin-panel screen-table-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">ServiÃ§os</p>
-            <h2>ServiÃ§os contratÃ¡veis</h2>
+            <p class="eyebrow">Serviços</p>
+            <h2>Serviços contratáveis</h2>
           </div>
         </div>
         <div class="admin-table-wrap">
           <table class="admin-table service-table">
             <thead>
               <tr>
-                <th>ServiÃ§o</th>
-                <th>Tipo de veÃ­culo</th>
-                <th>Categoria de veÃ­culo</th>
+                <th>Serviço</th>
+                <th>Tipo de veículo</th>
+                <th>Categoria de veículo</th>
                 <th>Tempo</th>
-                <th>PreÃ§o</th>
+                <th>Preço</th>
                 <th>Status</th>
-                <th>AÃ§Ãµes</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -11897,15 +11897,15 @@ function renderServicesScreen(container) {
       <article class="admin-panel service-list-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">VeÃ­culos</p>
+            <p class="eyebrow">Veículos</p>
             <h2>Tipos e categorias</h2>
           </div>
         </div>
 
         <div class="registry-list-block">
           <label class="login-field" for="newVehicleTypeName">
-            <span>Tipo de veÃ­culo</span>
-            <input id="newVehicleTypeName" type="text" placeholder="Ex.: CaminhÃ£o" />
+            <span>Tipo de veículo</span>
+            <input id="newVehicleTypeName" type="text" placeholder="Ex.: Caminhão" />
           </label>
           <button class="ghost-action" id="addVehicleTypeButton" type="button">
             <span data-icon="plus"></span>
@@ -11918,7 +11918,7 @@ function renderServicesScreen(container) {
 
         <div class="registry-list-block">
           <label class="login-field" for="newVehicleCategoryName">
-            <span>Categoria de veÃ­culo</span>
+            <span>Categoria de veículo</span>
             <input id="newVehicleCategoryName" type="text" placeholder="Ex.: Premium" />
           </label>
           <button class="ghost-action" id="addVehicleCategoryButton" type="button">
@@ -11943,7 +11943,7 @@ function bindServicesScreenControls(container) {
   });
 
   $("#addVehicleTypeButton", container).addEventListener("click", () => {
-    addVehicleRegistryOption(container, "#newVehicleTypeName", vehicleTypes, "Tipo de veÃ­culo cadastrado.");
+    addVehicleRegistryOption(container, "#newVehicleTypeName", vehicleTypes, "Tipo de veículo cadastrado.");
   });
 
   $("#addVehicleCategoryButton", container).addEventListener("click", () => {
@@ -11962,13 +11962,13 @@ function renderServiceRows() {
     .map(
       (service, index) => `
         <tr>
-          <td data-label="ServiÃ§o"><strong>${escapeHtml(service.name)}</strong></td>
-          <td data-label="Tipo de veÃ­culo">${escapeHtml(service.vehicleType)}</td>
+          <td data-label="Serviço"><strong>${escapeHtml(service.name)}</strong></td>
+          <td data-label="Tipo de veículo">${escapeHtml(service.vehicleType)}</td>
           <td data-label="Categoria">${escapeHtml(shouldUseVehicleCategory(service.vehicleType) ? service.vehicleCategory : "-")}</td>
           <td data-label="Tempo">${escapeHtml(service.duration)}</td>
-          <td data-label="PreÃ§o">${formatCurrency(service.price)}</td>
+          <td data-label="Preço">${formatCurrency(service.price)}</td>
           <td data-label="Status">${escapeHtml(service.status)}</td>
-          <td data-label="AÃ§Ãµes">
+          <td data-label="Ações">
             <span class="table-actions">
               <button type="button" data-edit-service="${index}">Editar</button>
             </span>
@@ -12006,8 +12006,8 @@ function renderServiceDialogForm(service) {
     <form class="vehicle-box service-box" id="serviceForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">${service ? "EdiÃ§Ã£o" : "Cadastro"}</p>
-          <h2 id="serviceDialogTitle">${service ? escapeHtml(service.name) : "Novo serviÃ§o"}</h2>
+          <p class="eyebrow">${service ? "Edição" : "Cadastro"}</p>
+          <h2 id="serviceDialogTitle">${service ? escapeHtml(service.name) : "Novo serviço"}</h2>
         </div>
         <button class="icon-button" id="closeServiceDialog" type="button" aria-label="Fechar">
           <span data-icon="x"></span>
@@ -12016,17 +12016,17 @@ function renderServiceDialogForm(service) {
 
       <div class="vehicle-form-grid service-dialog-grid">
         <label class="login-field" for="serviceName">
-          <span>Nome do serviÃ§o</span>
+          <span>Nome do serviço</span>
           <input id="serviceName" type="text" placeholder="Ex.: Lavagem Prime" value="${escapeHtml(service?.name || "")}" required />
         </label>
         <label class="login-field" for="serviceVehicleType">
-          <span>Tipo de veÃ­culo</span>
+          <span>Tipo de veículo</span>
           <select id="serviceVehicleType" required>
             ${renderRegistrySelectOptions(vehicleTypes, service?.vehicleType || vehicleTypes[0] || "")}
           </select>
         </label>
         <label class="login-field" for="serviceVehicleCategory">
-          <span>Categoria de veÃ­culo</span>
+          <span>Categoria de veículo</span>
           <select id="serviceVehicleCategory" required>
             ${renderRegistrySelectOptions(vehicleCategories, service?.vehicleCategory || vehicleCategories[0] || "")}
           </select>
@@ -12050,7 +12050,7 @@ function renderServiceDialogForm(service) {
       <section class="vehicle-special-care-section service-technical-section">
         <div class="vehicle-special-care-head">
           <div>
-            <p class="eyebrow">ComposiÃ§Ã£o do serviÃ§o</p>
+            <p class="eyebrow">Composição do serviço</p>
             <h3>Insumos e custo aproximado</h3>
           </div>
           <span class="client-status-label" id="serviceSupplyEstimatedCost">${formatCurrency(calculateServiceSupplyEntriesCost(getServiceSupplyProfile(service || {})))}</span>
@@ -12070,7 +12070,7 @@ function renderServiceDialogForm(service) {
         <label class="switch-field" for="serviceMaintenanceRequired">
           <input id="serviceMaintenanceRequired" type="checkbox" ${service?.maintenanceRequired ? "checked" : ""} />
           <span class="switch-control"></span>
-          <span>Requer ManutenÃ§Ã£o</span>
+          <span>Requer Manutenção</span>
         </label>
         <div class="vehicle-form-grid service-dialog-grid inventory-form-grid" id="serviceMaintenanceFields" ${service?.maintenanceRequired ? "" : "hidden"}>
           <label class="login-field" for="serviceMaintenanceInterval">
@@ -12081,7 +12081,7 @@ function renderServiceDialogForm(service) {
                 { value: "bimonthly", label: "Bimestral" },
                 { value: "semiannual", label: "Semestral" },
                 { value: "annual", label: "Anual" },
-                { value: "custom", label: "Escolher no calendÃ¡rio" }
+                { value: "custom", label: "Escolher no calendário" }
               ], service?.maintenanceInterval || "monthly")}
             </select>
           </label>
@@ -12096,7 +12096,7 @@ function renderServiceDialogForm(service) {
         <button class="exit-button" id="cancelServiceDialog" type="button">Cancelar</button>
         <button class="primary-button" type="submit">
           <span data-icon="check"></span>
-          <span>${service ? "Atualizar serviÃ§o" : "Salvar serviÃ§o"}</span>
+          <span>${service ? "Atualizar serviço" : "Salvar serviço"}</span>
         </button>
       </div>
     </form>
@@ -12167,7 +12167,7 @@ function saveServiceRegistration(container) {
   const maintenanceDate = maintenanceInterval === "custom" ? $("#serviceMaintenanceDate", container)?.value || "" : "";
 
   if (!name || !vehicleType || (shouldUseVehicleCategory(vehicleType) && !vehicleCategory) || !price) {
-    showToast(shouldUseVehicleCategory(vehicleType) ? "Informe nome, tipo, categoria e valor do serviÃ§o." : "Informe nome, tipo e valor do serviÃ§o.");
+    showToast(shouldUseVehicleCategory(vehicleType) ? "Informe nome, tipo, categoria e valor do serviço." : "Informe nome, tipo e valor do serviço.");
     return;
   }
 
@@ -12175,12 +12175,12 @@ function saveServiceRegistration(container) {
     (service, index) => index !== selectedServiceIndex && normalizeText(service.name) === normalizeText(name)
   );
   if (duplicateService) {
-    showToast("ServiÃ§o jÃ¡ cadastrado.");
+    showToast("Serviço já cadastrado.");
     return;
   }
 
   if (maintenanceRequired && maintenanceInterval === "custom" && !maintenanceDate) {
-    showToast("Escolha a data do lembrete de manutenÃ§Ã£o.");
+    showToast("Escolha a data do lembrete de manutenção.");
     $("#serviceMaintenanceDate", container)?.focus();
     return;
   }
@@ -12223,7 +12223,7 @@ function saveServiceRegistration(container) {
   renderSuppliesScreen($("#adminSuppliesContent"));
   renderVehicleEntryOptions();
   renderPatio();
-  showToast(previousService ? "ServiÃ§o atualizado." : "ServiÃ§o cadastrado.");
+  showToast(previousService ? "Serviço atualizado." : "Serviço cadastrado.");
 }
 
 function updateServiceCategoryState(container) {
@@ -12330,7 +12330,7 @@ function addVehicleRegistryOption(container, selector, list, successMessage) {
     return;
   }
   if (list.some((item) => normalizeText(item) === normalizeText(value))) {
-    showToast("Item jÃ¡ cadastrado.");
+    showToast("Item já cadastrado.");
     return;
   }
   list.push(value);
@@ -12342,7 +12342,7 @@ function addVehicleRegistryOption(container, selector, list, successMessage) {
 
 async function deleteVehicleRegistryOption(container, kind, value) {
   const list = kind === "type" ? vehicleTypes : vehicleCategories;
-  const label = kind === "type" ? "tipo de veÃ­culo" : "categoria de veÃ­culo";
+  const label = kind === "type" ? "tipo de veículo" : "categoria de veículo";
   const index = list.findIndex((item) => item === value);
   if (index < 0) return;
 
@@ -12355,7 +12355,7 @@ async function deleteVehicleRegistryOption(container, kind, value) {
   if (usage.services || usage.vehicles) {
     await showMessageBox({
       title: "Item em uso",
-      message: `NÃ£o Ã© possÃ­vel excluir este ${label}, pois ele estÃ¡ vinculado a ${usage.services} serviÃ§o(s) e ${usage.vehicles} veÃ­culo(s). Edite esses cadastros antes de excluir.`,
+      message: `Não é possível excluir este ${label}, pois ele está vinculado a ${usage.services} serviço(s) e ${usage.vehicles} veículo(s). Edite esses cadastros antes de excluir.`,
       confirmLabel: "Entendi"
     });
     return;
@@ -12463,7 +12463,7 @@ function renderServiceEntryScreen(container) {
       ${[
         { label: "Na fila hoje", value: queue.length, icon: "carFront" },
         { label: "Agendados", value: countByStatus("agendado"), icon: "hourglass" },
-        { label: "OrÃ§amentos pendentes", value: pendingQuotes.length, icon: "invoice" },
+        { label: "Orçamentos pendentes", value: pendingQuotes.length, icon: "invoice" },
         { label: "Receita prevista", value: formatCurrency(queue.reduce((total, vehicle) => total + getVehiclePaymentTotal(vehicle), 0)), icon: "wallet" }
       ]
         .map(renderScreenMetric)
@@ -12481,15 +12481,15 @@ function renderServiceEntryScreen(container) {
         <div class="quick-action-grid">
           <button class="primary-button" type="button" data-service-entry-action="new-entry">
             <span data-icon="plus"></span>
-            <span>Novo veÃ­culo no pÃ¡tio</span>
+            <span>Novo veículo no pátio</span>
           </button>
           <button class="ghost-action" type="button" data-service-entry-action="quotes">
             <span data-icon="invoice"></span>
-            <span>Ver orÃ§amentos</span>
+            <span>Ver orçamentos</span>
           </button>
           <button class="ghost-action" type="button" data-service-entry-action="patio">
             <span data-icon="dashboard"></span>
-            <span>Acompanhar o pÃ¡tio</span>
+            <span>Acompanhar o pátio</span>
           </button>
         </div>
         <div class="screen-side-list compact-top">
@@ -12501,7 +12501,7 @@ function renderServiceEntryScreen(container) {
                     <article class="screen-side-item">
                       <span>${escapeHtml(getStatusGroupLabel(vehicle.status))}</span>
                       <strong>${escapeHtml(vehicle.plate)} - ${escapeHtml(vehicle.service)}</strong>
-                      <p>${escapeHtml(vehicle.owner)} Â· ${formatCurrency(getVehiclePaymentTotal(vehicle))}</p>
+                      <p>${escapeHtml(vehicle.owner)} · ${formatCurrency(getVehiclePaymentTotal(vehicle))}</p>
                     </article>
                   `
                 )
@@ -12513,25 +12513,25 @@ function renderServiceEntryScreen(container) {
       <article class="admin-panel screen-side-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">OperaÃ§Ã£o</p>
-            <h2>Base rÃ¡pida do turno</h2>
+            <p class="eyebrow">Operação</p>
+            <h2>Base rápida do turno</h2>
           </div>
         </div>
         <div class="screen-side-list">
           <article class="screen-side-item">
             <span>Pagamentos ativos</span>
-            <strong>${escapeHtml(quickPayments.slice(0, 3).join(", ") || "Sem mÃ©todos ativos")}</strong>
-            <p>As formas disponÃ­veis vÃªm das ConfiguraÃ§Ãµes Financeiras.</p>
+            <strong>${escapeHtml(quickPayments.slice(0, 3).join(", ") || "Sem métodos ativos")}</strong>
+            <p>As formas disponíveis vêm das Configurações Financeiras.</p>
           </article>
           <article class="screen-side-item">
-            <span>ServiÃ§os com ficha tÃ©cnica</span>
+            <span>Serviços com ficha técnica</span>
             <strong>${getServiceTechnicalCoverageCount()} de ${serviceCatalog.length}</strong>
-            <p>${getServicesWithoutSupplyProfile().length ? "Ainda hÃ¡ serviÃ§os sem composiÃ§Ã£o de insumos." : "Todos os serviÃ§os jÃ¡ tÃªm composiÃ§Ã£o configurada."}</p>
+            <p>${getServicesWithoutSupplyProfile().length ? "Ainda há serviços sem composição de insumos." : "Todos os serviços já têm composição configurada."}</p>
           </article>
           <article class="screen-side-item">
-            <span>Estoque sob atenÃ§Ã£o</span>
+            <span>Estoque sob atenção</span>
             <strong>${getLowStockProducts().length + getLowStockSupplies().length} alerta(s)</strong>
-            <p>Produtos e insumos com estoque mÃ­nimo entram no radar da operaÃ§Ã£o.</p>
+            <p>Produtos e insumos com estoque mínimo entram no radar da operação.</p>
           </article>
         </div>
       </article>
@@ -12558,7 +12558,7 @@ function renderProductsScreen(container) {
       ${[
         { label: "Produtos ativos", value: productCatalog.filter((item) => item.active !== false).length, icon: "package" },
         { label: "Baixo estoque", value: lowStock.length, icon: "alert" },
-        { label: "Margem mÃ©dia", value: averageMargin, icon: "wallet" },
+        { label: "Margem média", value: averageMargin, icon: "wallet" },
         { label: "Valor em estoque", value: formatCurrency(productCatalog.reduce((total, item) => total + Number(item.stock || 0) * Number(item.cost || 0), 0)), icon: "clipboard" }
       ]
         .map(renderScreenMetric)
@@ -12567,7 +12567,7 @@ function renderProductsScreen(container) {
     <section class="screen-toolbar inventory-toolbar" aria-label="Filtros dos produtos">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.package}</span>
-        <input id="productSearchInput" type="search" placeholder="Buscar produto, SKU ou observaÃ§Ã£o" />
+        <input id="productSearchInput" type="search" placeholder="Buscar produto, SKU ou observação" />
       </label>
       <div class="screen-filters" id="productFilters">
         ${["Todos", "Ativos", "Baixo estoque", "Inativos"]
@@ -12600,7 +12600,7 @@ function renderProductsScreen(container) {
                 <th>Venda</th>
                 <th>Margem</th>
                 <th>Status</th>
-                <th>AÃ§Ãµes</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -12608,14 +12608,14 @@ function renderProductsScreen(container) {
                 .map(
                   (product) => `
                     <tr data-product-row data-product-filter-value="${product.active !== false ? (isLowStockItem(product) ? "Baixo estoque" : "Ativos") : "Inativos"}">
-                      <td data-label="Produto"><strong>${escapeHtml(product.name)}</strong><small class="table-note">${escapeHtml(product.notes || "Produto de balcÃ£o.")}</small></td>
+                      <td data-label="Produto"><strong>${escapeHtml(product.name)}</strong><small class="table-note">${escapeHtml(product.notes || "Produto de balcão.")}</small></td>
                       <td data-label="SKU">${escapeHtml(product.sku)}</td>
                       <td data-label="Estoque">${formatInventoryQuantity(product.stock, product.unit)}</td>
                       <td data-label="Custo">${formatCurrency(product.cost)}</td>
                       <td data-label="Venda">${formatCurrency(product.price)}</td>
                       <td data-label="Margem">${getProductMarginPercent(product).toFixed(1).replace(".", ",")}%</td>
                       <td data-label="Status"><span class="inventory-pill ${product.active !== false ? "is-active" : "is-inactive"}">${product.active !== false ? "Ativo" : "Inativo"}</span></td>
-                      <td data-label="AÃ§Ãµes">
+                      <td data-label="Ações">
                         <div class="cashflow-row-actions">
                           <button class="ghost-action" type="button" data-edit-product="${product.id}">Editar</button>
                           <button class="ghost-action" type="button" data-adjust-product="${product.id}">Estoque</button>
@@ -12632,7 +12632,7 @@ function renderProductsScreen(container) {
       <article class="admin-panel screen-side-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">AtenÃ§Ã£o</p>
+            <p class="eyebrow">Atenção</p>
             <h2>Produtos em foco</h2>
           </div>
         </div>
@@ -12645,12 +12645,12 @@ function renderProductsScreen(container) {
                       <article class="screen-side-item">
                         <span>Baixo estoque</span>
                         <strong>${escapeHtml(item.name)}</strong>
-                        <p>${formatInventoryQuantity(item.stock, item.unit)} em estoque Â· mÃ­nimo ${formatInventoryQuantity(item.minStock, item.unit)}</p>
+                        <p>${formatInventoryQuantity(item.stock, item.unit)} em estoque · mínimo ${formatInventoryQuantity(item.minStock, item.unit)}</p>
                       </article>
                     `
                   )
                   .join("")
-              : '<p class="empty-alert">Todos os produtos estÃ£o acima do estoque mÃ­nimo.</p>'
+              : '<p class="empty-alert">Todos os produtos estão acima do estoque mínimo.</p>'
           }
         </div>
       </article>
@@ -12668,7 +12668,7 @@ function renderSuppliesScreen(container) {
         { label: "Insumos ativos", value: supplyCatalog.filter((item) => item.active !== false).length, icon: "flask" },
         { label: "Baixo estoque", value: lowStock.length, icon: "alert" },
         { label: "Custo imobilizado", value: formatCurrency(supplyCatalog.reduce((total, item) => total + Number(item.stock || 0) * Number(item.cost || 0), 0)), icon: "wallet" },
-        { label: "ServiÃ§os com ficha", value: getServiceTechnicalCoverageCount(), icon: "service" }
+        { label: "Serviços com ficha", value: getServiceTechnicalCoverageCount(), icon: "service" }
       ]
         .map(renderScreenMetric)
         .join("")}
@@ -12708,7 +12708,7 @@ function renderSuppliesScreen(container) {
                 <th>Custo</th>
                 <th>Fornecedor</th>
                 <th>Status</th>
-                <th>AÃ§Ãµes</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -12716,13 +12716,13 @@ function renderSuppliesScreen(container) {
                 .map(
                   (item) => `
                     <tr data-supply-row data-supply-filter-value="${item.active !== false ? (isLowStockItem(item) ? "Baixo estoque" : "Ativos") : "Inativos"}">
-                      <td data-label="Insumo"><strong>${escapeHtml(item.name)}</strong><small class="table-note">${escapeHtml(item.notes || "Consumo interno da operaÃ§Ã£o.")}</small></td>
+                      <td data-label="Insumo"><strong>${escapeHtml(item.name)}</strong><small class="table-note">${escapeHtml(item.notes || "Consumo interno da operação.")}</small></td>
                       <td data-label="SKU">${escapeHtml(item.sku)}</td>
                       <td data-label="Estoque">${formatInventoryQuantity(item.stock, item.unit)}</td>
                       <td data-label="Custo">${formatCurrency(item.cost)}</td>
                       <td data-label="Fornecedor">${escapeHtml(item.supplier || "-")}</td>
                       <td data-label="Status"><span class="inventory-pill ${item.active !== false ? "is-active" : "is-inactive"}">${item.active !== false ? "Ativo" : "Inativo"}</span></td>
-                      <td data-label="AÃ§Ãµes">
+                      <td data-label="Ações">
                         <div class="cashflow-row-actions">
                           <button class="ghost-action" type="button" data-edit-supply="${item.id}">Editar</button>
                           <button class="ghost-action" type="button" data-adjust-supply="${item.id}">Estoque</button>
@@ -12745,7 +12745,7 @@ function renderSuppliesScreen(container) {
 function renderInventoryScreen(container) {
   const combinedItems = getCombinedInventoryItems();
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo do inventÃ¡rio">
+    <section class="screen-metrics" aria-label="Resumo do inventário">
       ${[
         { label: "Itens monitorados", value: combinedItems.length, icon: "clipboard" },
         { label: "Produtos em alerta", value: getLowStockProducts().length, icon: "package" },
@@ -12755,7 +12755,7 @@ function renderInventoryScreen(container) {
         .map(renderScreenMetric)
         .join("")}
     </section>
-    <section class="screen-toolbar inventory-toolbar" aria-label="Filtros do inventÃ¡rio">
+    <section class="screen-toolbar inventory-toolbar" aria-label="Filtros do inventário">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.clipboard}</span>
         <input id="inventorySearchInput" type="search" placeholder="Buscar item, SKU ou motivo de ajuste" />
@@ -12770,8 +12770,8 @@ function renderInventoryScreen(container) {
       <article class="admin-panel screen-table-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">InventÃ¡rio</p>
-            <h2>PosiÃ§Ã£o atual dos estoques</h2>
+            <p class="eyebrow">Inventário</p>
+            <h2>Posição atual dos estoques</h2>
           </div>
         </div>
         <div class="admin-table-wrap">
@@ -12781,10 +12781,10 @@ function renderInventoryScreen(container) {
                 <th>Item</th>
                 <th>Tipo</th>
                 <th>Estoque</th>
-                <th>MÃ­nimo</th>
+                <th>Mínimo</th>
                 <th>Custo</th>
                 <th>Status</th>
-                <th>AÃ§Ãµes</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -12795,10 +12795,10 @@ function renderInventoryScreen(container) {
                       <td data-label="Item"><strong>${escapeHtml(item.name)}</strong><small class="table-note">${escapeHtml(item.sku)}</small></td>
                       <td data-label="Tipo">${escapeHtml(item.kindLabel)}</td>
                       <td data-label="Estoque">${formatInventoryQuantity(item.stock, item.unit)}</td>
-                      <td data-label="MÃ­nimo">${formatInventoryQuantity(item.minStock, item.unit)}</td>
+                      <td data-label="Mínimo">${formatInventoryQuantity(item.minStock, item.unit)}</td>
                       <td data-label="Custo">${formatCurrency(item.cost)}</td>
-                      <td data-label="Status"><span class="inventory-pill ${isLowStockItem(item) ? "is-warning" : "is-active"}">${isLowStockItem(item) ? "AtenÃ§Ã£o" : "SaudÃ¡vel"}</span></td>
-                      <td data-label="AÃ§Ãµes">
+                      <td data-label="Status"><span class="inventory-pill ${isLowStockItem(item) ? "is-warning" : "is-active"}">${isLowStockItem(item) ? "Atenção" : "Saudável"}</span></td>
+                      <td data-label="Ações">
                         <div class="cashflow-row-actions">
                           <button class="ghost-action" type="button" data-adjust-inventory-kind="${item.kind}" data-adjust-inventory-id="${item.id}">Ajustar</button>
                         </div>
@@ -12814,8 +12814,8 @@ function renderInventoryScreen(container) {
       <article class="admin-panel screen-side-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">HistÃ³rico</p>
-            <h2>Ãšltimos movimentos</h2>
+            <p class="eyebrow">Histórico</p>
+            <h2>Ultimos movimentos</h2>
           </div>
         </div>
         <div class="screen-side-list">
@@ -12828,7 +12828,7 @@ function renderInventoryScreen(container) {
                       <article class="screen-side-item">
                         <span>${escapeHtml(getInventoryMovementLabel(movement.type))}</span>
                         <strong>${escapeHtml(movement.itemName)}</strong>
-                        <p>${escapeHtml(movement.createdAt)} Â· ${formatInventoryQuantity(movement.quantity, movement.unit)} Â· saldo ${formatInventoryQuantity(movement.currentStock, movement.unit)}</p>
+                        <p>${escapeHtml(movement.createdAt)} · ${formatInventoryQuantity(movement.quantity, movement.unit)} · saldo ${formatInventoryQuantity(movement.currentStock, movement.unit)}</p>
                       </article>
                     `
                   )
@@ -12851,7 +12851,7 @@ function renderProductSalesScreen(container) {
         { label: "Vendas registradas", value: productSales.length, icon: "package" },
         { label: "Itens vendidos", value: getProductSalesItemsTotal(), icon: "clipboard" },
         { label: "Faturamento", value: formatCurrency(getProductSalesRevenueTotal()), icon: "wallet" },
-        { label: "MÃ©todos ativos", value: getActivePaymentMethodNames("productSale").length, icon: "card" }
+        { label: "Métodos ativos", value: getActivePaymentMethodNames("productSale").length, icon: "card" }
       ]
         .map(renderScreenMetric)
         .join("")}
@@ -12869,7 +12869,7 @@ function renderProductSalesScreen(container) {
       <div class="toolbar-actions">
         <button class="ghost-action" type="button" id="repeatLastProductSaleButton" ${productSales.length ? "" : "disabled"}>
           <span data-icon="plus"></span>
-          <span>Replicar Ãºltima venda</span>
+          <span>Replicar última venda</span>
         </button>
       </div>
     </section>
@@ -12877,8 +12877,8 @@ function renderProductSalesScreen(container) {
       <article class="admin-panel screen-table-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">OperaÃ§Ã£o</p>
-            <h2>Vendas concluÃ­das</h2>
+            <p class="eyebrow">Operação</p>
+            <h2>Vendas concluídas</h2>
           </div>
         </div>
         <div class="admin-table-wrap">
@@ -12891,7 +12891,7 @@ function renderProductSalesScreen(container) {
                 <th>Total</th>
                 <th>Pagamento</th>
                 <th>Documento</th>
-                <th>AÃ§Ãµes</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -12901,13 +12901,13 @@ function renderProductSalesScreen(container) {
                       .map(
                         (sale) => `
                           <tr data-product-sale-row data-product-sale-filter-value="${sale.date === getTodayISO() ? "Hoje" : sale.plate ? "Com placa" : "Sem placa"}" data-product-sale-has-plate="${sale.plate ? "true" : "false"}">
-                            <td data-label="Venda"><strong>${escapeHtml(sale.code)}</strong><small class="table-note">${escapeHtml(formatDateBR(sale.date))} Â· ${escapeHtml(sale.time)}</small></td>
+                            <td data-label="Venda"><strong>${escapeHtml(sale.code)}</strong><small class="table-note">${escapeHtml(formatDateBR(sale.date))} · ${escapeHtml(sale.time)}</small></td>
                             <td data-label="Cliente">${escapeHtml(sale.clientName)}${sale.plate ? `<small class="table-note">${escapeHtml(sale.plate)}</small>` : ""}</td>
                             <td data-label="Itens">${sale.items.length} item(ns)</td>
                             <td data-label="Total">${formatCurrency(sale.total)}</td>
                             <td data-label="Pagamento">${escapeHtml(sale.paymentMethod)}</td>
                             <td data-label="Documento">${escapeHtml(sale.documentType)}</td>
-                            <td data-label="AÃ§Ãµes">
+                            <td data-label="Ações">
                               <div class="cashflow-row-actions">
                                 <button class="ghost-action" type="button" data-product-sale-receipt="${sale.id}">Comprovante</button>
                               </div>
@@ -12938,12 +12938,12 @@ function renderProductSalesScreen(container) {
                       <article class="screen-side-item">
                         <span>Produto</span>
                         <strong>${escapeHtml(item.name)}</strong>
-                        <p>${item.quantity} unidade(s) jÃ¡ registradas em vendas.</p>
+                        <p>${item.quantity} unidade(s) já registradas em vendas.</p>
                       </article>
                     `
                   )
                   .join("")
-              : '<p class="empty-alert">As vendas aparecerÃ£o aqui assim que forem registradas.</p>'
+              : '<p class="empty-alert">As vendas aparecerão aqui assim que forem registradas.</p>'
           }
         </div>
       </article>
@@ -12961,7 +12961,7 @@ function renderDocumentsScreen(container) {
       ${[
         { label: "Documentos gerados", value: documentHistory.length, icon: "clipboard" },
         { label: "Recibos", value: receiptsCount, icon: "invoice" },
-        { label: "RelatÃ³rios", value: reportsCount, icon: "dashboard" },
+        { label: "Relatórios", value: reportsCount, icon: "dashboard" },
         { label: "Hoje", value: documentHistory.filter((item) => normalizeText(item.createdAt).includes(normalizeText(formatDateBR(getTodayISO())))).length, icon: "clock" }
       ]
         .map(renderScreenMetric)
@@ -12970,10 +12970,10 @@ function renderDocumentsScreen(container) {
     <section class="screen-toolbar inventory-toolbar" aria-label="Filtros dos documentos">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.clipboard}</span>
-        <input id="documentHistorySearchInput" type="search" placeholder="Buscar nÃºmero, tÃ­tulo ou responsÃ¡vel" />
+        <input id="documentHistorySearchInput" type="search" placeholder="Buscar número, título ou responsável" />
       </label>
       <div class="screen-filters" id="documentHistoryFilters">
-        ${["Todos", "Recibo", "RelatÃ³rio", "Documento"]
+        ${["Todos", "Recibo", "Relatório", "Documento"]
           .map((filter, index) => `<button class="${index === 0 ? "is-active" : ""}" type="button" data-document-filter="${escapeHtml(filter)}">${escapeHtml(filter)}</button>`)
           .join("")}
       </div>
@@ -12982,7 +12982,7 @@ function renderDocumentsScreen(container) {
       <article class="admin-panel screen-table-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">HistÃ³rico</p>
+            <p class="eyebrow">Histórico</p>
             <h2>Recibos e documentos emitidos</h2>
           </div>
         </div>
@@ -12991,10 +12991,10 @@ function renderDocumentsScreen(container) {
             <thead>
               <tr>
                 <th>Data</th>
-                <th>TÃ­tulo</th>
-                <th>NÃºmero</th>
+                <th>Título</th>
+                <th>Número</th>
                 <th>Categoria</th>
-                <th>ResponsÃ¡vel</th>
+                <th>Responsável</th>
                 <th>Arquivo</th>
               </tr>
             </thead>
@@ -13004,18 +13004,18 @@ function renderDocumentsScreen(container) {
                   ? documentHistory
                       .map(
                         (item) => `
-                          <tr data-document-row data-document-filter-value="${escapeHtml(normalizeText(item.category).includes("recibo") ? "Recibo" : normalizeText(item.category).includes("relatorio") ? "RelatÃ³rio" : "Documento")}">
+                          <tr data-document-row data-document-filter-value="${escapeHtml(normalizeText(item.category).includes("recibo") ? "Recibo" : normalizeText(item.category).includes("relatorio") ? "Relatório" : "Documento")}">
                             <td data-label="Data">${escapeHtml(item.createdAt)}</td>
-                            <td data-label="TÃ­tulo"><strong>${escapeHtml(item.title)}</strong><small class="table-note">${escapeHtml(item.summary || item.subtitle || "Documento gerado pelo LavaPrime.")}</small></td>
-                            <td data-label="NÃºmero">${escapeHtml(item.documentNumber || "-")}</td>
+                            <td data-label="Título"><strong>${escapeHtml(item.title)}</strong><small class="table-note">${escapeHtml(item.summary || item.subtitle || "Documento gerado pelo LavaPrime.")}</small></td>
+                            <td data-label="Número">${escapeHtml(item.documentNumber || "-")}</td>
                             <td data-label="Categoria">${escapeHtml(item.category)}</td>
-                            <td data-label="ResponsÃ¡vel">${escapeHtml(item.responsible)}</td>
+                            <td data-label="Responsável">${escapeHtml(item.responsible)}</td>
                             <td data-label="Arquivo">${escapeHtml(item.fileName)}</td>
                           </tr>
                         `
                       )
                       .join("")
-                  : '<tr><td colspan="6"><p class="empty-alert">Os documentos emitidos passarÃ£o a aparecer aqui.</p></td></tr>'
+                  : '<tr><td colspan="6"><p class="empty-alert">Os documentos emitidos passarão a aparecer aqui.</p></td></tr>'
               }
             </tbody>
           </table>
@@ -13024,20 +13024,20 @@ function renderDocumentsScreen(container) {
       <article class="admin-panel screen-side-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">ObservaÃ§Ã£o</p>
-            <h2>PadrÃ£o documental</h2>
+            <p class="eyebrow">Observação</p>
+            <h2>Padrão documental</h2>
           </div>
         </div>
         <div class="screen-side-list">
           <article class="screen-side-item">
             <span>Papel timbrado</span>
             <strong>Ativo em toda a rotina PDF</strong>
-            <p>Recibos, relatÃ³rios e comprovantes continuam saindo pelo mesmo gerador central do LavaPrime.</p>
+            <p>Recibos, relatórios e comprovantes continuam saindo pelo mesmo gerador central do LavaPrime.</p>
           </article>
           <article class="screen-side-item">
             <span>Financeiro</span>
-            <strong>Pix e contas bancÃ¡rias</strong>
-            <p>Quando o documento Ã© compatÃ­vel com cobranÃ§a, os dados de pagamento definidos em ConfiguraÃ§Ãµes Financeiras continuam disponÃ­veis.</p>
+            <strong>Pix e contas bancárias</strong>
+            <p>Quando o documento é compatível com cobrança, os dados de pagamento definidos em Configurações Financeiras continuam disponíveis.</p>
           </article>
         </div>
       </article>
@@ -13173,7 +13173,7 @@ function bindDocumentsScreenControls(container) {
 
 function openInventoryDialog(options = {}) {
   if (options.mode === "adjustment" && options.kind === "supply" && !businessFinanceSettings.inventory.allowManualSupplyAdjustment) {
-    showToast("Os ajustes manuais de insumos estÃ£o desativados nas ConfiguraÃ§Ãµes Financeiras.");
+    showToast("Os ajustes manuais de insumos estão desativados nas Configurações Financeiras.");
     return;
   }
   inventoryDialogState = { ...options };
@@ -13211,9 +13211,9 @@ function renderInventoryItemDialog(kind, item = null) {
   const title = isProduct ? (item ? "Editar produto" : "Novo produto") : item ? "Editar insumo" : "Novo insumo";
   const eyebrow = isProduct ? "Produtos para venda" : "Insumos internos";
   const compatibilityOptions = [
-    { value: "unknown", label: "NÃ£o informado" },
+    { value: "unknown", label: "Não informado" },
     { value: "true", label: "Sim" },
-    { value: "false", label: "NÃ£o" }
+    { value: "false", label: "Não" }
   ];
   return `
     <form class="vehicle-box service-box" id="inventoryItemForm" novalidate>
@@ -13246,18 +13246,18 @@ function renderInventoryItemDialog(kind, item = null) {
           <input id="inventoryItemStock" type="number" min="0" step="0.01" value="${escapeHtml(String(item?.stock ?? 0))}" required />
         </label>
         <label class="login-field" for="inventoryItemMinStock">
-          <span>Estoque mÃ­nimo</span>
+          <span>Estoque mínimo</span>
           <input id="inventoryItemMinStock" type="number" min="0" step="0.01" value="${escapeHtml(String(item?.minStock ?? 0))}" />
         </label>
         <label class="login-field" for="inventoryItemCost">
-          <span>${isProduct ? "Custo unitÃ¡rio" : "Custo mÃ©dio"}</span>
+          <span>${isProduct ? "Custo unitário" : "Custo médio"}</span>
           <input id="inventoryItemCost" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(formatCurrencyFieldValue(item?.cost || 0))}" required />
         </label>
         ${
           isProduct
             ? `
               <label class="login-field" for="inventoryItemPrice">
-                <span>PreÃ§o de venda</span>
+                <span>Preço de venda</span>
                 <input id="inventoryItemPrice" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(formatCurrencyFieldValue(item?.price || 0))}" required />
               </label>
             `
@@ -13269,7 +13269,7 @@ function renderInventoryItemDialog(kind, item = null) {
             `
         }
         <label class="login-field inventory-notes-field" for="inventoryItemNotes">
-          <span>ObservaÃ§Ãµes</span>
+          <span>Observações</span>
           <textarea id="inventoryItemNotes" rows="3">${escapeHtml(item?.notes || "")}</textarea>
         </label>
         <label class="switch-field" for="inventoryItemActive">
@@ -13285,7 +13285,7 @@ function renderInventoryItemDialog(kind, item = null) {
             <section class="vehicle-special-care-section service-technical-section">
               <div class="vehicle-special-care-head">
                 <div>
-                  <p class="eyebrow">ClassificaÃ§Ã£o tÃ©cnica</p>
+                  <p class="eyebrow">Classificação técnica</p>
                   <h3>Tags de risco</h3>
                 </div>
                 <span class="client-status-label">Opcional</span>
@@ -13304,7 +13304,7 @@ function renderInventoryItemDialog(kind, item = null) {
         <button class="exit-button" id="cancelInventoryDialog" type="button">Cancelar</button>
         <button class="primary-button" type="submit">
           <span data-icon="check"></span>
-          <span>${item ? "Salvar alteraÃ§Ãµes" : "Cadastrar item"}</span>
+          <span>${item ? "Salvar alterações" : "Cadastrar item"}</span>
         </button>
       </div>
     </form>
@@ -13316,19 +13316,19 @@ function renderInventoryAdjustmentDialog(kind, item) {
     <form class="vehicle-box service-box" id="inventoryAdjustmentForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">InventÃ¡rio</p>
+          <p class="eyebrow">Inventário</p>
           <h2>Ajuste de estoque</h2>
         </div>
         <button class="icon-button" id="closeInventoryDialog" type="button" aria-label="Fechar">
           <span data-icon="x"></span>
         </button>
       </div>
-      <p class="step-copy">${item ? `${item.name} Â· saldo atual ${formatInventoryQuantity(item.stock, item.unit)}` : "Selecione um item vÃ¡lido para ajustar o estoque."}</p>
+      <p class="step-copy">${item ? `${item.name} · saldo atual ${formatInventoryQuantity(item.stock, item.unit)}` : "Selecione um item válido para ajustar o estoque."}</p>
       <div class="vehicle-form-grid service-dialog-grid inventory-form-grid">
         <label class="login-field" for="inventoryAdjustmentType">
           <span>Tipo de movimento</span>
           <select id="inventoryAdjustmentType">
-            ${renderSelectOptions(["ReposiÃ§Ã£o", "Ajuste de entrada", "Ajuste de saÃ­da"], "ReposiÃ§Ã£o")}
+            ${renderSelectOptions(["Reposição", "Ajuste de entrada", "Ajuste de saída"], "Reposição")}
           </select>
         </label>
         <label class="login-field" for="inventoryAdjustmentQuantity">
@@ -13337,7 +13337,7 @@ function renderInventoryAdjustmentDialog(kind, item) {
         </label>
         <label class="login-field inventory-notes-field" for="inventoryAdjustmentReason">
           <span>Motivo</span>
-          <textarea id="inventoryAdjustmentReason" rows="3" placeholder="Ex.: conferÃªncia fÃ­sica, reposiÃ§Ã£o do fornecedor, perda operacional"></textarea>
+          <textarea id="inventoryAdjustmentReason" rows="3" placeholder="Ex.: conferência física, reposição do fornecedor, perda operacional"></textarea>
         </label>
       </div>
       <div class="dialog-actions">
@@ -13385,7 +13385,7 @@ function renderProductSaleDialog(baseSale = null) {
         <label class="login-field" for="productSaleDocumentType">
           <span>Documento</span>
           <select id="productSaleDocumentType">
-            ${renderSelectOptions(["Recibo", "Pedido", "Comprovante simples", "OrÃ§amento"], baseSale?.documentType || businessFinanceSettings.documents.defaultProductDocumentType || "Recibo")}
+            ${renderSelectOptions(["Recibo", "Pedido", "Comprovante simples", "Orçamento"], baseSale?.documentType || businessFinanceSettings.documents.defaultProductDocumentType || "Recibo")}
           </select>
         </label>
       </div>
@@ -13400,7 +13400,7 @@ function renderProductSaleDialog(baseSale = null) {
         <div id="productSaleLines">${defaultLines.map((line, index) => renderProductSaleLine(line, index)).join("")}</div>
       </div>
       <label class="login-field inventory-notes-field" for="productSaleNotes">
-        <span>ObservaÃ§Ãµes</span>
+        <span>Observações</span>
         <textarea id="productSaleNotes" rows="3">${escapeHtml(baseSale?.notes || "")}</textarea>
       </label>
       <article class="cash-change-card partial-balance-card sale-total-card">
@@ -13428,7 +13428,7 @@ function renderProductSaleLine(line, index) {
         <select id="productSaleProduct${index}" data-product-sale-product>
           ${renderRegistrySelectOptions(activeProducts.map((item) => String(item.id)), String(line.productId || fallbackId), { labelGetter: (value) => {
             const product = getProductById(Number(value));
-            return product ? `${product.name} Â· ${formatCurrency(product.price)}` : value;
+            return product ? `${product.name} · ${formatCurrency(product.price)}` : value;
           } })}
         </select>
       </label>
@@ -13452,17 +13452,17 @@ function renderServiceSuppliesDialog(serviceIndex) {
     <form class="vehicle-box service-box" id="serviceSuppliesForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">Ficha tÃ©cnica</p>
+          <p class="eyebrow">Ficha técnica</p>
           <h2>${service ? escapeHtml(service.name) : "Configurar insumos"}</h2>
         </div>
         <button class="icon-button" id="closeInventoryDialog" type="button" aria-label="Fechar">
           <span data-icon="x"></span>
         </button>
       </div>
-      <p class="step-copy">${service ? `Defina a mÃ©dia de consumo usada ao concluir ${service.name}.` : "Selecione um serviÃ§o vÃ¡lido."}</p>
+      <p class="step-copy">${service ? `Defina a média de consumo usada ao concluir ${service.name}.` : "Selecione um serviço válido."}</p>
       <div class="sale-lines-block">
         <div class="sale-lines-head">
-          <h3>ComposiÃ§Ã£o do serviÃ§o</h3>
+          <h3>Composição do serviço</h3>
           <button class="ghost-action compact" id="addServiceSupplyLineButton" type="button" ${activeSupplies.length ? "" : "disabled"}>
             <span data-icon="plus"></span>
             <span>Adicionar insumo</span>
@@ -13476,7 +13476,7 @@ function renderServiceSuppliesDialog(serviceIndex) {
         <button class="exit-button" id="cancelInventoryDialog" type="button">Cancelar</button>
         <button class="primary-button" type="submit" ${service ? "" : "disabled"}>
           <span data-icon="check"></span>
-          <span>Salvar composiÃ§Ã£o</span>
+          <span>Salvar composição</span>
         </button>
       </div>
     </form>
@@ -13517,7 +13517,7 @@ function renderServiceSupplyLinesForServiceDialog(service) {
   const fallbackEntries = entries.length ? entries : [{ supplyId: activeSupplies[0]?.id || "", quantity: 1 }];
   return activeSupplies.length
     ? fallbackEntries.map((entry, index) => renderServiceSupplyLine(entry, index)).join("")
-    : '<p class="empty-plates">Cadastre insumos de uso interno para compor o serviÃ§o.</p>';
+    : '<p class="empty-plates">Cadastre insumos de uso interno para compor o serviço.</p>';
 }
 
 function readServiceSupplyEntriesFromDialog(container) {
@@ -13667,17 +13667,17 @@ function saveInventoryItemForm(dialog) {
     return;
   }
   if (stock < 0 || minStock < 0 || cost < 0) {
-    showToast("Estoque, estoque mÃ­nimo e custo nÃ£o podem ser negativos.");
+    showToast("Estoque, estoque mínimo e custo não podem ser negativos.");
     return;
   }
   if (list.some((item) => Number(item.id) !== Number(existingItem?.id || 0) && normalizeText(item.sku) === normalizeText(sku))) {
-    showToast("JÃ¡ existe um item com esse SKU.");
+    showToast("Já existe um item com esse SKU.");
     return;
   }
   if (isProduct) {
     const price = getCurrencyInputValue("#inventoryItemPrice", dialog);
     if (price < 0) {
-      showToast("O preÃ§o de venda nÃ£o pode ser negativo.");
+      showToast("O preço de venda não pode ser negativo.");
       return;
     }
     const nextProduct = { ...basePayload, price };
@@ -13739,14 +13739,14 @@ function saveInventoryAdjustment(dialog) {
   const kind = inventoryDialogState?.kind || "product";
   const item = kind === "product" ? getProductById(inventoryDialogState?.id) : getSupplyById(inventoryDialogState?.id);
   if (!item) {
-    showToast("Item de estoque nÃ£o localizado.");
+    showToast("Item de estoque não localizado.");
     return;
   }
   const movementType = $("#inventoryAdjustmentType", dialog).value;
   const rawQuantity = Number($("#inventoryAdjustmentQuantity", dialog).value || 0);
   const reason = $("#inventoryAdjustmentReason", dialog).value.trim();
   if (rawQuantity <= 0) {
-    showToast("Informe uma quantidade vÃ¡lida.");
+    showToast("Informe uma quantidade válida.");
     return;
   }
   if (kind === "supply" && businessFinanceSettings.inventory.requireSupplyAdjustmentReason && !reason) {
@@ -13754,10 +13754,10 @@ function saveInventoryAdjustment(dialog) {
     $("#inventoryAdjustmentReason", dialog)?.focus();
     return;
   }
-  const delta = movementType === "Ajuste de saÃ­da" ? -rawQuantity : rawQuantity;
+  const delta = movementType === "Ajuste de saída" ? -rawQuantity : rawQuantity;
   const nextStock = Number(item.stock || 0) + delta;
   if (nextStock < 0 && !(kind === "supply" && businessFinanceSettings.inventory.allowSupplyNegativeStock) && !(kind === "product" && businessFinanceSettings.inventory.allowProductSaleWithoutStock)) {
-    showToast("O ajuste deixaria o estoque negativo e essa regra estÃ¡ bloqueada.");
+    showToast("O ajuste deixaria o estoque negativo e essa regra está bloqueada.");
     return;
   }
   const previousStock = Number(item.stock || 0);
@@ -13769,7 +13769,7 @@ function saveInventoryAdjustment(dialog) {
     kind,
     itemId: item.id,
     itemName: item.name,
-    type: movementType === "ReposiÃ§Ã£o" ? "restock" : "adjustment",
+    type: movementType === "Reposição" ? "restock" : "adjustment",
     quantity: delta,
     previousStock,
     currentStock: nextStock,
@@ -13847,7 +13847,7 @@ function saveProductSale(dialog) {
     })
     .filter((item) => item && item.quantity > 0);
   if (!saleItems.length) {
-    showToast("Selecione itens vÃ¡lidos para a venda.");
+    showToast("Selecione itens válidos para a venda.");
     return;
   }
   const invalidStock = saleItems.find(
@@ -13914,7 +13914,7 @@ function saveProductSale(dialog) {
 function saveServiceSupplies(dialog) {
   const service = serviceCatalog[inventoryDialogState?.serviceIndex];
   if (!service) {
-    showToast("ServiÃ§o nÃ£o localizado.");
+    showToast("Serviço não localizado.");
     return;
   }
   const entries = $$("[data-service-supply-row]", dialog)
@@ -13933,7 +13933,7 @@ function saveServiceSupplies(dialog) {
   renderServicesScreen($("#adminServicesContent"));
   renderSuppliesScreen($("#adminSuppliesContent"));
   renderPatio();
-  showToast("Ficha tÃ©cnica do serviÃ§o atualizada.");
+  showToast("Ficha técnica do serviço atualizada.");
 }
 
 function generateProductSaleReceiptPdf(saleId) {
@@ -13943,13 +13943,13 @@ function generateProductSaleReceiptPdf(saleId) {
     `Venda: ${sale.code}`,
     `Cliente: ${sale.clientName}`,
     sale.plate ? `Placa: ${sale.plate}` : "",
-    `Data: ${formatDateBR(sale.date)} Ã s ${sale.time}`,
+    `Data: ${formatDateBR(sale.date)} às ${sale.time}`,
     `Pagamento: ${sale.paymentMethod}`,
     "",
     ...sale.items.map((item) => `${item.name} - ${item.quantity} x ${formatCurrency(item.unitPrice)} = ${formatCurrency(item.lineTotal)}`),
     "",
     `Total: ${formatCurrency(sale.total)}`,
-    sale.notes ? `ObservaÃ§Ãµes: ${sale.notes}` : ""
+    sale.notes ? `Observações: ${sale.notes}` : ""
   ].filter(Boolean);
   downloadPdfFile(`${sale.code.toLowerCase()}.pdf`, "COMPROVANTE DE VENDA", lines, {
     subtitle: `Venda ${sale.code}`,
@@ -13989,8 +13989,8 @@ function getClientsScreenContent() {
     sideTitle: "Atalhos",
     sideItems: [
       { title: "Clientes com faturamento", value: billingClients.length, detail: "Cadastro usado na entrada faturada" },
-      { title: "Contato principal", value: "Telefone", detail: "Base para confirmaÃ§Ã£o e cobranÃ§a" },
-      { title: "HistÃ³rico", value: "PrÃ³ximo", detail: "LigaÃ§Ã£o futura com serviÃ§os por cliente" }
+      { title: "Contato principal", value: "Telefone", detail: "Base para confirmação e cobrança" },
+      { title: "Histórico", value: "Próximo", detail: "Ligação futura com serviços por cliente" }
     ]
   };
 }
@@ -14002,19 +14002,19 @@ function getOperatorsScreenContent() {
     filters: ["Todos", "Ativos", "Turno atual"],
     metrics: [
       { label: "Operadores ativos", value: adminOperators.filter((operator) => operator.status === "Ativo").length, icon: "badge" },
-      { label: "ServiÃ§os hoje", value: adminOperators.reduce((total, operator) => total + operator.today, 0), icon: "service" },
+      { label: "Serviços hoje", value: adminOperators.reduce((total, operator) => total + operator.today, 0), icon: "service" },
       { label: "Turnos abertos", value: 2, icon: "clock" }
     ],
     kicker: "Equipe",
     tableTitle: "Operadores",
-    columns: ["Nome", "FunÃ§Ã£o", "Turno", "ServiÃ§os hoje", "Status"],
+    columns: ["Nome", "Função", "Turno", "Serviços hoje", "Status"],
     rows: adminOperators.map((operator) => [operator.name, operator.role, operator.shift, operator.today, operator.status]),
-    sideKicker: "PermissÃµes",
+    sideKicker: "Permissões",
     sideTitle: "Perfis",
     sideItems: [
-      { title: "Operador", value: "PÃ¡tio", detail: "Entrada, status e acompanhamento" },
-      { title: "Administrador", value: "Completo", detail: "OperaÃ§Ã£o, cadastros e financeiro" },
-      { title: "Acesso", value: "Login", detail: "UsuÃ¡rio e senha por colaborador" }
+      { title: "Operador", value: "Pátio", detail: "Entrada, status e acompanhamento" },
+      { title: "Administrador", value: "Completo", detail: "Operação, cadastros e financeiro" },
+      { title: "Acesso", value: "Login", detail: "Usuário e senha por colaborador" }
     ]
   };
 }
@@ -14022,16 +14022,16 @@ function getOperatorsScreenContent() {
 function getServicesScreenContent() {
   return {
     searchIcon: "service",
-    searchPlaceholder: "Buscar serviÃ§o",
-    filters: ["Todos", "Ativos", "EstÃ©tica", "Lavagem"],
+    searchPlaceholder: "Buscar serviço",
+    filters: ["Todos", "Ativos", "Estética", "Lavagem"],
     metrics: [
-      { label: "ServiÃ§os ativos", value: serviceCatalog.length, icon: "service" },
-      { label: "Ticket mÃ©dio", value: formatCurrency(getAverageServicePrice()), icon: "wallet" },
-      { label: "Maior duraÃ§Ã£o", value: "4h00", icon: "clock" }
+      { label: "Serviços ativos", value: serviceCatalog.length, icon: "service" },
+      { label: "Ticket médio", value: formatCurrency(getAverageServicePrice()), icon: "wallet" },
+      { label: "Maior duração", value: "4h00", icon: "clock" }
     ],
     kicker: "Tabela",
-    tableTitle: "ServiÃ§os e valores",
-    columns: ["ServiÃ§o", "Tipo / categoria de veÃ­culo", "Tempo", "PreÃ§o", "Status"],
+    tableTitle: "Serviços e valores",
+    columns: ["Serviço", "Tipo / categoria de veículo", "Tempo", "Preço", "Status"],
     rows: serviceCatalog.map((service) => [
       service.name,
       formatVehicleScope(service.vehicleType, service.vehicleCategory),
@@ -14040,11 +14040,11 @@ function getServicesScreenContent() {
       service.status
     ]),
     sideKicker: "Comercial",
-    sideTitle: "ComposiÃ§Ã£o",
+    sideTitle: "Composição",
     sideItems: [
-      { title: "PreÃ§o base", value: "ObrigatÃ³rio", detail: "Usado nas mÃ©tricas e faturamento" },
-      { title: "DuraÃ§Ã£o prevista", value: "Agenda", detail: "Base para capacidade do pÃ¡tio" },
-      { title: "Categoria", value: "Filtro", detail: "Organiza lavagem, interna e estÃ©tica" }
+      { title: "Preço base", value: "Obrigatório", detail: "Usado nas métricas e faturamento" },
+      { title: "Duração prevista", value: "Agenda", detail: "Base para capacidade do pátio" },
+      { title: "Categoria", value: "Filtro", detail: "Organiza lavagem, interna e estética" }
     ]
   };
 }
@@ -14059,7 +14059,7 @@ function renderOpenPaymentsScreen(container) {
       ${[
         { label: "Em aberto", value: active.length, icon: "alert" },
         { label: "Valor pendente", value: formatCurrency(total), icon: "wallet" },
-        { label: "Lembretes diÃ¡rios", value: overdue.length || active.length, icon: "clock" },
+        { label: "Lembretes diários", value: overdue.length || active.length, icon: "clock" },
         { label: "Baixados", value: openPayments.filter((payment) => payment.status === "Baixado").length, icon: "check" }
       ]
         .map(renderScreenMetric)
@@ -14068,8 +14068,8 @@ function renderOpenPaymentsScreen(container) {
 
     <section class="cashflow-pending-panel open-payment-reminder-panel" aria-label="Lembretes de pagamento">
       <div>
-        <p class="eyebrow">PendÃªncias</p>
-        <h2>Lembretes diÃ¡rios ao gestor</h2>
+        <p class="eyebrow">Pendências</p>
+        <h2>Lembretes diários ao gestor</h2>
       </div>
       ${
         active.length
@@ -14080,7 +14080,7 @@ function renderOpenPaymentsScreen(container) {
                     <article class="cashflow-pending-item">
                       <span>${escapeHtml(payment.clientName)}</span>
                       <strong>${formatCurrency(payment.value)}</strong>
-                      <small>${escapeHtml(payment.plate)} / ${escapeHtml(payment.service)} / ${escapeHtml(payment.reminderFrequency || "DiÃ¡rio")}</small>
+                      <small>${escapeHtml(payment.plate)} / ${escapeHtml(payment.service)} / ${escapeHtml(payment.reminderFrequency || "Diário")}</small>
                     </article>
                   `
                 )
@@ -14093,7 +14093,7 @@ function renderOpenPaymentsScreen(container) {
     <section class="screen-toolbar cashflow-toolbar" aria-label="Filtros de pagamentos em aberto">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.alert}</span>
-        <input id="openPaymentSearchInput" type="search" placeholder="Buscar cliente, placa ou serviÃ§o" />
+        <input id="openPaymentSearchInput" type="search" placeholder="Buscar cliente, placa ou serviço" />
       </label>
       <div class="screen-filters" id="openPaymentFilters">
         ${["Todos", "Aberto", "Baixado"]
@@ -14103,7 +14103,7 @@ function renderOpenPaymentsScreen(container) {
       <div class="cashflow-export-actions">
         <button class="ghost-action" id="exportOpenPaymentsPdfButton" type="button">
           <span data-icon="invoice"></span>
-          <span>RelatÃ³rio PDF</span>
+          <span>Relatório PDF</span>
         </button>
       </div>
     </section>
@@ -14112,7 +14112,7 @@ function renderOpenPaymentsScreen(container) {
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Financeiro</p>
-          <h2>ServiÃ§os com pagamento em aberto</h2>
+          <h2>Serviços com pagamento em aberto</h2>
         </div>
       </div>
       <div class="admin-table-wrap">
@@ -14122,11 +14122,11 @@ function renderOpenPaymentsScreen(container) {
               <th>Cliente</th>
               <th>Telefone</th>
               <th>Placa</th>
-              <th>ServiÃ§o</th>
+              <th>Serviço</th>
               <th>Valor</th>
               <th>Status</th>
               <th>Lembrete</th>
-              <th>AÃ§Ãµes</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -14150,14 +14150,14 @@ function renderOpenPaymentRow(payment) {
       <td data-label="Cliente">${escapeHtml(payment.clientName)}</td>
       <td data-label="Telefone">${escapeHtml(payment.phone || "-")}</td>
       <td data-label="Placa">${escapeHtml(payment.plate || "-")}</td>
-      <td data-label="ServiÃ§o">
+      <td data-label="Serviço">
         <span>${escapeHtml(payment.service || "-")}</span>
         ${description ? `<small class="open-payment-description">${escapeHtml(description)}</small>` : ""}
       </td>
       <td data-label="Valor">${formatCurrency(displayValue)}</td>
       <td data-label="Status">${escapeHtml(payment.status)}</td>
-      <td data-label="Lembrete">${escapeHtml(payment.reminderFrequency || "DiÃ¡rio")}${payment.lastReminderAt ? ` Â· ${escapeHtml(payment.lastReminderAt)}` : ""}</td>
-      <td data-label="AÃ§Ãµes">
+      <td data-label="Lembrete">${escapeHtml(payment.reminderFrequency || "Diário")}${payment.lastReminderAt ? ` · ${escapeHtml(payment.lastReminderAt)}` : ""}</td>
+      <td data-label="Ações">
         <div class="cashflow-row-actions">
           ${
             isOpen
@@ -14264,12 +14264,12 @@ function requestSettlementPaymentInfo({
           </select>
         </label>
         <label class="login-field settlement-bank-field" for="settlementBankAccount" hidden>
-          <span>Conta bancÃ¡ria</span>
+          <span>Conta bancária</span>
           <select id="settlementBankAccount" ${hasBankAccounts ? "" : "disabled"}>
             ${
               hasBankAccounts
                 ? businessBankAccounts.map((account) => `<option value="${account.id}">${escapeHtml(getBusinessBankAccountLabel(account))}</option>`).join("")
-                : '<option value="">Cadastre uma conta bancÃ¡ria</option>'
+                : '<option value="">Cadastre uma conta bancária</option>'
             }
           </select>
         </label>
@@ -14346,7 +14346,7 @@ function requestSettlementPaymentInfo({
       resolve(value);
     };
     const updateBankField = () => {
-      const isBankDeposit = $("#settlementPaymentMethod", dialog).value === "DepÃ³sito bancÃ¡rio";
+      const isBankDeposit = $("#settlementPaymentMethod", dialog).value === "Depósito bancário";
       const field = $(".settlement-bank-field", dialog);
       const select = $("#settlementBankAccount", dialog);
       field.hidden = !isBankDeposit;
@@ -14383,7 +14383,7 @@ function requestSettlementPaymentInfo({
     $("#settlementPaymentForm", dialog).addEventListener("submit", (event) => {
       event.preventDefault();
       const method = $("#settlementPaymentMethod", dialog).value;
-      const isBankDeposit = method === "DepÃ³sito bancÃ¡rio";
+      const isBankDeposit = method === "Depósito bancário";
       const bankAccountId = isBankDeposit ? Number($("#settlementBankAccount", dialog).value || 0) : null;
       const bankAccount = bankAccountId ? businessBankAccounts.find((account) => account.id === bankAccountId) : null;
       const partial = canUsePartial && ($("#settlementPartialEnabled", dialog)?.checked || false);
@@ -14393,7 +14393,7 @@ function requestSettlementPaymentInfo({
       const targetInvoiceId = destination === "existing-invoice" ? Number($("#settlementTargetInvoice", dialog)?.value || 0) : null;
       const newInvoiceDueDate = destination === "new-invoice" ? $("#settlementNewInvoiceDueDate", dialog)?.value || "" : "";
       if (isBankDeposit && !bankAccount) {
-        showToast("Cadastre e selecione uma conta bancÃ¡ria para depÃ³sito.");
+        showToast("Cadastre e selecione uma conta bancária para depósito.");
         return;
       }
       if (partial && amount <= 0) {
@@ -14484,7 +14484,7 @@ async function settleOpenPayment(paymentId) {
       method: settlement.method,
       value: settlement.partial ? settlement.amount : payment.value,
       status: "Confirmado",
-      category: "ServiÃ§os",
+      category: "Serviços",
       costCenter: "Lavagem",
       bankAccountId: settlement.bankAccountId,
       bankAccountName: settlement.bankAccountName,
@@ -14542,7 +14542,7 @@ function createRemainingOpenPaymentCashEntry(payment, settlement) {
     method: settlement.method,
     value: settlement.balance,
     status: "Pendente",
-    category: "ServiÃ§os",
+    category: "Serviços",
     costCenter: "Lavagem",
     plate: payment.plate || "",
     vehicleId: payment.vehicleId || null,
@@ -14573,7 +14573,7 @@ function createRemainingOpenPayment(payment, settlement, cashEntry) {
     createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
     dueDate: getDefaultOpenPaymentDueDate(),
     status: "Aberto",
-    reminderFrequency: payment.reminderFrequency || "DiÃ¡rio",
+    reminderFrequency: payment.reminderFrequency || "Diário",
     lastReminderAt: "",
     operator: activeSessionUser || payment.operator || "Administrador",
     vehicleId: payment.vehicleId || null,
@@ -14589,7 +14589,7 @@ function createRemainingOpenPayment(payment, settlement, cashEntry) {
 }
 
 function getRemainingOpenPaymentDescription(payment) {
-  return `Saldo remanescente referente ao pagamento em aberto de ${payment.service || payment.description || "serviÃ§o"} em ${formatDateBR(getTodayISO())}.`;
+  return `Saldo remanescente referente ao pagamento em aberto de ${payment.service || payment.description || "serviço"} em ${formatDateBR(getTodayISO())}.`;
 }
 
 function sendOpenPaymentWhatsapp(paymentId) {
@@ -14612,7 +14612,7 @@ function exportOpenPaymentsPdf() {
         `${payment.clientName} | ${payment.phone || "-"} | ${payment.plate || "-"} | ${payment.description || payment.service || "-"} | ${formatCurrency(payment.value)} | ${payment.status}`
     )
   ];
-  downloadPdfFile(`pagamentos-em-aberto-${getTodayISO()}.pdf`, "RelatÃ³rio de pagamentos em aberto", lines, {
+  downloadPdfFile(`pagamentos-em-aberto-${getTodayISO()}.pdf`, "Relatório de pagamentos em aberto", lines, {
     subtitle: "Controle financeiro",
     category: "Financeiro",
     summary: `${active.length} pagamento(s) em aberto somando ${formatCurrency(total)}.`
@@ -14635,7 +14635,7 @@ function renderCashflowScreen(container) {
       ${[
         { label: "Entradas confirmadas", value: formatCurrency(totalIn), icon: "cashflow" },
         { label: "A confirmar", value: formatCurrency(pendingIn), icon: "clock" },
-        { label: "SaÃ­das", value: formatCurrency(totalOut), icon: "payable" },
+        { label: "Saídas", value: formatCurrency(totalOut), icon: "payable" },
         { label: "Saldo previsto", value: formatCurrency(totalIn + pendingIn - totalOut), icon: "wallet" }
       ]
         .map(renderScreenMetric)
@@ -14645,10 +14645,10 @@ function renderCashflowScreen(container) {
     ${
       scheduledToday.length
         ? `
-          <section class="cashflow-pending-panel" aria-label="PendÃªncias do caixa">
+          <section class="cashflow-pending-panel" aria-label="Pendências do caixa">
             <div>
-              <p class="eyebrow">PendÃªncias</p>
-              <h2>Agendados para confirmaÃ§Ã£o hoje</h2>
+              <p class="eyebrow">Pendências</p>
+              <h2>Agendados para confirmação hoje</h2>
             </div>
             <div class="cashflow-pending-list">
               ${scheduledToday
@@ -14675,12 +14675,12 @@ function renderCashflowScreen(container) {
     <section class="screen-toolbar cashflow-toolbar" aria-label="Filtros do fluxo">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.cashflow}</span>
-        <input id="cashflowSearchInput" type="search" placeholder="Buscar lanÃ§amento" />
+        <input id="cashflowSearchInput" type="search" placeholder="Buscar lançamento" />
       </label>
       <label class="login-field cashflow-filter-select" for="cashflowFilterSelect">
         <span>Filtro</span>
         <select id="cashflowFilterSelect">
-          ${["Todos", "Entradas", "SaÃ­das", "Agendados", "Pendentes", "Confirmados", "ExcluÃ­dos"]
+          ${["Todos", "Entradas", "Saídas", "Agendados", "Pendentes", "Confirmados", "Excluídos"]
             .map((filter) => `<option value="${escapeHtml(filter.toLowerCase())}">${escapeHtml(filter)}</option>`)
             .join("")}
         </select>
@@ -14691,7 +14691,7 @@ function renderCashflowScreen(container) {
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Movimento</p>
-          <h2>LanÃ§amentos do caixa</h2>
+          <h2>Lançamentos do caixa</h2>
         </div>
         <div class="cashflow-panel-actions">
           <button class="ghost-action" id="openCashflowExportButton" type="button">
@@ -14700,14 +14700,14 @@ function renderCashflowScreen(container) {
           </button>
           <button class="new-vehicle-button" id="startCashEntryButton" type="button">
             <span data-icon="plus"></span>
-            <span>Novo lanÃ§amento</span>
+            <span>Novo lançamento</span>
           </button>
         </div>
       </div>
       ${renderCashflowTable()}
     </article>
 
-    <section class="cashflow-charts" aria-label="GrÃ¡ficos do fluxo de caixa">
+    <section class="cashflow-charts" aria-label="Gráficos do fluxo de caixa">
       ${renderCashflowCharts()}
     </section>
   `;
@@ -14767,17 +14767,17 @@ function renderCashflowExportDialog() {
   const movementOptions = [
     ["todos", "Todos os movimentos"],
     ["entradas", "Entradas"],
-    ["saidas", "SaÃ­das"],
+    ["saidas", "Saídas"],
     ["pendentes", "Pendentes"],
     ["confirmados", "Confirmados"],
     ["agendados", "Agendados"],
-    ["excluidos", "ExcluÃ­dos"]
+    ["excluidos", "Excluídos"]
   ];
   return `
     <form class="vehicle-box cashflow-box cashflow-export-dialog-box" id="cashflowExportForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">RelatÃ³rio</p>
+          <p class="eyebrow">Relatório</p>
           <h2>Exportar fluxo de caixa</h2>
         </div>
         <button class="icon-button" id="closeCashflowExportDialog" type="button" aria-label="Fechar">
@@ -14867,7 +14867,7 @@ function renderCashflowRegistryDialog(kind) {
             <div class="dialog-actions cashflow-dialog-actions">
               <button class="primary-button" id="returnCashflowEntryDialog" type="button">
                 <span data-icon="check"></span>
-                <span>Voltar ao lanÃ§amento</span>
+                <span>Voltar ao lançamento</span>
               </button>
             </div>
           `
@@ -14896,7 +14896,7 @@ function bindCashflowRegistryDialogControls(dialog, kind) {
 function getCashflowRegistryConfig(kind) {
   const configs = {
     category: {
-      title: "Categorias de lanÃ§amento",
+      title: "Categorias de lançamento",
       label: "categoria",
       list: cashflowCategories,
       placeholder: "Nova categoria",
@@ -14953,13 +14953,13 @@ function renderCashflowTable() {
           <tr>
             <th>Data / hora</th>
             <th>Tipo</th>
-            <th>DescriÃ§Ã£o</th>
+            <th>Descrição</th>
             <th>Categoria</th>
             <th>Centro de custo</th>
             <th>Forma</th>
             <th>Valor</th>
             <th>Status</th>
-            <th>AÃ§Ãµes</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -14976,16 +14976,16 @@ function renderCashflowTableRow(entry) {
   const openPayment = isDeleted ? null : getOpenPaymentForCashEntry(entry);
   const statusClass = normalizeText(getCashEntryStatus(entry)).replace(/\s+/g, "-");
   return `
-    <tr class="cashflow-row ${entry.value < 0 ? "is-out" : "is-in"} ${isDeleted ? "is-deleted" : ""}" data-cash-row data-cash-type="${entry.value < 0 ? "saÃ­das" : "entradas"}" data-cash-status="${escapeHtml(statusClass)}" data-cash-scheduled="${String(isScheduled)}" data-cash-deleted="${String(isDeleted)}">
+    <tr class="cashflow-row ${entry.value < 0 ? "is-out" : "is-in"} ${isDeleted ? "is-deleted" : ""}" data-cash-row data-cash-type="${entry.value < 0 ? "saídas" : "entradas"}" data-cash-status="${escapeHtml(statusClass)}" data-cash-scheduled="${String(isScheduled)}" data-cash-deleted="${String(isDeleted)}">
       <td data-label="Data / hora">${formatDateBR(entry.date || getTodayISO())} ${escapeHtml(entry.time || "")}</td>
       <td data-label="Tipo"><span class="cash-type-pill ${entry.value < 0 ? "is-out" : "is-in"}">${escapeHtml(entry.type)}</span></td>
-      <td data-label="DescriÃ§Ã£o">${escapeHtml(entry.description)}</td>
+      <td data-label="Descrição">${escapeHtml(entry.description)}</td>
       <td data-label="Categoria">${escapeHtml(entry.category || "Sem categoria")}</td>
       <td data-label="Centro de custo">${escapeHtml(entry.costCenter || "Sem centro")}</td>
       <td data-label="Forma">${escapeHtml(entry.method || "-")}</td>
       <td data-label="Valor">${formatCurrency(entry.value)}</td>
       <td data-label="Status">${renderCashEntryStatusLabel(entry)}</td>
-      <td data-label="AÃ§Ãµes">
+      <td data-label="Ações">
         <div class="cashflow-row-actions">
           <button class="ghost-action" type="button" data-open-cash-entry="${entry.id}">Abrir</button>
           ${
@@ -15016,9 +15016,9 @@ function getCashEntryStatus(entry) {
 function renderCashEntryStatusLabel(entry) {
   const status = getCashEntryStatus(entry);
   const details = [];
-  if (entry.scheduledDate) details.push(`Agendado ${formatDateBR(entry.scheduledDate)}${entry.scheduledTime ? ` Ã s ${entry.scheduledTime}` : ""}`);
-  if (entry.deleted) details.push("ExcluÃ­do do fluxo ativo");
-  return `${escapeHtml(status)}${details.length ? ` Â· ${details.map(escapeHtml).join(" Â· ")}` : ""}`;
+  if (entry.scheduledDate) details.push(`Agendado ${formatDateBR(entry.scheduledDate)}${entry.scheduledTime ? ` às ${entry.scheduledTime}` : ""}`);
+  if (entry.deleted) details.push("Excluído do fluxo ativo");
+  return `${escapeHtml(status)}${details.length ? ` · ${details.map(escapeHtml).join(" · ")}` : ""}`;
 }
 
 function renderCashflowCharts() {
@@ -15030,20 +15030,20 @@ function renderCashflowCharts() {
     <article class="admin-panel cashflow-chart-panel">
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">AnÃ¡lise</p>
-          <h2>Entradas x saÃ­das</h2>
+          <p class="eyebrow">Análise</p>
+          <h2>Entradas x saídas</h2>
         </div>
       </div>
       <div class="cashflow-bars">
         ${renderCashflowBar("Entradas", totalIn, maxFlow, "in")}
-        ${renderCashflowBar("SaÃ­das", totalOut, maxFlow, "out")}
+        ${renderCashflowBar("Saídas", totalOut, maxFlow, "out")}
       </div>
     </article>
     <article class="admin-panel cashflow-chart-panel">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Categorias</p>
-          <h2>DistribuiÃ§Ã£o por categoria</h2>
+          <h2>Distribuição por categoria</h2>
         </div>
       </div>
       <div class="cashflow-bars">
@@ -15067,7 +15067,7 @@ function renderCashflowCharts() {
 function renderGroupedCashflowBars(key) {
   const groups = getCashflowGroupedTotals(key);
   const max = Math.max(1, ...groups.map((item) => Math.abs(item.total)));
-  if (!groups.length) return '<p class="empty-alert">Sem lanÃ§amentos para anÃ¡lise.</p>';
+  if (!groups.length) return '<p class="empty-alert">Sem lançamentos para análise.</p>';
   return groups.map((item) => renderCashflowBar(item.label, Math.abs(item.total), max, item.total < 0 ? "out" : "in")).join("");
 }
 
@@ -15089,7 +15089,7 @@ function renderCashflowBar(label, value, max, kind) {
 function getCashflowGroupedTotals(key) {
   const totals = new Map();
   getCashflowActiveEntries().forEach((entry) => {
-    const label = entry[key] || "Sem classificaÃ§Ã£o";
+    const label = entry[key] || "Sem classificação";
     totals.set(label, (totals.get(label) || 0) + entry.value);
   });
   return [...totals.entries()].map(([label, total]) => ({ label, total })).sort((a, b) => Math.abs(b.total) - Math.abs(a.total));
@@ -15129,7 +15129,7 @@ function applyCashflowFilters(container) {
       (activeFilter === "pendentes" && row.dataset.cashStatus === "pendente") ||
       (activeFilter === "confirmados" && row.dataset.cashStatus === "confirmado") ||
       (activeFilter === "agendados" && row.dataset.cashScheduled === "true") ||
-      (activeFilter === "excluÃ­dos" && row.dataset.cashDeleted === "true");
+      (activeFilter === "excluídos" && row.dataset.cashDeleted === "true");
     row.hidden = !textMatch || !filterMatch;
   });
 }
@@ -15145,7 +15145,7 @@ function addCashflowOption(container, kind) {
     return;
   }
   if (list.some((item) => normalizeText(item) === normalizeText(value))) {
-    showToast("Item jÃ¡ cadastrado.");
+    showToast("Item já cadastrado.");
     return;
   }
   list.push(value);
@@ -15160,17 +15160,17 @@ function updateCashflowOption(container, kind, index) {
   const input = $(`#cashflowOption${index}`, container);
   const nextValue = input?.value.trim();
   if (!currentValue || !nextValue) {
-    showToast("Informe um nome vÃ¡lido.");
+    showToast("Informe um nome válido.");
     input?.focus();
     return;
   }
   if (currentValue === nextValue) return;
   if ((config.protectedValues || []).includes(currentValue)) {
-    showToast("Esta forma Ã© essencial para rotinas do sistema e nÃ£o pode ser alterada.");
+    showToast("Esta forma é essencial para rotinas do sistema e não pode ser alterada.");
     return;
   }
   if (list.some((item, itemIndex) => itemIndex !== index && normalizeText(item) === normalizeText(nextValue))) {
-    showToast("Item jÃ¡ cadastrado.");
+    showToast("Item já cadastrado.");
     input.focus();
     return;
   }
@@ -15187,7 +15187,7 @@ async function deleteCashflowOption(container, kind, value) {
   if ((config.protectedValues || []).includes(value)) {
     await showMessageBox({
       title: "Item protegido",
-      message: `Esta ${label} Ã© usada em rotinas essenciais do sistema e nÃ£o pode ser excluÃ­da.`,
+      message: `Esta ${label} é usada em rotinas essenciais do sistema e não pode ser excluída.`,
       confirmLabel: "Entendi"
     });
     return;
@@ -15196,7 +15196,7 @@ async function deleteCashflowOption(container, kind, value) {
   if (used) {
     await showMessageBox({
       title: "Item em uso",
-      message: `NÃ£o Ã© possÃ­vel excluir esta ${label}, pois hÃ¡ lanÃ§amentos vinculados. Edite ou exclua os lanÃ§amentos antes.`,
+      message: `Não é possível excluir esta ${label}, pois há lançamentos vinculados. Edite ou exclua os lançamentos antes.`,
       confirmLabel: "Entendi"
     });
     return;
@@ -15278,17 +15278,17 @@ function getCashflowScreenContent() {
     .slice(0, 4);
   return {
     searchIcon: "cashflow",
-    searchPlaceholder: "Buscar lanÃ§amento",
-    filters: ["Hoje", "Entradas", "SaÃ­das", "Pendentes"],
+    searchPlaceholder: "Buscar lançamento",
+    filters: ["Hoje", "Entradas", "Saídas", "Pendentes"],
     metrics: [
       { label: "Entradas confirmadas", value: formatCurrency(totalIn), icon: "cashflow" },
       { label: "A confirmar", value: formatCurrency(pendingIn), icon: "clock" },
-      { label: "SaÃ­das", value: formatCurrency(totalOut), icon: "payable" },
+      { label: "Saídas", value: formatCurrency(totalOut), icon: "payable" },
       { label: "Saldo previsto", value: formatCurrency(totalIn + pendingIn - totalOut), icon: "wallet" }
     ],
     kicker: "Movimento",
-    tableTitle: "LanÃ§amentos do dia",
-    columns: ["Hora", "Tipo", "DescriÃ§Ã£o", "Forma", "Valor", "Status"],
+    tableTitle: "Lançamentos do dia",
+    columns: ["Hora", "Tipo", "Descrição", "Forma", "Valor", "Status"],
     rows: cashEntries.map((entry) => [
       entry.time,
       entry.type,
@@ -15298,10 +15298,10 @@ function getCashflowScreenContent() {
       entry.status
     ]),
     sideKicker: "Fechamento",
-    sideTitle: "ConciliaÃ§Ã£o",
+    sideTitle: "Conciliação",
     sideItems: methodSummary.length
       ? methodSummary
-      : [{ title: "Sem recebimentos", value: zeroCurrency, detail: "Confirme pagamentos no pÃ¡tio" }]
+      : [{ title: "Sem recebimentos", value: zeroCurrency, detail: "Confirme pagamentos no pátio" }]
   };
 }
 
@@ -15340,8 +15340,8 @@ function renderCashflowDialogForm(entry, draft = null) {
     <form class="vehicle-box cashflow-box" id="cashflowForm" novalidate>
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">${entry ? "EdiÃ§Ã£o" : "Cadastro"}</p>
-          <h2>${entry ? escapeHtml(entry.description) : "Novo lanÃ§amento"}</h2>
+          <p class="eyebrow">${entry ? "Edição" : "Cadastro"}</p>
+          <h2>${entry ? escapeHtml(entry.description) : "Novo lançamento"}</h2>
         </div>
         <button class="icon-button" id="closeCashflowDialog" type="button" aria-label="Fechar">
           <span data-icon="x"></span>
@@ -15352,7 +15352,7 @@ function renderCashflowDialogForm(entry, draft = null) {
         <label class="login-field" for="cashEntryType">
           <span>Tipo</span>
           <select id="cashEntryType" required>
-            ${renderSelectOptions(["Entrada", "SaÃ­da"], source.type || "Entrada")}
+            ${renderSelectOptions(["Entrada", "Saída"], source.type || "Entrada")}
           </select>
         </label>
         <label class="login-field" for="cashEntryValue">
@@ -15360,7 +15360,7 @@ function renderCashflowDialogForm(entry, draft = null) {
           <input id="cashEntryValue" type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" value="${escapeHtml(formatCurrencyFieldValue(value))}" required />
         </label>
         <label class="login-field cashflow-description-field" for="cashEntryDescription">
-          <span>DescriÃ§Ã£o</span>
+          <span>Descrição</span>
           <input id="cashEntryDescription" type="text" placeholder="Ex.: Compra de insumos" value="${escapeHtml(source.description || "")}" required />
         </label>
         ${renderCashflowManagedSelectField({
@@ -15393,7 +15393,7 @@ function renderCashflowDialogForm(entry, draft = null) {
         <label class="switch-field cashflow-schedule-switch" for="cashEntryScheduled">
           <input id="cashEntryScheduled" type="checkbox" ${isScheduled ? "checked" : ""} ${entry?.deleted ? "disabled" : ""} />
           <span class="switch-control"></span>
-          <span>Agendar lanÃ§amento</span>
+          <span>Agendar lançamento</span>
         </label>
         <label class="login-field cashflow-schedule-field" for="cashEntryScheduledDate">
           <span>Data agendada</span>
@@ -15490,7 +15490,7 @@ function bindCashflowDialogControls(dialog) {
 function getCashflowDialogDraft(dialog) {
   const rawValue = getCurrencyInputValue("#cashEntryValue", dialog);
   const type = $("#cashEntryType", dialog)?.value || "Entrada";
-  const signedValue = type === "SaÃ­da" ? -Math.abs(rawValue) : Math.abs(rawValue);
+  const signedValue = type === "Saída" ? -Math.abs(rawValue) : Math.abs(rawValue);
   return {
     type,
     value: signedValue,
@@ -15543,7 +15543,7 @@ function saveCashEntry(dialog) {
   const file = $("#cashEntryAttachment", dialog).files?.[0];
 
   if (!description || !rawValue || !method || !category || !costCenter) {
-    showToast("Preencha os dados obrigatÃ³rios do lanÃ§amento.");
+    showToast("Preencha os dados obrigatórios do lançamento.");
     return;
   }
   if (isScheduled && (!scheduledDate || !scheduledTime)) {
@@ -15552,7 +15552,7 @@ function saveCashEntry(dialog) {
   }
 
   const existingEntry = getCashEntryById(selectedCashEntryId);
-  const signedValue = type === "SaÃ­da" ? -Math.abs(rawValue) : Math.abs(rawValue);
+  const signedValue = type === "Saída" ? -Math.abs(rawValue) : Math.abs(rawValue);
   const referenceDate = isScheduled ? scheduledDate || getTodayISO() : existingEntry?.date || getTodayISO();
   const financeSnapshot = getCashEntryFinanceSnapshot(rawValue, method, type, referenceDate);
   const resolvedStatus = isScheduled ? "Pendente" : status === "Pendente" ? "Pendente" : getExpectedReceiptStatus(method, type);
@@ -15589,15 +15589,15 @@ function saveCashEntry(dialog) {
   closeCashflowDialog();
   renderAdminScreen("cashflow");
   renderAdminDashboard();
-  showToast(existingEntry ? "LanÃ§amento atualizado." : "LanÃ§amento cadastrado.");
+  showToast(existingEntry ? "Lançamento atualizado." : "Lançamento cadastrado.");
 }
 
 async function deleteCashEntry(entryId) {
   const entry = getCashEntryById(entryId);
   if (!entry || entry.deleted) return;
   const shouldDelete = await showMessageBox({
-    title: "Excluir lanÃ§amento?",
-    message: "O lanÃ§amento serÃ¡ removido dos totais, mas permanecerÃ¡ no histÃ³rico e nos relatÃ³rios.",
+    title: "Excluir lançamento?",
+    message: "O lançamento será removido dos totais, mas permanecerá no histórico e nos relatórios.",
     confirmLabel: "Excluir",
     cancelLabel: "Cancelar",
     confirmOnly: false
@@ -15610,7 +15610,7 @@ async function deleteCashEntry(entryId) {
   closeCashflowDialog();
   renderAdminScreen("cashflow");
   renderAdminDashboard();
-  showToast("LanÃ§amento excluÃ­do do fluxo ativo.");
+  showToast("Lançamento excluído do fluxo ativo.");
 }
 
 function cancelScheduledCashEntry(entryId) {
@@ -15625,7 +15625,7 @@ function cancelScheduledCashEntry(entryId) {
   closeCashflowDialog();
   renderAdminScreen("cashflow");
   renderAdminDashboard();
-  showToast("Agendamento cancelado e mantido no histÃ³rico.");
+  showToast("Agendamento cancelado e mantido no histórico.");
 }
 
 function confirmScheduledCashEntry(entryId) {
@@ -15639,7 +15639,7 @@ function confirmScheduledCashEntry(entryId) {
   saveCashEntries();
   renderAdminScreen("cashflow");
   renderAdminDashboard();
-  showToast("LanÃ§amento agendado confirmado.");
+  showToast("Lançamento agendado confirmado.");
 }
 
 function downloadCashEntryAttachment(dialog) {
@@ -15651,7 +15651,7 @@ function downloadCashEntryAttachment(dialog) {
     return;
   }
   const attachmentLines = [
-    `LanÃ§amento: ${entry?.description || "Novo lanÃ§amento"}`,
+    `Lançamento: ${entry?.description || "Novo lançamento"}`,
     `Valor: ${entry ? formatCurrency(entry.value) : ""}`,
     `Arquivo original: ${attachment.name}`,
     `Categoria: ${entry?.category || "-"}`,
@@ -15659,7 +15659,7 @@ function downloadCashEntryAttachment(dialog) {
     `Status: ${entry ? getCashEntryStatus(entry) : "-"}`
   ];
   if (String(attachment.name || "").toLowerCase().endsWith(".pdf")) {
-    downloadPdfFile(attachment.name || `comprovante-${entry?.id || "lancamento"}.pdf`, "COMPROVANTE DO LANÃ‡AMENTO", attachmentLines, {
+    downloadPdfFile(attachment.name || `comprovante-${entry?.id || "lancamento"}.pdf`, "COMPROVANTE DO LANCAMENTO", attachmentLines, {
       subtitle: "Anexo financeiro",
       category: "Financeiro",
       summary: entry ? `${entry.description} - ${formatCurrency(entry.value)}.` : "Comprovante financeiro gerado pelo sistema."
@@ -15680,11 +15680,11 @@ function exportCashflowReport(dialog) {
   const format = $("#cashflowExportFormat", dialog).value;
 
   if (!startDate || !endDate) {
-    showToast("Informe o perÃ­odo do relatÃ³rio.");
+    showToast("Informe o período do relatório.");
     return;
   }
   if (startDate > endDate) {
-    showToast("A data inicial nÃ£o pode ser maior que a data final.");
+    showToast("A data inicial não pode ser maior que a data final.");
     return;
   }
 
@@ -15703,7 +15703,7 @@ function getCashflowReportEntries({ startDate, endDate, movement }) {
     const isDeleted = Boolean(entry.deleted);
     if (movement === "todos") return true;
     if (movement === "entradas") return !isDeleted && entry.type === "Entrada";
-    if (movement === "saidas") return !isDeleted && entry.type === "SaÃ­da";
+    if (movement === "saidas") return !isDeleted && entry.type === "Saída";
     if (movement === "pendentes") return !isDeleted && status === "pendente";
     if (movement === "confirmados") return !isDeleted && status === "confirmado";
     if (movement === "agendados") return !isDeleted && Boolean(entry.scheduledDate);
@@ -15720,11 +15720,11 @@ function getCashflowMovementLabel(movement) {
   const labels = {
     todos: "Todos os movimentos",
     entradas: "Entradas",
-    saidas: "SaÃ­das",
+    saidas: "Saídas",
     pendentes: "Pendentes",
     confirmados: "Confirmados",
     agendados: "Agendados",
-    excluidos: "ExcluÃ­dos"
+    excluidos: "Excluídos"
   };
   return labels[movement] || "Todos os movimentos";
 }
@@ -15736,7 +15736,7 @@ function getCashflowReportFileSuffix(filters) {
 function exportCashflowCsv(filters = { startDate: "0000-01-01", endDate: "9999-12-31", movement: "todos" }) {
   const entries = getCashflowReportEntries(filters);
   const rows = [
-    ["ID", "Data", "Hora", "Tipo", "DescriÃ§Ã£o", "Categoria", "Centro de custo", "Forma", "Valor", "Status", "Agendado", "ExcluÃ­do", "Comprovante"],
+    ["ID", "Data", "Hora", "Tipo", "Descrição", "Categoria", "Centro de custo", "Forma", "Valor", "Status", "Agendado", "Excluído", "Comprovante"],
     ...entries.map((entry) => [
       entry.id,
       entry.date || "",
@@ -15748,8 +15748,8 @@ function exportCashflowCsv(filters = { startDate: "0000-01-01", endDate: "9999-1
       entry.method || "",
       entry.value,
       getCashEntryStatus(entry),
-      entry.scheduledDate ? "Sim" : "NÃ£o",
-      entry.deleted ? "Sim" : "NÃ£o",
+      entry.scheduledDate ? "Sim" : "Não",
+      entry.deleted ? "Sim" : "Não",
       entry.attachment?.name || ""
     ])
   ];
@@ -15763,20 +15763,20 @@ function exportCashflowPdf(filters = { startDate: "0000-01-01", endDate: "9999-1
   const period = `${formatDateBR(filters.startDate)} a ${formatDateBR(filters.endDate)}`;
   const movementLabel = getCashflowMovementLabel(filters.movement);
   const lines = [
-    `RelatÃ³rio de fluxo de caixa - ${period}`,
-    `Movimentos incluÃ­dos: ${movementLabel}`,
-    `Total de lanÃ§amentos: ${entries.length}`,
-    `Saldo do relatÃ³rio: ${formatCurrency(total)}`,
+    `Relatório de fluxo de caixa - ${period}`,
+    `Movimentos incluídos: ${movementLabel}`,
+    `Total de lançamentos: ${entries.length}`,
+    `Saldo do relatório: ${formatCurrency(total)}`,
     "",
     ...entries.map(
       (entry) =>
-        `${entry.id}. ${entry.type} | ${entry.description} | ${entry.category || "-"} | ${entry.costCenter || "-"} | ${formatCurrency(entry.value)} | ${getCashEntryStatus(entry)}${entry.scheduledDate ? " | agendado" : ""}${entry.deleted ? " | excluÃ­do" : ""}`
+        `${entry.id}. ${entry.type} | ${entry.description} | ${entry.category || "-"} | ${entry.costCenter || "-"} | ${formatCurrency(entry.value)} | ${getCashEntryStatus(entry)}${entry.scheduledDate ? " | agendado" : ""}${entry.deleted ? " | excluído" : ""}`
     )
   ];
-  downloadPdfFile(`fluxo-caixa-${getCashflowReportFileSuffix(filters)}.pdf`, "RelatÃ³rio de fluxo de caixa", lines, {
+  downloadPdfFile(`fluxo-caixa-${getCashflowReportFileSuffix(filters)}.pdf`, "Relatório de fluxo de caixa", lines, {
     subtitle: "Fluxo de caixa",
     category: "Financeiro",
-    summary: `${entries.length} lanÃ§amento(s) no perÃ­odo ${period}, filtrado por ${movementLabel.toLowerCase()}.`
+    summary: `${entries.length} lançamento(s) no período ${period}, filtrado por ${movementLabel.toLowerCase()}.`
   });
 }
 
@@ -15809,7 +15809,7 @@ function getSettlementPaymentMethods() {
 
 function getAttachmentTypeLabel(fileName) {
   const extension = String(fileName).split(".").pop()?.toLowerCase();
-  if (extension === "xml") return "NF eletrÃ´nica";
+  if (extension === "xml") return "NF eletrônica";
   if (["jpg", "jpeg", "png"].includes(extension)) return "Imagem";
   if (extension === "pdf") return "PDF";
   return "Comprovante";
@@ -15982,7 +15982,7 @@ function getOperatorProductionReportStats(rows) {
     ? sortedDates[0] === sortedDates[sortedDates.length - 1]
       ? formatDateBR(sortedDates[0])
       : `${formatDateBR(sortedDates[0])} a ${formatDateBR(sortedDates[sortedDates.length - 1])}`
-    : "Sem produÃ§Ã£o";
+    : "Sem produção";
   const byDate = sortedDates.map((date) => {
     const dateRows = rows.filter((row) => row.date === date);
     return {
@@ -17267,7 +17267,7 @@ function getPayablesScreenContent() {
       { label: "Valor aberto", value: formatCurrency(openPayables.reduce((total, account) => total + account.value, 0)), icon: "wallet" },
       { label: "Pagas", value: payableAccounts.filter((account) => account.status === "Pago").length, icon: "check" }
     ],
-    kicker: "ObrigaÃ§Ãµes",
+    kicker: "Obrigações",
     tableTitle: "Contas registradas",
     columns: ["Fornecedor", "Categoria", "Vencimento", "Valor", "Status"],
     rows: payableAccounts.map((account) => [
@@ -17281,8 +17281,8 @@ function getPayablesScreenContent() {
     sideTitle: "Categorias",
     sideItems: [
       { title: "Insumos", value: formatCurrency(420), detail: "Produtos e materiais de lavagem" },
-      { title: "Operacional", value: formatCurrency(310), detail: "Contas variÃ¡veis da unidade" },
-      { title: "Fixo", value: formatCurrency(1800), detail: "Custos recorrentes do negÃ³cio" }
+      { title: "Operacional", value: formatCurrency(310), detail: "Contas variáveis da unidade" },
+      { title: "Fixo", value: formatCurrency(1800), detail: "Custos recorrentes do negócio" }
     ]
   };
 }
@@ -17330,7 +17330,7 @@ function renderInvoicesScreen(container) {
               <th>Vencimento</th>
               <th>Valor</th>
               <th>Status</th>
-              <th>AÃ§Ãµes</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -17357,8 +17357,8 @@ function renderInvoiceRow(invoice) {
       <td data-label="Cliente">${escapeHtml(getBillingClientName(invoice.clientId))}</td>
       <td data-label="Vencimento">${formatDateBR(invoice.dueDate)}</td>
       <td data-label="Valor">${formatCurrency(displayAmount)}</td>
-      <td data-label="Status">${escapeHtml(statusLabel)}${invoice.partialSettlement ? ` Â· saldo remanejado ${formatCurrency(invoice.remainingBalance || 0)}` : ""}${isOverdue ? " Â· Vencida" : ""}</td>
-      <td data-label="AÃ§Ãµes">
+      <td data-label="Status">${escapeHtml(statusLabel)}${invoice.partialSettlement ? ` · saldo remanejado ${formatCurrency(invoice.remainingBalance || 0)}` : ""}${isOverdue ? " · Vencida" : ""}</td>
+      <td data-label="Ações">
         <div class="cashflow-row-actions">
           ${!isPaid ? `<button class="ghost-action" type="button" data-send-invoice-message="${invoice.id}">Lembrete</button>
           <button class="primary-button compact-action" type="button" data-settle-invoice="${invoice.id}">Baixar</button>` : `<span class="table-plate-chip">Baixada</span>`}
@@ -17579,7 +17579,7 @@ function createOpenPaymentFromInvoiceBalance(invoice, settlement) {
     createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
     dueDate: getDefaultOpenPaymentDueDate(),
     status: "Aberto",
-    reminderFrequency: "DiÃ¡rio",
+    reminderFrequency: "Diário",
     lastReminderAt: "",
     operator: activeSessionUser || "Administrador",
     cashEntryId,
@@ -17621,7 +17621,7 @@ function getInvoicesScreenContent() {
   return {
     searchIcon: "invoice",
     searchPlaceholder: "Buscar fatura",
-    filters: ["Abertas", "Vencem no mÃªs", "Pagas", "Em atraso"],
+    filters: ["Abertas", "Vencem no mês", "Pagas", "Em atraso"],
     metrics: [
       { label: "Faturas abertas", value: openInvoices.length, icon: "invoice" },
       { label: "Total aberto", value: formatCurrency(getOpenInvoicesTotal()), icon: "wallet" },
@@ -17638,7 +17638,7 @@ function getInvoicesScreenContent() {
       invoice.partialSettlement ? "Paga parcial" : invoice.status || "Aberta"
     ]),
     sideKicker: "Ciclo",
-    sideTitle: "PrÃ³ximos vencimentos",
+    sideTitle: "Próximos vencimentos",
     sideItems: billingInvoices.slice(0, 3).map((invoice) => ({
       title: invoice.code,
       value: formatDateBR(invoice.dueDate),
@@ -17684,7 +17684,7 @@ function renderSideItem(item) {
 
 function getBillingClientName(clientId) {
   const client = billingClients.find((item) => item.id === Number(clientId));
-  return client ? client.name : "Cliente nÃ£o localizado";
+  return client ? client.name : "Cliente não localizado";
 }
 
 function getInvoiceAmount(invoiceId) {
@@ -17842,7 +17842,7 @@ function getVehicleCategoryValue(type, category) {
 }
 
 function formatVehicleScope(type, category) {
-  return shouldUseVehicleCategory(type) && category ? `${type} / ${category}` : type || "VeÃ­culo";
+  return shouldUseVehicleCategory(type) && category ? `${type} / ${category}` : type || "Veículo";
 }
 
 function formatServiceOptionLabel(service) {
@@ -18142,7 +18142,7 @@ function renderVehicleGroup(status) {
   const sortedVehicles = status === "aguardando" ? sortWaitingVehiclesByArrival(vehicles) : vehicles;
   const cards = vehicles.length
     ? sortedVehicles.map((vehicle, index) => renderVehicleCard(vehicle, status === "aguardando" ? index + 1 : 0)).join("")
-    : '<p class="empty-group">Nenhum veÃ­culo neste status.</p>';
+    : '<p class="empty-group">Nenhum veículo neste status.</p>';
 
   return `
     <section class="vehicle-status-group status-group-${status}" aria-label="${groupLabel}">
@@ -18150,7 +18150,7 @@ function renderVehicleGroup(status) {
         <span class="status-dot-icon status-${status}">${icons[meta.icon]}</span>
         <div>
           <h3>${groupLabel}</h3>
-          <p>${vehicles.length} ${vehicles.length === 1 ? "veÃ­culo" : "veÃ­culos"}${status === "aguardando" && vehicles.length ? " Â· fila por ordem de chegada" : ""}</p>
+          <p>${vehicles.length} ${vehicles.length === 1 ? "veículo" : "veículos"}${status === "aguardando" && vehicles.length ? " · fila por ordem de chegada" : ""}</p>
         </div>
       </div>
       <div class="vehicle-group-grid">
@@ -18186,7 +18186,7 @@ function renderVehicleCard(vehicle, queuePosition = 0) {
   const specialCareSummary = getVehicleSpecialCareSummary(vehicle);
   const cardLabel =
     vehicle.status === "cancelado"
-      ? `ServiÃ§o cancelado de ${vehicle.plate}`
+      ? `Serviço cancelado de ${vehicle.plate}`
       : vehicle.status === "finalizado"
       ? `Emitir recibo de ${vehicle.plate}`
       : vehicle.status === "pronto"
@@ -18195,7 +18195,7 @@ function renderVehicleCard(vehicle, queuePosition = 0) {
 
   return `
     <button class="vehicle-card ${queuePosition ? "is-queued" : ""} ${queuePosition === 1 ? "is-next" : ""}" type="button" data-vehicle-id="${vehicle.id}" aria-label="${escapeHtml(cardLabel)}">
-      ${queuePosition ? `<span class="queue-badge">${queuePosition === 1 ? "PrÃ³ximo" : `Fila ${queuePosition}`}</span>` : ""}
+      ${queuePosition ? `<span class="queue-badge">${queuePosition === 1 ? "Próximo" : `Fila ${queuePosition}`}</span>` : ""}
       <span class="vehicle-visual">
         <img class="vehicle-car-icon" src="./assets/brand/icone_carro.png" alt="" />
         <span class="status-corner status-${vehicle.status}" aria-hidden="true">${icons[status.icon]}</span>
@@ -18233,10 +18233,10 @@ function openStatusDialog(vehicleId) {
 
   if (vehicle.status === "cancelado") {
     showMessageBox({
-      title: "ServiÃ§o cancelado",
+      title: "Serviço cancelado",
       message:
-        "NÃ£o Ã© possÃ­vel realizar alteraÃ§Ãµes em serviÃ§o cancelado. Se necessÃ¡rio, faÃ§a uma nova entrada no pÃ¡tio.",
-      eyebrow: "PÃ¡tio",
+        "Não é possível realizar alterações em serviço cancelado. Se necessário, faça uma nova entrada no pátio.",
+      eyebrow: "Pátio",
       confirmLabel: "Entendi"
     });
     return;
@@ -18254,7 +18254,7 @@ function openStatusDialog(vehicleId) {
 function renderStatusDialogContent(vehicle) {
   $("#statusVehicleTitle").textContent = `${vehicle.plate} - ${formatVehicleDisplayName(vehicle)} ${vehicle.color || ""}`.trim();
   $("#statusDialogEyebrow").textContent =
-    vehicle.status === "pronto" ? "Confirmar pagamento" : isFinalizedStatus(vehicle.status) ? "Recibo" : "AÃ§Ãµes do veÃ­culo";
+    vehicle.status === "pronto" ? "Confirmar pagamento" : isFinalizedStatus(vehicle.status) ? "Recibo" : "Ações do veículo";
   $("#statusOptions").innerHTML = isFinalizedStatus(vehicle.status)
     ? renderReceiptPanel(vehicle)
     : vehicle.status === "pronto"
@@ -18289,7 +18289,7 @@ function renderVehicleSpecialCareDetailCard(vehicle) {
   const acknowledged = hasVehicleCareWarningAcknowledged(vehicle, conflictResult);
   return `
     <article class="status-detail-card vehicle-special-care-detail-card">
-      <span>Cuidados especiais do veÃ­culo</span>
+      <span>Cuidados especiais do veículo</span>
       ${
         activeRecords.length
           ? activeRecords
@@ -18297,7 +18297,7 @@ function renderVehicleSpecialCareDetailCard(vehicle) {
                 (record) => `
                   <div class="vehicle-special-care-detail-item">
                     <strong>${escapeHtml(record.type)}</strong>
-                    <p>${escapeHtml(record.attentionLevel)}${record.source ? ` Â· ${escapeHtml(record.source)}` : ""}</p>
+                    <p>${escapeHtml(record.attentionLevel)}${record.source ? ` · ${escapeHtml(record.source)}` : ""}</p>
                     ${
                       record.restrictionTags?.length
                         ? `<div class="vehicle-special-care-inline-tags">${record.restrictionTags
@@ -18316,8 +18316,8 @@ function renderVehicleSpecialCareDetailCard(vehicle) {
         conflictResult.hasConflicts || conflictResult.unknownTechnicalClassification.length
           ? `<p class="vehicle-special-care-detail-alert ${acknowledged ? "is-acknowledged" : ""}">${
               acknowledged
-                ? "Alerta tÃ©cnico jÃ¡ confirmado neste atendimento."
-                : "ServiÃ§o selecionado exige conferÃªncia antes da execuÃ§Ã£o."
+                ? "Alerta técnico já confirmado neste atendimento."
+                : "Serviço selecionado exige conferência antes da execução."
             }</p>`
           : ""
       }
@@ -18357,7 +18357,7 @@ function renderVehicleDetailSections(vehicle, options = {}) {
       ${renderVehicleSpecialCareDetailCard(vehicle)}
 
       <article class="status-detail-card">
-        <span>ServiÃ§os contratados</span>
+        <span>Serviços contratados</span>
         ${getVehicleServices(vehicle)
           .map((serviceName) => {
             const service = findServiceDefinition(serviceName, vehicle.type, vehicle.category);
@@ -18365,7 +18365,7 @@ function renderVehicleDetailSections(vehicle, options = {}) {
               <div class="status-line-item">
                 <div>
                   <strong>${escapeHtml(serviceName)}</strong>
-                  <p>${escapeHtml(service?.duration || "ServiÃ§o contratado")}</p>
+                  <p>${escapeHtml(service?.duration || "Serviço contratado")}</p>
                 </div>
                 <span>${formatCurrency(Number(service?.price || 0))}</span>
               </div>
@@ -18405,7 +18405,7 @@ function renderVehicleDetailSections(vehicle, options = {}) {
       <article class="status-detail-card">
         <span>Resumo financeiro</span>
         <div class="status-line-item">
-          <strong>Total de serviÃ§os</strong>
+          <strong>Total de serviços</strong>
           <span>${formatCurrency(serviceTotal)}</span>
         </div>
         <div class="status-line-item">
@@ -18428,7 +18428,7 @@ function renderVehicleDetailSections(vehicle, options = {}) {
           <strong>Total geral</strong>
           <span>${formatCurrency(getVehiclePaymentTotal(vehicle))}</span>
         </div>
-        <p>Valor lÃ­quido estimado: ${formatCurrency(financeSnapshot.netAmount)}${financeSnapshot.immediateSettlement ? " / na hora" : ` / previsto para ${formatDateBR(financeSnapshot.expectedDate)}`}</p>
+        <p>Valor líquido estimado: ${formatCurrency(financeSnapshot.netAmount)}${financeSnapshot.immediateSettlement ? " / na hora" : ` / previsto para ${formatDateBR(financeSnapshot.expectedDate)}`}</p>
       </article>
     </section>
   `;
@@ -18476,7 +18476,7 @@ function renderAttendanceProductPanel(vehicle) {
       ${renderVehicleDetailSections(vehicle)}
       <section class="status-service-editor status-product-editor">
         <label class="login-field" for="attendanceProductSearch">
-          <span>Buscar produto por nome ou cÃ³digo</span>
+          <span>Buscar produto por nome ou código</span>
           <input id="attendanceProductSearch" type="search" value="${escapeHtml(searchValue)}" placeholder="Ex.: lava seco ou PRD-001" />
         </label>
         <label class="login-field" for="attendanceProductSelect">
@@ -18494,7 +18494,7 @@ function renderAttendanceProductPanel(vehicle) {
           <input id="attendanceProductDiscount" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(formatCurrencyFieldValue(discount))}" />
         </label>
         <label class="login-field inventory-notes-field" for="attendanceProductNotes">
-          <span>ObservaÃ§Ã£o</span>
+          <span>Observação</span>
           <textarea id="attendanceProductNotes" rows="2" placeholder="Ex.: cliente solicitou aromatizante premium"></textarea>
         </label>
         <article class="status-detail-card">
@@ -18504,7 +18504,7 @@ function renderAttendanceProductPanel(vehicle) {
             <span id="attendanceProductStock">${selectedProduct ? formatInventoryQuantity(selectedProduct.stock, selectedProduct.unit) : "-"}</span>
           </div>
           <div class="status-line-item">
-            <strong>PreÃ§o unitÃ¡rio</strong>
+            <strong>Preço unitário</strong>
             <span id="attendanceProductPrice">${selectedProduct ? formatCurrency(selectedProduct.price) : formatCurrency(0)}</span>
           </div>
           <div class="status-line-item is-total">
@@ -18547,7 +18547,7 @@ function updateAttendanceProductPanelPreview() {
 function saveAttendanceProductToVehicle() {
   const vehicle = getPatioVehicleById();
   if (!vehicle || !canManageAttendanceProducts(vehicle)) {
-    showToast("Este atendimento nÃ£o permite adicionar produto neste status.");
+    showToast("Este atendimento não permite adicionar produto neste status.");
     return;
   }
   const panel = $("#statusOptions");
@@ -18556,11 +18556,11 @@ function saveAttendanceProductToVehicle() {
   const discount = getDialogMoneyValue("#attendanceProductDiscount");
   const notes = $("#attendanceProductNotes", panel)?.value.trim() || "";
   if (!product) {
-    showToast("Selecione um produto vÃ¡lido.");
+    showToast("Selecione um produto válido.");
     return;
   }
   if (Number(product.price || 0) <= 0) {
-    showToast("Este produto ainda nÃ£o possui preÃ§o de venda.");
+    showToast("Este produto ainda não possui preço de venda.");
     return;
   }
   if (Number(product.stock || 0) < quantity && !businessFinanceSettings.inventory.allowProductSaleWithoutStock) {
@@ -18618,7 +18618,7 @@ async function removeAttendanceProductFromVehicle(productLineId) {
   const item = vehicle.productsSold[index];
   const confirmed = await showMessageBox({
     title: "Remover produto do atendimento?",
-    message: "O estoque serÃ¡ estornado e o total do atendimento serÃ¡ recalculado.",
+    message: "O estoque será estornado e o total do atendimento será recalculado.",
     confirmLabel: "Remover",
     cancelLabel: "Cancelar",
     confirmOnly: false
@@ -18638,7 +18638,7 @@ async function removeAttendanceProductFromVehicle(productLineId) {
       previousStock,
       currentStock: product.stock,
       unit: product.unit,
-      reason: `RemoÃ§Ã£o de produto do atendimento ${vehicle.plate}`,
+      reason: `Remoção de produto do atendimento ${vehicle.plate}`,
       sourceCode: `PAT-${vehicle.id}`
     });
     saveProductCatalog();
@@ -18711,12 +18711,12 @@ function renderPaymentConfirmationPanel(vehicle) {
           <strong id="paymentConfirmTotal">${formatCurrency(total)}</strong>
           <p>${
             isConfirmed
-              ? `Pagamento confirmado Ã s ${escapeHtml(vehicle.paymentConfirmedAt || "agora")}.`
+              ? `Pagamento confirmado às ${escapeHtml(vehicle.paymentConfirmedAt || "agora")}.`
               : isEntryPayment
-                ? `Pagamento informado na entrada por ${escapeHtml(selectedPaymentMethod)}. Ajuste avulsos e desconto antes de lanÃ§ar no Fluxo de caixa.`
-              : `ServiÃ§os: ${formatCurrency(serviceValue)} Â· Produtos: ${formatCurrency(productsValue)}. Ajuste avulsos e desconto antes de lanÃ§ar no Fluxo de caixa.`
+                ? `Pagamento informado na entrada por ${escapeHtml(selectedPaymentMethod)}. Ajuste avulsos e desconto antes de lançar no Fluxo de caixa.`
+              : `Serviços: ${formatCurrency(serviceValue)} · Produtos: ${formatCurrency(productsValue)}. Ajuste avulsos e desconto antes de lançar no Fluxo de caixa.`
           }</p>
-          <p id="paymentConfirmBreakdown">Avulsos: ${formatCurrency(extraCharges)} Â· Desconto: ${formatCurrency(discount)}</p>
+          <p id="paymentConfirmBreakdown">Avulsos: ${formatCurrency(extraCharges)} · Desconto: ${formatCurrency(discount)}</p>
         </div>
         <label class="login-field" for="paymentConfirmMethod">
           <span>Forma de pagamento</span>
@@ -18758,15 +18758,15 @@ function renderPaymentConfirmationPanel(vehicle) {
           <input id="paymentExtraCharges" type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" value="${escapeHtml(formatCurrencyFieldValue(extraCharges))}" />
         </label>
         <label class="login-field payment-adjustment-field" for="paymentExtraDescription" ${hasExtraCharges ? "" : "hidden"}>
-          <span>DescriÃ§Ã£o do valor avulso</span>
-          <input id="paymentExtraDescription" type="text" placeholder="Ex.: RemoÃ§Ã£o de manchas" value="${escapeHtml(vehicle.extraDescription || "")}" />
+          <span>Descrição do valor avulso</span>
+          <input id="paymentExtraDescription" type="text" placeholder="Ex.: Remoção de manchas" value="${escapeHtml(vehicle.extraDescription || "")}" />
         </label>
         <label class="login-field payment-adjustment-field" for="paymentDiscount" ${hasDiscount ? "" : "hidden"}>
           <span>Valor do desconto</span>
           <input id="paymentDiscount" type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" value="${escapeHtml(formatCurrencyFieldValue(discount))}" />
         </label>
         <label class="login-field payment-adjustment-field" for="paymentDiscountDescription" ${hasDiscount ? "" : "hidden"}>
-          <span>DescriÃ§Ã£o do desconto</span>
+          <span>Descrição do desconto</span>
           <input id="paymentDiscountDescription" type="text" placeholder="Ex.: Cortesia autorizada" value="${escapeHtml(vehicle.discountDescription || "")}" />
         </label>
         <label class="login-field payment-cash-field" id="paymentCashReceivedField" for="paymentCashReceived" ${isCash ? "" : "hidden"}>
@@ -18789,7 +18789,7 @@ function renderPaymentConfirmationPanel(vehicle) {
 
       <div class="dialog-actions status-dialog-actions">
         ${canAddProduct ? `<button class="ghost-action" type="button" data-status-action="show-product-editor"><span data-icon="package"></span><span>Adicionar produto</span></button>` : ""}
-        <button class="exit-button" type="button" data-status-action="edit-services">Editar serviÃ§os</button>
+        <button class="exit-button" type="button" data-status-action="edit-services">Editar serviços</button>
         <button class="ghost-action" type="button" data-status-action="show-status">
           <span data-icon="dashboard"></span>
           <span>Alterar status</span>
@@ -18813,7 +18813,7 @@ function renderReceiptPanel(vehicle) {
         </span>
         <div>
           <strong>${formatCurrency(getVehiclePaymentTotal(vehicle))}</strong>
-          <p>Gere um recibo em PDF com dados do cliente, veÃ­culo, serviÃ§os, pagamento e operador responsÃ¡vel.</p>
+          <p>Gere um recibo em PDF com dados do cliente, veículo, serviços, pagamento e operador responsável.</p>
         </div>
       </section>
       <div class="dialog-actions status-dialog-actions">
@@ -18935,8 +18935,8 @@ function renderStatusActionPanel(vehicle) {
       <button class="status-option edit-services-option" type="button" data-status-action="edit-services">
         <span class="status-dot-icon">${icons.service}</span>
         <span>
-          <strong>Editar serviÃ§os e pagamento</strong><br />
-          <small>Adicionar ou remover serviÃ§os e alterar a forma de pagamento</small>
+          <strong>Editar serviços e pagamento</strong><br />
+          <small>Adicionar ou remover serviços e alterar a forma de pagamento</small>
         </span>
       </button>
       ${
@@ -18962,14 +18962,14 @@ function renderScheduledEntryOption() {
       <span class="status-dot-icon status-aguardando">${icons.check}</span>
       <span>
         <strong>Confirmar entrada</strong><br />
-        <small>Mover veÃ­culo para Aguardando ServiÃ§o</small>
+        <small>Mover veículo para Aguardando Serviço</small>
       </span>
     </button>
     <button class="status-option cancel-schedule-option" type="button" data-status-option="cancelado">
       <span class="status-dot-icon status-cancelado">${icons.cancel}</span>
       <span>
         <strong>Cancelar agendamento</strong><br />
-        <small>Mover veÃ­culo para Finalizados como cancelado</small>
+        <small>Mover veículo para Finalizados como cancelado</small>
       </span>
     </button>
   `;
@@ -18981,7 +18981,7 @@ function renderScheduledEntryConfirmationPanel(vehicle) {
     <div class="status-action-panel">
       ${renderVehicleActionSummary(vehicle)}
       <section class="status-billing-panel">
-        <p class="billing-warning">Confirme a chegada do veÃ­culo agendado. Se necessÃ¡rio, acione o Check-list antes de mover para Aguardando ServiÃ§o.</p>
+        <p class="billing-warning">Confirme a chegada do veículo agendado. Se necessário, acione o Check-list antes de mover para Aguardando Serviço.</p>
       </section>
       ${renderChecklistPanel("scheduledConfirm", vehicle.type, vehicle.checklist || null)}
       <div class="dialog-actions status-dialog-actions">
@@ -19049,7 +19049,7 @@ function handleStatusDialogAction(action) {
       return;
     }
     resetStatusBillingSelection();
-    $("#statusDialogEyebrow").textContent = action === "show-status" ? "Alterar status" : vehicle.status === "pronto" ? "Confirmar pagamento" : "AÃ§Ãµes do veÃ­culo";
+    $("#statusDialogEyebrow").textContent = action === "show-status" ? "Alterar status" : vehicle.status === "pronto" ? "Confirmar pagamento" : "Ações do veículo";
     $("#statusOptions").innerHTML = action === "show-status" ? renderStatusActionPanel(vehicle) : vehicle.status === "pronto" ? renderPaymentConfirmationPanel(vehicle) : renderStatusActionPanel(vehicle);
     initIcons();
     bindCurrencyInputs($("#statusOptions"));
@@ -19240,7 +19240,7 @@ function updatePaymentConfirmationPreview(vehicle) {
     breakdown.push(`Pago agora: ${formatCurrency(updatedAdjustment.partialAmount)}`);
     breakdown.push(`Saldo: ${formatCurrency(updatedAdjustment.partialBalance)}`);
   }
-  $("#paymentConfirmBreakdown").textContent = breakdown.join(" Â· ");
+  $("#paymentConfirmBreakdown").textContent = breakdown.join(" · ");
   if ($("#paymentPartialBalance")) {
     $("#paymentPartialBalance").textContent = formatCurrency(updatedAdjustment.partialBalance);
   }
@@ -19257,13 +19257,13 @@ function renderServiceEditPanel(vehicle, options = {}) {
   if (!options.preserveEdited) editedStatusServices = getVehicleServices(vehicle);
   const availableServices = getServicesForVehicleContext(vehicle);
 
-  $("#statusDialogEyebrow").textContent = "Editar lanÃ§amento";
+  $("#statusDialogEyebrow").textContent = "Editar lançamento";
   $("#statusOptions").innerHTML = `
     <div class="status-action-panel">
       ${renderVehicleActionSummary(vehicle)}
       <section class="status-service-editor">
         <label class="login-field" for="statusServiceSelect">
-          <span>ServiÃ§o contratado</span>
+          <span>Serviço contratado</span>
           <select id="statusServiceSelect">
             ${availableServices
               .map(
@@ -19275,7 +19275,7 @@ function renderServiceEditPanel(vehicle, options = {}) {
         </label>
         <button class="ghost-action" type="button" data-status-action="add-service">
           <span data-icon="plus"></span>
-          <span>Adicionar serviÃ§o</span>
+          <span>Adicionar serviço</span>
         </button>
         <div class="selected-services-list status-selected-services" id="statusServiceList"></div>
         <label class="login-field status-payment-field" for="statusPaymentSelect">
@@ -19289,7 +19289,7 @@ function renderServiceEditPanel(vehicle, options = {}) {
         <button class="exit-button" type="button" data-status-action="back-actions">Voltar</button>
         <button class="primary-button" type="button" data-status-action="save-service-edit">
           <span data-icon="check"></span>
-          <span>Salvar alteraÃ§Ãµes</span>
+          <span>Salvar alterações</span>
         </button>
       </div>
     </div>
@@ -19306,7 +19306,7 @@ function renderStatusServiceChips() {
     ? editedStatusServices
         .map((serviceName) => {
           const registeredService = findServiceDefinition(serviceName);
-          const details = registeredService ? `${formatVehicleScope(registeredService.vehicleType, registeredService.vehicleCategory)} - ${formatCurrency(registeredService.price)}` : "ServiÃ§o contratado";
+          const details = registeredService ? `${formatVehicleScope(registeredService.vehicleType, registeredService.vehicleCategory)} - ${formatCurrency(registeredService.price)}` : "Serviço contratado";
           return `
             <span class="selected-service-chip">
               <span>
@@ -19320,7 +19320,7 @@ function renderStatusServiceChips() {
           `;
         })
         .join("")
-    : '<p class="empty-plates">Nenhum serviÃ§o contratado.</p>';
+    : '<p class="empty-plates">Nenhum serviço contratado.</p>';
 }
 
 function renderStatusBillingPanel(vehicle, mode) {
@@ -19351,7 +19351,7 @@ function renderStatusBillingPanel(vehicle, mode) {
 
   const billingClient = billingClients.find((client) => client.id === Number(registryClient.billingClientId));
   if (!billingClient) {
-    showToast("Cliente faturado aprovado nÃ£o localizado.");
+    showToast("Cliente faturado aprovado não localizado.");
     return;
   }
   selectedStatusBillingClientId = selectedStatusBillingClientId || String(billingClient.id);
@@ -19365,7 +19365,7 @@ function renderStatusBillingPanel(vehicle, mode) {
     <div class="status-action-panel">
       ${renderVehicleActionSummary(vehicle)}
       <section class="status-billing-panel">
-        <p class="billing-warning">Selecione a fatura aberta onde este atendimento serÃ¡ lanÃ§ado. Se nÃ£o houver fatura disponÃ­vel, abra uma nova com vencimento aprovado.</p>
+        <p class="billing-warning">Selecione a fatura aberta onde este atendimento será lançado. Se não houver fatura disponível, abra uma nova com vencimento aprovado.</p>
         <div class="status-billing-grid">
           <label class="login-field" for="statusBillingClientSelect">
             <span>Cliente faturado</span>
@@ -19434,7 +19434,7 @@ function openStatusBillingInvoice() {
   const registryClient = getApprovedBillingClientForEntry(vehicle);
 
   if (!registryClient || !selectedStatusBillingClientId) {
-    showToast("Cliente faturado aprovado nÃ£o localizado.");
+    showToast("Cliente faturado aprovado não localizado.");
     return;
   }
 
@@ -19446,7 +19446,7 @@ function openStatusBillingInvoice() {
 
   const openInvoices = getOpenInvoicesByRegistryClient(registryClient);
   if (openInvoices.length && !registryClient.allowMultipleOpenInvoices) {
-    showToast("Cliente nÃ£o permite mais de uma fatura em aberto.");
+    showToast("Cliente não permite mais de uma fatura em aberto.");
     return;
   }
 
@@ -19498,7 +19498,7 @@ async function finishStatusBillingFlow() {
   refreshCashflowScreen();
   closeStatusDialog();
   await maybeSuggestVehicleCareFromCompletedServices(vehicle);
-  showToast(`LanÃ§amento faturado de ${vehicle.plate} registrado.`);
+  showToast(`Lançamento faturado de ${vehicle.plate} registrado.`);
 }
 
 function getSelectedStatusBillingInvoice() {
@@ -19514,7 +19514,7 @@ function addStatusServiceFromDialog() {
   if (!select?.value) return;
 
   if (editedStatusServices.includes(select.value)) {
-    showToast("ServiÃ§o jÃ¡ incluÃ­do.");
+    showToast("Serviço já incluído.");
     return;
   }
 
@@ -19532,7 +19532,7 @@ function saveStatusServiceEdit() {
   if (!vehicle) return;
 
   if (!editedStatusServices.length) {
-    showToast("Mantenha ao menos um serviÃ§o contratado.");
+    showToast("Mantenha ao menos um serviço contratado.");
     return;
   }
 
@@ -19571,7 +19571,7 @@ function applyStatusServiceEdit(nextPayment, billingInvoice = null) {
   renderPatio();
   refreshCashflowScreen();
   closeStatusDialog();
-  showToast("ServiÃ§os e pagamento atualizados.");
+  showToast("Serviços e pagamento atualizados.");
 }
 
 function applyPaymentAdjustmentsFromDialog(vehicle, method) {
@@ -19679,7 +19679,7 @@ async function confirmVehiclePayment() {
 
   if (usePartialPayment) {
     if (method === "Faturado") {
-      showToast("Para pagamento parcial, selecione o meio pago agora; o saldo ficarÃ¡ em aberto.");
+      showToast("Para pagamento parcial, selecione o meio pago agora; o saldo ficará em aberto.");
       return;
     }
     if (adjustment.total <= 0) {
@@ -19812,7 +19812,7 @@ async function confirmVehiclePayment() {
   showToast(
     cashEntry.status === "Confirmado"
       ? `Pagamento de ${vehicle.plate} confirmado.`
-      : `LanÃ§amento faturado de ${vehicle.plate} registrado.`
+      : `Lançamento faturado de ${vehicle.plate} registrado.`
   );
 }
 
@@ -19836,7 +19836,7 @@ function upsertCashEntryFromVehicle(vehicle, options = {}) {
     method,
     value,
     status,
-    category: "ServiÃ§os",
+    category: "Serviços",
     costCenter: vehicle.type === "Carro" ? "Lavagem" : "Unidade principal",
     plate: vehicle.plate,
     vehicleId: vehicle.id,
@@ -19892,7 +19892,7 @@ function upsertOpenPaymentFromVehicle(vehicle, cashEntry, options = {}) {
     createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
     dueDate: getDefaultOpenPaymentDueDate(),
     status: "Aberto",
-    reminderFrequency: "DiÃ¡rio",
+    reminderFrequency: "Diário",
     operator: activeSessionUser || "Operador",
     vehicleId: vehicle.id,
     cashEntryId: cashEntry?.id || vehicle.cashEntryId || null,

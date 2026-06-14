@@ -8,6 +8,7 @@ dist/
 Thumbs.db
 .env
 .env.*
+!.env.example
 .codex-downloads/
 LavaPrime/
 /Gestão do Projeto.xlsx

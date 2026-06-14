@@ -21,6 +21,7 @@
 - revisar o diff antes do commit
 - validar o fluxo alterado no app
 - rodar `npm run build` quando a mudanca tocar a interface web
+- rodar `npm run verify:build` antes de publicar alteracoes de deploy
 - verificar se assets e arquivos auxiliares necessarios foram versionados
 - confirmar se a documentacao continua coerente
 
@@ -32,6 +33,7 @@ Hoje a validacao automatica prevista inclui:
 
 - `npm ci`
 - `npm run build`
+- `npm run verify:build`
 - checagem de sintaxe de `app/main.js`
 - checagem de sintaxe de `scripts/sync-fipe-local-db.mjs`
 
@@ -51,6 +53,7 @@ Atualize `docs/` quando houver:
 - mudanca em deploy ou execucao local
 - nova dependencia externa
 - decisao estrutural que afete manutencao futura
+- nova migration, politica ou exigencia operacional do backend
 
 ## O que nao deve depender so de contexto humano
 

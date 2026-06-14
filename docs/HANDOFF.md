@@ -8,16 +8,18 @@ Este repositorio deve permitir que qualquer dev entenda o projeto apenas com o c
 
 1. Ler `README.md`.
 2. Ler `docs/ARCHITECTURE.md`.
-3. Ler `docs/PROJECT_STATUS.md`.
-4. Ver os ultimos commits e o `CHANGELOG.md`.
-5. Rodar o projeto localmente e validar os fluxos principais.
+3. Ler `docs/DEPLOYMENT.md`.
+4. Ler `docs/SUPABASE_BACKEND.md`.
+5. Ler `docs/PROJECT_STATUS.md`.
+6. Ver os ultimos commits e o `CHANGELOG.md`.
+7. Rodar o projeto localmente e validar os fluxos principais.
 
 ## O que este projeto e hoje
 
 - app estatico da marca LavaPrime
 - servido por Nginx
 - publicado a partir da pasta `app/`
-- sem backend proprio versionado neste repositorio
+- com backend planejado e versionado em `supabase/`
 - com dados locais em JavaScript e JSON para alguns fluxos
 
 ## Pastas mais importantes
@@ -26,6 +28,7 @@ Este repositorio deve permitir que qualquer dev entenda o projeto apenas com o c
 - `app/assets/data/` - base local de veiculos
 - `app/assets/templates/` - padroes de documentos e relatorios
 - `scripts/` - scripts utilitarios
+- `supabase/` - schema e migrations do backend planejado
 - `Projeto Landingpage/` - materiais de apoio da landing page
 
 ## Regras de continuidade

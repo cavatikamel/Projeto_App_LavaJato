@@ -2,6 +2,11 @@
 
 ## 2026-06-14
 
+- corrigida a publicacao web para copiar `app/assets/` no build do Vite e evitar 404 na Netlify
+- adicionada verificacao automatica de artefatos criticos em `scripts/verify-build-artifacts.mjs`
+- adicionados `netlify.toml`, `.env.example` e checklist de deploy
+- corrigidos textos corrompidos no bootstrap legado que apareciam na interface publicada
+- adicionada a base versionada do backend no Supabase com migration inicial, RLS e documentacao
 - migrada a aplicacao web para uma base React + Vite sem remover a logica funcional existente
 - preservada a marcacao atual em `app/legacy-body.html` para manter compatibilidade durante a transicao
 - adicionado shell React em `app/src/` para inicializar o app legado com build moderno

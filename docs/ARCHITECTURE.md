@@ -39,6 +39,7 @@ O projeto entrega uma aplicacao web compilada pelo Vite e publicada como arquivo
 - `app/assets/data/fipe-veiculos.json` guarda a base local de modelos de veiculos
 - `app/assets/data/fipe-veiculos.js` expoe a mesma base para uso direto no navegador
 - `scripts/sync-fipe-local-db.mjs` atualiza os arquivos da base local
+- `supabase/migrations/` guarda a base versionada do backend planejado
 
 ## Decisoes estruturais atuais
 
@@ -46,13 +47,15 @@ O projeto entrega uma aplicacao web compilada pelo Vite e publicada como arquivo
 - `LavaPrime/` foi removido do escopo de versionamento deste repo
 - `Projeto Landingpage/` fica versionado como material de referencia e apoio
 - o app depende fortemente de assets locais, por isso o versionamento desses arquivos e parte do produto
+- a publicacao web precisa copiar `app/assets/` para `dist/assets/` no build final
+- o backend planejado segue um modelo multi-tenant por empresa no Supabase
 
 ## Riscos tecnicos atuais
 
 - `app/main.js` esta grande e concentra muitas responsabilidades
 - parte da interface ainda esta em markup legado, apesar de o bootstrap agora estar em React
 - parte importante do conhecimento do projeto ainda pode estar fora do repositorio
-- validacoes locais automaticas estao limitadas neste ambiente Windows atual
+- o frontend ainda nao esta conectado ao backend do Supabase
 
 ## Direcao recomendada
 
@@ -60,3 +63,4 @@ O projeto entrega uma aplicacao web compilada pelo Vite e publicada como arquivo
 - migrar telas e fluxos do legado para componentes React em etapas pequenas
 - quando um modulo crescer demais, separar responsabilidades em arquivos menores
 - registrar no repo qualquer integracao futura com hospedagem, banco ou servicos externos
+- migrar o estado persistido localmente para a camada versionada em `supabase/`
