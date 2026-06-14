@@ -2,17 +2,19 @@
 
 ## Stack atual
 
-- HTML
+- React
+- Vite
 - CSS
-- JavaScript puro
+- JavaScript puro para o bootstrap legado
 - Nginx para servir o app
 - Docker para empacotamento e execucao local
 
 ## Modelo de entrega
 
-O projeto e uma aplicacao estatica.
+O projeto entrega uma aplicacao web compilada pelo Vite e publicada como arquivos estaticos.
 
-- `Dockerfile` copia `app/` para `/usr/share/nginx/html`
+- `Dockerfile` executa o build com Node
+- `dist/` e publicado pelo Nginx
 - `nginx.conf` usa fallback para `index.html`
 - `docker-compose.yml` expoe a aplicacao em `localhost:8080`
 
@@ -29,9 +31,11 @@ O projeto e uma aplicacao estatica.
 - check-list veicular
 - exportacoes em PDF
 
-## Dados locais relevantes
+## Estrutura tecnica da migracao
 
-- `app/main.js` concentra a maior parte da logica da aplicacao
+- `app/src/App.jsx` renderiza a marcacao preservada do app e inicializa o legado
+- `app/legacy-body.html` guarda a estrutura HTML migrada da versao estatica
+- `app/main.js` concentra a maior parte da logica funcional legada
 - `app/assets/data/fipe-veiculos.json` guarda a base local de modelos de veiculos
 - `app/assets/data/fipe-veiculos.js` expoe a mesma base para uso direto no navegador
 - `scripts/sync-fipe-local-db.mjs` atualiza os arquivos da base local
@@ -46,11 +50,13 @@ O projeto e uma aplicacao estatica.
 ## Riscos tecnicos atuais
 
 - `app/main.js` esta grande e concentra muitas responsabilidades
+- parte da interface ainda esta em markup legado, apesar de o bootstrap agora estar em React
 - parte importante do conhecimento do projeto ainda pode estar fora do repositorio
 - validacoes locais automaticas estao limitadas neste ambiente Windows atual
 
 ## Direcao recomendada
 
 - manter a documentacao tecnica dentro de `docs/`
+- migrar telas e fluxos do legado para componentes React em etapas pequenas
 - quando um modulo crescer demais, separar responsabilidades em arquivos menores
 - registrar no repo qualquer integracao futura com hospedagem, banco ou servicos externos

@@ -20,6 +20,7 @@
 
 - revisar o diff antes do commit
 - validar o fluxo alterado no app
+- rodar `npm run build` quando a mudanca tocar a interface web
 - verificar se assets e arquivos auxiliares necessarios foram versionados
 - confirmar se a documentacao continua coerente
 
@@ -29,8 +30,17 @@ O repositorio deve manter checks no GitHub Actions.
 
 Hoje a validacao automatica prevista inclui:
 
+- `npm ci`
+- `npm run build`
 - checagem de sintaxe de `app/main.js`
 - checagem de sintaxe de `scripts/sync-fipe-local-db.mjs`
+
+## Fluxo web atual
+
+- `npm run dev` sobe o shell React + Vite em modo desenvolvimento
+- `app/src/` concentra a camada nova de bootstrap e futura componentizacao
+- `app/legacy-body.html` preserva a marcacao da aplicacao atual
+- `app/main.js` segue como camada funcional legada ate a migracao gradual dos modulos
 
 ## Regra de documentacao
 

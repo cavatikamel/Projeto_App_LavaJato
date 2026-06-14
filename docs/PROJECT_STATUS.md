@@ -2,11 +2,11 @@
 
 ## Estado atual
 
-O projeto esta ativo, com repositorio principal funcional e publicacao no GitHub validada.
+O projeto esta ativo, com repositorio principal funcional, publicacao no GitHub validada e base web migrada para React + Vite com compatibilidade legada.
 
 ## Modulos presentes no repositorio
 
-- app principal servido estaticamente
+- app principal migrado para base React + Vite com compatibilidade legada
 - financeiro com fluxo de caixa e pagamentos em aberto
 - central de mensagens
 - cadastro e historico de veiculos
@@ -23,6 +23,7 @@ O projeto esta ativo, com repositorio principal funcional e publicacao no GitHub
 
 ## Pendencias conhecidas
 
+- migrar gradualmente a interface e a logica de `app/main.js` para componentes e modulos React
 - reduzir dependencia de conhecimento fora do repositorio
 - melhorar a granularidade de `app/main.js`
 - ampliar validacoes automaticas conforme o projeto evoluir

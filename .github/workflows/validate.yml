@@ -18,8 +18,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
 
-      - name: Check app syntax
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+
+      - name: Check legacy app syntax
         run: node --check app/main.js
 
       - name: Check sync script syntax
@@ -29,6 +36,8 @@ jobs:
         run: |
           test -f README.md
           test -f CHANGELOG.md
+          test -f package.json
           test -f app/index.html
+          test -f app/legacy-body.html
           test -f app/styles.css
           test -f app/main.js

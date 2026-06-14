@@ -1,12 +1,12 @@
 # Projeto App LavaJato
 
-Aplicacao estatica da marca LavaPrime para operacao de patio, cadastro, financeiro, comunicacao com clientes e emissoes em PDF.
+Aplicacao web da marca LavaPrime para operacao de patio, cadastro, financeiro, comunicacao com clientes e emissoes em PDF.
 
 ## Visao geral
 
-O projeto e servido como app estatico via Nginx e pode ser executado localmente com Docker. O repositorio concentra:
+O projeto usa React + Vite como base de execucao da interface e preserva a logica funcional legada em JavaScript puro durante a migracao. O repositorio concentra:
 
-- app principal em HTML, CSS e JavaScript puro
+- app principal com shell React e bootstrap legado
 - ativos visuais e templates PDF
 - banco local de veiculos para autocomplete
 - script de sincronizacao da base FIPE
@@ -25,7 +25,9 @@ O projeto e servido como app estatico via Nginx e pode ser executado localmente 
 ## Estrutura
 
 ```text
-app/                   Aplicacao principal publicada pelo Nginx
+app/                   Aplicacao principal servida pelo Vite e publicada apos build
+app/src/               Shell React e bootstrap da migracao
+app/legacy-body.html   Marcacao HTML preservada da aplicacao original
 app/assets/brand/      Logos e icones da marca
 app/assets/checklist-icons/
                        Icones usados no check-list
@@ -33,9 +35,10 @@ app/assets/data/       Base local FIPE em JSON e JS
 app/assets/templates/  Templates de papel timbrado e referencias PDF/DOCX
 scripts/               Scripts utilitarios de manutencao
 Projeto Landingpage/   Materiais de apoio da landing page
-Dockerfile             Imagem de deploy estatico
+Dockerfile             Build com Vite + entrega estatica em Nginx
 docker-compose.yml     Execucao local com Docker
 nginx.conf             Configuracao do servidor estatico
+vite.config.js         Configuracao do Vite
 ```
 
 ## Documentacao do repositorio
@@ -50,7 +53,16 @@ Para garantir handoff completo para qualquer dev futuro, use estes arquivos como
 
 ## Como rodar localmente
 
-### Opcao 1: Docker Compose
+### Opcao 1: Desenvolvimento com Vite
+
+```powershell
+npm install
+npm run dev
+```
+
+Depois acesse o endereco exibido pelo Vite, normalmente `http://localhost:5173`.
+
+### Opcao 2: Docker Compose
 
 ```powershell
 docker compose up --build
@@ -58,9 +70,13 @@ docker compose up --build
 
 Depois acesse [http://localhost:8080](http://localhost:8080).
 
-### Opcao 2: Servidor estatico
+### Opcao 3: Build local
 
-Abra `app/index.html` por um servidor HTTP local de sua preferencia. Como o projeto usa arquivos JS, CSS, JSON e assets locais, prefira servidor HTTP em vez de abrir o arquivo diretamente no navegador.
+```powershell
+npm run build
+```
+
+Os arquivos finais de publicacao ficam em `dist/`.
 
 ## Base local FIPE
 
@@ -79,7 +95,7 @@ Variaveis opcionais:
 
 - `Projeto_App_LavaJato` e o repositorio principal
 - `LavaPrime/` foi desconsiderado neste repositorio para evitar historico duplicado
-- `Gestão do Projeto.xlsx` e um artefato operacional local e nao entra no versionamento
+- `Gestao do Projeto.xlsx` e um artefato operacional local e nao entra no versionamento
 - toda alteracao relevante deve deixar rastros no GitHub: codigo, commit e, quando necessario, documentacao
 
 Fluxo recomendado:
@@ -94,12 +110,13 @@ Fluxo recomendado:
 
 O deploy atual esta preparado para entrega como site estatico com Nginx:
 
-- `Dockerfile` copia `app/` para `/usr/share/nginx/html`
+- `Dockerfile` executa `npm run build`
+- o resultado de `dist/` e copiado para `/usr/share/nginx/html`
 - `nginx.conf` faz fallback para `index.html`
 - arquivos estaticos recebem cache publico
 
 ## Observacoes
 
 - O ambiente atual permitiu validar acesso ao GitHub e publicacao por `git push`.
-- Neste turno, a checagem por `node --check` nao foi possivel porque `node.exe` retornou erro de acesso no Windows local.
-- Para compensar isso, o repositorio deve manter validacao automatica no GitHub Actions sempre que possivel.
+- A migracao atual preserva a logica do app em `app/main.js` para evitar regressao funcional.
+- O repositorio deve manter validacao automatica no GitHub Actions sempre que possivel.

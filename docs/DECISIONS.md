@@ -37,3 +37,20 @@ Motivo:
 Consequencia:
 
 - informacoes importantes da planilha precisam ser refletidas em Markdown dentro do repositorio
+
+## 2026-06-14 - Migracao segura para React + Vite
+
+Decisao:
+
+- a base web passa a rodar com React + Vite
+- a logica existente em `app/main.js` permanece ativa durante a transicao
+- a marcacao atual fica preservada em `app/legacy-body.html`
+
+Motivo:
+
+- modernizar build, deploy e manutencao sem perder o comportamento ja implementado
+
+Consequencia:
+
+- o projeto ganha base moderna para componentizacao gradual
+- a reescrita deixa de ser um corte brusco e passa a ser feita por etapas
