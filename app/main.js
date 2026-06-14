@@ -3474,6 +3474,7 @@ function renderVehicleRegistrySpecialCareSection(vehicle) {
   const records = vehicle ? getVehicleSpecialCareRecords(vehicle) : [];
   const formState = getVehicleSpecialCareFormState();
   const activeRecords = records.filter((record) => record.active !== false);
+  const inactiveRecords = records.filter((record) => record.active === false);
   return `
     <section class="vehicle-special-care-section">
       <div class="vehicle-special-care-head">
@@ -3489,6 +3490,18 @@ function renderVehicleRegistrySpecialCareSection(vehicle) {
             ? `<div class="vehicle-special-care-record-list">${activeRecords.map((record) => renderVehicleSpecialCareRecordCard(record, { canManage: true })).join("")}</div>`
             : '<p class="empty-plates">Nenhum cuidado especial ativo para este veículo.</p>'
           : '<p class="empty-plates">Salve o veículo para manter histórico completo. Você já pode registrar o primeiro cuidado especial.</p>'
+      }
+      ${
+        inactiveRecords.length
+          ? `
+            <div class="vehicle-special-care-history">
+              <span>Histórico inativo</span>
+              <div class="vehicle-special-care-record-list is-compact">${inactiveRecords
+                .map((record) => renderVehicleSpecialCareRecordCard(record, { canManage: true }))
+                .join("")}</div>
+            </div>
+          `
+          : ""
       }
       <label class="switch-field" for="vehicleSpecialCareEnabled">
         <input id="vehicleSpecialCareEnabled" type="checkbox" ${formState.enabled ? "checked" : ""} />
@@ -11822,6 +11835,48 @@ async function ensureVehicleCareWarningAcknowledged(vehicle, conflictResult, con
   registerVehicleCareWarningAcknowledgement(vehicle, conflictResult, context);
   renderAdminDashboard();
   return true;
+}
+
+function getVehicleAutoCareSuggestion(vehicle) {
+  const existingTypes = new Set(getVehicleActiveSpecialCareRecords(vehicle).map((record) => normalizeText(record.type)));
+  return getVehicleServices(vehicle)
+    .map((serviceName) => findServiceDefinition(serviceName))
+    .find((service) => service?.autoCreateVehicleCareType && !existingTypes.has(normalizeText(service.autoCreateVehicleCareType)));
+}
+
+async function maybeSuggestVehicleCareFromCompletedServices(vehicle) {
+  const suggestedService = getVehicleAutoCareSuggestion(vehicle);
+  const registryVehicle = findVehicleByPlate(vehicle?.plate || "");
+  if (!suggestedService || !registryVehicle) return;
+  const confirmed = await showMessageBox({
+    title: "Registrar cuidado especial?",
+    message: `${suggestedService.name} foi concluído. Deseja registrar ${suggestedService.autoCreateVehicleCareType} para alertas futuros deste veículo?`,
+    eyebrow: "Pós-serviço",
+    confirmLabel: "Registrar",
+    cancelLabel: "Agora não",
+    confirmOnly: false
+  });
+  if (!confirmed) return;
+  const record = createVehicleSpecialCareRecord(
+    registryVehicle,
+    {
+      type: suggestedService.autoCreateVehicleCareType,
+      attentionLevel: "Atenção",
+      source: "Serviço realizado neste lava jato",
+      description: `Registrado após a conclusão de ${suggestedService.name}.`
+    },
+    {
+      attendanceId: vehicle.id,
+      sourceAttendanceId: vehicle.id,
+      sourceServiceId: suggestedService.name,
+      historyDescription: `Cuidado especial sugerido após a conclusão de ${suggestedService.name}.`
+    }
+  );
+  if (!record) return;
+  appendAttendanceHistory(vehicle, `Cuidado especial criado após ${suggestedService.name}.`, "vehicle_special_care_created");
+  renderPatio();
+  renderAdminDashboard();
+  showToast(`${record.type} registrado para ${vehicle.plate}.`);
 }
 
 function getVehicleOwnerName(vehicle) {
@@ -20489,7 +20544,7 @@ function openStatusBillingInvoice() {
   showToast("Nova fatura aberta.");
 }
 
-function finishStatusBillingFlow() {
+async function finishStatusBillingFlow() {
   const vehicle = getPatioVehicleById();
   if (!vehicle) return;
 
@@ -20519,6 +20574,7 @@ function finishStatusBillingFlow() {
   renderPatio();
   refreshCashflowScreen();
   closeStatusDialog();
+  await maybeSuggestVehicleCareFromCompletedServices(vehicle);
   showToast(`Lançamento faturado de ${vehicle.plate} registrado.`);
 }
 
@@ -20691,6 +20747,7 @@ async function confirmVehiclePayment() {
     refreshCashflowScreen();
     renderAdminDashboard();
     closeStatusDialog();
+    await maybeSuggestVehicleCareFromCompletedServices(vehicle);
     triggerAutomatedMessage("payment-confirmation", getMessageContextFromVehicle(vehicle));
     triggerAutomatedMessage("satisfaction", getMessageContextFromVehicle(vehicle));
     showToast(`Pagamento na entrada de ${vehicle.plate} confirmado.`);
@@ -20772,6 +20829,7 @@ async function confirmVehiclePayment() {
     refreshCashflowScreen();
     renderAdminDashboard();
     closeStatusDialog();
+    await maybeSuggestVehicleCareFromCompletedServices(vehicle);
     triggerAutomatedMessage("partial-yard-payment", getMessageContextFromVehicle(vehicle));
     showToast(`Pagamento parcial de ${vehicle.plate} registrado. Saldo em aberto: ${formatCurrency(adjustment.partialBalance)}.`);
     return;
@@ -20804,6 +20862,7 @@ async function confirmVehiclePayment() {
     refreshCashflowScreen();
     renderAdminDashboard();
     closeStatusDialog();
+    await maybeSuggestVehicleCareFromCompletedServices(vehicle);
     triggerAutomatedMessage("open-service-payment", getMessageContextFromOpenPayment(openPayment));
     showToast(`Pagamento em aberto de ${vehicle.plate} registrado para ${openPayment.clientName}.`);
     return;
@@ -20822,6 +20881,7 @@ async function confirmVehiclePayment() {
   renderPatio();
   refreshCashflowScreen();
   closeStatusDialog();
+  await maybeSuggestVehicleCareFromCompletedServices(vehicle);
   if (cashEntry.status === "Confirmado") {
     triggerAutomatedMessage("payment-confirmation", getMessageContextFromVehicle(vehicle));
     triggerAutomatedMessage("satisfaction", getMessageContextFromVehicle(vehicle));
