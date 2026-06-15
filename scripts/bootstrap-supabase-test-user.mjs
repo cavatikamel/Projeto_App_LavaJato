@@ -176,7 +176,9 @@ async function ensureProfile(client, user) {
 async function clearOrganizationData(client, organizationId) {
   for (const tableName of organizationScopedTablesToClear) {
     const { error } = await client.from(tableName).delete().eq("organization_id", organizationId);
-    if (error) throw new Error(`Falha ao limpar ${tableName}: ${error.message}`);
+    if (!error) continue;
+    if (error.code === "PGRST205") continue;
+    throw new Error(`Falha ao limpar ${tableName}: ${error.message}`);
   }
 }
 
@@ -197,7 +199,7 @@ async function seedOrganizationConfig(client, organizationId) {
     },
     { onConflict: "organization_id" }
   );
-  if (profileError) throw profileError;
+  if (profileError && profileError.code !== "PGRST205") throw profileError;
 
   const { error: financeError } = await client.from("finance_settings").upsert(
     {
@@ -212,7 +214,7 @@ async function seedOrganizationConfig(client, organizationId) {
     },
     { onConflict: "organization_id" }
   );
-  if (financeError) throw financeError;
+  if (financeError && financeError.code !== "PGRST205") throw financeError;
 
   const defaultPaymentMethods = [
     { name: "Pix", method_type: "instantaneo" },
@@ -238,7 +240,7 @@ async function seedOrganizationConfig(client, organizationId) {
     { onConflict: "organization_id,name" }
   );
 
-  if (paymentsError) throw paymentsError;
+  if (paymentsError && paymentsError.code !== "PGRST205") throw paymentsError;
 }
 
 async function ensureMembership(client, organizationId, userId) {
