@@ -1222,6 +1222,10 @@ function selectProfile(button) {
   });
 }
 
+function looksLikeRemoteEmailLogin(user) {
+  return String(user || "").includes("@");
+}
+
 async function confirmLogin() {
   const user = $("#loginUser").value.trim();
   const password = $("#loginPassword").value.trim();
@@ -1233,6 +1237,11 @@ async function confirmLogin() {
 
   if (!selectedProfile) {
     showToast("Escolha Administrador ou Operador para continuar.");
+    return null;
+  }
+
+  if (!hasSupabaseBrowserConfig() && looksLikeRemoteEmailLogin(user)) {
+    showToast("Supabase nao configurado neste navegador. Crie .env.local para usar a base limpa de teste.");
     return null;
   }
 

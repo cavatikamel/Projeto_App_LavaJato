@@ -21,6 +21,7 @@
 - adicionado script `bootstrap:test-user` para criar ou resetar o usuario `Teste` com base vazia
 - ampliado `.env.example` com variaveis do bootstrap do ambiente de teste
 - documentado o fluxo de teste local com Supabase em `docs/TESTING.md`
+- bloqueado o login por email no modo local para evitar abrir a base ficticia quando o Supabase nao estiver configurado
 
 ## 2026-06-07
 

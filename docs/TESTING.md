@@ -47,6 +47,8 @@ Sinais de que o frontend entrou no modo Supabase:
 
 Se o frontend entrar no modo local legado, o app continua abrindo, mas os dados ficam apenas no navegador. Isso normalmente indica ausencia ou erro em `VITE_SUPABASE_URL` ou `VITE_SUPABASE_ANON_KEY`.
 
+Se voce abrir o app e ainda enxergar clientes, veiculos e servicos ficticios, isso significa que o navegador entrou no modo demo local, nao no ambiente remoto limpo do Supabase.
+
 ## Checklist de teste funcional
 
 1. Fazer login com o usuario de teste.
