@@ -2,7 +2,7 @@
 
 ## Estado atual
 
-O projeto esta ativo, com repositorio principal funcional, publicacao no GitHub validada, base web migrada para React + Vite com compatibilidade legada e primeira etapa de autenticacao/sincronizacao com Supabase em construcao.
+O projeto esta ativo, com repositorio principal funcional, publicacao no GitHub validada, base web migrada para React + Vite com compatibilidade legada e primeira etapa de autenticacao/sincronizacao com Supabase ja preparada em branch dedicada.
 
 ## Modulos presentes no repositorio
 
@@ -14,7 +14,7 @@ O projeto esta ativo, com repositorio principal funcional, publicacao no GitHub 
 - check-list veicular com exportacao
 - base local FIPE para autocomplete
 - migrations iniciais de backend para Supabase
-- login remoto com Supabase e snapshot por organizacao em desenvolvimento
+- login remoto com Supabase e snapshot por organizacao preparados para teste local
 - materiais de apoio da landing page
 
 ## Estado operacional do repositorio
@@ -25,12 +25,13 @@ O projeto esta ativo, com repositorio principal funcional, publicacao no GitHub 
 - backlog em planilha mantido fora do Git
 - deploy web preparado para publicar a pasta `dist/`
 - branch dedicada para a primeira construcao do Supabase: `feat/supabase-bootstrap-test-user`
+- ambiente de teste documentado em `docs/TESTING.md`
 
 ## Pendencias conhecidas
 
 - migrar gradualmente a interface e a logica de `app/main.js` para componentes e modulos React
-- conectar autenticacao, banco e storage do frontend ao Supabase
-- aplicar as migrations no projeto remoto e executar o bootstrap do usuario `Teste`
+- aprofundar a migracao do snapshot remoto para tabelas relacionais por modulo
+- configurar a chave publica `VITE_SUPABASE_ANON_KEY` nos ambientes locais e publicados
 - reduzir dependencia de conhecimento fora do repositorio
 - melhorar a granularidade de `app/main.js`
 - ampliar validacoes automaticas conforme o projeto evoluir

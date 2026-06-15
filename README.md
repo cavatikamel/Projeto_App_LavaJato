@@ -49,6 +49,7 @@ Para garantir handoff completo para qualquer dev futuro, use estes arquivos como
 - `docs/ARCHITECTURE.md` - arquitetura atual e decisoes tecnicas principais
 - `docs/DEVELOPMENT.md` - rotina de desenvolvimento, validacao, commit e publicacao
 - `docs/DEPLOYMENT.md` - fluxo de publicacao web e checklist de release
+- `docs/TESTING.md` - como subir o ambiente de teste local e validar o fluxo com Supabase
 - `docs/PROJECT_STATUS.md` - estado atual do produto, modulos e pendencias conhecidas
 - `docs/SUPABASE_BACKEND.md` - plano do backend, seguranca e estrutura do Supabase
 - `docs/DECISIONS.md` - registro de decisoes estruturais do projeto
@@ -132,6 +133,7 @@ Importante:
 
 - esta primeira etapa passa a autenticar no Supabase e sincronizar o estado do LavaPrime por organizacao
 - a aplicacao real no projeto remoto ainda depende de aplicar as migrations e informar as credenciais locais
+- o passo a passo para acessar o ambiente de teste local esta em `docs/TESTING.md`
 
 ## Observacoes
 

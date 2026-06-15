@@ -43,6 +43,7 @@ Hoje a validacao automatica prevista inclui:
 - `app/src/` concentra a camada nova de bootstrap e futura componentizacao
 - `app/legacy-body.html` preserva a marcacao da aplicacao atual
 - `app/main.js` segue como camada funcional legada ate a migracao gradual dos modulos
+- para testar login remoto e persistencia real, usar tambem o fluxo documentado em `docs/TESTING.md`
 
 ## Regra de documentacao
 

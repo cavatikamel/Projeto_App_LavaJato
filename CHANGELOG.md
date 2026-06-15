@@ -20,6 +20,7 @@
 - adicionada migration `organization_app_states` para armazenar o snapshot operacional do LavaPrime por empresa
 - adicionado script `bootstrap:test-user` para criar ou resetar o usuario `Teste` com base vazia
 - ampliado `.env.example` com variaveis do bootstrap do ambiente de teste
+- documentado o fluxo de teste local com Supabase em `docs/TESTING.md`
 
 ## 2026-06-07
 
