@@ -1,3 +1,13 @@
+import {
+  fetchOrganizationAppState,
+  getLavaprimeSessionContext,
+  hasSupabaseBrowserConfig,
+  isSupabaseAdminRole,
+  signInLavaprime,
+  signOutLavaprime,
+  upsertOrganizationAppState
+} from "./src/lib/lavaprimeSupabase.js";
+
 const icons = {
   shield: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.7-2.8 8.6-7 10-4.2-1.4-7-5.3-7-10V6l7-3z"/><path d="M9 12l2 2 4-5"/></svg>',
   user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg>',
@@ -77,6 +87,17 @@ let vehicleRegistryDialogSource = "";
 let selectedVehicleSpecialCareId = null;
 let entryVehicleSpecialCareDraft = null;
 let lastEntryCareConflictSignature = "";
+const remoteWorkspaceState = {
+  autosaveTimer: 0,
+  dirty: false,
+  enabled: false,
+  isLoading: false,
+  isSaving: false,
+  lastSnapshotHash: "",
+  membershipRole: "",
+  organizationId: null,
+  userId: null
+};
 const vehicleOwnerTransferSearchModes = [
   { value: "name", label: "Nome / Razao social", placeholder: "Digite o nome ou a razao social" },
   { value: "document", label: "Documento", placeholder: "Digite o CPF ou CNPJ" },
@@ -1160,6 +1181,7 @@ function showToast(message) {
   toast.textContent = message;
   toast.classList.add("is-visible");
   toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 2400);
+  queueRemoteStateSync();
 }
 
 function showMessageBox({ title, message, eyebrow = "Atenção", confirmLabel = "Entendi", cancelLabel = "", confirmOnly = true }) {
@@ -1200,7 +1222,7 @@ function selectProfile(button) {
   });
 }
 
-function confirmLogin() {
+async function confirmLogin() {
   const user = $("#loginUser").value.trim();
   const password = $("#loginPassword").value.trim();
 
@@ -1212,6 +1234,31 @@ function confirmLogin() {
   if (!selectedProfile) {
     showToast("Escolha Administrador ou Operador para continuar.");
     return null;
+  }
+
+  if (hasSupabaseBrowserConfig()) {
+    try {
+      const sessionContext = await signInLavaprime({ email: user, password });
+      if (!sessionContext) throw new Error("Não foi possível abrir a sessão no Supabase.");
+
+      const wantsAdmin = selectedProfile === "Administrador";
+      const hasAdminAccess = isSupabaseAdminRole(sessionContext.membership.role);
+
+      if (wantsAdmin && !hasAdminAccess) {
+        await signOutLavaprime();
+        showToast("Este usuário remoto não possui acesso administrativo.");
+        return null;
+      }
+
+      await initializeRemoteWorkspace(sessionContext);
+      if (wantsAdmin || hasAdminAccess) showAdmin(sessionContext.displayName);
+      else showPatio(sessionContext.displayName);
+      return sessionContext;
+    } catch (error) {
+      console.error("Falha ao autenticar no Supabase.", error);
+      showToast(error?.message || "Não foi possível autenticar no Supabase.");
+      return null;
+    }
   }
 
   if (selectedProfile === "Administrador") showAdmin(user);
@@ -1236,7 +1283,7 @@ function bindEvents() {
 
   $("#loginForm").addEventListener("submit", (event) => {
     event.preventDefault();
-    confirmLogin();
+    void confirmLogin();
   });
   $("#exitTool").addEventListener("click", exitTool);
   $("#patioLogout").addEventListener("click", returnToLogin);
@@ -1454,7 +1501,16 @@ function showAdminView(view) {
   if (!["dashboard", "patio", "quotes"].includes(normalizedView)) renderAdminScreen(normalizedView);
 }
 
-function returnToLogin() {
+async function returnToLogin() {
+  await flushRemoteStateSync();
+  stopRemoteAutosave();
+  if (hasSupabaseBrowserConfig()) {
+    try {
+      await signOutLavaprime();
+    } catch (error) {
+      console.error("Falha ao encerrar sessão remota.", error);
+    }
+  }
   $("#patioScreen").hidden = true;
   $("#adminShell").hidden = true;
   $(".login-screen").classList.remove("is-hidden");
@@ -5674,6 +5730,241 @@ function normalizeBusinessSocialLinks(links = {}) {
   }, {});
 }
 
+function cloneSerializable(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function replaceArrayContents(target, source) {
+  target.splice(0, target.length, ...source);
+}
+
+function createDefaultRemoteOperator(sessionContext) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  return {
+    id: 1,
+    name: sessionContext.displayName || "Administrador",
+    cpf: "",
+    phone: "",
+    accessProfile: "Administrador",
+    username: sessionContext.user?.email || "administrador",
+    password: "",
+    commissionType: "fixed",
+    commissionValue: 0,
+    role: "Administrador",
+    shift: "A definir",
+    today: 0,
+    status: "Ativo",
+    accessHistory: [],
+    production: [{ date: today, services: 0, revenue: 0, attendance: "Cadastrado", items: [] }]
+  };
+}
+
+function getDefaultRemoteWorkspaceSnapshot(sessionContext) {
+  return {
+    billingClients: [],
+    billingInvoices: [],
+    invoiceLineItems: [],
+    patioVehicles: [],
+    quoteEstimates: [],
+    clientRegistry: [],
+    vehicleRegistry: [],
+    adminOperators: [createDefaultRemoteOperator(sessionContext)],
+    serviceCatalog: [],
+    openPayments: [],
+    payableAccounts: [],
+    businessProfile: normalizeBusinessProfile({
+      ...getDefaultBusinessProfile(),
+      email: sessionContext.user?.email || "",
+      legalName: "",
+      tradeName: ""
+    }),
+    businessBankAccounts: [],
+    businessPixInfo: getDefaultBusinessPixInfo(),
+    businessPaymentMethods: normalizeBusinessPaymentMethods(getDefaultBusinessPaymentMethods()),
+    businessFinanceSettings: normalizeBusinessFinanceSettings(getDefaultBusinessFinanceSettings()),
+    businessSocialLinks: normalizeBusinessSocialLinks(getDefaultBusinessSocialLinks()),
+    businessMessageTemplates: getDefaultMessageTemplates(),
+    productCatalog: normalizeProductCatalog([]),
+    supplyCatalog: normalizeSupplyCatalog([]),
+    productSales: normalizeProductSales([]),
+    inventoryMovements: normalizeInventoryMovements([]),
+    serviceSupplyProfiles: normalizeServiceSupplyProfiles([]),
+    documentHistory: normalizeDocumentHistory([]),
+    cashEntries: normalizeCashEntries([]),
+    vehicleSpecialCareRecords: normalizeVehicleSpecialCareRecords([])
+  };
+}
+
+function buildRemoteWorkspaceSnapshot() {
+  return {
+    billingClients: cloneSerializable(billingClients),
+    billingInvoices: cloneSerializable(billingInvoices),
+    invoiceLineItems: cloneSerializable(invoiceLineItems),
+    patioVehicles: cloneSerializable(patioVehicles),
+    quoteEstimates: cloneSerializable(quoteEstimates),
+    clientRegistry: cloneSerializable(clientRegistry),
+    vehicleRegistry: cloneSerializable(vehicleRegistry),
+    adminOperators: cloneSerializable(adminOperators),
+    serviceCatalog: cloneSerializable(serviceCatalog),
+    openPayments: cloneSerializable(openPayments),
+    payableAccounts: cloneSerializable(payableAccounts),
+    businessProfile: cloneSerializable(businessProfile),
+    businessBankAccounts: cloneSerializable(businessBankAccounts),
+    businessPixInfo: cloneSerializable(businessPixInfo),
+    businessPaymentMethods: cloneSerializable(businessPaymentMethods),
+    businessFinanceSettings: cloneSerializable(businessFinanceSettings),
+    businessSocialLinks: cloneSerializable(businessSocialLinks),
+    businessMessageTemplates: cloneSerializable(businessMessageTemplates),
+    productCatalog: cloneSerializable(productCatalog),
+    supplyCatalog: cloneSerializable(supplyCatalog),
+    productSales: cloneSerializable(productSales),
+    inventoryMovements: cloneSerializable(inventoryMovements),
+    serviceSupplyProfiles: cloneSerializable(serviceSupplyProfiles),
+    documentHistory: cloneSerializable(documentHistory),
+    cashEntries: cloneSerializable(cashEntries),
+    vehicleSpecialCareRecords: cloneSerializable(vehicleSpecialCareRecords)
+  };
+}
+
+function applyRemoteWorkspaceSnapshot(snapshot, sessionContext) {
+  const fallback = getDefaultRemoteWorkspaceSnapshot(sessionContext);
+  const nextSnapshot = {
+    ...fallback,
+    ...(snapshot && typeof snapshot === "object" ? snapshot : {})
+  };
+
+  businessProfile = normalizeBusinessProfile(nextSnapshot.businessProfile || fallback.businessProfile);
+  businessBankAccounts = Array.isArray(nextSnapshot.businessBankAccounts) ? nextSnapshot.businessBankAccounts : [];
+  businessPixInfo = { ...getDefaultBusinessPixInfo(), ...(nextSnapshot.businessPixInfo || {}) };
+  businessPaymentMethods = normalizeBusinessPaymentMethods(nextSnapshot.businessPaymentMethods || fallback.businessPaymentMethods);
+  businessFinanceSettings = normalizeBusinessFinanceSettings(
+    nextSnapshot.businessFinanceSettings || fallback.businessFinanceSettings
+  );
+  businessSocialLinks = normalizeBusinessSocialLinks(nextSnapshot.businessSocialLinks || fallback.businessSocialLinks);
+  businessMessageTemplates = Array.isArray(nextSnapshot.businessMessageTemplates)
+    ? nextSnapshot.businessMessageTemplates
+    : fallback.businessMessageTemplates;
+  productCatalog = normalizeProductCatalog(nextSnapshot.productCatalog || []);
+  supplyCatalog = normalizeSupplyCatalog(nextSnapshot.supplyCatalog || []);
+  productSales = normalizeProductSales(nextSnapshot.productSales || []);
+  inventoryMovements = normalizeInventoryMovements(nextSnapshot.inventoryMovements || []);
+  serviceSupplyProfiles = normalizeServiceSupplyProfiles(nextSnapshot.serviceSupplyProfiles || []);
+  documentHistory = normalizeDocumentHistory(nextSnapshot.documentHistory || []);
+  cashEntries = normalizeCashEntries(nextSnapshot.cashEntries || []);
+  vehicleSpecialCareRecords = normalizeVehicleSpecialCareRecords(nextSnapshot.vehicleSpecialCareRecords || []);
+
+  replaceArrayContents(billingClients, Array.isArray(nextSnapshot.billingClients) ? nextSnapshot.billingClients : []);
+  replaceArrayContents(billingInvoices, Array.isArray(nextSnapshot.billingInvoices) ? nextSnapshot.billingInvoices : []);
+  replaceArrayContents(invoiceLineItems, Array.isArray(nextSnapshot.invoiceLineItems) ? nextSnapshot.invoiceLineItems : []);
+  replaceArrayContents(patioVehicles, Array.isArray(nextSnapshot.patioVehicles) ? nextSnapshot.patioVehicles : []);
+  replaceArrayContents(quoteEstimates, Array.isArray(nextSnapshot.quoteEstimates) ? nextSnapshot.quoteEstimates : []);
+  replaceArrayContents(clientRegistry, Array.isArray(nextSnapshot.clientRegistry) ? nextSnapshot.clientRegistry : []);
+  replaceArrayContents(vehicleRegistry, Array.isArray(nextSnapshot.vehicleRegistry) ? nextSnapshot.vehicleRegistry : []);
+  replaceArrayContents(
+    adminOperators,
+    Array.isArray(nextSnapshot.adminOperators) && nextSnapshot.adminOperators.length
+      ? nextSnapshot.adminOperators
+      : fallback.adminOperators
+  );
+  replaceArrayContents(serviceCatalog, Array.isArray(nextSnapshot.serviceCatalog) ? nextSnapshot.serviceCatalog : []);
+  replaceArrayContents(openPayments, Array.isArray(nextSnapshot.openPayments) ? nextSnapshot.openPayments : []);
+  replaceArrayContents(payableAccounts, Array.isArray(nextSnapshot.payableAccounts) ? nextSnapshot.payableAccounts : []);
+
+  selectedReportOperatorId = adminOperators[0]?.id || null;
+}
+
+function stopRemoteAutosave() {
+  if (remoteWorkspaceState.autosaveTimer) {
+    window.clearInterval(remoteWorkspaceState.autosaveTimer);
+    remoteWorkspaceState.autosaveTimer = 0;
+  }
+  remoteWorkspaceState.dirty = false;
+  remoteWorkspaceState.enabled = false;
+  remoteWorkspaceState.isLoading = false;
+  remoteWorkspaceState.isSaving = false;
+  remoteWorkspaceState.lastSnapshotHash = "";
+  remoteWorkspaceState.membershipRole = "";
+  remoteWorkspaceState.organizationId = null;
+  remoteWorkspaceState.userId = null;
+}
+
+function queueRemoteStateSync() {
+  if (!remoteWorkspaceState.enabled || remoteWorkspaceState.isLoading) return;
+  remoteWorkspaceState.dirty = true;
+}
+
+async function flushRemoteStateSync() {
+  if (!remoteWorkspaceState.enabled || remoteWorkspaceState.isLoading || remoteWorkspaceState.isSaving) return;
+  if (!remoteWorkspaceState.dirty) return;
+
+  const snapshot = buildRemoteWorkspaceSnapshot();
+  const snapshotHash = JSON.stringify(snapshot);
+
+  if (snapshotHash === remoteWorkspaceState.lastSnapshotHash) {
+    remoteWorkspaceState.dirty = false;
+    return;
+  }
+
+  remoteWorkspaceState.isSaving = true;
+  try {
+    await upsertOrganizationAppState({
+      organizationId: remoteWorkspaceState.organizationId,
+      state: snapshot,
+      stateVersion: 1,
+      userId: remoteWorkspaceState.userId
+    });
+    remoteWorkspaceState.lastSnapshotHash = snapshotHash;
+    remoteWorkspaceState.dirty = false;
+  } catch (error) {
+    console.error("Falha ao sincronizar estado com o Supabase.", error);
+  } finally {
+    remoteWorkspaceState.isSaving = false;
+  }
+}
+
+async function initializeRemoteWorkspace(sessionContext) {
+  remoteWorkspaceState.isLoading = true;
+  try {
+    const remoteRow = await fetchOrganizationAppState(sessionContext.organization.id);
+    const snapshot = remoteRow?.state || getDefaultRemoteWorkspaceSnapshot(sessionContext);
+    applyRemoteWorkspaceSnapshot(snapshot, sessionContext);
+
+    remoteWorkspaceState.enabled = true;
+    remoteWorkspaceState.membershipRole = sessionContext.membership.role;
+    remoteWorkspaceState.organizationId = sessionContext.organization.id;
+    remoteWorkspaceState.userId = sessionContext.user.id;
+    remoteWorkspaceState.lastSnapshotHash = JSON.stringify(buildRemoteWorkspaceSnapshot());
+
+    if (!remoteRow) {
+      remoteWorkspaceState.dirty = true;
+      await flushRemoteStateSync();
+    }
+
+    if (remoteWorkspaceState.autosaveTimer) window.clearInterval(remoteWorkspaceState.autosaveTimer);
+    remoteWorkspaceState.autosaveTimer = window.setInterval(() => {
+      void flushRemoteStateSync();
+    }, 4000);
+  } finally {
+    remoteWorkspaceState.isLoading = false;
+  }
+}
+
+async function restoreSupabaseSession() {
+  if (!hasSupabaseBrowserConfig()) return;
+
+  try {
+    const sessionContext = await getLavaprimeSessionContext();
+    if (!sessionContext) return;
+
+    await initializeRemoteWorkspace(sessionContext);
+    if (isSupabaseAdminRole(sessionContext.membership.role)) showAdmin(sessionContext.displayName);
+    else showPatio(sessionContext.displayName);
+  } catch (error) {
+    console.error("Falha ao restaurar sessão do Supabase.", error);
+  }
+}
+
 function loadBusinessStorageItem(key, fallback) {
   try {
     const rawValue = window.localStorage?.getItem(key);
@@ -5689,6 +5980,7 @@ function loadBusinessStorageItem(key, fallback) {
 function saveBusinessStorageItem(key, value) {
   try {
     window.localStorage?.setItem(key, JSON.stringify(value));
+    queueRemoteStateSync();
   } catch (error) {
     showToast("Não foi possível salvar no navegador.");
   }
@@ -20133,6 +20425,7 @@ initIcons();
 preloadPdfLogoImage();
 startSplashScreen();
 bindEvents();
+void restoreSupabaseSession();
 
 
 

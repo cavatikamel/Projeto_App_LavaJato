@@ -14,6 +14,13 @@
 - ampliada a validacao do GitHub Actions com `npm ci` e `npm run build`
 - atualizada a documentacao de arquitetura, desenvolvimento e status do projeto
 
+## 2026-06-15
+
+- iniciada a primeira integracao real do frontend com Supabase para login por email e sincronizacao do estado do app por organizacao
+- adicionada migration `organization_app_states` para armazenar o snapshot operacional do LavaPrime por empresa
+- adicionado script `bootstrap:test-user` para criar ou resetar o usuario `Teste` com base vazia
+- ampliado `.env.example` com variaveis do bootstrap do ambiente de teste
+
 ## 2026-06-07
 
 - consolidada a configuracao do repositorio principal `Projeto_App_LavaJato`

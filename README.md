@@ -125,11 +125,13 @@ O repositorio agora inclui a base inicial para o backend no Supabase:
 - migration inicial em `supabase/migrations/`
 - documentacao operacional em `docs/SUPABASE_BACKEND.md`
 - variaveis esperadas em `.env.example`
+- cliente browser do Supabase para login real e sincronizacao inicial do estado do app
+- script `npm run bootstrap:test-user` para preparar o usuario `Teste` com base vazia
 
 Importante:
 
-- o frontend ainda nao esta ligado ao Supabase
-- a publicacao real do backend depende de criar o projeto, aplicar as migrations e conectar a aplicacao
+- esta primeira etapa passa a autenticar no Supabase e sincronizar o estado do LavaPrime por organizacao
+- a aplicacao real no projeto remoto ainda depende de aplicar as migrations e informar as credenciais locais
 
 ## Observacoes
 

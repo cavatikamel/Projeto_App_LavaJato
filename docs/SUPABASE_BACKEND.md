@@ -7,10 +7,12 @@ Hoje o frontend ainda opera majoritariamente com dados locais em `app/main.js` e
 O repositorio agora ficou preparado para iniciar a migracao para Supabase com:
 
 - schema inicial versionado em `supabase/migrations/20260614133000_init_lavaprime.sql`
+- tabela `organization_app_states` em `supabase/migrations/20260615093000_add_organization_app_states.sql`
 - organizacao multi-tenant por empresa
 - perfis de usuario
 - RLS nas tabelas do dominio
-- funcao de bootstrap para criar a empresa principal
+- cliente browser para login com email e senha
+- script de bootstrap do usuario `Teste`
 
 ## Estrutura planejada
 
@@ -29,19 +31,21 @@ Grupos principais de tabelas:
 - clientes, veiculos, operadores e servicos deixam de ficar presos ao `main.js`
 - caixa, pagamentos em aberto, faturas e historico documental passam a ser persistidos
 - os cuidados especiais do veiculo deixam de depender apenas de estado local
+- nesta primeira fase, o app legado sincroniza um snapshot por organizacao em `organization_app_states` para nao quebrar os fluxos existentes enquanto a migracao relacional continua
 
 ## Publicacao no Supabase
 
 1. Criar um projeto novo no Supabase.
 2. Configurar Auth com email/senha ou magic link.
 3. Ajustar URLs de redirect da autenticacao para a URL da Netlify.
-4. Aplicar a migration inicial em `supabase/migrations/`.
+4. Aplicar as migrations de `supabase/migrations/`.
 5. Criar os buckets:
    - `brand-assets`: publico, para logo institucional se necessario
    - `documents`: privado, para PDFs e comprovantes
    - `attachments`: privado, para anexos de caixa e operacao
 6. Configurar variaveis de ambiente da Netlify e do ambiente local.
-7. Conectar o frontend ao Supabase por etapas, comecando por autenticacao e perfis.
+7. Executar `npm run bootstrap:test-user` com as variaveis de servidor preenchidas para criar ou resetar o usuario `Teste`.
+8. Conectar o frontend ao Supabase por etapas, comecando por autenticacao e perfis.
 
 ## Variaveis de ambiente
 
@@ -57,6 +61,14 @@ Somente servidor ou automacao:
 - `SUPABASE_ACCESS_TOKEN`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
+Bootstrap do usuario de teste:
+
+- `TEST_USER_EMAIL`
+- `TEST_USER_PASSWORD`
+- `TEST_USER_FULL_NAME`
+- `TEST_ORGANIZATION_NAME`
+- `TEST_ORGANIZATION_SLUG`
+
 ## Checklist de seguranca
 
 - nunca expor `SUPABASE_SERVICE_ROLE_KEY` no frontend
@@ -69,11 +81,11 @@ Somente servidor ou automacao:
 ## O que ainda falta para a migracao completa
 
 - criar a camada cliente do Supabase no frontend
-- trocar `localStorage` por leitura/escrita real no banco
+- aprofundar a migracao do snapshot remoto para tabelas relacionais por modulo
 - migrar login visual para Auth real
 - mover uploads e comprovantes para Storage
 - criar seeds ou script de migracao dos dados locais, se necessario
 
 ## Verdade importante
 
-Este repositorio ficou pronto para receber o backend no Supabase, mas a publicacao real no Supabase ainda depende do seu projeto, das credenciais e da ligacao efetiva do frontend com esse backend.
+Esta primeira construcao deixa o app apto a autenticar no Supabase e salvar o estado operacional por organizacao, mas a aplicacao real no projeto remoto ainda depende do seu projeto, das credenciais e da execucao das migrations no Supabase.
