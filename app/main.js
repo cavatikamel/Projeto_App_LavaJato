@@ -13143,8 +13143,8 @@ function renderProductsScreen(container) {
         </button>
       </div>
     </section>
-    <section class="admin-screen-grid inventory-screen-grid">
-      <article class="admin-panel screen-table-panel">
+    <section class="admin-screen-grid inventory-screen-grid documents-screen-grid">
+      <article class="admin-panel screen-table-panel documents-table-panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Cadastro</p>

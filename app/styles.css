@@ -1941,6 +1941,14 @@ h2 {
   grid-column: 1 / -1;
 }
 
+.documents-screen-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.documents-screen-grid .screen-side-panel {
+  display: none;
+}
+
 .inventory-table .cashflow-row-actions,
 .inventory-table .table-actions {
   display: flex;
