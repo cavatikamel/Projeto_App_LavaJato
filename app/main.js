@@ -13519,7 +13519,7 @@ function renderDocumentsScreen(container) {
   const receiptsCount = documentHistory.filter((item) => normalizeText(item.category).includes("recibo")).length;
   const reportsCount = documentHistory.filter((item) => normalizeText(item.category).includes("relatorio")).length;
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo dos documentos">
+    <section class="screen-metrics documents-metrics" aria-label="Resumo dos documentos">
       ${[
         { label: "Documentos gerados", value: documentHistory.length, icon: "clipboard" },
         { label: "Recibos", value: receiptsCount, icon: "invoice" },
