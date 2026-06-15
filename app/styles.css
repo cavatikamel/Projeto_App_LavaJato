@@ -768,6 +768,10 @@ h2 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.top-row-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .screen-metric {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

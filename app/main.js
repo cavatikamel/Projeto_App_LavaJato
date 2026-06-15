@@ -6255,7 +6255,7 @@ function renderPatioQuotes() {
   const totalOpenValue = activeQuotes.reduce((total, quote) => total + getQuoteTotal(quote), 0);
 
   container.innerHTML = `
-    <section class="screen-metrics quote-metrics" aria-label="Resumo dos orçamentos">
+    <section class="screen-metrics quote-metrics top-row-metrics" aria-label="Resumo dos orçamentos">
       ${[
         { label: "Orçamentos", value: quoteEstimates.length, icon: "invoice" },
         { label: "Aprovados", value: approvedQuotes.length, icon: "check" },
@@ -8959,22 +8959,7 @@ function bindBusinessFinanceControls(container) {
 }
 
 function renderBusinessFinanceScreen(container) {
-  const visibleAccounts = businessBankAccounts.filter((account) => account.showInInvoices).length;
-  const activeMethods = businessPaymentMethods.filter((method) => method.active).length;
-  const immediateMethods = businessPaymentMethods.filter((method) => method.active && method.immediateSettlement).length;
   container.innerHTML = `
-    <section class="screen-metrics business-metrics" aria-label="Resumo financeiro do negócio">
-      ${[
-        { label: "Formas ativas", value: activeMethods, icon: "card" },
-        { label: "Liquidação imediata", value: immediateMethods, icon: "check" },
-        { label: "Contas cadastradas", value: businessBankAccounts.length, icon: "wallet" },
-        { label: "Exibir em faturas", value: visibleAccounts, icon: "invoice" },
-        { label: "Pix", value: businessPixInfo.key ? "Configurado" : "Pendente", icon: "cashflow" }
-      ]
-        .map(renderScreenMetric)
-        .join("")}
-    </section>
-
     <section class="business-finance-layout">
       <article class="admin-panel business-finance-primary-panel">
         <div class="panel-heading">
@@ -9131,18 +9116,7 @@ function getBusinessPaymentMethodSettlementSummary(method) {
 }
 
 function renderBusinessSocialScreen(container) {
-  const visibleChannels = businessSocialChannels.filter((channel) => businessSocialLinks[channel.key]?.showInFooter).length;
   container.innerHTML = `
-    <section class="screen-metrics business-metrics" aria-label="Resumo de comunicação">
-      ${[
-        { label: "Canais", value: businessSocialChannels.length, icon: "users" },
-        { label: "No relatório", value: visibleChannels, icon: "invoice" },
-        { label: "WhatsApp", value: businessSocialLinks.whatsapp?.value ? "Configurado" : "Pendente", icon: "card" }
-      ]
-        .map(renderScreenMetric)
-        .join("")}
-    </section>
-
     <article class="admin-panel">
       <div class="panel-heading">
         <div>
@@ -9229,16 +9203,6 @@ function renderBusinessMessagesScreen(container) {
   }
 
   container.innerHTML = `
-    <section class="screen-metrics business-metrics" aria-label="Resumo da central de mensagens">
-      ${[
-        { label: "Modelos", value: businessMessageTemplates.length, icon: "message" },
-        { label: "Ativos", value: businessMessageTemplates.filter((template) => template.active).length, icon: "check" },
-        { label: "Naturezas", value: categories.length, icon: "dashboard" }
-      ]
-        .map(renderScreenMetric)
-        .join("")}
-    </section>
-
     <section class="message-center-layout">
       <article class="admin-panel message-template-list-panel">
         <div class="panel-heading">
@@ -9690,17 +9654,6 @@ function normalizeWhatsappPhone(phone) {
 
 function renderClientsScreen(container) {
   container.innerHTML = `
-    <section class="screen-metrics client-metrics" aria-label="Resumo de clientes">
-      ${[
-        { label: "Clientes ativos", value: clientRegistry.length, icon: "users" },
-        { label: "Avulsos", value: clientRegistry.filter((client) => !client.billing).length, icon: "user" },
-        { label: "Faturados", value: clientRegistry.filter((client) => client.billing).length, icon: "invoice" },
-        { label: "Placas vinculadas", value: getRegisteredPlates().length, icon: "carFront" }
-      ]
-        .map(renderScreenMetric)
-        .join("")}
-    </section>
-
     <section class="screen-toolbar" aria-label="Filtros de clientes">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.users}</span>
@@ -9751,7 +9704,7 @@ function renderClientsScreen(container) {
 function renderOperatorsScreen(container) {
   const selectedOperator = getSelectedReportOperator();
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo da equipe">
+    <section class="screen-metrics top-row-metrics" aria-label="Resumo da equipe">
       ${[
         { label: "Operadores ativos", value: adminOperators.filter((operator) => operator.status === "Ativo").length, icon: "badge" },
         { label: "Serviços hoje", value: adminOperators.reduce((total, operator) => total + Number(operator.today || 0), 0), icon: "service" },
@@ -13116,7 +13069,7 @@ function renderProductsScreen(container) {
     ? `${(productCatalog.reduce((total, product) => total + getProductMarginPercent(product), 0) / productCatalog.length).toFixed(1).replace(".", ",")}%`
     : "0%";
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo dos produtos">
+    <section class="screen-metrics top-row-metrics" aria-label="Resumo dos produtos">
       ${[
         { label: "Produtos ativos", value: productCatalog.filter((item) => item.active !== false).length, icon: "package" },
         { label: "Baixo estoque", value: lowStock.length, icon: "alert" },
@@ -13143,8 +13096,8 @@ function renderProductsScreen(container) {
         </button>
       </div>
     </section>
-    <section class="admin-screen-grid inventory-screen-grid documents-screen-grid">
-      <article class="admin-panel screen-table-panel documents-table-panel">
+    <section class="admin-screen-grid inventory-screen-grid">
+      <article class="admin-panel screen-table-panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Cadastro</p>
@@ -13225,7 +13178,7 @@ function renderProductsScreen(container) {
 function renderSuppliesScreen(container) {
   const lowStock = getLowStockSupplies();
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo dos insumos">
+    <section class="screen-metrics top-row-metrics" aria-label="Resumo dos insumos">
       ${[
         { label: "Insumos ativos", value: supplyCatalog.filter((item) => item.active !== false).length, icon: "flask" },
         { label: "Baixo estoque", value: lowStock.length, icon: "alert" },
@@ -13252,8 +13205,8 @@ function renderSuppliesScreen(container) {
         </button>
       </div>
     </section>
-    <section class="admin-screen-grid inventory-screen-grid documents-screen-grid">
-      <article class="admin-panel screen-table-panel documents-table-panel">
+    <section class="admin-screen-grid inventory-screen-grid">
+      <article class="admin-panel screen-table-panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Cadastro</p>
@@ -13307,7 +13260,7 @@ function renderSuppliesScreen(container) {
 function renderInventoryScreen(container) {
   const combinedItems = getCombinedInventoryItems();
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo do inventário">
+    <section class="screen-metrics top-row-metrics" aria-label="Resumo do inventário">
       ${[
         { label: "Itens monitorados", value: combinedItems.length, icon: "clipboard" },
         { label: "Produtos em alerta", value: getLowStockProducts().length, icon: "package" },
@@ -13328,8 +13281,8 @@ function renderInventoryScreen(container) {
           .join("")}
       </div>
     </section>
-    <section class="admin-screen-grid inventory-screen-grid documents-screen-grid">
-      <article class="admin-panel screen-table-panel documents-table-panel">
+    <section class="admin-screen-grid inventory-screen-grid">
+      <article class="admin-panel screen-table-panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Inventário</p>
@@ -13408,7 +13361,7 @@ function renderInventoryScreen(container) {
 function renderProductSalesScreen(container) {
   const topProducts = getTopSoldProducts();
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo das vendas de produtos">
+    <section class="screen-metrics top-row-metrics" aria-label="Resumo das vendas de produtos">
       ${[
         { label: "Vendas registradas", value: productSales.length, icon: "package" },
         { label: "Itens vendidos", value: getProductSalesItemsTotal(), icon: "clipboard" },
@@ -13435,8 +13388,8 @@ function renderProductSalesScreen(container) {
         </button>
       </div>
     </section>
-    <section class="admin-screen-grid inventory-screen-grid documents-screen-grid">
-      <article class="admin-panel screen-table-panel documents-table-panel">
+    <section class="admin-screen-grid inventory-screen-grid">
+      <article class="admin-panel screen-table-panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Operação</p>
