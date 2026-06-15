@@ -4476,6 +4476,18 @@ function formatCnpj(value) {
   return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
 }
 
+function formatCpfOrCnpj(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  return digits.length <= 11 ? formatCpf(digits) : formatCnpj(digits);
+}
+
+function getDocumentLabel(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (digits.length === 11) return "CPF";
+  if (digits.length === 14) return "CNPJ";
+  return "Documento";
+}
+
 function getDefaultBusinessProfile() {
   return {
     cnpj: "",
@@ -4511,6 +4523,7 @@ function normalizeBusinessProfile(profile = {}) {
   const legacyLogoSize = getBusinessLogoSizePercent(mergedProfile.logoSizePercent);
   return {
     ...mergedProfile,
+    cnpj: formatCpfOrCnpj(mergedProfile.cnpj),
     logoSizePercent: legacyLogoSize,
     logoSizeXPercent: getBusinessLogoDimensionPercent("x", mergedProfile.logoSizeXPercent ?? legacyLogoSize),
     logoSizeYPercent: getBusinessLogoDimensionPercent("y", mergedProfile.logoSizeYPercent ?? legacyLogoSize),
@@ -6008,7 +6021,9 @@ function getBusinessDocumentContactLine(reportTarget = "all") {
   const items = [];
   const reportName = getBusinessReportDocumentName(reportTarget);
   items.push(...getBusinessReportIdentityDetails(reportTarget, reportName));
-  if (shouldIncludeBusinessProfileFieldInReport("cnpj", reportTarget) && businessProfile.cnpj) items.push(`CNPJ: ${businessProfile.cnpj}`);
+  if (shouldIncludeBusinessProfileFieldInReport("cnpj", reportTarget) && businessProfile.cnpj) {
+    items.push(`${getDocumentLabel(businessProfile.cnpj)}: ${businessProfile.cnpj}`);
+  }
   if (shouldIncludeBusinessProfileFieldInReport("phone", reportTarget) && businessProfile.phone) items.push(`Telefone: ${businessProfile.phone}`);
   getVisibleBusinessAdditionalPhones(reportTarget).forEach((phone, index) => {
     items.push(`Telefone ${index + 2}: ${phone.value}`);
@@ -7968,9 +7983,9 @@ function renderBusinessScreen(container) {
         <form class="business-form-grid" id="businessProfileForm">
           ${renderBusinessProfileReportField({
             fieldKey: "cnpj",
-            label: "CNPJ",
+            label: "CPF ou CNPJ",
             inputId: "businessCnpj",
-            controlHtml: `<input id="businessCnpj" type="text" value="${escapeHtml(businessProfile.cnpj)}" placeholder="00.000.000/0000-00" />`
+            controlHtml: `<input id="businessCnpj" type="text" inputmode="numeric" value="${escapeHtml(businessProfile.cnpj)}" placeholder="CPF ou CNPJ" />`
           })}
           ${renderBusinessProfileReportField({
             fieldKey: "legalName",
@@ -8066,7 +8081,7 @@ function renderBusinessScreen(container) {
 
 function bindBusinessScreenControls(container) {
   $("#businessCnpj", container).addEventListener("input", (event) => {
-    event.currentTarget.value = formatCnpj(event.currentTarget.value);
+    event.currentTarget.value = formatCpfOrCnpj(event.currentTarget.value);
   });
   $("#businessPhone", container).addEventListener("input", (event) => {
     event.currentTarget.value = formatPhone(event.currentTarget.value);
@@ -8164,7 +8179,7 @@ function getBusinessProfileFormValues(container) {
   const reportFields = getBusinessProfileReportFieldsFromForm(container);
   return {
     ...businessProfile,
-    cnpj: $("#businessCnpj", container).value.trim(),
+    cnpj: formatCpfOrCnpj($("#businessCnpj", container).value.trim()),
     legalName: $("#businessLegalName", container).value.trim(),
     tradeName: $("#businessTradeName", container).value.trim(),
     displayNameMode: getBusinessProfileDisplayNameMode(reportFields),
