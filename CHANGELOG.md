@@ -24,6 +24,7 @@
 - bloqueado o login por email no modo local para evitar abrir a base ficticia quando o Supabase nao estiver configurado
 - ajustada a configuracao do Vite para ler o `.env.local` na pasta principal do projeto
 - restauradas a tela de operadores e a abertura do cadastro de novo operador no administrativo
+- removido o bloco lateral de observacoes em recibos e documentos e adicionada a acao de baixar arquivo na tabela
 
 ## 2026-06-07
 

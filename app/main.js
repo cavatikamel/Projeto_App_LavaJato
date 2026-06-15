@@ -13558,6 +13558,7 @@ function renderDocumentsScreen(container) {
                 <th>Categoria</th>
                 <th>Responsável</th>
                 <th>Arquivo</th>
+                <th>AÃ§Ãµes</th>
               </tr>
             </thead>
             <tbody>
@@ -13573,6 +13574,11 @@ function renderDocumentsScreen(container) {
                             <td data-label="Categoria">${escapeHtml(item.category)}</td>
                             <td data-label="Responsável">${escapeHtml(item.responsible)}</td>
                             <td data-label="Arquivo">${escapeHtml(item.fileName)}</td>
+                            <td data-label="AÃ§Ãµes">
+                              <span class="table-actions">
+                                <button type="button" data-download-document-history="${escapeHtml(item.id)}">Baixar arquivo</button>
+                              </span>
+                            </td>
                           </tr>
                         `
                       )
@@ -13724,6 +13730,12 @@ function bindProductSalesScreenControls(container) {
 }
 
 function bindDocumentsScreenControls(container) {
+  $(".screen-side-panel", container)?.remove();
+  $("thead tr th:last-child", container).textContent = "Acoes";
+  $$("tbody tr td:last-child", container).forEach((cell) => {
+    cell.dataset.label = "Acoes";
+  });
+
   bindToolbarFilters(container, {
     inputSelector: "#documentHistorySearchInput",
     rowSelector: "[data-document-row]",
@@ -13731,6 +13743,47 @@ function bindDocumentsScreenControls(container) {
     filterDatasetKey: "documentFilter",
     filterMatcher: (activeFilter, rowFilterValue) => activeFilter === "Todos" || rowFilterValue === activeFilter
   });
+
+  $$("[data-download-document-history]", container).forEach((button) => {
+    button.addEventListener("click", () => downloadDocumentHistoryFile(Number(button.dataset.downloadDocumentHistory)));
+  });
+}
+
+function downloadDocumentHistoryFile(documentId) {
+  const item = documentHistory.find((entry) => Number(entry.id) === Number(documentId));
+  if (!item) {
+    showToast("Documento nÃ£o localizado.");
+    return;
+  }
+
+  const lines = [
+    `TÃ­tulo: ${item.title || "Documento LavaPrime"}`,
+    item.subtitle ? `SubtÃ­tulo: ${item.subtitle}` : "",
+    `NÃºmero: ${item.documentNumber || "-"}`,
+    `Categoria: ${item.category || "Documento"}`,
+    `ResponsÃ¡vel: ${item.responsible || "Sistema LavaPrime"}`,
+    `Gerado em: ${item.createdAt || "-"}`,
+    "",
+    item.summary || "Segunda via emitida a partir do histÃ³rico documental do LavaPrime."
+  ].filter(Boolean);
+
+  const pdf = createStandardPdfDocument(
+    {
+      fileName: item.fileName || `documento-${item.id || "lavaprime"}.pdf`,
+      title: item.title || "Documento LavaPrime",
+      lines,
+      subtitle: item.subtitle || "Segunda via do histÃ³rico",
+      documentNumber: item.documentNumber || createPdfDocumentNumber(item.fileName || `documento-${item.id || "lavaprime"}.pdf`),
+      responsible: item.responsible || activeSessionUser || "Sistema LavaPrime",
+      category: item.category || "Documento",
+      summary: item.summary || "Segunda via emitida a partir do histÃ³rico documental do LavaPrime.",
+      reportTarget: item.reportTarget || "documents"
+    },
+    getPdfLogoImage()
+  );
+
+  downloadTextFile(item.fileName || `documento-${item.id || "lavaprime"}.pdf`, pdf, "application/pdf");
+  showToast("Arquivo preparado para download.");
 }
 
 function openInventoryDialog(options = {}) {
