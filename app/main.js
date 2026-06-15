@@ -9748,6 +9748,132 @@ function renderClientsScreen(container) {
   bindClientsScreenControls(container);
 }
 
+function renderOperatorsScreen(container) {
+  const selectedOperator = getSelectedReportOperator();
+  container.innerHTML = `
+    <section class="screen-metrics" aria-label="Resumo da equipe">
+      ${[
+        { label: "Operadores ativos", value: adminOperators.filter((operator) => operator.status === "Ativo").length, icon: "badge" },
+        { label: "Serviços hoje", value: adminOperators.reduce((total, operator) => total + Number(operator.today || 0), 0), icon: "service" },
+        { label: "Comissão prevista", value: formatCurrency(getOperatorsCommissionTotal()), icon: "wallet" },
+        { label: "Perfis com acesso", value: adminOperators.length, icon: "users" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+
+    <section class="screen-toolbar" aria-label="Filtros da equipe">
+      <label class="screen-search">
+        <span class="screen-search-icon">${icons.badge}</span>
+        <input id="operatorSearchInput" type="search" placeholder="Buscar operador, login ou função" />
+      </label>
+      <div class="screen-filters" id="operatorFilters">
+        <button class="is-active" type="button" data-operator-filter="all">Todos</button>
+        <button type="button" data-operator-filter="Ativo">Ativos</button>
+        <button type="button" data-operator-filter="Operador">Operadores</button>
+        <button type="button" data-operator-filter="Administrador">Administradores</button>
+      </div>
+    </section>
+
+    <section class="admin-screen-grid">
+      <article class="admin-panel screen-table-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Equipe</p>
+            <h2>Operadores e usuários</h2>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table operator-table">
+            <thead>
+              <tr>
+                <th>Operador</th>
+                <th>Perfil</th>
+                <th>Login</th>
+                <th>Telefone</th>
+                <th>Comissão</th>
+                <th>Produção</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="operatorTableBody">
+              ${renderOperatorRows()}
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="admin-panel operator-form-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Relatórios</p>
+            <h2>Acompanhamento individual</h2>
+          </div>
+        </div>
+
+        <label class="login-field operator-report-selector" for="operatorReportSelect">
+          <span>Operador selecionado</span>
+          <select id="operatorReportSelect">
+            ${adminOperators
+              .map(
+                (operator) =>
+                  `<option value="${escapeHtml(operator.id)}" ${operator.id === selectedOperator?.id ? "selected" : ""}>${escapeHtml(
+                    operator.name
+                  )}</option>`
+              )
+              .join("")}
+          </select>
+        </label>
+
+        <div class="operator-report-actions">
+          <button class="ghost-action" type="button" data-operator-report="production" ${selectedOperator ? "" : "disabled"}>
+            <span data-icon="clipboard"></span>
+            <span>Relatório de produção</span>
+          </button>
+          <button class="ghost-action" type="button" data-operator-report="commission" ${selectedOperator ? "" : "disabled"}>
+            <span data-icon="wallet"></span>
+            <span>Relatório de comissão</span>
+          </button>
+          <button class="ghost-action" type="button" data-operator-report="attendance" ${selectedOperator ? "" : "disabled"}>
+            <span data-icon="clock"></span>
+            <span>Relatório de frequência</span>
+          </button>
+        </div>
+
+        ${renderOperatorHistoryPanel(selectedOperator)}
+      </article>
+    </section>
+  `;
+
+  initIcons();
+  bindOperatorsScreenControls(container);
+}
+
+function bindOperatorsScreenControls(container) {
+  $("#operatorSearchInput", container)?.addEventListener("input", () => applyOperatorTableFilter(container));
+
+  $$("[data-operator-filter]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      $$("[data-operator-filter]", container).forEach((item) => item.classList.toggle("is-active", item === button));
+      applyOperatorTableFilter(container);
+    });
+  });
+
+  $$("[data-edit-operator]", container).forEach((button) => {
+    button.addEventListener("click", () => openOperatorDialog(Number(button.dataset.editOperator)));
+  });
+
+  $("#operatorReportSelect", container)?.addEventListener("change", (event) => {
+    selectedReportOperatorId = Number(event.currentTarget.value || 0) || null;
+    renderOperatorsScreen(container);
+  });
+
+  $$("[data-operator-report]", container).forEach((button) => {
+    button.addEventListener("click", () => emitOperatorReport(button.dataset.operatorReport));
+  });
+}
+
 function bindClientsScreenControls(container) {
   $("#clientSearchInput", container).addEventListener("input", () => applyClientTableFilter(container));
   $$("[data-edit-client]", container).forEach((button) => {
@@ -11998,6 +12124,141 @@ function getSelectedReportOperator() {
     selectedReportOperatorId = adminOperators[0]?.id || null;
   }
   return selectedReportOperatorId ? findOperatorById(selectedReportOperatorId) : null;
+}
+
+function openOperatorDialog(operatorId = null) {
+  selectedOperatorId = operatorId && findOperatorById(operatorId) ? Number(operatorId) : null;
+  const operator = selectedOperatorId ? findOperatorById(selectedOperatorId) : null;
+  const dialog = $("#operatorDialog");
+  if (!dialog) return;
+
+  dialog.innerHTML = renderOperatorDialogForm(operator);
+  initIcons();
+  bindOperatorDialogControls(dialog);
+
+  if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
+  else dialog.setAttribute("open", "");
+
+  window.setTimeout(() => $("#operatorName", dialog)?.focus(), 0);
+}
+
+function closeOperatorDialog() {
+  const dialog = $("#operatorDialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function" && dialog.open) dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+  selectedOperatorId = null;
+}
+
+function renderOperatorDialogForm(operator) {
+  const commissionType = getCommissionTypeLabel(operator?.commissionType || "fixed");
+  const commissionValue =
+    operator?.commissionType === "percent"
+      ? String(operator?.commissionValue || "").replace(".", ",")
+      : formatCurrencyFieldValue(operator?.commissionValue || 0);
+
+  return `
+    <form class="vehicle-box operator-box" id="operatorForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">${operator ? "Edição" : "Cadastro"}</p>
+          <h2 id="operatorDialogTitle">${operator ? escapeHtml(operator.name) : "Novo operador"}</h2>
+        </div>
+        <button class="icon-button" id="closeOperatorDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+
+      <div class="vehicle-form-grid operator-dialog-grid">
+        <label class="login-field" for="operatorName">
+          <span>Nome completo</span>
+          <input id="operatorName" type="text" placeholder="Nome do operador" value="${escapeHtml(operator?.name || "")}" required />
+        </label>
+        <label class="login-field" for="operatorCpf">
+          <span>CPF</span>
+          <input id="operatorCpf" type="text" inputmode="numeric" placeholder="000.000.000-00" value="${escapeHtml(operator?.cpf || "")}" required />
+        </label>
+        <label class="login-field" for="operatorPhone">
+          <span>Telefone</span>
+          <input id="operatorPhone" type="tel" inputmode="tel" placeholder="(00) 90000-0000" value="${escapeHtml(operator?.phone || "")}" required />
+        </label>
+        <label class="login-field" for="operatorAccessProfile">
+          <span>Perfil de acesso</span>
+          <select id="operatorAccessProfile">
+            ${renderSelectOptions(["Operador", "Administrador"], operator?.accessProfile || "Operador")}
+          </select>
+        </label>
+        <label class="login-field" for="operatorRole">
+          <span>Função</span>
+          <input id="operatorRole" type="text" placeholder="Ex.: Operador de pátio" value="${escapeHtml(operator?.role || "")}" />
+        </label>
+        <label class="login-field" for="operatorShift">
+          <span>Turno</span>
+          <input id="operatorShift" type="text" placeholder="Ex.: 08:00 - 17:00" value="${escapeHtml(operator?.shift || "")}" />
+        </label>
+        <label class="login-field" for="operatorUsername">
+          <span>Login</span>
+          <input id="operatorUsername" type="text" placeholder="Login de acesso" value="${escapeHtml(operator?.username || "")}" required />
+        </label>
+        <label class="login-field" for="operatorPassword">
+          <span>Senha</span>
+          <input id="operatorPassword" type="text" placeholder="Senha inicial" value="${escapeHtml(operator?.password || "")}" required />
+        </label>
+        <label class="login-field" for="operatorCommissionType">
+          <span>Regra de comissão</span>
+          <select id="operatorCommissionType">
+            ${renderSelectOptions(["Valor fixo por serviço", "Percentual por serviço"], commissionType)}
+          </select>
+        </label>
+        <label class="login-field" for="operatorCommissionValue">
+          <span>${operator?.commissionType === "percent" ? "Percentual" : "Valor da comissão"}</span>
+          <input
+            id="operatorCommissionValue"
+            type="text"
+            inputmode="decimal"
+            data-money-input="${operator?.commissionType === "percent" ? "false" : "true"}"
+            placeholder="${operator?.commissionType === "percent" ? "Ex.: 8" : "R$ 0,00"}"
+            value="${escapeHtml(commissionValue)}"
+            required
+          />
+        </label>
+        <label class="login-field" for="operatorStatus">
+          <span>Status</span>
+          <select id="operatorStatus">
+            ${renderSelectOptions(["Ativo", "Inativo"], operator?.status || "Ativo")}
+          </select>
+        </label>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="exit-button" id="cancelOperatorDialog" type="button">Cancelar</button>
+        <button class="primary-button" type="submit">
+          <span data-icon="check"></span>
+          <span>${operator ? "Salvar operador" : "Cadastrar operador"}</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function bindOperatorDialogControls(dialog) {
+  bindCurrencyInputs(dialog);
+  updateOperatorCommissionInputMode(dialog);
+
+  $("#closeOperatorDialog", dialog)?.addEventListener("click", closeOperatorDialog);
+  $("#cancelOperatorDialog", dialog)?.addEventListener("click", closeOperatorDialog);
+  $("#operatorCommissionType", dialog)?.addEventListener("change", () => updateOperatorCommissionInputMode(dialog));
+  $("#operatorCpf", dialog)?.addEventListener("input", (event) => {
+    event.currentTarget.value = formatCpf(event.currentTarget.value);
+  });
+  $("#operatorPhone", dialog)?.addEventListener("input", (event) => {
+    event.currentTarget.value = formatPhone(event.currentTarget.value);
+  });
+  $("#operatorForm", dialog)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveOperatorRegistration(dialog);
+  });
 }
 
 function saveOperatorRegistration(container) {
