@@ -25,6 +25,7 @@ function copyLegacyAssets() {
 
 export default defineConfig({
   root: "app",
+  envDir: workspaceRoot,
   plugins: [react(), copyLegacyAssets()],
   build: {
     outDir: "../dist",

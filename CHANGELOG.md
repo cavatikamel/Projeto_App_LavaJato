@@ -22,6 +22,7 @@
 - ampliado `.env.example` com variaveis do bootstrap do ambiente de teste
 - documentado o fluxo de teste local com Supabase em `docs/TESTING.md`
 - bloqueado o login por email no modo local para evitar abrir a base ficticia quando o Supabase nao estiver configurado
+- ajustada a configuracao do Vite para ler o `.env.local` na pasta principal do projeto
 
 ## 2026-06-07
 

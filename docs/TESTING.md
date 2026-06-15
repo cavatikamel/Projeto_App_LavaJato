@@ -26,6 +26,7 @@ Importante:
 
 - nao use `SUPABASE_SERVICE_ROLE_KEY` no frontend
 - `.env.local` nao deve ser commitado
+- neste projeto, a raiz e a pasta principal do repositorio, nao a subpasta `app/`
 - a chave `anon` fica no painel do Supabase em `Project Settings` > `API`
 
 ## Como rodar o ambiente de teste
