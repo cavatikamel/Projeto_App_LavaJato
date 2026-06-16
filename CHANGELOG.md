@@ -40,6 +40,9 @@
 - adicionado seed automatico dessas tabelas a partir do estado legado quando a organizacao remota ainda estiver vazia
 - conectado o salvamento de clientes, veiculos, operadores, servicos, produtos e insumos ao backend relacional
 - ampliada a sincronizacao de produtos e insumos para acompanhar mudancas de cadastro e estoque
+- conectadas as fichas tecnicas de servico (`service_supply_profiles`) ao backend relacional
+- conectados os cuidados especiais de veiculo (`vehicle_special_care`) ao backend relacional
+- ajustada a hidratacao remota para restaurar fichas tecnicas e cuidados especiais diretamente das tabelas do Supabase
 
 ## 2026-06-07
 

@@ -8,6 +8,8 @@ Na Fase A de estabilizacao, o legado passou a salvar um snapshot operacional loc
 
 Na primeira fatia da Fase B, o app passou a hidratar e gravar `clients`, `vehicles`, `operators`, `services`, `products` e `supplies` tambem nas tabelas do Supabase, sem remover o snapshot legado dos modulos que ainda nao foram migrados.
 
+Na continuidade atual da Fase B, `service_supply_profiles` e `vehicle_special_care` tambem passaram a ser restaurados e sincronizados pelas tabelas relacionais, reduzindo mais um bloco relevante que antes dependia so do snapshot.
+
 ## Modulos presentes no repositorio
 
 - app principal migrado para base React + Vite com compatibilidade legada

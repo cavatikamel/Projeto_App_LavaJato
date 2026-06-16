@@ -5021,6 +5021,7 @@ function normalizeVehicleSpecialCareRecords(records = []) {
       const timestamp = String(record.createdAt || record.registeredAt || new Date().toISOString()).trim();
       return {
         id: Number(record.id || index + 1),
+        remoteId: String(record.remoteId || "").trim(),
         companyId: String(record.companyId || "local-default").trim(),
         vehicleId: Number(record.vehicleId || 0) || null,
         vehiclePlate: formatPlate(String(record.vehiclePlate || record.plate || "").trim()),
@@ -5194,6 +5195,10 @@ function saveInventoryMovements() {
 
 function saveServiceSupplyProfiles() {
   saveBusinessStorageItem(businessStorageKeys.serviceSupplies, serviceSupplyProfiles);
+  void runRemoteRelationalTask(
+    () => syncServiceSupplyProfilesToRemote(serviceCatalog),
+    "Falha ao sincronizar fichas tecnicas de servico com o Supabase."
+  );
 }
 
 function saveDocumentHistory() {
@@ -5207,6 +5212,10 @@ function saveCashEntries() {
 
 function saveVehicleSpecialCareRecords() {
   saveBusinessStorageItem(businessStorageKeys.vehicleSpecialCare, vehicleSpecialCareRecords);
+  void runRemoteRelationalTask(
+    () => syncVehicleSpecialCareToRemote(vehicleSpecialCareRecords),
+    "Falha ao sincronizar cuidados especiais com o Supabase."
+  );
 }
 
 function buildLegacyWorkspaceSnapshot() {
@@ -6061,6 +6070,77 @@ function mergeRemoteSupplies(rows) {
   });
 }
 
+function mergeRemoteServiceSupplyProfiles(rows) {
+  const nextProfiles = {};
+
+  rows.forEach((row) => {
+    const service =
+      serviceCatalog.find((item) => item.remoteId === row.service_id) ||
+      serviceCatalog.find((item) => item.remoteSupplyProfileId === row.id) ||
+      serviceCatalog.find((item) => normalizeText(item.name) === normalizeText(row.name));
+    if (!service) return;
+
+    service.remoteSupplyProfileId = row.id;
+    const key = getServiceSupplyProfileKey(service);
+    const entries = (Array.isArray(row.items) ? row.items : [])
+      .map((item) => {
+        const supply =
+          supplyCatalog.find((candidate) => candidate.remoteId === item.supplyId || candidate.remoteId === item.remoteSupplyId) ||
+          supplyCatalog.find((candidate) => Number(candidate.id) === Number(item.legacySupplyId || item.localSupplyId || item.supplyId)) ||
+          supplyCatalog.find((candidate) => normalizeText(candidate.name) === normalizeText(item.name || ""));
+        return {
+          supplyId: Number(supply?.id || item.legacySupplyId || item.localSupplyId || 0),
+          quantity: Math.max(0, Number(item.quantity || 0)),
+          notes: String(item.notes || "").trim()
+        };
+      })
+      .filter((item) => item.supplyId && item.quantity > 0);
+
+    if (entries.length) nextProfiles[key] = entries;
+  });
+
+  serviceSupplyProfiles = normalizeServiceSupplyProfiles(nextProfiles);
+}
+
+function mergeRemoteVehicleSpecialCare(rows) {
+  vehicleSpecialCareRecords = normalizeVehicleSpecialCareRecords(
+    rows.map((row, index) => {
+      const metadata = getSafeMetadata(row.metadata);
+      const vehicle =
+        vehicleRegistry.find((candidate) => candidate.remoteId === row.vehicle_id) ||
+        vehicleRegistry.find((candidate) => Number(candidate.id) === Number(metadata.vehicleId || 0)) ||
+        null;
+      return {
+        id: Number(metadata.legacyId || metadata.localId || index + 1),
+        remoteId: row.id,
+        companyId: String(row.organization_id || "local-default").trim(),
+        vehicleId: Number(vehicle?.id || metadata.vehicleId || 0) || null,
+        vehiclePlate: formatPlate(metadata.vehiclePlate || vehicle?.plate || ""),
+        attendanceId: Number(metadata.attendanceId || 0) || null,
+        type: String(row.care_type || "").trim(),
+        attentionLevel: String(row.attention_level || "Informativo").trim(),
+        description: String(row.notes || "").trim(),
+        restrictionTags: Array.isArray(row.restrictions) ? row.restrictions : [],
+        recommendedTags: Array.isArray(row.recommendations) ? row.recommendations : [],
+        source: String(row.source || "Outro").trim(),
+        sourceAttendanceId: Number(metadata.sourceAttendanceId || 0) || null,
+        sourceServiceId: String(metadata.sourceServiceId || "").trim(),
+        registeredAt: String(metadata.registeredAt || row.created_at || "").trim(),
+        validUntil: String(metadata.validUntil || "").trim(),
+        active: row.active !== false,
+        createdAt: String(row.created_at || new Date().toISOString()).trim(),
+        updatedAt: String(row.updated_at || row.created_at || new Date().toISOString()).trim(),
+        createdBy: String(metadata.createdBy || activeSessionUser || "Administrador").trim(),
+        updatedBy: String(metadata.updatedBy || activeSessionUser || "Administrador").trim(),
+        deletedAt: String(metadata.deletedAt || "").trim(),
+        syncStatus: "synced",
+        auditLogId: String(metadata.auditLogId || `care-${index + 1}`).trim(),
+        history: Array.isArray(metadata.history) ? metadata.history : []
+      };
+    })
+  );
+}
+
 function buildRemoteClientPayload(client) {
   return {
     id: client.remoteId || undefined,
@@ -6218,6 +6298,66 @@ function buildRemoteSupplyPayload(supply) {
   };
 }
 
+function buildRemoteServiceSupplyProfilePayload(service) {
+  const entries = getServiceSupplyProfile(service);
+  if (!service?.remoteId) return null;
+  if (!entries.length && !service.remoteSupplyProfileId) return null;
+
+  return {
+    id: service.remoteSupplyProfileId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    service_id: service.remoteId,
+    name: service.name,
+    notes: "",
+    items: entries
+      .map((entry) => {
+        const supply = getSupplyById(entry.supplyId);
+        return {
+          supplyId: supply?.remoteId || null,
+          legacySupplyId: Number(entry.supplyId || 0),
+          name: supply?.name || "",
+          quantity: Math.max(0, Number(entry.quantity || 0)),
+          notes: String(entry.notes || "").trim()
+        };
+      })
+      .filter((entry) => entry.legacySupplyId && entry.quantity > 0)
+  };
+}
+
+function buildRemoteVehicleSpecialCarePayload(record) {
+  const vehicle = getAnyVehicleRecord(record.vehicleId, record.vehiclePlate);
+  if (!vehicle?.remoteId) return null;
+
+  return {
+    id: record.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    vehicle_id: vehicle.remoteId,
+    care_type: record.type,
+    attention_level: record.attentionLevel,
+    source: record.source || null,
+    restrictions: Array.isArray(record.restrictionTags) ? record.restrictionTags : [],
+    recommendations: Array.isArray(record.recommendedTags) ? record.recommendedTags : [],
+    notes: record.description || null,
+    active: record.active !== false,
+    last_acknowledged_at: null,
+    metadata: {
+      legacyId: Number(record.id || 0),
+      vehicleId: Number(record.vehicleId || 0) || null,
+      vehiclePlate: record.vehiclePlate || "",
+      attendanceId: Number(record.attendanceId || 0) || null,
+      sourceAttendanceId: Number(record.sourceAttendanceId || 0) || null,
+      sourceServiceId: record.sourceServiceId || "",
+      registeredAt: record.registeredAt || "",
+      validUntil: record.validUntil || "",
+      createdBy: record.createdBy || "",
+      updatedBy: record.updatedBy || "",
+      deletedAt: record.deletedAt || "",
+      auditLogId: record.auditLogId || "",
+      history: Array.isArray(record.history) ? record.history : []
+    }
+  };
+}
+
 async function syncClientsToRemote(clients = clientRegistry) {
   if (!isRemoteRelationalModeEnabled() || !clients.length) return [];
   const rows = await upsertOrganizationRows("clients", clients.map(buildRemoteClientPayload), { onConflict: "id" });
@@ -6260,6 +6400,28 @@ async function syncSuppliesToRemote(supplies = supplyCatalog) {
   return rows;
 }
 
+async function syncServiceSupplyProfilesToRemote(services = serviceCatalog) {
+  if (!isRemoteRelationalModeEnabled() || !services.length) return [];
+  const rows = services
+    .map((service) => buildRemoteServiceSupplyProfilePayload(service))
+    .filter(Boolean);
+  if (!rows.length) return [];
+  const persisted = await upsertOrganizationRows("service_supply_profiles", rows, { onConflict: "id" });
+  mergeRemoteServiceSupplyProfiles(persisted);
+  return persisted;
+}
+
+async function syncVehicleSpecialCareToRemote(records = vehicleSpecialCareRecords) {
+  if (!isRemoteRelationalModeEnabled() || !records.length) return [];
+  const rows = records
+    .map((record) => buildRemoteVehicleSpecialCarePayload(record))
+    .filter(Boolean);
+  if (!rows.length) return [];
+  const persisted = await upsertOrganizationRows("vehicle_special_care", rows, { onConflict: "id" });
+  mergeRemoteVehicleSpecialCare(persisted);
+  return persisted;
+}
+
 function runRemoteRelationalTask(task, failureMessage = "Falha ao sincronizar cadastro com o Supabase.") {
   if (!isRemoteRelationalModeEnabled()) return Promise.resolve([]);
   return task().catch((error) => {
@@ -6294,6 +6456,12 @@ async function hydrateRemoteRelationalWorkspace(sessionContext) {
 
   if (dataset.vehicles.length) mergeRemoteVehicles(dataset.vehicles);
   else await syncVehiclesToRemote(vehicleRegistry);
+
+  if (dataset.serviceSupplyProfiles.length) mergeRemoteServiceSupplyProfiles(dataset.serviceSupplyProfiles);
+  else await syncServiceSupplyProfilesToRemote(serviceCatalog);
+
+  if (dataset.vehicleSpecialCare.length) mergeRemoteVehicleSpecialCare(dataset.vehicleSpecialCare);
+  else await syncVehicleSpecialCareToRemote(vehicleSpecialCareRecords);
 
   ensureCoreRelationalLocalIds();
 }
@@ -13277,6 +13445,7 @@ async function saveServiceRegistration(container) {
     id: nextServiceId,
     remoteId: previousService?.remoteId || "",
     serviceCode: previousService?.serviceCode || buildLegacyEntityCode("SVC", nextServiceId),
+    remoteSupplyProfileId: previousService?.remoteSupplyProfileId || "",
     name,
     price,
     duration,
