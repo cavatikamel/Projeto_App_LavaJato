@@ -6,6 +6,17 @@ const adminRoles = new Set(["owner", "admin", "manager", "finance"]);
 
 let browserClient = null;
 
+function isMissingSupabaseSessionError(error) {
+  const name = String(error?.name || "").trim();
+  const code = String(error?.code || "").trim();
+  const message = String(error?.message || "").trim();
+  return (
+    name === "AuthSessionMissingError" ||
+    code === "session_not_found" ||
+    message.toLowerCase().includes("auth session missing")
+  );
+}
+
 function ensureSupabaseConfig() {
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Supabase não configurado no navegador.");
@@ -64,7 +75,10 @@ export async function getLavaprimeSessionContext() {
     error: userError
   } = await client.auth.getUser();
 
-  if (userError) throw userError;
+  if (userError) {
+    if (isMissingSupabaseSessionError(userError)) return null;
+    throw userError;
+  }
   if (!user) return null;
 
   const membership = await fetchSingleRow(

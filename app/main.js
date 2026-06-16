@@ -6039,7 +6039,7 @@ async function initializeRemoteWorkspace(sessionContext) {
   }
 }
 
-async function restoreSupabaseSession() {
+async function restoreSupabaseSessionLegacy() {
   if (!hasSupabaseBrowserConfig()) return;
 
   try {
@@ -20794,6 +20794,22 @@ async function updateVehicleStatus(status) {
         ? `Agendamento de ${vehicle.plate} cancelado.`
       : `Status de ${vehicle.plate} alterado para ${statusMeta[status].label}.`
   );
+}
+
+async function restoreSupabaseSession() {
+  if (!hasSupabaseBrowserConfig()) return;
+
+  try {
+    const sessionContext = await getLavaprimeSessionContext();
+    if (!sessionContext) return;
+
+    await initializeRemoteWorkspace(sessionContext);
+    if (isSupabaseAdminRole(sessionContext.membership.role)) showAdmin(sessionContext.displayName);
+    else showPatio(sessionContext.displayName);
+  } catch (error) {
+    if (String(error?.name || "").trim() === "AuthSessionMissingError") return;
+    console.error("Falha ao restaurar sessao do Supabase.", error);
+  }
 }
 
 window.setTimeout(restoreLegacyWorkspaceSnapshot, 0);

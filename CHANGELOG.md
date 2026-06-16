@@ -26,6 +26,7 @@
 - iniciada a Fase A de estabilizacao do legado com persistencia local do workspace operacional e marcacao consistente de sincronizacao remota
 - corrigido o fallback indevido que repovoava produtos, insumos e cuidados especiais com dados demo mesmo quando o estado remoto estava vazio
 - ajustado o login remoto para exigir email real do Supabase e evitar mistura com o fluxo legado
+- ajustado o bootstrap de sessao do Supabase para tratar tela sem sessao salva como estado normal do login
 - liberado o host do QR Code Pix na politica de seguranca da publicacao web
 - adicionada protecao no `.gitignore` para arquivos `*.hprof`
 - restauradas a tela de operadores e a abertura do cadastro de novo operador no administrativo
