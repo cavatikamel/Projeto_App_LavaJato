@@ -42,6 +42,7 @@ Importante:
 Sinais de que o frontend entrou no modo Supabase:
 
 - o login aceita email e senha reais do Supabase
+- no modo remoto, o campo de usuario precisa receber um email real; logins legados por apelido ficam bloqueados
 - a sessao persiste apos recarregar a pagina
 - os dados da operacao passam a ser sincronizados por organizacao
 - ao sair e entrar novamente, o estado salvo continua disponivel

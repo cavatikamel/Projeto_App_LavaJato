@@ -23,6 +23,11 @@
 - documentado o fluxo de teste local com Supabase em `docs/TESTING.md`
 - bloqueado o login por email no modo local para evitar abrir a base ficticia quando o Supabase nao estiver configurado
 - ajustada a configuracao do Vite para ler o `.env.local` na pasta principal do projeto
+- iniciada a Fase A de estabilizacao do legado com persistencia local do workspace operacional e marcacao consistente de sincronizacao remota
+- corrigido o fallback indevido que repovoava produtos, insumos e cuidados especiais com dados demo mesmo quando o estado remoto estava vazio
+- ajustado o login remoto para exigir email real do Supabase e evitar mistura com o fluxo legado
+- liberado o host do QR Code Pix na politica de seguranca da publicacao web
+- adicionada protecao no `.gitignore` para arquivos `*.hprof`
 - restauradas a tela de operadores e a abertura do cadastro de novo operador no administrativo
 - removido o bloco lateral de observacoes em recibos e documentos e adicionada a acao de baixar arquivo na tabela
 

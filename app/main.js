@@ -254,6 +254,7 @@ const businessStorageKeys = {
   pix: "lavaprime-business-pix-v1",
   paymentMethods: "lavaprime-business-payment-methods-v1",
   financeSettings: "lavaprime-business-finance-settings-v1",
+  legacyWorkspace: "lavaprime-legacy-workspace-v1",
   products: "lavaprime-products-v1",
   supplies: "lavaprime-supplies-v1",
   productSales: "lavaprime-product-sales-v1",
@@ -1242,6 +1243,12 @@ async function confirmLogin() {
 
   if (!hasSupabaseBrowserConfig() && looksLikeRemoteEmailLogin(user)) {
     showToast("Supabase nao configurado neste navegador. Crie .env.local para usar a base limpa de teste.");
+    return null;
+  }
+
+  if (hasSupabaseBrowserConfig() && !looksLikeRemoteEmailLogin(user)) {
+    showToast("No modo remoto, entre com o email real do Supabase.");
+    $("#loginUser")?.focus();
     return null;
   }
 
@@ -2474,6 +2481,7 @@ function saveClientVehicleRegistrationFromDialog() {
       serviceHistory: [],
       checklistHistory: []
     });
+    saveLegacyWorkspaceSnapshot();
     renderAdminDashboard();
   }
 
@@ -4037,6 +4045,7 @@ function addVehicleToPatio(vehicle) {
   patioVehicles.unshift(vehicle);
   const registryVehicle = syncVehicleFromPatioEntry(vehicle);
   persistEntryVehicleSpecialCareFromDraft(vehicle, registryVehicle);
+  saveLegacyWorkspaceSnapshot();
   closeVehicleDialog();
   renderPatio();
   renderAdminDashboard();
@@ -4205,6 +4214,7 @@ function saveBillingClient() {
   billingClients.push(client);
   selectedBillingClientId = String(client.id);
   selectedBillingInvoiceId = "";
+  saveLegacyWorkspaceSnapshot();
   clearBillingSubforms();
   renderBillingSelectors();
   showVehicleStep("billing");
@@ -4255,6 +4265,7 @@ function openBillingInvoice() {
   selectedBillingClientId = String(invoice.clientId);
   selectedBillingInvoiceId = String(invoice.id);
   $("#invoiceDueDate").value = "";
+  saveLegacyWorkspaceSnapshot();
   renderBillingSelectors();
   showVehicleStep("billing");
   showToast("Nova fatura aberta.");
@@ -4292,6 +4303,7 @@ function finishBilledEntry() {
     value: getVehiclePaymentTotal(pendingVehicle),
     operator: activeSessionUser || "Operador"
   });
+  saveLegacyWorkspaceSnapshot();
 
   if (vehicleEntryMode === "schedule") {
     showVehicleStep("schedule");
@@ -4948,7 +4960,7 @@ function getDefaultVehicleSpecialCareRecords() {
 }
 
 function normalizeProductCatalog(products = []) {
-  const source = Array.isArray(products) && products.length ? products : getDefaultProductCatalog();
+  const source = Array.isArray(products) ? products : getDefaultProductCatalog();
   return source
     .map((item, index) => {
       const today = getTodayISO();
@@ -4971,7 +4983,7 @@ function normalizeProductCatalog(products = []) {
 }
 
 function normalizeSupplyCatalog(supplies = []) {
-  const source = Array.isArray(supplies) && supplies.length ? supplies : getDefaultSupplyCatalog();
+  const source = Array.isArray(supplies) ? supplies : getDefaultSupplyCatalog();
   return source
     .map((item, index) => {
       const today = getTodayISO();
@@ -5001,7 +5013,7 @@ function normalizeStringTagList(values = [], allowedValues = []) {
 }
 
 function normalizeVehicleSpecialCareRecords(records = []) {
-  const source = Array.isArray(records) && records.length ? records : getDefaultVehicleSpecialCareRecords();
+  const source = Array.isArray(records) ? records : getDefaultVehicleSpecialCareRecords();
   return source
     .map((record, index) => {
       const timestamp = String(record.createdAt || record.registeredAt || new Date().toISOString()).trim();
@@ -5186,10 +5198,64 @@ function saveDocumentHistory() {
 
 function saveCashEntries() {
   saveBusinessStorageItem(businessStorageKeys.cashEntries, cashEntries);
+  saveLegacyWorkspaceSnapshot();
 }
 
 function saveVehicleSpecialCareRecords() {
   saveBusinessStorageItem(businessStorageKeys.vehicleSpecialCare, vehicleSpecialCareRecords);
+}
+
+function buildLegacyWorkspaceSnapshot() {
+  return {
+    billingClients: cloneSerializable(billingClients),
+    billingInvoices: cloneSerializable(billingInvoices),
+    invoiceLineItems: cloneSerializable(invoiceLineItems),
+    patioVehicles: cloneSerializable(patioVehicles),
+    quoteEstimates: cloneSerializable(quoteEstimates),
+    clientRegistry: cloneSerializable(clientRegistry),
+    vehicleRegistry: cloneSerializable(vehicleRegistry),
+    adminOperators: cloneSerializable(adminOperators),
+    serviceCatalog: cloneSerializable(serviceCatalog),
+    openPayments: cloneSerializable(openPayments),
+    payableAccounts: cloneSerializable(payableAccounts)
+  };
+}
+
+function saveLegacyWorkspaceSnapshot() {
+  saveBusinessStorageItem(businessStorageKeys.legacyWorkspace, buildLegacyWorkspaceSnapshot());
+}
+
+function applyLegacyWorkspaceSnapshot(snapshot) {
+  if (!snapshot || typeof snapshot !== "object") return;
+
+  replaceArrayContents(billingClients, Array.isArray(snapshot.billingClients) ? snapshot.billingClients : billingClients);
+  replaceArrayContents(billingInvoices, Array.isArray(snapshot.billingInvoices) ? snapshot.billingInvoices : billingInvoices);
+  replaceArrayContents(invoiceLineItems, Array.isArray(snapshot.invoiceLineItems) ? snapshot.invoiceLineItems : invoiceLineItems);
+  replaceArrayContents(patioVehicles, Array.isArray(snapshot.patioVehicles) ? snapshot.patioVehicles : patioVehicles);
+  replaceArrayContents(quoteEstimates, Array.isArray(snapshot.quoteEstimates) ? snapshot.quoteEstimates : quoteEstimates);
+  replaceArrayContents(clientRegistry, Array.isArray(snapshot.clientRegistry) ? snapshot.clientRegistry : clientRegistry);
+  replaceArrayContents(vehicleRegistry, Array.isArray(snapshot.vehicleRegistry) ? snapshot.vehicleRegistry : vehicleRegistry);
+  replaceArrayContents(adminOperators, Array.isArray(snapshot.adminOperators) ? snapshot.adminOperators : adminOperators);
+  replaceArrayContents(serviceCatalog, Array.isArray(snapshot.serviceCatalog) ? snapshot.serviceCatalog : serviceCatalog);
+  replaceArrayContents(openPayments, Array.isArray(snapshot.openPayments) ? snapshot.openPayments : openPayments);
+  replaceArrayContents(payableAccounts, Array.isArray(snapshot.payableAccounts) ? snapshot.payableAccounts : payableAccounts);
+}
+
+function rebuildInvoiceAmounts() {
+  Object.keys(invoiceAmounts).forEach((key) => delete invoiceAmounts[key]);
+  billingInvoices.forEach((invoice) => {
+    invoiceAmounts[invoice.id] = 0;
+  });
+  invoiceLineItems.forEach((item) => {
+    const invoiceId = Number(item.invoiceId || 0);
+    if (!invoiceId) return;
+    invoiceAmounts[invoiceId] = (invoiceAmounts[invoiceId] || 0) + Math.max(0, Number(item.value || 0));
+  });
+}
+
+function restoreLegacyWorkspaceSnapshot() {
+  applyLegacyWorkspaceSnapshot(loadBusinessStorageItem(businessStorageKeys.legacyWorkspace, null));
+  rebuildInvoiceAmounts();
 }
 
 function getNextProductId() {
@@ -5892,6 +5958,7 @@ function applyRemoteWorkspaceSnapshot(snapshot, sessionContext) {
   replaceArrayContents(serviceCatalog, Array.isArray(nextSnapshot.serviceCatalog) ? nextSnapshot.serviceCatalog : []);
   replaceArrayContents(openPayments, Array.isArray(nextSnapshot.openPayments) ? nextSnapshot.openPayments : []);
   replaceArrayContents(payableAccounts, Array.isArray(nextSnapshot.payableAccounts) ? nextSnapshot.payableAccounts : []);
+  rebuildInvoiceAmounts();
 
   selectedReportOperatorId = adminOperators[0]?.id || null;
 }
@@ -7478,6 +7545,7 @@ function saveQuoteFromDialog(dialog = $("#quoteDialog")) {
   };
 
   quoteEstimates.unshift(quote);
+  saveLegacyWorkspaceSnapshot();
   closeQuoteDialog();
   renderPatioQuotes();
   showToast(`Orçamento ${quote.code} emitido com validade até ${formatDateBR(quote.dueDate)}.`);
@@ -10435,6 +10503,7 @@ function saveClientRegistration(container) {
     if (client.billing) syncBillingClientFromRegistry(client);
   }
   syncVehiclesFromClientRegistration(savedClient);
+  saveLegacyWorkspaceSnapshot();
 
   pendingClientPlates = [];
   selectedClientPersonType = "PF";
@@ -10671,6 +10740,7 @@ function createCasualClientFromEntry(vehicle) {
   };
 
   clientRegistry.unshift(client);
+  saveLegacyWorkspaceSnapshot();
   return client;
 }
 
@@ -10858,6 +10928,7 @@ function persistVehicleRegistration(container) {
   if (!persistVehicleSpecialCareFromRegistry(container, vehicle)) return null;
 
   selectedVehicleId = vehicle.id;
+  saveLegacyWorkspaceSnapshot();
   return { ok: true, reason: selectedVehicle ? "updated" : "created", vehicle };
 }
 
@@ -12298,6 +12369,7 @@ function saveOperatorRegistration(container) {
 
   selectedReportOperatorId = savedOperator.id;
   const wasEdit = Boolean(operator);
+  saveLegacyWorkspaceSnapshot();
   closeOperatorDialog();
   renderOperatorsScreen($("#adminOperatorsContent"));
   renderAdminDashboard();
@@ -12747,6 +12819,7 @@ function saveServiceRegistration(container) {
   else delete serviceSupplyProfiles[nextProfileKey];
   serviceSupplyProfiles = normalizeServiceSupplyProfiles(serviceSupplyProfiles);
   saveServiceSupplyProfiles();
+  saveLegacyWorkspaceSnapshot();
 
   closeServiceDialog();
   renderServicesScreen($("#adminServicesContent"));
@@ -18107,6 +18180,7 @@ function createInvoiceFromRemainingBalance(sourceInvoice, settlement) {
   billingInvoices.push(invoice);
   invoiceAmounts[invoice.id] = 0;
   addRemainingBalanceToInvoice(invoice, sourceInvoice, settlement.balance);
+  saveLegacyWorkspaceSnapshot();
   return invoice;
 }
 
@@ -18121,6 +18195,7 @@ function addRemainingBalanceToInvoice(targetInvoice, sourceInvoice, value) {
     operator: activeSessionUser || "Administrador",
     originInvoiceId: sourceInvoice.id
   });
+  saveLegacyWorkspaceSnapshot();
 }
 
 function createOpenPaymentFromInvoiceBalance(invoice, settlement) {
@@ -18175,6 +18250,7 @@ function createOpenPaymentFromInvoiceBalance(invoice, settlement) {
   cashEntries.unshift(cashEntry);
   saveCashEntries();
   openPayments.unshift(openPayment);
+  saveLegacyWorkspaceSnapshot();
   return openPayment;
 }
 
@@ -20046,6 +20122,7 @@ function openStatusBillingInvoice() {
   billingInvoices.push(invoice);
   invoiceAmounts[invoice.id] = 0;
   selectedStatusBillingInvoiceId = String(invoice.id);
+  saveLegacyWorkspaceSnapshot();
   renderStatusBillingPanel(vehicle, statusBillingMode);
   showToast("Nova fatura aberta.");
 }
@@ -20192,6 +20269,7 @@ function syncBillingValueAfterPaymentAdjustment(vehicle, previousValue) {
     lineItem.value = nextValue;
     lineItem.operator = activeSessionUser || lineItem.operator;
   }
+  saveLegacyWorkspaceSnapshot();
 }
 
 async function confirmVehiclePayment() {
@@ -20485,6 +20563,7 @@ function upsertOpenPaymentFromVehicle(vehicle, cashEntry, options = {}) {
 
   if (existingPayment) {
     Object.assign(existingPayment, payload, { id: existingPayment.id, lastReminderAt: existingPayment.lastReminderAt || "" });
+    saveLegacyWorkspaceSnapshot();
     return existingPayment;
   }
 
@@ -20494,6 +20573,7 @@ function upsertOpenPaymentFromVehicle(vehicle, cashEntry, options = {}) {
     ...payload
   };
   openPayments.unshift(openPayment);
+  saveLegacyWorkspaceSnapshot();
   return openPayment;
 }
 
@@ -20549,6 +20629,7 @@ function syncBillingAfterPatioEdit(vehicle, previousValue, previousService, prev
   }
   vehicle.paymentStatus = "Pendente";
   vehicle.paymentConfirmed = false;
+  saveLegacyWorkspaceSnapshot();
 }
 
 function syncBillingFromVehicleProducts(vehicle) {
@@ -20565,6 +20646,7 @@ function syncBillingFromVehicleProducts(vehicle) {
   lineItem.productSummary = getVehicleSoldProducts(vehicle).map((item) => item.productName).join(", ");
   lineItem.value = nextValue;
   lineItem.operator = activeSessionUser || lineItem.operator;
+  saveLegacyWorkspaceSnapshot();
 }
 
 function attachVehicleToOpenInvoice(vehicle) {
@@ -20598,6 +20680,7 @@ function attachVehicleToInvoice(vehicle, invoice) {
     value: getVehiclePaymentTotal(vehicle),
     operator: activeSessionUser || "Operador"
   });
+  saveLegacyWorkspaceSnapshot();
   return true;
 }
 
@@ -20620,6 +20703,7 @@ function detachVehicleFromBilling(vehicle, previousValue, previousService) {
   invoiceAmounts[invoiceId] = Math.max(0, (invoiceAmounts[invoiceId] || 0) - lineValue);
   if (lineIndex >= 0) invoiceLineItems.splice(lineIndex, 1);
   delete vehicle.billing;
+  saveLegacyWorkspaceSnapshot();
 }
 
 function findInvoiceLineItemForVehicle(vehicle, invoiceId, previousService) {
@@ -20711,6 +20795,8 @@ async function updateVehicleStatus(status) {
       : `Status de ${vehicle.plate} alterado para ${statusMeta[status].label}.`
   );
 }
+
+window.setTimeout(restoreLegacyWorkspaceSnapshot, 0);
 
 initIcons();
 preloadPdfLogoImage();

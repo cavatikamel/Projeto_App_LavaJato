@@ -4,6 +4,8 @@ outputs/
 node_modules/
 dist/
 *.log
+.codex-*.log
+*.hprof
 .DS_Store
 Thumbs.db
 .env

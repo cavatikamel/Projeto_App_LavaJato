@@ -4,6 +4,8 @@
 
 O projeto esta ativo, com repositorio principal funcional, publicacao no GitHub validada, base web migrada para React + Vite com compatibilidade legada e primeira etapa de autenticacao/sincronizacao com Supabase ja preparada em branch dedicada.
 
+Na Fase A de estabilizacao, o legado passou a salvar um snapshot operacional local complementar para reduzir perda de dados em cadastros e faturamento durante a transicao, e o modo remoto deixou de repovoar automaticamente produtos, insumos e cuidados especiais com dados demo quando a organizacao esta vazia.
+
 ## Modulos presentes no repositorio
 
 - app principal migrado para base React + Vite com compatibilidade legada
@@ -32,6 +34,7 @@ O projeto esta ativo, com repositorio principal funcional, publicacao no GitHub 
 - migrar gradualmente a interface e a logica de `app/main.js` para componentes e modulos React
 - aprofundar a migracao do snapshot remoto para tabelas relacionais por modulo
 - configurar a chave publica `VITE_SUPABASE_ANON_KEY` nos ambientes locais e publicados
+- aplicar no Supabase real as tabelas relacionais do dominio que ainda faltam na API publicada
 - reduzir dependencia de conhecimento fora do repositorio
 - melhorar a granularidade de `app/main.js`
 - ampliar validacoes automaticas conforme o projeto evoluir

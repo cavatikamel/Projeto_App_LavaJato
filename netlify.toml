@@ -11,7 +11,7 @@ status = 200
 for = "/*"
 
 [headers.values]
-Content-Security-Policy = "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+Content-Security-Policy = "default-src 'self'; img-src 'self' data: blob: https://api.qrserver.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 Referrer-Policy = "strict-origin-when-cross-origin"
 X-Content-Type-Options = "nosniff"
