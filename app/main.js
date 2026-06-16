@@ -1,4 +1,5 @@
 import {
+  deleteOrganizationRows,
   fetchOrganizationRelationalDataset,
   fetchOrganizationAppState,
   getLavaprimeSessionContext,
@@ -99,6 +100,9 @@ const remoteWorkspaceState = {
   membershipRole: "",
   organizationId: null,
   userId: null
+};
+const pendingRemoteReceivablesDeletes = {
+  invoiceLineItemIds: []
 };
 const vehicleOwnerTransferSearchModes = [
   { value: "name", label: "Nome / Razao social", placeholder: "Digite o nome ou a razao social" },
@@ -4267,7 +4271,7 @@ function openBillingInvoice() {
   selectedBillingClientId = String(invoice.clientId);
   selectedBillingInvoiceId = String(invoice.id);
   $("#invoiceDueDate").value = "";
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
   renderBillingSelectors();
   showVehicleStep("billing");
   showToast("Nova fatura aberta.");
@@ -4305,7 +4309,7 @@ function finishBilledEntry() {
     value: getVehiclePaymentTotal(pendingVehicle),
     operator: activeSessionUser || "Operador"
   });
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
 
   if (vehicleEntryMode === "schedule") {
     showVehicleStep("schedule");
@@ -5174,6 +5178,92 @@ function normalizeQuoteEstimates(quotes = []) {
     .filter((quote) => quote.code && quote.plate);
 }
 
+function normalizeBillingInvoices(invoices = []) {
+  return (Array.isArray(invoices) ? invoices : [])
+    .map((invoice, index) => ({
+      id: Number(invoice.id || index + 1),
+      remoteId: String(invoice.remoteId || "").trim(),
+      clientId: Number(invoice.clientId || 0) || null,
+      code: String(invoice.code || "").trim(),
+      issueDate: String(invoice.issueDate || "").trim(),
+      dueDate: String(invoice.dueDate || getTodayISO()).trim(),
+      status: String(invoice.status || "Aberta").trim(),
+      approvedBy: String(invoice.approvedBy || "").trim(),
+      cycle: String(invoice.cycle || "").trim(),
+      paidAt: String(invoice.paidAt || "").trim(),
+      settlementMethod: String(invoice.settlementMethod || "").trim(),
+      paymentMethod: String(invoice.paymentMethod || "").trim(),
+      settlementBankAccountId: Number(invoice.settlementBankAccountId || 0) || null,
+      settlementBankAccountName: String(invoice.settlementBankAccountName || "").trim(),
+      partialSettlement: Boolean(invoice.partialSettlement),
+      settledAmount: Number(invoice.settledAmount || 0),
+      remainingBalance: Number(invoice.remainingBalance || 0),
+      remainingDestination: String(invoice.remainingDestination || "").trim(),
+      remainingDestinationLabel: String(invoice.remainingDestinationLabel || "").trim(),
+      originInvoiceId: Number(invoice.originInvoiceId || 0) || null,
+      originInvoiceCode: String(invoice.originInvoiceCode || "").trim()
+    }))
+    .filter((invoice) => invoice.code);
+}
+
+function normalizeInvoiceLineItems(items = []) {
+  return (Array.isArray(items) ? items : [])
+    .map((item, index) => ({
+      id: Number(item.id || index + 1),
+      remoteId: String(item.remoteId || "").trim(),
+      invoiceId: Number(item.invoiceId || 0) || null,
+      clientId: Number(item.clientId || 0) || null,
+      vehicleId: Number(item.vehicleId || 0) || null,
+      plate: formatPlate(String(item.plate || "").trim()),
+      service: String(item.service || "").trim(),
+      servicesTotal: Number(item.servicesTotal || 0),
+      productsTotal: Number(item.productsTotal || 0),
+      productSummary: String(item.productSummary || "").trim(),
+      value: Number(item.value || item.total || 0),
+      operator: String(item.operator || "").trim(),
+      originInvoiceId: Number(item.originInvoiceId || 0) || null
+    }))
+    .filter((item) => item.invoiceId && item.service);
+}
+
+function normalizeOpenPayments(payments = []) {
+  return (Array.isArray(payments) ? payments : [])
+    .map((payment, index) => ({
+      id: Number(payment.id || index + 1),
+      remoteId: String(payment.remoteId || "").trim(),
+      clientId: Number(payment.clientId || 0) || null,
+      clientName: String(payment.clientName || "").trim(),
+      phone: String(payment.phone || "").trim(),
+      plate: formatPlate(String(payment.plate || "").trim()),
+      service: String(payment.service || "").trim(),
+      description: String(payment.description || "").trim(),
+      value: Number(payment.value || 0),
+      paymentMethod: String(payment.paymentMethod || "").trim(),
+      createdAt: String(payment.createdAt || `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`).trim(),
+      dueDate: String(payment.dueDate || "").trim(),
+      status: String(payment.status || "Aberto").trim(),
+      reminderFrequency: String(payment.reminderFrequency || "Diário").trim(),
+      lastReminderAt: String(payment.lastReminderAt || "").trim(),
+      operator: String(payment.operator || activeSessionUser || "Administrador").trim(),
+      vehicleId: Number(payment.vehicleId || 0) || null,
+      cashEntryId: Number(payment.cashEntryId || 0) || null,
+      invoiceId: Number(payment.invoiceId || 0) || null,
+      invoiceCode: String(payment.invoiceCode || "").trim(),
+      partialPayment: Boolean(payment.partialPayment),
+      paidAmount: Number(payment.paidAmount || 0),
+      previousOpenPaymentId: Number(payment.previousOpenPaymentId || 0) || null,
+      paidAt: String(payment.paidAt || "").trim(),
+      settledBy: String(payment.settledBy || "").trim(),
+      settlementMethod: String(payment.settlementMethod || "").trim(),
+      settlementBankAccountId: Number(payment.settlementBankAccountId || 0) || null,
+      settlementBankAccountName: String(payment.settlementBankAccountName || "").trim(),
+      partialSettlement: Boolean(payment.partialSettlement),
+      settledAmount: Number(payment.settledAmount || 0),
+      remainingBalance: Number(payment.remainingBalance || 0)
+    }))
+    .filter((payment) => payment.clientName && payment.value >= 0);
+}
+
 function normalizeServiceSupplyProfiles(profiles = {}) {
   const validSupplyIds = new Set((Array.isArray(supplyCatalog) ? supplyCatalog : []).map((item) => Number(item.id)));
   return Object.entries(profiles || {}).reduce((accumulator, [serviceKey, entries]) => {
@@ -5225,6 +5315,11 @@ function saveProductSales() {
 function saveQuoteEstimates() {
   saveLegacyWorkspaceSnapshot();
   void runRemoteRelationalTask(() => syncQuotesToRemote(quoteEstimates), "Falha ao sincronizar orcamentos com o Supabase.");
+}
+
+function saveReceivablesState() {
+  saveLegacyWorkspaceSnapshot();
+  void runRemoteRelationalTask(() => syncReceivablesToRemote(), "Falha ao sincronizar cobrancas com o Supabase.");
 }
 
 function saveInventoryMovements() {
@@ -6295,6 +6390,135 @@ function mergeRemoteCashEntries(rows) {
   cashEntries = buildLocalCashEntriesFromRemote(rows);
 }
 
+function buildLocalInvoicesFromRemote(rows = [], lineRows = []) {
+  const normalizedInvoices = normalizeBillingInvoices(
+    rows.map((row, index) => {
+      const metadata = getSafeMetadata(row.metadata);
+      const registryClient =
+        clientRegistry.find((client) => client.remoteId === row.client_id) ||
+        clientRegistry.find((client) => Number(client.billingClientId || 0) === Number(metadata.localBillingClientId || 0)) ||
+        null;
+      return {
+        id: Number(metadata.legacyId || metadata.localId || index + 1),
+        remoteId: row.id,
+        clientId: Number(metadata.localBillingClientId || registryClient?.billingClientId || 0) || null,
+        code: String(row.invoice_number || "").trim(),
+        issueDate: String(row.issue_date || metadata.issueDate || "").trim(),
+        dueDate: String(row.due_date || "").trim(),
+        status: String(row.status || "Aberta").trim(),
+        approvedBy: String(metadata.approvedBy || "").trim(),
+        cycle: String(metadata.cycle || "").trim(),
+        paidAt: String(metadata.paidAt || "").trim(),
+        settlementMethod: String(metadata.settlementMethod || "").trim(),
+        paymentMethod: String(metadata.paymentMethod || "").trim(),
+        settlementBankAccountId: Number(metadata.settlementBankAccountId || 0) || null,
+        settlementBankAccountName: String(metadata.settlementBankAccountName || "").trim(),
+        partialSettlement: Boolean(metadata.partialSettlement),
+        settledAmount: Number(metadata.settledAmount || row.paid_amount || 0),
+        remainingBalance: Number(metadata.remainingBalance || 0),
+        remainingDestination: String(metadata.remainingDestination || "").trim(),
+        remainingDestinationLabel: String(metadata.remainingDestinationLabel || "").trim(),
+        originInvoiceId: Number(metadata.originInvoiceId || 0) || null,
+        originInvoiceCode: String(metadata.originInvoiceCode || "").trim()
+      };
+    })
+  );
+
+  const remoteToLocalInvoiceId = new Map(normalizedInvoices.map((invoice) => [String(invoice.remoteId), invoice.id]));
+  const normalizedItems = normalizeInvoiceLineItems(
+    lineRows.map((row, index) => {
+      const metadata = getSafeMetadata({});
+      const registryClient =
+        clientRegistry.find((client) => client.remoteId === row.client_id) ||
+        null;
+      return {
+        id: Number(index + 1),
+        remoteId: row.id,
+        invoiceId: remoteToLocalInvoiceId.get(String(row.invoice_id)) || null,
+        clientId: Number(registryClient?.billingClientId || 0) || null,
+        vehicleId:
+          Number(
+            vehicleRegistry.find((vehicle) => vehicle.remoteId === row.vehicle_id)?.id ||
+              0
+          ) || null,
+        plate: vehicleRegistry.find((vehicle) => vehicle.remoteId === row.vehicle_id)?.plate || "",
+        service: String(row.service_name || row.description || "").trim(),
+        servicesTotal: Number(row.total || 0),
+        productsTotal: 0,
+        productSummary: "",
+        value: Number(row.total || row.unit_price || 0),
+        operator: String(row.operator_name || "").trim(),
+        originInvoiceId: Number(0)
+      };
+    })
+  );
+
+  return { invoices: normalizedInvoices, items: normalizedItems };
+}
+
+function mergeRemoteInvoices(rows = [], lineRows = []) {
+  const normalized = buildLocalInvoicesFromRemote(rows, lineRows);
+  replaceArrayContents(billingInvoices, normalized.invoices);
+  replaceArrayContents(invoiceLineItems, normalized.items);
+  rebuildInvoiceAmounts();
+}
+
+function buildLocalOpenPaymentsFromRemote(rows = []) {
+  return normalizeOpenPayments(
+    rows.map((row, index) => {
+      const metadata = getSafeMetadata(row.metadata);
+      const registryClient =
+        clientRegistry.find((client) => client.remoteId === row.client_id) ||
+        clientRegistry.find((client) => Number(client.billingClientId || 0) === Number(metadata.localBillingClientId || 0)) ||
+        null;
+      const vehicle = vehicleRegistry.find((candidate) => candidate.remoteId === row.vehicle_id) || null;
+      return {
+        id: Number(metadata.legacyId || metadata.localId || index + 1),
+        remoteId: row.id,
+        clientId: Number(metadata.localBillingClientId || registryClient?.billingClientId || 0) || null,
+        clientName: String(metadata.clientName || (registryClient ? getClientDisplayName(registryClient) : "")).trim(),
+        phone: String(metadata.phone || registryClient?.phone || "").trim(),
+        plate: String(metadata.plate || vehicle?.plate || "").trim(),
+        service: String(metadata.service || "").trim(),
+        description: String(row.description || "").trim(),
+        value: Number(row.amount || 0),
+        paymentMethod: String(metadata.paymentMethod || "").trim(),
+        createdAt: String(metadata.createdAt || row.created_at || "").trim(),
+        dueDate: String(row.due_date || "").trim(),
+        status: String(row.status || "Aberto").trim(),
+        reminderFrequency: String(row.reminder_frequency || "Diário").trim(),
+        lastReminderAt: String(metadata.lastReminderAt || "").trim(),
+        operator: String(metadata.operator || activeSessionUser || "Administrador").trim(),
+        vehicleId: Number(vehicle?.id || metadata.vehicleId || 0) || null,
+        cashEntryId: Number(metadata.cashEntryId || 0) || null,
+        invoiceId: Number(metadata.localInvoiceId || 0) || null,
+        invoiceCode: String(metadata.invoiceCode || "").trim(),
+        partialPayment: Boolean(metadata.partialPayment),
+        paidAmount: Number(row.paid_amount || metadata.paidAmount || 0),
+        previousOpenPaymentId: Number(metadata.previousOpenPaymentId || 0) || null,
+        paidAt: String(metadata.paidAt || "").trim(),
+        settledBy: String(metadata.settledBy || "").trim(),
+        settlementMethod: String(metadata.settlementMethod || "").trim(),
+        settlementBankAccountId: Number(metadata.settlementBankAccountId || 0) || null,
+        settlementBankAccountName: String(metadata.settlementBankAccountName || "").trim(),
+        partialSettlement: Boolean(metadata.partialSettlement),
+        settledAmount: Number(metadata.settledAmount || 0),
+        remainingBalance: Number(row.balance_amount || metadata.remainingBalance || 0)
+      };
+    })
+  );
+}
+
+function mergeRemoteOpenPayments(rows = []) {
+  replaceArrayContents(openPayments, buildLocalOpenPaymentsFromRemote(rows));
+}
+
+function queueRemoteInvoiceLineItemDelete(remoteId) {
+  const normalizedId = String(remoteId || "").trim();
+  if (!normalizedId || pendingRemoteReceivablesDeletes.invoiceLineItemIds.includes(normalizedId)) return;
+  pendingRemoteReceivablesDeletes.invoiceLineItemIds.push(normalizedId);
+}
+
 function buildRemoteClientPayload(client) {
   return {
     id: client.remoteId || undefined,
@@ -6647,6 +6871,108 @@ function buildRemoteCashEntryPayload(entry) {
   };
 }
 
+function buildRemoteInvoicePayload(invoice) {
+  const registryClient = getRegistryClientByBillingClientId(invoice.clientId);
+  return {
+    id: invoice.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    client_id: registryClient?.remoteId || null,
+    attendance_id: null,
+    status: invoice.status || "Aberta",
+    invoice_number: invoice.code,
+    issue_date: invoice.issueDate || getTodayISO(),
+    due_date: invoice.dueDate || getTodayISO(),
+    subtotal: getInvoiceAmount(invoice.id),
+    discount: 0,
+    total: getInvoiceAmount(invoice.id),
+    paid_amount: Number(invoice.settledAmount || 0),
+    notes: "",
+    metadata: {
+      legacyId: Number(invoice.id || 0),
+      localBillingClientId: Number(invoice.clientId || 0) || null,
+      approvedBy: invoice.approvedBy || "",
+      cycle: invoice.cycle || "",
+      paidAt: invoice.paidAt || "",
+      settlementMethod: invoice.settlementMethod || "",
+      paymentMethod: invoice.paymentMethod || "",
+      settlementBankAccountId: invoice.settlementBankAccountId || null,
+      settlementBankAccountName: invoice.settlementBankAccountName || "",
+      partialSettlement: Boolean(invoice.partialSettlement),
+      settledAmount: Number(invoice.settledAmount || 0),
+      remainingBalance: Number(invoice.remainingBalance || 0),
+      remainingDestination: invoice.remainingDestination || "",
+      remainingDestinationLabel: invoice.remainingDestinationLabel || "",
+      originInvoiceId: invoice.originInvoiceId || null,
+      originInvoiceCode: invoice.originInvoiceCode || ""
+    }
+  };
+}
+
+function buildRemoteInvoiceLineItemPayload(item) {
+  const invoice = billingInvoices.find((candidate) => candidate.id === Number(item.invoiceId));
+  if (!invoice?.remoteId) return null;
+  const registryClient = getRegistryClientByBillingClientId(item.clientId || invoice.clientId);
+  const vehicle = getAnyVehicleRecord(item.vehicleId, item.plate);
+  return {
+    id: item.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    invoice_id: invoice.remoteId,
+    attendance_id: null,
+    client_id: registryClient?.remoteId || null,
+    vehicle_id: vehicle?.remoteId || null,
+    description: item.service,
+    service_name: item.service,
+    quantity: 1,
+    unit_price: Number(item.value || 0),
+    total: Number(item.value || 0),
+    operator_name: item.operator || null
+  };
+}
+
+function buildRemoteOpenPaymentPayload(payment) {
+  const registryClient = getRegistryClientByBillingClientId(payment.clientId);
+  const vehicle = getAnyVehicleRecord(payment.vehicleId, payment.plate);
+  return {
+    id: payment.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    attendance_id: null,
+    client_id: registryClient?.remoteId || null,
+    vehicle_id: vehicle?.remoteId || null,
+    status: payment.status || "Aberto",
+    description: payment.description || payment.service || "",
+    amount: Number(payment.value || 0),
+    paid_amount: Number(payment.paidAmount || payment.settledAmount || 0),
+    balance_amount: Number(payment.remainingBalance || 0),
+    due_date: payment.dueDate || null,
+    reminder_frequency: payment.reminderFrequency || "Diário",
+    metadata: {
+      legacyId: Number(payment.id || 0),
+      localBillingClientId: Number(payment.clientId || 0) || null,
+      clientName: payment.clientName || "",
+      phone: payment.phone || "",
+      plate: payment.plate || "",
+      service: payment.service || "",
+      paymentMethod: payment.paymentMethod || "",
+      createdAt: payment.createdAt || "",
+      lastReminderAt: payment.lastReminderAt || "",
+      operator: payment.operator || "",
+      vehicleId: Number(payment.vehicleId || 0) || null,
+      cashEntryId: Number(payment.cashEntryId || 0) || null,
+      localInvoiceId: Number(payment.invoiceId || 0) || null,
+      invoiceCode: payment.invoiceCode || "",
+      partialPayment: Boolean(payment.partialPayment),
+      paidAt: payment.paidAt || "",
+      settledBy: payment.settledBy || "",
+      settlementMethod: payment.settlementMethod || "",
+      settlementBankAccountId: payment.settlementBankAccountId || null,
+      settlementBankAccountName: payment.settlementBankAccountName || "",
+      partialSettlement: Boolean(payment.partialSettlement),
+      settledAmount: Number(payment.settledAmount || 0),
+      previousOpenPaymentId: Number(payment.previousOpenPaymentId || 0) || null
+    }
+  };
+}
+
 async function syncClientsToRemote(clients = clientRegistry) {
   if (!isRemoteRelationalModeEnabled() || !clients.length) return [];
   const rows = await upsertOrganizationRows("clients", clients.map(buildRemoteClientPayload), { onConflict: "id" });
@@ -6734,6 +7060,45 @@ async function syncCashEntriesToRemote(entries = cashEntries) {
   return rows;
 }
 
+async function syncInvoicesToRemote(invoices = billingInvoices, items = invoiceLineItems) {
+  if (!isRemoteRelationalModeEnabled()) return [];
+  if (!invoices.length) {
+    if (pendingRemoteReceivablesDeletes.invoiceLineItemIds.length) {
+      await deleteOrganizationRows("invoice_line_items", remoteWorkspaceState.organizationId, pendingRemoteReceivablesDeletes.invoiceLineItemIds);
+      pendingRemoteReceivablesDeletes.invoiceLineItemIds = [];
+    }
+    return [];
+  }
+
+  const invoiceRows = await upsertOrganizationRows("invoices", invoices.map(buildRemoteInvoicePayload), { onConflict: "id" });
+  invoiceRows.forEach((row) => {
+    const metadata = getSafeMetadata(row.metadata);
+    const localInvoice = billingInvoices.find((invoice) => Number(invoice.id) === Number(metadata.legacyId || 0));
+    if (localInvoice) localInvoice.remoteId = row.id;
+  });
+
+  const itemRows = items.map((item) => buildRemoteInvoiceLineItemPayload(item)).filter(Boolean);
+  const persistedItems = itemRows.length ? await upsertOrganizationRows("invoice_line_items", itemRows, { onConflict: "id" }) : [];
+  if (pendingRemoteReceivablesDeletes.invoiceLineItemIds.length) {
+    await deleteOrganizationRows("invoice_line_items", remoteWorkspaceState.organizationId, pendingRemoteReceivablesDeletes.invoiceLineItemIds);
+    pendingRemoteReceivablesDeletes.invoiceLineItemIds = [];
+  }
+  mergeRemoteInvoices(invoiceRows, persistedItems);
+  return invoiceRows;
+}
+
+async function syncOpenPaymentsToRemote(payments = openPayments) {
+  if (!isRemoteRelationalModeEnabled() || !payments.length) return [];
+  const rows = await upsertOrganizationRows("open_payments", payments.map(buildRemoteOpenPaymentPayload), { onConflict: "id" });
+  mergeRemoteOpenPayments(rows);
+  return rows;
+}
+
+async function syncReceivablesToRemote() {
+  await syncInvoicesToRemote(billingInvoices, invoiceLineItems);
+  await syncOpenPaymentsToRemote(openPayments);
+}
+
 function runRemoteRelationalTask(task, failureMessage = "Falha ao sincronizar cadastro com o Supabase.") {
   if (!isRemoteRelationalModeEnabled()) return Promise.resolve([]);
   return task().catch((error) => {
@@ -6780,6 +7145,12 @@ async function hydrateRemoteRelationalWorkspace(sessionContext) {
 
   if (dataset.cashEntries.length) mergeRemoteCashEntries(dataset.cashEntries);
   else await syncCashEntriesToRemote(cashEntries);
+
+  if (dataset.invoices.length || dataset.invoiceLineItems.length) mergeRemoteInvoices(dataset.invoices, dataset.invoiceLineItems);
+  else await syncInvoicesToRemote(billingInvoices, invoiceLineItems);
+
+  if (dataset.openPayments.length) mergeRemoteOpenPayments(dataset.openPayments);
+  else await syncOpenPaymentsToRemote(openPayments);
 
   ensureCoreRelationalLocalIds();
 }
@@ -16165,6 +16536,7 @@ async function settleOpenPayment(paymentId) {
   renderAdminScreen("openPayments");
   refreshCashflowScreen();
   renderAdminDashboard();
+  saveReceivablesState();
   if (remainingPayment) {
     triggerAutomatedMessage("partial-open-payment", getMessageContextFromOpenPayment(payment));
     showToast(`Baixa parcial registrada. Saldo em aberto: ${formatCurrency(settlement.balance)}.`);
@@ -16239,6 +16611,7 @@ function sendOpenPaymentWhatsapp(paymentId) {
   const payment = getOpenPaymentById(paymentId);
   if (!payment) return;
   payment.lastReminderAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+  saveReceivablesState();
   sendManualMessage("open-service-payment", getMessageContextFromOpenPayment(payment));
   renderAdminScreen("openPayments");
 }
@@ -19167,7 +19540,7 @@ function createInvoiceFromRemainingBalance(sourceInvoice, settlement) {
   billingInvoices.push(invoice);
   invoiceAmounts[invoice.id] = 0;
   addRemainingBalanceToInvoice(invoice, sourceInvoice, settlement.balance);
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
   return invoice;
 }
 
@@ -19182,7 +19555,7 @@ function addRemainingBalanceToInvoice(targetInvoice, sourceInvoice, value) {
     operator: activeSessionUser || "Administrador",
     originInvoiceId: sourceInvoice.id
   });
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
 }
 
 function createOpenPaymentFromInvoiceBalance(invoice, settlement) {
@@ -19237,7 +19610,7 @@ function createOpenPaymentFromInvoiceBalance(invoice, settlement) {
   cashEntries.unshift(cashEntry);
   saveCashEntries();
   openPayments.unshift(openPayment);
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
   return openPayment;
 }
 
@@ -21109,7 +21482,7 @@ function openStatusBillingInvoice() {
   billingInvoices.push(invoice);
   invoiceAmounts[invoice.id] = 0;
   selectedStatusBillingInvoiceId = String(invoice.id);
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
   renderStatusBillingPanel(vehicle, statusBillingMode);
   showToast("Nova fatura aberta.");
 }
@@ -21256,7 +21629,7 @@ function syncBillingValueAfterPaymentAdjustment(vehicle, previousValue) {
     lineItem.value = nextValue;
     lineItem.operator = activeSessionUser || lineItem.operator;
   }
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
 }
 
 async function confirmVehiclePayment() {
@@ -21550,7 +21923,7 @@ function upsertOpenPaymentFromVehicle(vehicle, cashEntry, options = {}) {
 
   if (existingPayment) {
     Object.assign(existingPayment, payload, { id: existingPayment.id, lastReminderAt: existingPayment.lastReminderAt || "" });
-    saveLegacyWorkspaceSnapshot();
+    saveReceivablesState();
     return existingPayment;
   }
 
@@ -21560,7 +21933,7 @@ function upsertOpenPaymentFromVehicle(vehicle, cashEntry, options = {}) {
     ...payload
   };
   openPayments.unshift(openPayment);
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
   return openPayment;
 }
 
@@ -21616,7 +21989,7 @@ function syncBillingAfterPatioEdit(vehicle, previousValue, previousService, prev
   }
   vehicle.paymentStatus = "Pendente";
   vehicle.paymentConfirmed = false;
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
 }
 
 function syncBillingFromVehicleProducts(vehicle) {
@@ -21633,7 +22006,7 @@ function syncBillingFromVehicleProducts(vehicle) {
   lineItem.productSummary = getVehicleSoldProducts(vehicle).map((item) => item.productName).join(", ");
   lineItem.value = nextValue;
   lineItem.operator = activeSessionUser || lineItem.operator;
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
 }
 
 function attachVehicleToOpenInvoice(vehicle) {
@@ -21667,7 +22040,7 @@ function attachVehicleToInvoice(vehicle, invoice) {
     value: getVehiclePaymentTotal(vehicle),
     operator: activeSessionUser || "Operador"
   });
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
   return true;
 }
 
@@ -21688,9 +22061,12 @@ function detachVehicleFromBilling(vehicle, previousValue, previousService) {
   );
   const lineValue = lineIndex >= 0 ? invoiceLineItems[lineIndex].value : previousValue;
   invoiceAmounts[invoiceId] = Math.max(0, (invoiceAmounts[invoiceId] || 0) - lineValue);
-  if (lineIndex >= 0) invoiceLineItems.splice(lineIndex, 1);
+  if (lineIndex >= 0) {
+    const [removedLineItem] = invoiceLineItems.splice(lineIndex, 1);
+    if (removedLineItem?.remoteId) queueRemoteInvoiceLineItemDelete(removedLineItem.remoteId);
+  }
   delete vehicle.billing;
-  saveLegacyWorkspaceSnapshot();
+  saveReceivablesState();
 }
 
 function findInvoiceLineItemForVehicle(vehicle, invoiceId, previousService) {

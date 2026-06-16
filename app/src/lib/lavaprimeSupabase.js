@@ -171,7 +171,10 @@ export async function fetchOrganizationRelationalDataset(organizationId) {
     vehicleSpecialCare,
     quotes,
     quoteItems,
-    cashEntries
+    cashEntries,
+    openPayments,
+    invoices,
+    invoiceLineItems
   ] = await Promise.all([
     selectOrganizationRows(
       "clients",
@@ -227,6 +230,21 @@ export async function fetchOrganizationRelationalDataset(organizationId) {
       "cash_entries",
       "id, organization_id, attendance_id, invoice_id, kind, category, cost_center, description, method, status, amount, entry_date, due_date, paid_at, attachment_path, metadata, created_at, updated_at",
       organizationId
+    ),
+    selectOrganizationRows(
+      "open_payments",
+      "id, organization_id, attendance_id, client_id, vehicle_id, status, description, amount, paid_amount, balance_amount, due_date, reminder_frequency, metadata, created_at, updated_at",
+      organizationId
+    ),
+    selectOrganizationRows(
+      "invoices",
+      "id, organization_id, client_id, attendance_id, status, invoice_number, issue_date, due_date, subtotal, discount, total, paid_amount, notes, metadata, created_at, updated_at",
+      organizationId
+    ),
+    selectOrganizationRows(
+      "invoice_line_items",
+      "id, organization_id, invoice_id, attendance_id, client_id, vehicle_id, description, service_name, quantity, unit_price, total, operator_name, created_at, updated_at",
+      organizationId
     )
   ]);
 
@@ -241,7 +259,10 @@ export async function fetchOrganizationRelationalDataset(organizationId) {
     vehicleSpecialCare,
     quotes,
     quoteItems,
-    cashEntries
+    cashEntries,
+    openPayments,
+    invoices,
+    invoiceLineItems
   };
 }
 
@@ -258,4 +279,14 @@ export async function upsertOrganizationRows(table, rows, options = {}) {
   const { data, error } = await query;
   if (error) throw error;
   return Array.isArray(data) ? data : [];
+}
+
+export async function deleteOrganizationRows(table, organizationId, ids = []) {
+  const normalizedIds = [...new Set((Array.isArray(ids) ? ids : []).map((id) => String(id || "").trim()).filter(Boolean))];
+  if (!table || !organizationId || !normalizedIds.length) return [];
+
+  const client = getSupabaseBrowserClient();
+  const { error } = await client.from(table).delete().eq("organization_id", organizationId).in("id", normalizedIds);
+  if (error) throw error;
+  return normalizedIds;
 }

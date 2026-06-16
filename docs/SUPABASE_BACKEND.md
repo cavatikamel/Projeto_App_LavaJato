@@ -13,7 +13,7 @@ O repositorio agora ficou preparado para iniciar a migracao para Supabase com:
 - RLS nas tabelas do dominio
 - cliente browser para login com email e senha
 - script de bootstrap do usuario `Teste`
-- camada relacional inicial para `clients`, `vehicles`, `operators`, `services`, `products`, `supplies`, `service_supply_profiles`, `vehicle_special_care`, `quotes`, `quote_items` e `cash_entries`
+- camada relacional inicial para `clients`, `vehicles`, `operators`, `services`, `products`, `supplies`, `service_supply_profiles`, `vehicle_special_care`, `quotes`, `quote_items`, `cash_entries`, `open_payments`, `invoices` e `invoice_line_items`
 
 ## Estrutura planejada
 
@@ -32,7 +32,7 @@ Grupos principais de tabelas:
 - clientes, veiculos, operadores, produtos, insumos e servicos passam a ter leitura e gravacao tambem nas tabelas do Supabase
 - fichas tecnicas de servico e cuidados especiais do veiculo tambem passam a ser restaurados e sincronizados via tabelas relacionais
 - orcamentos com seus itens e o fluxo de caixa tambem passam a ser restaurados e sincronizados via tabelas relacionais
-- caixa, pagamentos em aberto, faturas e historico documental passam a ser persistidos
+- caixa, pagamentos em aberto e faturas ja passam a ser persistidos nas tabelas relacionais do Supabase
 - os cuidados especiais do veiculo deixam de depender apenas de estado local
 - durante a transicao, o app legado ainda sincroniza um snapshot por organizacao em `organization_app_states` para nao quebrar os fluxos existentes enquanto a migracao relacional continua
 
@@ -84,7 +84,7 @@ Bootstrap do usuario de teste:
 ## O que ainda falta para a migracao completa
 
 - aprofundar a migracao do snapshot remoto para tabelas relacionais por modulo
-- migrar `open_payments`, `invoices`, `invoice_line_items`, `attendances`, historico documental e trilhas auxiliares para o mesmo padrao relacional
+- migrar `attendances`, historico documental e trilhas auxiliares para o mesmo padrao relacional
 - migrar login visual para Auth real
 - mover uploads e comprovantes para Storage
 - criar seeds ou script de migracao dos dados locais, se necessario

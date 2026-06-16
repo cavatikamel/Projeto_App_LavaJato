@@ -46,6 +46,9 @@
 - conectados os orcamentos (`quotes` e `quote_items`) ao backend relacional
 - conectado o fluxo de caixa (`cash_entries`) ao backend relacional
 - ajustados os eventos de aprovar, reprovar, usar orcamento e salvar lancamento para sincronizar com o Supabase
+- conectados os recebiveis (`open_payments`, `invoices` e `invoice_line_items`) ao backend relacional
+- ajustados os fluxos de baixa, faturamento parcial e vinculo de veiculo para sincronizar cobrancas com o Supabase
+- adicionada limpeza remota de itens de fatura removidos para evitar residuos no backend relacional
 
 ## 2026-06-07
 

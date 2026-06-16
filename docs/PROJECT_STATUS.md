@@ -12,6 +12,8 @@ Na continuidade atual da Fase B, `service_supply_profiles` e `vehicle_special_ca
 
 Na etapa seguinte da Fase B, `quotes`, `quote_items` e `cash_entries` tambem passaram a hidratar e gravar pelas tabelas relacionais, cobrindo uma parte importante da operacao comercial e financeira sem remover ainda o snapshot dos modulos restantes.
 
+No passo atual da Fase B, `open_payments`, `invoices` e `invoice_line_items` tambem passaram a hidratar e gravar pelas tabelas relacionais, incluindo baixa, faturamento parcial, atualizacao de valores e remocao remota dos itens de fatura que saem do fluxo local.
+
 ## Modulos presentes no repositorio
 
 - app principal migrado para base React + Vite com compatibilidade legada
@@ -38,9 +40,9 @@ Na etapa seguinte da Fase B, `quotes`, `quote_items` e `cash_entries` tambem pas
 ## Pendencias conhecidas
 
 - migrar gradualmente a interface e a logica de `app/main.js` para componentes e modulos React
-- concluir a migracao dos modulos restantes do snapshot remoto para tabelas relacionais por modulo
+- concluir a migracao dos modulos restantes do snapshot remoto para tabelas relacionais por modulo, com foco em atendimentos e historicos auxiliares
 - configurar a chave publica `VITE_SUPABASE_ANON_KEY` nos ambientes locais e publicados
-- aplicar no Supabase real as tabelas relacionais do dominio que ainda faltam na API publicada
+- aplicar no Supabase real as tabelas relacionais do dominio que ainda faltam na API publicada e validar o uso efetivo dos modulos financeiros ja conectados
 - reduzir dependencia de conhecimento fora do repositorio
 - melhorar a granularidade de `app/main.js`
 - ampliar validacoes automaticas conforme o projeto evoluir
