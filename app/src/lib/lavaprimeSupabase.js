@@ -168,7 +168,10 @@ export async function fetchOrganizationRelationalDataset(organizationId) {
     supplies,
     products,
     serviceSupplyProfiles,
-    vehicleSpecialCare
+    vehicleSpecialCare,
+    quotes,
+    quoteItems,
+    cashEntries
   ] = await Promise.all([
     selectOrganizationRows(
       "clients",
@@ -209,6 +212,21 @@ export async function fetchOrganizationRelationalDataset(organizationId) {
       "vehicle_special_care",
       "id, organization_id, vehicle_id, care_type, attention_level, source, restrictions, recommendations, notes, active, last_acknowledged_at, metadata, created_at, updated_at",
       organizationId
+    ),
+    selectOrganizationRows(
+      "quotes",
+      "id, organization_id, client_id, vehicle_id, status, reference, valid_until, subtotal, discount, total, notes, approved_at, metadata, created_at, updated_at",
+      organizationId
+    ),
+    selectOrganizationRows(
+      "quote_items",
+      "id, organization_id, quote_id, line_order, item_type, service_id, product_id, description, quantity, unit_price, discount, total, created_at, updated_at",
+      organizationId
+    ),
+    selectOrganizationRows(
+      "cash_entries",
+      "id, organization_id, attendance_id, invoice_id, kind, category, cost_center, description, method, status, amount, entry_date, due_date, paid_at, attachment_path, metadata, created_at, updated_at",
+      organizationId
     )
   ]);
 
@@ -220,7 +238,10 @@ export async function fetchOrganizationRelationalDataset(organizationId) {
     supplies,
     products,
     serviceSupplyProfiles,
-    vehicleSpecialCare
+    vehicleSpecialCare,
+    quotes,
+    quoteItems,
+    cashEntries
   };
 }
 

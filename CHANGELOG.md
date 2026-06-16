@@ -43,6 +43,9 @@
 - conectadas as fichas tecnicas de servico (`service_supply_profiles`) ao backend relacional
 - conectados os cuidados especiais de veiculo (`vehicle_special_care`) ao backend relacional
 - ajustada a hidratacao remota para restaurar fichas tecnicas e cuidados especiais diretamente das tabelas do Supabase
+- conectados os orcamentos (`quotes` e `quote_items`) ao backend relacional
+- conectado o fluxo de caixa (`cash_entries`) ao backend relacional
+- ajustados os eventos de aprovar, reprovar, usar orcamento e salvar lancamento para sincronizar com o Supabase
 
 ## 2026-06-07
 

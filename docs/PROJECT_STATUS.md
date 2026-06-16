@@ -10,6 +10,8 @@ Na primeira fatia da Fase B, o app passou a hidratar e gravar `clients`, `vehicl
 
 Na continuidade atual da Fase B, `service_supply_profiles` e `vehicle_special_care` tambem passaram a ser restaurados e sincronizados pelas tabelas relacionais, reduzindo mais um bloco relevante que antes dependia so do snapshot.
 
+Na etapa seguinte da Fase B, `quotes`, `quote_items` e `cash_entries` tambem passaram a hidratar e gravar pelas tabelas relacionais, cobrindo uma parte importante da operacao comercial e financeira sem remover ainda o snapshot dos modulos restantes.
+
 ## Modulos presentes no repositorio
 
 - app principal migrado para base React + Vite com compatibilidade legada

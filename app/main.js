@@ -5141,6 +5141,39 @@ function normalizeCashEntries(entries = []) {
     .filter((entry) => entry.description);
 }
 
+function normalizeQuoteEstimates(quotes = []) {
+  return (Array.isArray(quotes) ? quotes : [])
+    .map((quote, index) => ({
+      id: Number(quote.id || index + 1),
+      remoteId: String(quote.remoteId || "").trim(),
+      remoteQuoteItemIds: Array.isArray(quote.remoteQuoteItemIds) ? quote.remoteQuoteItemIds.map((item) => String(item || "").trim()).filter(Boolean) : [],
+      code: String(quote.code || "").trim(),
+      date: String(quote.date || getTodayISO()).trim(),
+      time: String(quote.time || getCurrentShortTime()).trim(),
+      dueDate: String(quote.dueDate || "").trim(),
+      validityDays: Math.max(0, Number(quote.validityDays || 0)),
+      plate: formatPlate(String(quote.plate || "").trim()),
+      brand: String(quote.brand || "").trim(),
+      model: String(quote.model || "").trim(),
+      color: String(quote.color || "").trim(),
+      type: String(quote.type || "Carro").trim(),
+      category: String(quote.category || "").trim(),
+      owner: String(quote.owner || "").trim(),
+      phone: String(quote.phone || "").trim(),
+      payment: getCanonicalPaymentMethodName(quote.payment || "") || String(quote.payment || "").trim(),
+      services: (Array.isArray(quote.services) ? quote.services : []).map((item) => String(item || "").trim()).filter(Boolean),
+      extraItems: getQuoteExtraItems(quote),
+      status: String(quote.status || "Pendente").trim(),
+      operator: String(quote.operator || activeSessionUser || "Administrador").trim(),
+      approvedAt: String(quote.approvedAt || "").trim(),
+      rejectedAt: String(quote.rejectedAt || "").trim(),
+      expiredAt: String(quote.expiredAt || "").trim(),
+      usedAt: String(quote.usedAt || "").trim(),
+      usedVehicleId: Number(quote.usedVehicleId || 0) || null
+    }))
+    .filter((quote) => quote.code && quote.plate);
+}
+
 function normalizeServiceSupplyProfiles(profiles = {}) {
   const validSupplyIds = new Set((Array.isArray(supplyCatalog) ? supplyCatalog : []).map((item) => Number(item.id)));
   return Object.entries(profiles || {}).reduce((accumulator, [serviceKey, entries]) => {
@@ -5189,6 +5222,11 @@ function saveProductSales() {
   saveBusinessStorageItem(businessStorageKeys.productSales, productSales);
 }
 
+function saveQuoteEstimates() {
+  saveLegacyWorkspaceSnapshot();
+  void runRemoteRelationalTask(() => syncQuotesToRemote(quoteEstimates), "Falha ao sincronizar orcamentos com o Supabase.");
+}
+
 function saveInventoryMovements() {
   saveBusinessStorageItem(businessStorageKeys.inventoryMovements, inventoryMovements);
 }
@@ -5208,6 +5246,7 @@ function saveDocumentHistory() {
 function saveCashEntries() {
   saveBusinessStorageItem(businessStorageKeys.cashEntries, cashEntries);
   saveLegacyWorkspaceSnapshot();
+  void runRemoteRelationalTask(() => syncCashEntriesToRemote(cashEntries), "Falha ao sincronizar fluxo de caixa com o Supabase.");
 }
 
 function saveVehicleSpecialCareRecords() {
@@ -6141,6 +6180,121 @@ function mergeRemoteVehicleSpecialCare(rows) {
   );
 }
 
+function buildLocalQuotesFromRemote(rows, itemRows = []) {
+  const itemsByQuoteId = itemRows.reduce((accumulator, item) => {
+    const quoteId = String(item.quote_id || "").trim();
+    if (!quoteId) return accumulator;
+    if (!accumulator[quoteId]) accumulator[quoteId] = [];
+    accumulator[quoteId].push(item);
+    return accumulator;
+  }, {});
+
+  return normalizeQuoteEstimates(
+    rows
+      .map((row, index) => {
+        const metadata = getSafeMetadata(row.metadata);
+        const vehicle =
+          vehicleRegistry.find((candidate) => candidate.remoteId === row.vehicle_id) ||
+          vehicleRegistry.find((candidate) => Number(candidate.id) === Number(metadata.usedVehicleId || 0)) ||
+          null;
+        const quoteItems = (itemsByQuoteId[row.id] || []).slice().sort((left, right) => Number(left.line_order || 0) - Number(right.line_order || 0));
+        const services = quoteItems.filter((item) => item.item_type !== "manual").map((item) => String(item.description || "").trim()).filter(Boolean);
+        const extraItems = quoteItems
+          .filter((item) => item.item_type === "manual")
+          .map((item) => ({
+            description: String(item.description || "").trim(),
+            value: Number(item.total || item.unit_price || 0)
+          }))
+          .filter((item) => item.description && item.value > 0);
+
+        return {
+          id: Number(metadata.legacyId || metadata.localId || index + 1),
+          remoteId: row.id,
+          remoteQuoteItemIds: quoteItems.map((item) => String(item.id || "").trim()).filter(Boolean),
+          code: String(row.reference || metadata.code || "").trim(),
+          date: String(metadata.date || row.created_at || getTodayISO()).slice(0, 10),
+          time: String(metadata.time || getCurrentShortTime()).trim(),
+          dueDate: String(row.valid_until || metadata.dueDate || "").trim(),
+          validityDays: Math.max(0, Number(metadata.validityDays || 0)),
+          plate: formatPlate(metadata.plate || vehicle?.plate || ""),
+          brand: String(metadata.brand || vehicle?.brand || "").trim(),
+          model: String(metadata.model || vehicle?.model || "").trim(),
+          color: String(metadata.color || vehicle?.color || "").trim(),
+          type: String(metadata.type || vehicle?.type || "Carro").trim(),
+          category: String(metadata.category || vehicle?.category || "").trim(),
+          owner: String(metadata.owner || "").trim(),
+          phone: String(metadata.phone || "").trim(),
+          payment: String(metadata.payment || "").trim(),
+          services,
+          extraItems,
+          status: String(row.status || metadata.status || "Pendente").trim(),
+          operator: String(metadata.operator || activeSessionUser || "Administrador").trim(),
+          approvedAt: String(metadata.approvedAt || "").trim(),
+          rejectedAt: String(metadata.rejectedAt || "").trim(),
+          expiredAt: String(metadata.expiredAt || "").trim(),
+          usedAt: String(metadata.usedAt || "").trim(),
+          usedVehicleId: Number(metadata.usedVehicleId || 0) || null
+        };
+      })
+      .sort((left, right) => `${right.date} ${right.time}`.localeCompare(`${left.date} ${left.time}`))
+  );
+}
+
+function mergeRemoteQuotes(rows, itemRows = []) {
+  replaceArrayContents(quoteEstimates, buildLocalQuotesFromRemote(rows, itemRows));
+}
+
+function buildLocalCashEntriesFromRemote(rows = []) {
+  return normalizeCashEntries(
+    rows
+      .map((row, index) => {
+        const metadata = getSafeMetadata(row.metadata);
+        const amount = Math.abs(Number(row.amount || 0));
+        const type = row.kind === "expense" ? "Saída" : "Entrada";
+        const signedValue = type === "Saída" ? -amount : amount;
+        return {
+          id: Number(metadata.legacyId || metadata.localId || index + 1),
+          remoteId: row.id,
+          date: String(row.entry_date || metadata.date || getTodayISO()).trim(),
+          time: String(metadata.time || getCurrentShortTime()).trim(),
+          type,
+          description: String(row.description || "").trim(),
+          method: String(row.method || metadata.method || "").trim(),
+          value: Number(metadata.value ?? signedValue),
+          category: String(row.category || "").trim(),
+          costCenter: String(row.cost_center || "").trim(),
+          status: String(row.status || "Pendente").trim(),
+          scheduledDate: String(metadata.scheduledDate || "").trim(),
+          scheduledTime: String(metadata.scheduledTime || "").trim(),
+          deleted: Boolean(metadata.deleted),
+          deletedAt: String(metadata.deletedAt || "").trim(),
+          deletedBy: String(metadata.deletedBy || "").trim(),
+          attachment: row.attachment_path ? { name: String(row.attachment_path), type: String(metadata.attachmentType || "Comprovante") } : null,
+          feePercent: Number(metadata.feePercent || 0),
+          fixedFee: Number(metadata.fixedFee || 0),
+          feeAmount: Number(metadata.feeAmount || 0),
+          netAmount: Number(metadata.netAmount || amount),
+          expectedReceiptDate: String(metadata.expectedReceiptDate || row.due_date || row.entry_date || getTodayISO()).trim(),
+          methodImmediateSettlement: Boolean(metadata.methodImmediateSettlement),
+          settlementDays: Math.max(0, Number(metadata.settlementDays || 0)),
+          linkedBankAccountName: String(metadata.linkedBankAccountName || "").trim(),
+          serviceAmount: Number(metadata.serviceAmount || 0),
+          productAmount: Number(metadata.productAmount || 0),
+          createdBy: String(metadata.createdBy || activeSessionUser || "Administrador").trim(),
+          updatedBy: String(metadata.updatedBy || activeSessionUser || "Administrador").trim(),
+          openPayment: Boolean(metadata.openPayment),
+          plate: String(metadata.plate || "").trim(),
+          vehicleId: Number(metadata.vehicleId || 0) || null
+        };
+      })
+      .sort((left, right) => `${right.date} ${right.time}`.localeCompare(`${left.date} ${left.time}`))
+  );
+}
+
+function mergeRemoteCashEntries(rows) {
+  cashEntries = buildLocalCashEntriesFromRemote(rows);
+}
+
 function buildRemoteClientPayload(client) {
   return {
     id: client.remoteId || undefined,
@@ -6358,6 +6512,141 @@ function buildRemoteVehicleSpecialCarePayload(record) {
   };
 }
 
+function buildRemoteQuotePayload(quote) {
+  const linkedVehicle = findVehicleByPlate(quote.plate) || getAnyVehicleRecord(null, quote.plate);
+  const linkedClient =
+    getClientLinkedToPlate(quote.plate) ||
+    clientRegistry.find((client) => normalizeText(getClientDisplayName(client)) === normalizeText(quote.owner)) ||
+    null;
+
+  return {
+    id: quote.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    client_id: linkedClient?.remoteId || null,
+    vehicle_id: linkedVehicle?.remoteId || null,
+    status: quote.status || "Pendente",
+    reference: quote.code,
+    valid_until: quote.dueDate || null,
+    subtotal: getQuoteBaseServiceTotal(quote),
+    discount: 0,
+    total: getQuoteTotal(quote),
+    notes: "",
+    approved_at: null,
+    metadata: {
+      legacyId: Number(quote.id || 0),
+      code: quote.code || "",
+      date: quote.date || getTodayISO(),
+      time: quote.time || getCurrentShortTime(),
+      dueDate: quote.dueDate || "",
+      validityDays: Number(quote.validityDays || 0) || 0,
+      plate: quote.plate || "",
+      brand: quote.brand || "",
+      model: quote.model || "",
+      color: quote.color || "",
+      type: quote.type || "Carro",
+      category: quote.category || "",
+      owner: quote.owner || "",
+      phone: quote.phone || "",
+      payment: quote.payment || "",
+      operator: quote.operator || "",
+      approvedAt: quote.approvedAt || "",
+      rejectedAt: quote.rejectedAt || "",
+      expiredAt: quote.expiredAt || "",
+      usedAt: quote.usedAt || "",
+      usedVehicleId: Number(quote.usedVehicleId || 0) || null
+    }
+  };
+}
+
+function buildRemoteQuoteItemPayloads(quote) {
+  if (!quote?.remoteId) return [];
+
+  const serviceItems = (quote.services || []).map((serviceName, index) => {
+    const service = findServiceDefinition(serviceName);
+    return {
+      id: quote.remoteQuoteItemIds?.[index] || undefined,
+      organization_id: remoteWorkspaceState.organizationId,
+      quote_id: quote.remoteId,
+      line_order: index + 1,
+      item_type: "service",
+      service_id: service?.remoteId || null,
+      product_id: null,
+      description: serviceName,
+      quantity: 1,
+      unit_price: Number(service?.price || 0),
+      discount: 0,
+      total: Number(service?.price || 0)
+    };
+  });
+
+  const baseOffset = serviceItems.length;
+  const extraItems = getQuoteExtraItems(quote).map((item, index) => ({
+    id: quote.remoteQuoteItemIds?.[baseOffset + index] || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    quote_id: quote.remoteId,
+    line_order: baseOffset + index + 1,
+    item_type: "manual",
+    service_id: null,
+    product_id: null,
+    description: item.description,
+    quantity: 1,
+    unit_price: Number(item.value || 0),
+    discount: 0,
+    total: Number(item.value || 0)
+  }));
+
+  return [...serviceItems, ...extraItems];
+}
+
+function buildRemoteCashEntryPayload(entry) {
+  const amount = Math.abs(Number(entry.value || 0));
+  return {
+    id: entry.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    attendance_id: null,
+    invoice_id: null,
+    kind: entry.type === "Saída" || Number(entry.value || 0) < 0 ? "expense" : "income",
+    category: entry.category || null,
+    cost_center: entry.costCenter || null,
+    description: entry.description,
+    method: entry.method || null,
+    status: entry.status || "Pendente",
+    amount,
+    entry_date: entry.date || getTodayISO(),
+    due_date: entry.expectedReceiptDate || entry.date || getTodayISO(),
+    paid_at: null,
+    attachment_path: entry.attachment?.name || null,
+    metadata: {
+      legacyId: Number(entry.id || 0),
+      date: entry.date || getTodayISO(),
+      time: entry.time || getCurrentShortTime(),
+      method: entry.method || "",
+      value: Number(entry.value || 0),
+      scheduledDate: entry.scheduledDate || "",
+      scheduledTime: entry.scheduledTime || "",
+      deleted: Boolean(entry.deleted),
+      deletedAt: entry.deletedAt || "",
+      deletedBy: entry.deletedBy || "",
+      attachmentType: entry.attachment?.type || "",
+      feePercent: Number(entry.feePercent || 0),
+      fixedFee: Number(entry.fixedFee || 0),
+      feeAmount: Number(entry.feeAmount || 0),
+      netAmount: Number(entry.netAmount || amount),
+      expectedReceiptDate: entry.expectedReceiptDate || entry.date || getTodayISO(),
+      methodImmediateSettlement: Boolean(entry.methodImmediateSettlement),
+      settlementDays: Math.max(0, Number(entry.settlementDays || 0)),
+      linkedBankAccountName: entry.linkedBankAccountName || "",
+      serviceAmount: Number(entry.serviceAmount || 0),
+      productAmount: Number(entry.productAmount || 0),
+      createdBy: entry.createdBy || "",
+      updatedBy: entry.updatedBy || "",
+      openPayment: Boolean(entry.openPayment),
+      plate: entry.plate || "",
+      vehicleId: Number(entry.vehicleId || 0) || null
+    }
+  };
+}
+
 async function syncClientsToRemote(clients = clientRegistry) {
   if (!isRemoteRelationalModeEnabled() || !clients.length) return [];
   const rows = await upsertOrganizationRows("clients", clients.map(buildRemoteClientPayload), { onConflict: "id" });
@@ -6422,6 +6711,29 @@ async function syncVehicleSpecialCareToRemote(records = vehicleSpecialCareRecord
   return persisted;
 }
 
+async function syncQuotesToRemote(quotes = quoteEstimates) {
+  if (!isRemoteRelationalModeEnabled() || !quotes.length) return [];
+
+  const quoteRows = await upsertOrganizationRows("quotes", quotes.map(buildRemoteQuotePayload), { onConflict: "id" });
+  quoteRows.forEach((row) => {
+    const metadata = getSafeMetadata(row.metadata);
+    const localQuote = quoteEstimates.find((quote) => Number(quote.id) === Number(metadata.legacyId || 0));
+    if (localQuote) localQuote.remoteId = row.id;
+  });
+
+  const itemRows = quotes.flatMap((quote) => buildRemoteQuoteItemPayloads(quote));
+  const persistedItems = itemRows.length ? await upsertOrganizationRows("quote_items", itemRows, { onConflict: "id" }) : [];
+  mergeRemoteQuotes(quoteRows, persistedItems);
+  return quoteRows;
+}
+
+async function syncCashEntriesToRemote(entries = cashEntries) {
+  if (!isRemoteRelationalModeEnabled() || !entries.length) return [];
+  const rows = await upsertOrganizationRows("cash_entries", entries.map(buildRemoteCashEntryPayload), { onConflict: "id" });
+  mergeRemoteCashEntries(rows);
+  return rows;
+}
+
 function runRemoteRelationalTask(task, failureMessage = "Falha ao sincronizar cadastro com o Supabase.") {
   if (!isRemoteRelationalModeEnabled()) return Promise.resolve([]);
   return task().catch((error) => {
@@ -6462,6 +6774,12 @@ async function hydrateRemoteRelationalWorkspace(sessionContext) {
 
   if (dataset.vehicleSpecialCare.length) mergeRemoteVehicleSpecialCare(dataset.vehicleSpecialCare);
   else await syncVehicleSpecialCareToRemote(vehicleSpecialCareRecords);
+
+  if (dataset.quotes.length) mergeRemoteQuotes(dataset.quotes, dataset.quoteItems);
+  else await syncQuotesToRemote(quoteEstimates);
+
+  if (dataset.cashEntries.length) mergeRemoteCashEntries(dataset.cashEntries);
+  else await syncCashEntriesToRemote(cashEntries);
 
   ensureCoreRelationalLocalIds();
 }
@@ -7292,6 +7610,7 @@ function approveQuote(id) {
   }
   quote.status = "Aprovado";
   quote.approvedAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+  saveQuoteEstimates();
   renderPatioQuotes();
   showToast(`Orçamento ${quote.code} aprovado.`);
 }
@@ -7305,6 +7624,7 @@ function rejectQuote(id) {
   }
   quote.status = "Não aprovado";
   quote.rejectedAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
+  saveQuoteEstimates();
   renderPatioQuotes();
   showToast(`Orçamento ${quote.code} marcado como não aprovado.`);
 }
@@ -7403,6 +7723,7 @@ function finishQuoteEntryWithChecklist() {
 function finishQuotePatioEntry(quote, vehicle) {
   quote.usedAt = `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`;
   quote.usedVehicleId = vehicle.id;
+  saveQuoteEstimates();
   pendingQuotePatioEntry = null;
   pendingQuotePatioQuoteId = null;
   closeStatusDialog();
@@ -8187,7 +8508,7 @@ function saveQuoteFromDialog(dialog = $("#quoteDialog")) {
   };
 
   quoteEstimates.unshift(quote);
-  saveLegacyWorkspaceSnapshot();
+  saveQuoteEstimates();
   closeQuoteDialog();
   renderPatioQuotes();
   showToast(`Orçamento ${quote.code} emitido com validade até ${formatDateBR(quote.dueDate)}.`);
