@@ -32,6 +32,15 @@
 - restauradas a tela de operadores e a abertura do cadastro de novo operador no administrativo
 - removido o bloco lateral de observacoes em recibos e documentos e adicionada a acao de baixar arquivo na tabela
 
+## 2026-06-16
+
+- iniciada a Fase B com leitura e gravacao relacional dos cadastros principais no Supabase
+- adicionada camada cliente para consultar e fazer upsert em `clients`, `vehicles`, `operators`, `services`, `products` e `supplies`
+- ajustado o bootstrap remoto para hidratar o app pelas tabelas relacionais quando elas ja tiverem dados
+- adicionado seed automatico dessas tabelas a partir do estado legado quando a organizacao remota ainda estiver vazia
+- conectado o salvamento de clientes, veiculos, operadores, servicos, produtos e insumos ao backend relacional
+- ampliada a sincronizacao de produtos e insumos para acompanhar mudancas de cadastro e estoque
+
 ## 2026-06-07
 
 - consolidada a configuracao do repositorio principal `Projeto_App_LavaJato`

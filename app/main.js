@@ -1,10 +1,12 @@
 import {
+  fetchOrganizationRelationalDataset,
   fetchOrganizationAppState,
   getLavaprimeSessionContext,
   hasSupabaseBrowserConfig,
   isSupabaseAdminRole,
   signInLavaprime,
   signOutLavaprime,
+  upsertOrganizationRows,
   upsertOrganizationAppState
 } from "./src/lib/lavaprimeSupabase.js";
 
@@ -5174,10 +5176,12 @@ function normalizeDocumentHistory(items = []) {
 
 function saveProductCatalog() {
   saveBusinessStorageItem(businessStorageKeys.products, productCatalog);
+  void runRemoteRelationalTask(() => syncProductsToRemote(productCatalog), "Falha ao sincronizar produtos com o Supabase.");
 }
 
 function saveSupplyCatalog() {
   saveBusinessStorageItem(businessStorageKeys.supplies, supplyCatalog);
+  void runRemoteRelationalTask(() => syncSuppliesToRemote(supplyCatalog), "Falha ao sincronizar insumos com o Supabase.");
 }
 
 function saveProductSales() {
@@ -5239,6 +5243,7 @@ function applyLegacyWorkspaceSnapshot(snapshot) {
   replaceArrayContents(serviceCatalog, Array.isArray(snapshot.serviceCatalog) ? snapshot.serviceCatalog : serviceCatalog);
   replaceArrayContents(openPayments, Array.isArray(snapshot.openPayments) ? snapshot.openPayments : openPayments);
   replaceArrayContents(payableAccounts, Array.isArray(snapshot.payableAccounts) ? snapshot.payableAccounts : payableAccounts);
+  ensureCoreRelationalLocalIds();
 }
 
 function rebuildInvoiceAmounts() {
@@ -5826,6 +5831,473 @@ function replaceArrayContents(target, source) {
   target.splice(0, target.length, ...source);
 }
 
+function isRemoteRelationalModeEnabled() {
+  return Boolean(remoteWorkspaceState.enabled && remoteWorkspaceState.organizationId);
+}
+
+function getSafeMetadata(metadata) {
+  return metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata : {};
+}
+
+function buildLegacyEntityCode(prefix, value) {
+  return `LP-${prefix}-${String(value || 0).padStart(4, "0")}`;
+}
+
+function ensureCoreRelationalLocalIds() {
+  clientRegistry.forEach((client, index) => {
+    client.id = Number(client.id || index + 1);
+    client.clientCode = String(client.clientCode || buildLegacyEntityCode("CLI", client.id)).trim();
+  });
+
+  vehicleRegistry.forEach((vehicle, index) => {
+    vehicle.id = Number(vehicle.id || index + 1);
+    vehicle.vehicleCode = String(vehicle.vehicleCode || buildLegacyEntityCode("VEH", vehicle.id)).trim();
+  });
+
+  adminOperators.forEach((operator, index) => {
+    operator.id = Number(operator.id || index + 1);
+    operator.operatorCode = String(operator.operatorCode || buildLegacyEntityCode("OPE", operator.id)).trim();
+  });
+
+  serviceCatalog.forEach((service, index) => {
+    service.id = Number(service.id || index + 1);
+    service.serviceCode = String(service.serviceCode || buildLegacyEntityCode("SVC", service.id)).trim();
+  });
+
+  productCatalog.forEach((product, index) => {
+    product.id = Number(product.id || index + 1);
+  });
+
+  supplyCatalog.forEach((supply, index) => {
+    supply.id = Number(supply.id || index + 1);
+  });
+}
+
+function parseDurationMinutesLabel(value) {
+  const text = String(value || "").trim().toLowerCase();
+  if (!text) return 0;
+  const hourMatch = text.match(/(\d+)\s*h/);
+  const minuteMatch = text.match(/(\d+)\s*min/);
+  const hours = Number(hourMatch?.[1] || 0);
+  const minutes = Number(minuteMatch?.[1] || 0);
+  return hours * 60 + minutes;
+}
+
+function formatDurationFromMinutes(minutes, fallback = "A definir") {
+  const total = Math.max(0, Number(minutes || 0));
+  if (!total) return fallback;
+  const hours = Math.floor(total / 60);
+  const rest = total % 60;
+  if (hours && rest) return `${hours}h${String(rest).padStart(2, "0")}`;
+  if (hours) return `${hours}h00`;
+  return `${rest} min`;
+}
+
+function mergeRemoteClients(rows) {
+  rows.forEach((row) => {
+    const metadata = getSafeMetadata(row.metadata);
+    const billing = getSafeMetadata(row.billing_preferences);
+    const localId = Number(metadata.legacyId || metadata.localId || 0) || getNextClientId();
+    const personType = metadata.personType === "PJ" ? "PJ" : "PF";
+    const mapped = {
+      id: localId,
+      remoteId: row.id,
+      clientCode: String(row.client_code || buildLegacyEntityCode("CLI", localId)).trim(),
+      billingClientId: Number(metadata.billingClientId || 0) || null,
+      personType,
+      billing: Boolean(billing.billing),
+      name: personType === "PF" ? String(metadata.personalName || row.name || "").trim() : "",
+      legalName: personType === "PJ" ? String(metadata.legalName || row.name || "").trim() : "",
+      document: String(row.document || "").trim(),
+      phone: String(row.phone || "").trim(),
+      address: String(billing.address || metadata.address || "").trim(),
+      email: String(row.email || "").trim(),
+      responsible: String(billing.responsible || metadata.responsible || "").trim(),
+      approver: String(billing.approver || metadata.approver || "").trim(),
+      billingApproved: Boolean(billing.billingApproved),
+      billingCycle: String(billing.billingCycle || "").trim(),
+      allowMultipleOpenInvoices: Boolean(billing.allowMultipleOpenInvoices),
+      plates: (Array.isArray(metadata.plates) ? metadata.plates : []).map((plate) => formatPlate(plate)).filter(Boolean)
+    };
+    const existing = getClientById(mapped.id) || clientRegistry.find((client) => client.remoteId === row.id);
+    if (existing) Object.assign(existing, mapped);
+    else clientRegistry.unshift(mapped);
+  });
+}
+
+function mergeRemoteVehicles(rows) {
+  rows.forEach((row) => {
+    const metadata = getSafeMetadata(row.metadata);
+    const localId = Number(metadata.legacyId || metadata.localId || 0) || getNextVehicleId();
+    const linkedClient = clientRegistry.find((client) => client.remoteId === row.client_id);
+    const mapped = {
+      id: localId,
+      remoteId: row.id,
+      vehicleCode: String(metadata.vehicleCode || buildLegacyEntityCode("VEH", localId)).trim(),
+      plate: formatPlate(row.plate || metadata.plate || ""),
+      brand: String(row.brand || "").trim(),
+      model: String(row.model || "").trim(),
+      year: String(metadata.year || row.model_year || row.manufacture_year || "").trim(),
+      color: String(row.color || "").trim(),
+      type: String(row.vehicle_type || metadata.type || "Carro").trim(),
+      category: String(row.category || metadata.category || "").trim(),
+      fuel: String(metadata.fuel || "Outro").trim(),
+      currentClientId: linkedClient?.id || Number(metadata.currentClientId || 0) || null,
+      notes: String(row.notes || "").trim(),
+      ownerHistory: Array.isArray(metadata.ownerHistory) ? metadata.ownerHistory : [],
+      serviceHistory: Array.isArray(metadata.serviceHistory) ? metadata.serviceHistory : [],
+      checklistHistory: Array.isArray(metadata.checklistHistory) ? metadata.checklistHistory : []
+    };
+    const existing = findVehicleById(mapped.id) || vehicleRegistry.find((vehicle) => vehicle.remoteId === row.id);
+    if (existing) Object.assign(existing, mapped);
+    else vehicleRegistry.unshift(mapped);
+  });
+}
+
+function mergeRemoteOperators(rows) {
+  rows.forEach((row) => {
+    const metadata = getSafeMetadata(row.metadata);
+    const localId = Number(metadata.legacyId || metadata.localId || 0) || getNextOperatorId();
+    const mapped = {
+      id: localId,
+      remoteId: row.id,
+      operatorCode: String(metadata.operatorCode || buildLegacyEntityCode("OPE", localId)).trim(),
+      name: String(row.name || "").trim(),
+      cpf: String(metadata.cpf || "").trim(),
+      phone: String(row.phone || "").trim(),
+      accessProfile: String(metadata.accessProfile || (row.role || "operator")).trim(),
+      username: String(metadata.username || row.email || "").trim(),
+      password: String(metadata.password || "").trim(),
+      commissionType: String(metadata.commissionType || "fixed").trim(),
+      commissionValue: Number(metadata.commissionValue ?? row.commission_percent ?? 0) || 0,
+      role: String(row.role || metadata.role || "Operador").trim(),
+      shift: String(metadata.shift || "A definir").trim(),
+      today: Number(metadata.today || 0) || 0,
+      status: String(row.status || "Ativo").trim(),
+      accessHistory: Array.isArray(metadata.accessHistory) ? metadata.accessHistory : [],
+      production: Array.isArray(metadata.production) ? metadata.production : []
+    };
+    const existing = findOperatorById(mapped.id) || adminOperators.find((operator) => operator.remoteId === row.id);
+    if (existing) Object.assign(existing, mapped);
+    else adminOperators.push(mapped);
+  });
+}
+
+function mergeRemoteServices(rows) {
+  rows.forEach((row) => {
+    const metadata = getSafeMetadata(row.metadata);
+    const localId = Number(metadata.legacyId || metadata.localId || 0) || serviceCatalog.length + 1;
+    const mapped = {
+      id: localId,
+      remoteId: row.id,
+      serviceCode: String(row.service_code || buildLegacyEntityCode("SVC", localId)).trim(),
+      name: String(row.name || "").trim(),
+      price: Number(row.price || 0) || 0,
+      duration: String(metadata.duration || formatDurationFromMinutes(row.duration_minutes, "A definir")).trim(),
+      vehicleType: String(row.vehicle_type || "").trim(),
+      vehicleCategory: String(row.vehicle_category || "").trim(),
+      status: String(metadata.status || (row.is_active === false ? "Inativo" : "Ativo")).trim(),
+      autoCreateVehicleCareType: String(metadata.autoCreateVehicleCareType || "").trim(),
+      maintenanceRequired: Boolean(metadata.maintenanceRequired),
+      maintenanceInterval: String(metadata.maintenanceInterval || "monthly").trim(),
+      maintenanceDate: String(metadata.maintenanceDate || "").trim()
+    };
+    const existing =
+      serviceCatalog.find((service) => Number(service.id) === Number(mapped.id)) ||
+      serviceCatalog.find((service) => service.remoteId === row.id);
+    if (existing) Object.assign(existing, mapped);
+    else serviceCatalog.push(mapped);
+  });
+}
+
+function mergeRemoteProducts(rows) {
+  rows.forEach((row) => {
+    const metadata = getSafeMetadata(row.metadata);
+    const localId = Number(metadata.legacyId || metadata.localId || 0) || getNextProductId();
+    const mapped = {
+      id: localId,
+      remoteId: row.id,
+      sku: String(row.sku || `PRD-${String(localId).padStart(3, "0")}`).trim(),
+      name: String(row.name || "").trim(),
+      unit: String(row.unit || "un").trim() || "un",
+      stock: Number(row.stock || 0),
+      minStock: Number(row.min_stock || 0),
+      cost: Number(row.cost || 0),
+      price: Number(row.price || 0),
+      active: row.is_active !== false,
+      notes: String(metadata.notes || "").trim(),
+      createdAt: String(row.created_at || metadata.createdAt || getTodayISO()).slice(0, 10),
+      updatedAt: String(row.updated_at || metadata.updatedAt || getTodayISO()).slice(0, 10)
+    };
+    const existing = getProductById(mapped.id) || productCatalog.find((product) => product.remoteId === row.id);
+    if (existing) Object.assign(existing, mapped);
+    else productCatalog.unshift(mapped);
+  });
+}
+
+function mergeRemoteSupplies(rows) {
+  rows.forEach((row) => {
+    const metadata = getSafeMetadata(row.metadata);
+    const localId = Number(metadata.legacyId || metadata.localId || 0) || getNextSupplyId();
+    const mapped = {
+      id: localId,
+      remoteId: row.id,
+      sku: String(row.sku || `INS-${String(localId).padStart(3, "0")}`).trim(),
+      name: String(row.name || "").trim(),
+      unit: String(row.unit || "un").trim() || "un",
+      stock: Number(row.stock || 0),
+      minStock: Number(row.min_stock || 0),
+      cost: Number(row.cost || 0),
+      active: metadata.active !== false,
+      supplier: String(metadata.supplier || "").trim(),
+      notes: String(metadata.notes || "").trim(),
+      riskTags: normalizeStringTagList(row.risk_tags, supplyRiskTagOptions.map((option) => option.tag)),
+      createdAt: String(row.created_at || metadata.createdAt || getTodayISO()).slice(0, 10),
+      updatedAt: String(row.updated_at || metadata.updatedAt || getTodayISO()).slice(0, 10)
+    };
+    const existing = getSupplyById(mapped.id) || supplyCatalog.find((supply) => supply.remoteId === row.id);
+    if (existing) Object.assign(existing, mapped);
+    else supplyCatalog.unshift(mapped);
+  });
+}
+
+function buildRemoteClientPayload(client) {
+  return {
+    id: client.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    client_code: String(client.clientCode || buildLegacyEntityCode("CLI", client.id)).trim(),
+    name: getClientDisplayName(client),
+    document: client.document || null,
+    phone: client.phone || null,
+    email: client.email || null,
+    notes: null,
+    tags: [],
+    is_active: true,
+    billing_preferences: {
+      billing: Boolean(client.billing),
+      billingApproved: Boolean(client.billingApproved),
+      billingCycle: client.billingCycle || "",
+      allowMultipleOpenInvoices: Boolean(client.allowMultipleOpenInvoices),
+      address: client.address || "",
+      responsible: client.responsible || "",
+      approver: client.approver || ""
+    },
+    metadata: {
+      legacyId: Number(client.id || 0),
+      personType: client.personType || "PF",
+      personalName: client.name || "",
+      legalName: client.legalName || "",
+      billingClientId: client.billingClientId || null,
+      plates: Array.isArray(client.plates) ? client.plates : []
+    }
+  };
+}
+
+function buildRemoteVehiclePayload(vehicle) {
+  const linkedClient = vehicle.currentClientId ? getClientById(vehicle.currentClientId) : null;
+  return {
+    id: vehicle.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    client_id: linkedClient?.remoteId || null,
+    plate: vehicle.plate,
+    brand: vehicle.brand || null,
+    model: vehicle.model || null,
+    model_year: Number(vehicle.year || 0) || null,
+    manufacture_year: Number(vehicle.year || 0) || null,
+    color: vehicle.color || null,
+    vehicle_type: vehicle.type || null,
+    category: vehicle.category || null,
+    chassis: null,
+    notes: vehicle.notes || null,
+    is_active: true,
+    metadata: {
+      legacyId: Number(vehicle.id || 0),
+      vehicleCode: vehicle.vehicleCode || buildLegacyEntityCode("VEH", vehicle.id),
+      year: vehicle.year || "",
+      fuel: vehicle.fuel || "",
+      currentClientId: vehicle.currentClientId || null,
+      ownerHistory: Array.isArray(vehicle.ownerHistory) ? vehicle.ownerHistory : [],
+      serviceHistory: Array.isArray(vehicle.serviceHistory) ? vehicle.serviceHistory : [],
+      checklistHistory: Array.isArray(vehicle.checklistHistory) ? vehicle.checklistHistory : []
+    }
+  };
+}
+
+function buildRemoteOperatorPayload(operator) {
+  return {
+    id: operator.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    profile_id: null,
+    name: operator.name,
+    role: operator.role || operator.accessProfile || "Operador",
+    email: null,
+    phone: operator.phone || null,
+    commission_percent: operator.commissionType === "percent" ? Number(operator.commissionValue || 0) : 0,
+    status: operator.status || "Ativo",
+    metadata: {
+      legacyId: Number(operator.id || 0),
+      operatorCode: operator.operatorCode || buildLegacyEntityCode("OPE", operator.id),
+      cpf: operator.cpf || "",
+      accessProfile: operator.accessProfile || "",
+      username: operator.username || "",
+      password: operator.password || "",
+      commissionType: operator.commissionType || "fixed",
+      commissionValue: Number(operator.commissionValue || 0) || 0,
+      shift: operator.shift || "A definir",
+      today: Number(operator.today || 0) || 0,
+      accessHistory: Array.isArray(operator.accessHistory) ? operator.accessHistory : [],
+      production: Array.isArray(operator.production) ? operator.production : []
+    }
+  };
+}
+
+function buildRemoteServicePayload(service) {
+  return {
+    id: service.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    service_code: String(service.serviceCode || buildLegacyEntityCode("SVC", service.id)).trim(),
+    name: service.name,
+    description: null,
+    price: Number(service.price || 0) || 0,
+    duration_minutes: parseDurationMinutesLabel(service.duration),
+    vehicle_type: service.vehicleType || null,
+    vehicle_category: service.vehicleCategory || null,
+    is_active: service.status !== "Inativo",
+    metadata: {
+      legacyId: Number(service.id || 0),
+      duration: service.duration || "A definir",
+      status: service.status || "Ativo",
+      autoCreateVehicleCareType: service.autoCreateVehicleCareType || "",
+      maintenanceRequired: Boolean(service.maintenanceRequired),
+      maintenanceInterval: service.maintenanceInterval || "monthly",
+      maintenanceDate: service.maintenanceDate || ""
+    }
+  };
+}
+
+function buildRemoteProductPayload(product) {
+  return {
+    id: product.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    sku: product.sku,
+    name: product.name,
+    unit: product.unit || "un",
+    stock: Number(product.stock || 0) || 0,
+    min_stock: Number(product.minStock || 0) || 0,
+    cost: Number(product.cost || 0) || 0,
+    price: Number(product.price || 0) || 0,
+    is_active: product.active !== false,
+    metadata: {
+      legacyId: Number(product.id || 0),
+      notes: product.notes || "",
+      createdAt: product.createdAt || getTodayISO(),
+      updatedAt: product.updatedAt || getTodayISO()
+    }
+  };
+}
+
+function buildRemoteSupplyPayload(supply) {
+  return {
+    id: supply.remoteId || undefined,
+    organization_id: remoteWorkspaceState.organizationId,
+    sku: supply.sku,
+    name: supply.name,
+    unit: supply.unit || "un",
+    stock: Number(supply.stock || 0) || 0,
+    min_stock: Number(supply.minStock || 0) || 0,
+    cost: Number(supply.cost || 0) || 0,
+    risk_tags: Array.isArray(supply.riskTags) ? supply.riskTags : [],
+    metadata: {
+      legacyId: Number(supply.id || 0),
+      active: supply.active !== false,
+      supplier: supply.supplier || "",
+      notes: supply.notes || "",
+      createdAt: supply.createdAt || getTodayISO(),
+      updatedAt: supply.updatedAt || getTodayISO()
+    }
+  };
+}
+
+async function syncClientsToRemote(clients = clientRegistry) {
+  if (!isRemoteRelationalModeEnabled() || !clients.length) return [];
+  const rows = await upsertOrganizationRows("clients", clients.map(buildRemoteClientPayload), { onConflict: "id" });
+  mergeRemoteClients(rows);
+  return rows;
+}
+
+async function syncVehiclesToRemote(vehicles = vehicleRegistry) {
+  if (!isRemoteRelationalModeEnabled() || !vehicles.length) return [];
+  const rows = await upsertOrganizationRows("vehicles", vehicles.map(buildRemoteVehiclePayload), { onConflict: "id" });
+  mergeRemoteVehicles(rows);
+  return rows;
+}
+
+async function syncOperatorsToRemote(operators = adminOperators) {
+  if (!isRemoteRelationalModeEnabled() || !operators.length) return [];
+  const rows = await upsertOrganizationRows("operators", operators.map(buildRemoteOperatorPayload), { onConflict: "id" });
+  mergeRemoteOperators(rows);
+  return rows;
+}
+
+async function syncServicesToRemote(services = serviceCatalog) {
+  if (!isRemoteRelationalModeEnabled() || !services.length) return [];
+  const rows = await upsertOrganizationRows("services", services.map(buildRemoteServicePayload), { onConflict: "id" });
+  mergeRemoteServices(rows);
+  return rows;
+}
+
+async function syncProductsToRemote(products = productCatalog) {
+  if (!isRemoteRelationalModeEnabled() || !products.length) return [];
+  const rows = await upsertOrganizationRows("products", products.map(buildRemoteProductPayload), { onConflict: "id" });
+  mergeRemoteProducts(rows);
+  return rows;
+}
+
+async function syncSuppliesToRemote(supplies = supplyCatalog) {
+  if (!isRemoteRelationalModeEnabled() || !supplies.length) return [];
+  const rows = await upsertOrganizationRows("supplies", supplies.map(buildRemoteSupplyPayload), { onConflict: "id" });
+  mergeRemoteSupplies(rows);
+  return rows;
+}
+
+function runRemoteRelationalTask(task, failureMessage = "Falha ao sincronizar cadastro com o Supabase.") {
+  if (!isRemoteRelationalModeEnabled()) return Promise.resolve([]);
+  return task().catch((error) => {
+    console.error(failureMessage, error);
+    showToast("Salvo localmente, mas ainda nao sincronizado com o Supabase.");
+    return [];
+  });
+}
+
+async function hydrateRemoteRelationalWorkspace(sessionContext) {
+  if (!sessionContext?.organization?.id) return;
+
+  ensureCoreRelationalLocalIds();
+
+  const dataset = await fetchOrganizationRelationalDataset(sessionContext.organization.id);
+  if (!dataset) return;
+
+  if (dataset.clients.length) mergeRemoteClients(dataset.clients);
+  else await syncClientsToRemote(clientRegistry);
+
+  if (dataset.operators.length) mergeRemoteOperators(dataset.operators);
+  else await syncOperatorsToRemote(adminOperators);
+
+  if (dataset.services.length) mergeRemoteServices(dataset.services);
+  else await syncServicesToRemote(serviceCatalog);
+
+  if (dataset.products.length) mergeRemoteProducts(dataset.products);
+  else await syncProductsToRemote(productCatalog);
+
+  if (dataset.supplies.length) mergeRemoteSupplies(dataset.supplies);
+  else await syncSuppliesToRemote(supplyCatalog);
+
+  if (dataset.vehicles.length) mergeRemoteVehicles(dataset.vehicles);
+  else await syncVehiclesToRemote(vehicleRegistry);
+
+  ensureCoreRelationalLocalIds();
+}
+
 function createDefaultRemoteOperator(sessionContext) {
   const today = new Date().toISOString().slice(0, 10);
 
@@ -5959,6 +6431,7 @@ function applyRemoteWorkspaceSnapshot(snapshot, sessionContext) {
   replaceArrayContents(openPayments, Array.isArray(nextSnapshot.openPayments) ? nextSnapshot.openPayments : []);
   replaceArrayContents(payableAccounts, Array.isArray(nextSnapshot.payableAccounts) ? nextSnapshot.payableAccounts : []);
   rebuildInvoiceAmounts();
+  ensureCoreRelationalLocalIds();
 
   selectedReportOperatorId = adminOperators[0]?.id || null;
 }
@@ -6023,6 +6496,7 @@ async function initializeRemoteWorkspace(sessionContext) {
     remoteWorkspaceState.membershipRole = sessionContext.membership.role;
     remoteWorkspaceState.organizationId = sessionContext.organization.id;
     remoteWorkspaceState.userId = sessionContext.user.id;
+    await hydrateRemoteRelationalWorkspace(sessionContext);
     remoteWorkspaceState.lastSnapshotHash = JSON.stringify(buildRemoteWorkspaceSnapshot());
 
     if (!remoteRow) {
@@ -10466,7 +10940,7 @@ async function editClientRegistration(container, clientId) {
   openClientDialog(clientId);
 }
 
-function saveClientRegistration(container) {
+async function saveClientRegistration(container) {
   if (selectedClientId && !canEditClientRegistrations()) {
     showToast("Somente administradores podem editar clientes.");
     return;
@@ -10511,6 +10985,11 @@ function saveClientRegistration(container) {
   closeClientDialog();
   renderClientsScreen($("#adminClientsContent"));
   renderAdminDashboard();
+  await runRemoteRelationalTask(async () => {
+    await syncClientsToRemote([savedClient]);
+    const relatedVehicles = vehicleRegistry.filter((vehicle) => savedClient.plates.includes(vehicle.plate));
+    if (relatedVehicles.length) await syncVehiclesToRemote(relatedVehicles);
+  }, "Falha ao sincronizar cliente com o Supabase.");
   showToast(`${getClientDisplayName(savedClient)} ${existingClient ? "atualizado" : "cadastrado"}.`);
 }
 
@@ -10741,6 +11220,7 @@ function createCasualClientFromEntry(vehicle) {
 
   clientRegistry.unshift(client);
   saveLegacyWorkspaceSnapshot();
+  void runRemoteRelationalTask(() => syncClientsToRemote([client]), "Falha ao sincronizar cliente avulso com o Supabase.");
   return client;
 }
 
@@ -10929,6 +11409,7 @@ function persistVehicleRegistration(container) {
 
   selectedVehicleId = vehicle.id;
   saveLegacyWorkspaceSnapshot();
+  void runRemoteRelationalTask(() => syncVehiclesToRemote([vehicle]), "Falha ao sincronizar veiculo com o Supabase.");
   return { ok: true, reason: selectedVehicle ? "updated" : "created", vehicle };
 }
 
@@ -12300,7 +12781,7 @@ function bindOperatorDialogControls(dialog) {
   });
 }
 
-function saveOperatorRegistration(container) {
+async function saveOperatorRegistration(container) {
   const name = $("#operatorName", container).value.trim();
   const cpf = $("#operatorCpf", container).value.trim();
   const phone = $("#operatorPhone", container).value.trim();
@@ -12373,6 +12854,7 @@ function saveOperatorRegistration(container) {
   closeOperatorDialog();
   renderOperatorsScreen($("#adminOperatorsContent"));
   renderAdminDashboard();
+  await runRemoteRelationalTask(() => syncOperatorsToRemote([savedOperator]), "Falha ao sincronizar operador com o Supabase.");
   showToast(wasEdit ? "Operador atualizado." : "Operador cadastrado.");
 }
 
@@ -12756,7 +13238,7 @@ function bindServiceDialogSupplyControls(dialog) {
   });
 }
 
-function saveServiceRegistration(container) {
+async function saveServiceRegistration(container) {
   const name = $("#serviceName", container).value.trim();
   const vehicleType = $("#serviceVehicleType", container).value;
   const vehicleCategory = getVehicleCategoryValue(vehicleType, $("#serviceVehicleCategory", container).value);
@@ -12790,7 +13272,11 @@ function saveServiceRegistration(container) {
   const previousService = selectedServiceIndex !== null ? serviceCatalog[selectedServiceIndex] : null;
   const previousName = previousService?.name || "";
   const previousProfileKey = previousService ? getServiceSupplyProfileKey(previousService) : "";
+  const nextServiceId = previousService?.id || serviceCatalog.length + 1;
   const serviceData = {
+    id: nextServiceId,
+    remoteId: previousService?.remoteId || "",
+    serviceCode: previousService?.serviceCode || buildLegacyEntityCode("SVC", nextServiceId),
     name,
     price,
     duration,
@@ -12820,12 +13306,14 @@ function saveServiceRegistration(container) {
   serviceSupplyProfiles = normalizeServiceSupplyProfiles(serviceSupplyProfiles);
   saveServiceSupplyProfiles();
   saveLegacyWorkspaceSnapshot();
+  const savedService = previousService ? serviceCatalog[selectedServiceIndex] : serviceCatalog[serviceCatalog.length - 1];
 
   closeServiceDialog();
   renderServicesScreen($("#adminServicesContent"));
   renderSuppliesScreen($("#adminSuppliesContent"));
   renderVehicleEntryOptions();
   renderPatio();
+  await runRemoteRelationalTask(() => syncServicesToRemote([savedService]), "Falha ao sincronizar servico com o Supabase.");
   showToast(previousService ? "Serviço atualizado." : "Serviço cadastrado.");
 }
 
@@ -14292,7 +14780,7 @@ function updateProductSaleTotal(dialog) {
   return total;
 }
 
-function saveInventoryItemForm(dialog) {
+async function saveInventoryItemForm(dialog) {
   const mode = inventoryDialogState?.mode || "product";
   const isProduct = mode === "product";
   const list = isProduct ? productCatalog : supplyCatalog;
@@ -14304,6 +14792,7 @@ function saveInventoryItemForm(dialog) {
   const minStock = Number($("#inventoryItemMinStock", dialog).value || 0);
   const cost = getCurrencyInputValue("#inventoryItemCost", dialog);
   const notes = $("#inventoryItemNotes", dialog).value.trim();
+  let savedItem = existingItem;
   const basePayload = {
     id: existingItem?.id || (isProduct ? getNextProductId() : getNextSupplyId()),
     sku,
@@ -14339,6 +14828,7 @@ function saveInventoryItemForm(dialog) {
     const nextProduct = { ...basePayload, price };
     if (existingItem) Object.assign(existingItem, nextProduct);
     else productCatalog.unshift(nextProduct);
+    savedItem = existingItem || nextProduct;
     saveProductCatalog();
     renderProductsScreen($("#adminProductsContent"));
   } else {
@@ -14360,6 +14850,7 @@ function saveInventoryItemForm(dialog) {
     } else {
       supplyCatalog.unshift(nextSupply);
     }
+    savedItem = existingItem || nextSupply;
     saveSupplyCatalog();
     serviceSupplyProfiles = normalizeServiceSupplyProfiles(serviceSupplyProfiles);
     saveServiceSupplyProfiles();
@@ -14367,6 +14858,12 @@ function saveInventoryItemForm(dialog) {
   }
   renderInventoryScreen($("#adminInventoryContent"));
   closeInventoryDialog();
+  if (savedItem) {
+    await runRemoteRelationalTask(
+      () => (isProduct ? syncProductsToRemote([savedItem]) : syncSuppliesToRemote([savedItem])),
+      isProduct ? "Falha ao sincronizar produto com o Supabase." : "Falha ao sincronizar insumo com o Supabase."
+    );
+  }
   showToast(isProduct ? "Produto salvo." : "Insumo salvo.");
 }
 
@@ -20814,6 +21311,7 @@ async function restoreSupabaseSession() {
 
 window.setTimeout(restoreLegacyWorkspaceSnapshot, 0);
 
+ensureCoreRelationalLocalIds();
 initIcons();
 preloadPdfLogoImage();
 startSplashScreen();

@@ -2,7 +2,7 @@
 
 ## Estado atual
 
-Hoje o frontend ainda opera majoritariamente com dados locais em `app/main.js` e `localStorage`.
+Hoje o frontend ainda opera parcialmente com dados locais em `app/main.js` e `localStorage`, mas a Fase B ja iniciou a gravacao relacional dos cadastros principais.
 
 O repositorio agora ficou preparado para iniciar a migracao para Supabase com:
 
@@ -13,6 +13,7 @@ O repositorio agora ficou preparado para iniciar a migracao para Supabase com:
 - RLS nas tabelas do dominio
 - cliente browser para login com email e senha
 - script de bootstrap do usuario `Teste`
+- camada relacional inicial para `clients`, `vehicles`, `operators`, `services`, `products` e `supplies`
 
 ## Estrutura planejada
 
@@ -28,10 +29,10 @@ Grupos principais de tabelas:
 ## Mapeamento do app atual para o banco
 
 - dados empresariais e financeiros locais passam para tabelas de configuracao por `organization_id`
-- clientes, veiculos, operadores e servicos deixam de ficar presos ao `main.js`
+- clientes, veiculos, operadores, produtos, insumos e servicos passam a ter leitura e gravacao tambem nas tabelas do Supabase
 - caixa, pagamentos em aberto, faturas e historico documental passam a ser persistidos
 - os cuidados especiais do veiculo deixam de depender apenas de estado local
-- nesta primeira fase, o app legado sincroniza um snapshot por organizacao em `organization_app_states` para nao quebrar os fluxos existentes enquanto a migracao relacional continua
+- durante a transicao, o app legado ainda sincroniza um snapshot por organizacao em `organization_app_states` para nao quebrar os fluxos existentes enquanto a migracao relacional continua
 
 ## Publicacao no Supabase
 
@@ -80,8 +81,8 @@ Bootstrap do usuario de teste:
 
 ## O que ainda falta para a migracao completa
 
-- criar a camada cliente do Supabase no frontend
 - aprofundar a migracao do snapshot remoto para tabelas relacionais por modulo
+- migrar `service_supply_profiles`, `vehicle_special_care`, operacao, financeiro e documentos para o mesmo padrao relacional
 - migrar login visual para Auth real
 - mover uploads e comprovantes para Storage
 - criar seeds ou script de migracao dos dados locais, se necessario
