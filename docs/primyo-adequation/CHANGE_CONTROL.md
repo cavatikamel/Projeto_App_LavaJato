@@ -295,3 +295,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: a fronteira oficial entre `Product`, `Supply`, `StockMovement` e consumo por servico foi documentada sem alterar runtime, adapters, scripts, estoque real ou Supabase.
 - Observacao de risco: a proxima fatia nao deve integrar adapters ao runtime nem abrir Supabase; a prioridade recomendada passa a ser `LP-WEB-ID-RESOLVER-001` para consolidar identidade e ownership cross-domain antes de qualquer integracao funcional.
+
+### LP-WEB-ID-RESOLVER-001
+
+- Change record: `docs/primyo-changes/LP-WEB-ID-RESOLVER-001.md`
+- Closure: `fase documental absorvida no proprio change record e nos documentos de id-resolution`
+- Resultado: `Aceito`
+- Observacao principal: a estrategia oficial da futura camada de resolucao de IDs foi documentada sem alterar runtime, adapters, scripts, `app/main.js` ou Supabase.
+- Observacao de risco: a proxima fatia nao deve integrar o resolvedor ao runtime; a prioridade recomendada passa a ser `LP-WEB-ID-RESOLVER-002` como implementacao pura, pequena e reversivel.

@@ -359,3 +359,29 @@ Ele precisara provar:
 - controle de snapshots;
 - compatibilidade de versao;
 - seguranca de rollback.
+
+## 8. Requisitos futuros para camada de ID resolver
+
+Apos `LP-WEB-ID-RESOLVER-001`, a futura camada de resolucao de IDs devera provar, no minimo:
+
+- resolve ID canonico valido apenas com `sourceId`, contexto e estrategia aprovados;
+- falha quando `sourceId` estiver ausente;
+- nao usa nome como ID oficial;
+- nao usa placa como ID oficial;
+- preserva `legacyRefs`;
+- nao cria relacao automatica quando houver ambiguidade;
+- nao altera payload original;
+- nao acessa runtime;
+- nao acessa Supabase.
+
+Relacoes prioritarias para a primeira onda:
+
+- `Vehicle -> Customer`
+- `Attendance -> Customer`
+- `Attendance -> Vehicle`
+- `Attendance -> Service`
+- `Service -> Supply`
+
+Regra:
+
+- nenhum adapter futuro deve esconder logica de resolucao cross-domain dentro do proprio modulo quando essa logica merecer uma camada dedicada e testavel de identidade.

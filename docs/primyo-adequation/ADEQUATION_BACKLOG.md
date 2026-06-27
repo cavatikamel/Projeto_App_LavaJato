@@ -973,3 +973,34 @@
   - `StockMovement` continua apenas como entidade conceitual futura;
   - consumo por servico continua sem evento auditavel implementado;
   - integracao funcional e abertura de Supabase continuam explicitamente fora da trilha atual.
+
+### LP-WEB-ID-RESOLVER-001
+
+- Status: `Concluido`
+- Data: `2026-06-27`
+- Arquivos alterados:
+  - `docs/primyo-web-contracts/id-resolution/ID_RESOLVER_STRATEGY.md`
+  - `docs/primyo-web-contracts/id-resolution/ID_RESOLUTION_MAP.md`
+  - `docs/primyo-web-contracts/id-resolution/LEGACY_ID_RISKS.md`
+  - `docs/primyo-web-contracts/id-resolution/RESOLVER_TEST_REQUIREMENTS.md`
+  - `docs/primyo-web-contracts/id-resolution/IMPLEMENTATION_READINESS.md`
+  - `docs/primyo-changes/LP-WEB-ID-RESOLVER-001.md`
+  - `docs/primyo-web-contracts/WEB_CONTRACT_TEST_REQUIREMENTS.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `git status --short` -> sucesso;
+  - `git diff --name-only` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - estrategia e mapa de resolucao registrados em `docs/primyo-web-contracts/id-resolution/`;
+  - change record registrado em `docs/primyo-changes/LP-WEB-ID-RESOLVER-001.md`.
+- Observacoes:
+  - nenhum resolver foi implementado;
+  - nenhum adapter, script ou arquivo funcional foi alterado;
+  - a fase consolidou apenas estrategia, mapa, riscos, testes e readiness;
+  - a proxima fatia recomendada passa a ser `LP-WEB-ID-RESOLVER-002`.
+- Riscos remanescentes:
+  - a camada de resolucao continua sem implementacao real;
+  - relacoes financeiras e de atendimento continuam dependendo de fases futuras de adapter e ownership;
+  - integrar runtime ou Supabase antes da implementacao controlada do resolvedor continua prematuro.
