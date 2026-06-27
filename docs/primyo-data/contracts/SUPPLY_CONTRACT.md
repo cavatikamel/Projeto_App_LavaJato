@@ -67,3 +67,10 @@ Nao definem ownership do contrato:
 ## 8. Decisao desta fase
 
 `Supply` passa a ser o contrato mestre dos materiais de consumo, preparado para suportar composicao tecnica, estoque auditavel e integracao futura sem dependencia de nome livre.
+
+## 9. Observacao apos LP-DATA-006
+
+- `Supply` continua separado de `Product`.
+- `salePrice` continua fora do shape padrao do contrato.
+- `stockBalance` continua sendo projecao observada, nao movimento auditavel.
+- consumo por servico continua dependendo de evento rastreavel e nao pode nascer automaticamente do catalogo.

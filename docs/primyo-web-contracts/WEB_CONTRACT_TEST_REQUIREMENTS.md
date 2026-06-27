@@ -183,6 +183,9 @@ Aprendizados consolidados no encerramento de `LP-WEB-010`:
 - `category` e `barcode` podem estar ausentes no seed legado sem impedir o contrato minimo;
 - `productAdapter` nao deve alterar preco, margem ou estoque real;
 - sem `name` ou `sourceId` o contrato deve falhar de forma controlada.
+- `Product` deve continuar separado de `Supply`, sem conversao automatica entre os dominios;
+- `stockBalance` deve continuar tratado como projecao observada, sem simular movimento auditavel;
+- nenhum adapter do dominio de produto deve gerar baixa automatica por servico.
 
 ### 4.5 Supply
 
@@ -206,6 +209,9 @@ Observacoes para `LP-WEB-011`:
 - `stockBalance` continua sendo projecao observada, nao trilha auditavel de movimento;
 - ausencia de `name`, `sourceId` ou `organizationId` deve falhar de forma controlada;
 - o envelope deve continuar carregando `payload`, `warnings`, `validation`, `metadata`, `organizationId`, `sourceId` e timestamps.
+- `Supply` deve continuar separado de `Product`, mesmo quando houver proximidade de nome, SKU ou fornecedor;
+- nenhum adapter do dominio de insumo deve gerar consumo por servico ou baixa automatica;
+- vinculos com `serviceSupplyProfiles` devem permanecer apenas como rastreabilidade ate fase propria de IDs e ownership.
 
 ### 4.6 Attendance
 

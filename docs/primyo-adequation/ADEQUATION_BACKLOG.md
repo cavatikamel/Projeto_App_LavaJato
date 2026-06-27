@@ -937,3 +937,39 @@
   - `stockBalance` continua sendo projecao e nao trilha auditavel;
   - relacoes entre servico e insumo ainda dependem de resolver de IDs e ownership cross-domain;
   - integracao funcional e abertura de Supabase continuam exigindo fatias separadas.
+
+### LP-DATA-006
+
+- Status: `Concluido`
+- Data: `2026-06-27`
+- Arquivos alterados:
+  - `docs/primyo-data/product-supply-stock/PRODUCT_SUPPLY_STOCK_BOUNDARY.md`
+  - `docs/primyo-data/product-supply-stock/PRODUCT_RULES.md`
+  - `docs/primyo-data/product-supply-stock/SUPPLY_RULES.md`
+  - `docs/primyo-data/product-supply-stock/STOCK_MOVEMENT_RULES.md`
+  - `docs/primyo-data/product-supply-stock/SERVICE_CONSUMPTION_RULES.md`
+  - `docs/primyo-data/product-supply-stock/RISKS_AND_DECISIONS.md`
+  - `docs/primyo-changes/LP-DATA-006.md`
+  - `docs/primyo-data/contracts/PRODUCT_CONTRACT.md`
+  - `docs/primyo-data/contracts/SUPPLY_CONTRACT.md`
+  - `docs/primyo-web-contracts/WEB_CONTRACT_TEST_REQUIREMENTS.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `git status --short` -> sucesso;
+  - `git diff --name-only` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - fronteira oficial entre `Product`, `Supply`, `StockMovement` e consumo por servico registrada em `docs/primyo-data/product-supply-stock/`;
+  - change record registrado em `docs/primyo-changes/LP-DATA-006.md`.
+- Observacoes:
+  - `Product` e `Supply` permaneceram separados;
+  - `stockBalance` foi reafirmado como projecao observada, nao trilha auditavel;
+  - nenhuma movimentacao de estoque foi implementada;
+  - nenhum adapter, script ou arquivo funcional foi alterado;
+  - a proxima fatia recomendada passa a ser `LP-WEB-ID-RESOLVER-001`.
+- Riscos remanescentes:
+  - ownership cross-domain entre servico, insumo, produto e estoque continua pendente de fase propria;
+  - `StockMovement` continua apenas como entidade conceitual futura;
+  - consumo por servico continua sem evento auditavel implementado;
+  - integracao funcional e abertura de Supabase continuam explicitamente fora da trilha atual.

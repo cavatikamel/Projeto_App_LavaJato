@@ -287,3 +287,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: o handoff seguro do Codex foi consolidado em documentos locais para permitir compactacao do chat sem perda do contexto critico da trilha Primyo, preservando branch esperada, commits relevantes, fora de escopo persistente e checklist de retomada.
 - Observacao de risco: o handoff precisa ser atualizado sempre que uma nova fase for concluida; a proxima fatia tecnica continua sendo `LP-DATA-006`, sem integracao de adapters ao runtime e sem abertura de Supabase.
+
+### LP-DATA-006
+
+- Change record: `docs/primyo-changes/LP-DATA-006.md`
+- Closure: `fase documental absorvida no proprio change record e nos documentos de dados`
+- Resultado: `Aceito`
+- Observacao principal: a fronteira oficial entre `Product`, `Supply`, `StockMovement` e consumo por servico foi documentada sem alterar runtime, adapters, scripts, estoque real ou Supabase.
+- Observacao de risco: a proxima fatia nao deve integrar adapters ao runtime nem abrir Supabase; a prioridade recomendada passa a ser `LP-WEB-ID-RESOLVER-001` para consolidar identidade e ownership cross-domain antes de qualquer integracao funcional.

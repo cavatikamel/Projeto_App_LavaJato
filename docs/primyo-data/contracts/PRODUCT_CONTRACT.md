@@ -67,3 +67,10 @@ Nao definem o registro oficial:
 ## 8. Decisao desta fase
 
 `Product` passa a ser o contrato mestre dos itens vendaveis, com SKU estavel, ownership claro e dependencia explicita de trilha auditavel de estoque.
+
+## 9. Observacao apos LP-DATA-006
+
+- `Product` continua separado de `Supply`.
+- `supplier` continua fora do primeiro nivel do contrato e deve permanecer em `legacyRefs` enquanto nao houver ownership proprio aprovado.
+- `stockBalance` continua sendo projecao observada, nao movimento auditavel.
+- consumo por servico e movimentacao de estoque continuam fora do ownership deste contrato isoladamente.
