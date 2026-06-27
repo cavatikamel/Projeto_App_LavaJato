@@ -23,6 +23,7 @@ Ele executa:
 - `node --check app/adapters/vehicleAdapter.js`;
 - `node --check app/adapters/serviceAdapter.js`;
 - `node --check app/adapters/productAdapter.js`;
+- `node --check app/adapters/supplyAdapter.js`;
 - `node --check scripts/primyo-adapter-gate.mjs`;
 - `node scripts/primyo-adapter-gate.mjs`;
 - `node --check app/main.js`;
@@ -38,6 +39,20 @@ Quando a mudanca tocar sessao, perfil, autenticacao, permissao ou navegacao prin
 - registrar a execucao em `TEST_EXECUTION_TEMPLATE.md`.
 
 Os comandos individuais continuam validos para diagnostico, mas nao substituem o registro do gate oficial quando a mudanca for encerrada.
+
+## Aplicacao em fases documentais e Lean Mode
+
+Quando a fase for documental e nao tocar codigo funcional, runtime, scripts, `package.json` ou dependencias:
+
+- executar `git status --short`;
+- executar `git diff --name-only`;
+- executar `npm.cmd run primyo:gate`;
+- registrar a ocorrencia se o gate falhar por causa de mudanca preexistente fora do escopo atual;
+- nao improvisar correcao lateral apenas para deixar o gate verde.
+
+Essa reducao vale apenas para fases documentais.
+
+Ela nao substitui o pacote completo de gate, build, verify, `node --check` extra ou smoke quando a fatia tocar codigo, adapters, scripts, runtime, permissao, dados ou integracao.
 
 ## Automacao planejada em LP-TEST-003
 
@@ -110,9 +125,20 @@ Estado oficial apos `LP-WEB-010`:
 - nenhum adapter foi integrado ao runtime;
 - `app/main.js` permanece fora do escopo desta fase.
 
+Estado oficial apos `LP-WEB-011`:
+
+- `scripts/primyo-adapter-gate.mjs` passa a importar `supplyAdapter` em Node puro;
+- o gate valida exports minimos de `supplyAdapter`;
+- o gate executa cenarios validos e invalidos controlados para insumo;
+- o gate valida `cost -> costPrice`, `stock -> stockBalance`, `supplier -> supplierName`, `organizationId`, timestamps, envelope e separacao entre `id` e `sourceId` no dominio de insumo;
+- `supplyAdapter` passa a estar protegido por regressao automatica minima oficial;
+- o estado oficial do gate passa a cobrir `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`;
+- nenhum adapter foi integrado ao runtime;
+- `app/main.js` permanece fora do escopo desta fase.
+
 Limites atuais desta cobertura:
 
-- o gate ainda cobre apenas `customerAdapter`, `vehicleAdapter` e `serviceAdapter`;
+- o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;
 - a cobertura continua conceitual e local, nao browser-based;
 - smoke funcional continua obrigatorio quando futuras fatias tocarem runtime, navegacao, dados ou permissao.
 

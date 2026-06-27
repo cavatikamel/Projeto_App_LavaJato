@@ -101,3 +101,12 @@ Esta fase apenas:
 - confirma que `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter` continuam fora do runtime;
 - confirma que o Adapter Gate continua protegendo os quatro adapters e o helper compartilhado;
 - escolhe `LP-WEB-011` como proxima fatia oficial.
+
+## Operacao apos `LP-DOC-EXEC-001`
+
+Com a consolidacao do Primyo Lean Mode:
+
+- `LP-WEB-011` continua sendo a proxima fatia tecnica recomendada;
+- os proximos prompts podem referenciar `EXECUTION_RULES.md`, `LEAN_PROMPT_POLICY.md`, `CODEX_RESPONSE_FORMAT.md`, `COMMIT_RULES.md` e `PHASE_TYPES.md` no lugar de repetir o baseline inteiro;
+- a recomendacao tecnica nao muda: ainda nao e hora de integrar adapters ao runtime nem de abrir Supabase;
+- a reducao de prompt nao altera a obrigatoriedade de gate, rollback, riscos, escopo e validacoes.

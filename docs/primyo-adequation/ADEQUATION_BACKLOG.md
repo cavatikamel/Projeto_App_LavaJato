@@ -28,6 +28,7 @@
 | LP-WEB-009 | Implementar terceiro adapter puro de contrato para master data de servicos | P2 | Medio | LP-WEB-008, LP-TEST-AUTO-003, LP-DATA-005 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-26`. `serviceAdapter` foi criado em `app/adapters/serviceAdapter.js`, seguindo o baseline compartilhado de `customerAdapter` e `vehicleAdapter`, com gate ampliado e sem integracao ao runtime. | O terceiro adapter puro existe, e reversivel, e converte servico legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, closure, `node --check` dos tres adapters, adapter gate, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
 | LP-WEB-ADAPTER-HELPERS-001 | Consolidar helper comum minimo para adapters puros | P2 | Medio | LP-WEB-009, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-26`. `adapterHelpers.js` foi criado como camada compartilhada minima para `customerAdapter`, `vehicleAdapter` e `serviceAdapter`, com gate ampliado e sem integracao ao runtime. | Existe helper comum minimo, reversivel e fora do runtime, reduzindo drift estrutural antes do quarto adapter. | Change record, closure, `node --check` do helper e dos tres adapters, adapter gate, `primyo:gate`, build, verify e rollback documentado. |
 | LP-WEB-010 | Implementar quarto adapter puro de contrato para master data de produtos | P2 | Medio | LP-WEB-ADAPTER-HELPERS-001, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-26`. `productAdapter` foi criado em `app/adapters/productAdapter.js`, seguindo o baseline compartilhado dos adapters anteriores, com gate ampliado e sem integracao ao runtime. | O quarto adapter puro existe, e reversivel, e converte produto legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, closure, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
+| LP-DOC-EXEC-001 | Consolidar Primyo Lean Mode para prompts curtos e seguros | P2 | Baixo | LP-WEB-010 | Docs, Governanca | Baixo | Concluido em `2026-06-27`. Foi criada a base documental do Lean Mode para reduzir repeticao de regras nos proximos prompts sem reduzir gate, rollback, rastreabilidade ou controle de escopo. | Os prompts futuros podem referenciar regras locais consolidadas, com qualidade e seguranca preservadas. | Documentos de execucao, politica de prompt, formato de resposta, regras de commit, tipos de fase, change record e `npm.cmd run primyo:gate` aprovado. |
 | LP-WEB-011 | Implementar quinto adapter puro de contrato para master data de insumos | P2 | Medio | LP-WEB-010, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Proxima fatia recomendada apos o encerramento formal de `LP-WEB-010`. Deve criar `supplyAdapter` como quinto adapter puro oficial, preservando a diferenca entre produto vendavel, insumo tecnico e movimento de estoque, sem integrar adapters ao runtime. | O quinto adapter puro existe, e reversivel, e converte insumo legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
 | LP-PERM-001 | Alinhar regras de administrador e operador | P1 | Alto | LP-SEC-003 | Web, Android | Medio | Concluido em `2026-06-23`. A matriz oficial de permissoes foi formalizada para Administrador e Operador, com perfis futuros planejados sem implementacao. | Cada permissao critica possui racional, politica, readiness RLS e cenarios de teste. | Matriz revisada, acoes sensiveis, politica de permissao, readiness RLS, cenarios de teste e validacoes tecnicas aprovadas. |
 | LP-TEST-001 | Formalizar baseline minima de testes web | P1 | Alto | Nenhuma | Web, CI, Docs | Baixo | Consolidar build, verificacoes existentes e fluxos manuais obrigatorios antes de qualquer mudanca funcional. | Existe pacote minimo repetivel para validar cada fatia web. | Documento de baseline, execucao registrada. |
@@ -72,15 +73,16 @@
 24. `LP-WEB-009` `concluido em 2026-06-26`
 25. `LP-WEB-ADAPTER-HELPERS-001` `concluido em 2026-06-26`
 26. `LP-WEB-010` `concluido em 2026-06-26`
-27. `LP-WEB-011` `recomendado em 2026-06-26`
-28. `LP-DATA-006`
-29. `LP-SUPABASE-001`
-30. `LP-SEC-002`
-31. `LP-OPS-001`
-32. `LP-OPS-002`
-33. `LP-AND-001`
-34. `LP-AND-002`
-35. `LP-REL-001`
+27. `LP-DOC-EXEC-001` `concluido em 2026-06-27`
+28. `LP-WEB-011` `recomendado em 2026-06-27`
+29. `LP-DATA-006`
+30. `LP-SUPABASE-001`
+31. `LP-SEC-002`
+32. `LP-OPS-001`
+33. `LP-OPS-002`
+34. `LP-AND-001`
+35. `LP-AND-002`
+36. `LP-REL-001`
 
 ## Observacoes de governanca
 

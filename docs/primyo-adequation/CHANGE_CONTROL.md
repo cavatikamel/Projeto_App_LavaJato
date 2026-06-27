@@ -263,3 +263,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: `productAdapter` foi aceito como quarto adapter puro oficial do web, aderente ao baseline compartilhado e com o Adapter Contract Gate ampliado para quatro adapters, sem qualquer integracao a `app/main.js`, ao runtime ou ao estoque real.
 - Observacao de risco: a proxima fatia nao deve integrar adapters nem abrir Supabase; a prioridade recomendada passa a ser `LP-WEB-011` com `supplyAdapter` como proximo adapter puro oficial, preservando a diferenca entre produto vendavel, insumo tecnico e movimento de estoque.
+
+### LP-DOC-EXEC-001
+
+- Change record: `docs/primyo-changes/LP-DOC-EXEC-001.md`
+- Closure: `fase documental sem closure separado`
+- Resultado: `Aceito`
+- Observacao principal: o Primyo Lean Mode foi consolidado em documentos locais para reduzir repeticao de regras nos proximos prompts sem perder gate, rollback, rastreabilidade, controle de escopo ou proibicao de push sem autorizacao.
+- Observacao de risco: prompts curtos continuam exigindo objetivo, escopo, validacoes e criterio de aceite; Lean Mode reduz repeticao, mas nao autoriza atalho perigoso nem integracao funcional prematura.
