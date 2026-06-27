@@ -279,3 +279,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: `supplyAdapter` foi aceito como quinto adapter puro oficial do web, aderente ao baseline compartilhado e com o Adapter Contract Gate ampliado para cinco adapters, sem qualquer integracao a `app/main.js`, ao runtime, ao estoque real ou ao Supabase.
 - Observacao de risco: a proxima fatia nao deve integrar adapters nem abrir Supabase; a prioridade recomendada passa a ser `LP-DATA-006` para formalizar resolver de IDs, ownership cross-domain e relacoes entre produto, insumo e servico antes de qualquer integracao funcional.
+
+### LP-DOC-HANDOFF-001
+
+- Change record: `docs/primyo-changes/LP-DOC-HANDOFF-001.md`
+- Closure: `docs/primyo-changes/LP-DOC-HANDOFF-001-CLOSURE.md`
+- Resultado: `Aceito`
+- Observacao principal: o handoff seguro do Codex foi consolidado em documentos locais para permitir compactacao do chat sem perda do contexto critico da trilha Primyo, preservando branch esperada, commits relevantes, fora de escopo persistente e checklist de retomada.
+- Observacao de risco: o handoff precisa ser atualizado sempre que uma nova fase for concluida; a proxima fatia tecnica continua sendo `LP-DATA-006`, sem integracao de adapters ao runtime e sem abertura de Supabase.

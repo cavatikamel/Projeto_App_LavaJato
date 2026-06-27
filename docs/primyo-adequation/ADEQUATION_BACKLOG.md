@@ -30,6 +30,7 @@
 | LP-WEB-010 | Implementar quarto adapter puro de contrato para master data de produtos | P2 | Medio | LP-WEB-ADAPTER-HELPERS-001, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-26`. `productAdapter` foi criado em `app/adapters/productAdapter.js`, seguindo o baseline compartilhado dos adapters anteriores, com gate ampliado e sem integracao ao runtime. | O quarto adapter puro existe, e reversivel, e converte produto legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, closure, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
 | LP-DOC-EXEC-001 | Consolidar Primyo Lean Mode para prompts curtos e seguros | P2 | Baixo | LP-WEB-010 | Docs, Governanca | Baixo | Concluido em `2026-06-27`. Foi criada a base documental do Lean Mode para reduzir repeticao de regras nos proximos prompts sem reduzir gate, rollback, rastreabilidade ou controle de escopo. | Os prompts futuros podem referenciar regras locais consolidadas, com qualidade e seguranca preservadas. | Documentos de execucao, politica de prompt, formato de resposta, regras de commit, tipos de fase, change record e `npm.cmd run primyo:gate` aprovado. |
 | LP-WEB-011 | Implementar quinto adapter puro de contrato para master data de insumos | P2 | Medio | LP-WEB-010, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-27`. `supplyAdapter` foi criado em `app/adapters/supplyAdapter.js`, seguindo o baseline compartilhado dos adapters anteriores, com gate ampliado e sem integracao ao runtime. | O quinto adapter puro existe, e reversivel, e converte insumo legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, closure, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
+| LP-DOC-HANDOFF-001 | Consolidar handoff seguro para compactacao do contexto do Codex | P3 | Baixo | LP-DOC-EXEC-001, LP-WEB-011 | Docs, Governanca | Baixo | Concluido em `2026-06-27`. Foi criada a base documental de handoff para registrar branch, commits relevantes, estado tecnico atual, fora de escopo persistente e checklist de compactacao segura do chat. | O proximo contexto consegue retomar a trilha Primyo com baixo risco de perda de contexto, sem reduzir gate, rollback ou controle de escopo. | Handoff summary, checklist de compactacao, change record, closure e `npm.cmd run primyo:gate` aprovado. |
 | LP-PERM-001 | Alinhar regras de administrador e operador | P1 | Alto | LP-SEC-003 | Web, Android | Medio | Concluido em `2026-06-23`. A matriz oficial de permissoes foi formalizada para Administrador e Operador, com perfis futuros planejados sem implementacao. | Cada permissao critica possui racional, politica, readiness RLS e cenarios de teste. | Matriz revisada, acoes sensiveis, politica de permissao, readiness RLS, cenarios de teste e validacoes tecnicas aprovadas. |
 | LP-TEST-001 | Formalizar baseline minima de testes web | P1 | Alto | Nenhuma | Web, CI, Docs | Baixo | Consolidar build, verificacoes existentes e fluxos manuais obrigatorios antes de qualquer mudanca funcional. | Existe pacote minimo repetivel para validar cada fatia web. | Documento de baseline, execucao registrada. |
 | LP-TEST-002 | Definir validacoes de regressao para fluxos criticos | P1 | Alto | LP-TEST-001 | Web, Android, Docs | Medio | Fixar os fluxos que nunca podem ser alterados sem revalidacao antes e depois. | Fluxos criticos listados com criterio de sucesso. | Checklist de regressao, evidencias manuais padronizadas. |
@@ -75,10 +76,11 @@
 26. `LP-WEB-010` `concluido em 2026-06-26`
 27. `LP-DOC-EXEC-001` `concluido em 2026-06-27`
 28. `LP-WEB-011` `concluido em 2026-06-27`
-29. `LP-DATA-006` `recomendado em 2026-06-27`
-30. `LP-SUPABASE-001`
-31. `LP-SEC-002`
-32. `LP-OPS-001`
+29. `LP-DOC-HANDOFF-001` `concluido em 2026-06-27`
+30. `LP-DATA-006` `recomendado em 2026-06-27`
+31. `LP-SUPABASE-001`
+32. `LP-SEC-002`
+33. `LP-OPS-001`
 33. `LP-OPS-002`
 34. `LP-AND-001`
 35. `LP-AND-002`
