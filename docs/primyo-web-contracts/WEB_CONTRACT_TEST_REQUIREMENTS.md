@@ -193,6 +193,20 @@ Obrigatorio validar:
 - ausencia ou perda de `compatibilityMetadata`;
 - comportamento com catalogo sem metadados tecnicos completos.
 
+Observacoes para `LP-WEB-011`:
+
+- `sourceId` por contexto ou legado continua obrigatorio para separar identidade canonica de rastreabilidade;
+- `id` canonico deve seguir `supply:legacy:<sourceId>` e nunca usar `sku`, fornecedor, nome ou texto livre como identidade oficial;
+- `cost -> costPrice`, `stock -> stockBalance` e `supplier -> supplierName` devem ocorrer de forma explicita e reproduzivel;
+- `supplierName` pertence ao contrato `Supply`, diferentemente do dominio `Product`, onde fornecedor continua apenas em `legacyRefs`;
+- `compatibilityMetadata` pode nascer do shape tecnico legado atual, mas nao deve consultar fontes externas nem inventar semantica nova;
+- `riskTags` devem permanecer como lista contratual controlada quando existirem no legado;
+- `serviceSupplyProfiles` ou relacoes futuras com servicos devem permanecer apenas em `legacyRefs` nesta fase;
+- `category`, `type` e descricao excedente devem permanecer em `legacyRefs` quando nao houver campo canonico aprovado;
+- `stockBalance` continua sendo projecao observada, nao trilha auditavel de movimento;
+- ausencia de `name`, `sourceId` ou `organizationId` deve falhar de forma controlada;
+- o envelope deve continuar carregando `payload`, `warnings`, `validation`, `metadata`, `organizationId`, `sourceId` e timestamps.
+
 ### 4.6 Attendance
 
 Obrigatorio validar:
@@ -307,6 +321,16 @@ Cobertura expandida em `LP-WEB-010`:
 - cenario invalido de `productAdapter` sem `organizationId`;
 - geracao de envelope para produto com `validation`, `warnings`, `metadata` e `sourceId` preservado.
 
+Cobertura expandida em `LP-WEB-011`:
+
+- importacao de `supplyAdapter` em Node puro;
+- exports minimos de `supplyAdapter`;
+- cenario valido de `supplyAdapter`;
+- cenario invalido de `supplyAdapter` sem nome;
+- cenario invalido de `supplyAdapter` sem `sourceId`;
+- cenario invalido de `supplyAdapter` sem `organizationId`;
+- geracao de envelope para insumo com `validation`, `warnings`, `metadata` e `sourceId` preservado.
+
 Regra oficial para proximos adapters:
 
 - todo novo adapter puro deve entrar no Adapter Contract Gate no mesmo slice em que for criado;
@@ -315,6 +339,8 @@ Regra oficial para proximos adapters:
 - o gate deve continuar provando `organizationId`, timestamps, envelope, `warnings`, `validation` e separacao entre `id` e `sourceId` para cada adapter promovido ao baseline.
 - com `LP-WEB-010`, o baseline automatizado minimo passa a cobrir `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter`;
 - qualquer mudanca em `adapterHelpers.js` ou no Adapter Gate deve revalidar os quatro adapters em conjunto antes da liberacao de um quinto dominio.
+- com `LP-WEB-011`, o baseline automatizado minimo passa a cobrir `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`;
+- qualquer mudanca em `adapterHelpers.js` ou no Adapter Gate deve revalidar os cinco adapters em conjunto antes da liberacao de um sexto dominio.
 
 ## 7. Decisao desta fase
 

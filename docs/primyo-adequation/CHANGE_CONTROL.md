@@ -271,3 +271,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: o Primyo Lean Mode foi consolidado em documentos locais para reduzir repeticao de regras nos proximos prompts sem perder gate, rollback, rastreabilidade, controle de escopo ou proibicao de push sem autorizacao.
 - Observacao de risco: prompts curtos continuam exigindo objetivo, escopo, validacoes e criterio de aceite; Lean Mode reduz repeticao, mas nao autoriza atalho perigoso nem integracao funcional prematura.
+
+### LP-WEB-011
+
+- Change record: `docs/primyo-changes/LP-WEB-011.md`
+- Closure: `docs/primyo-changes/LP-WEB-011-CLOSURE.md`
+- Resultado: `Aceito`
+- Observacao principal: `supplyAdapter` foi aceito como quinto adapter puro oficial do web, aderente ao baseline compartilhado e com o Adapter Contract Gate ampliado para cinco adapters, sem qualquer integracao a `app/main.js`, ao runtime, ao estoque real ou ao Supabase.
+- Observacao de risco: a proxima fatia nao deve integrar adapters nem abrir Supabase; a prioridade recomendada passa a ser `LP-DATA-006` para formalizar resolver de IDs, ownership cross-domain e relacoes entre produto, insumo e servico antes de qualquer integracao funcional.

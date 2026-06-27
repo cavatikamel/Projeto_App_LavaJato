@@ -29,7 +29,7 @@
 | LP-WEB-ADAPTER-HELPERS-001 | Consolidar helper comum minimo para adapters puros | P2 | Medio | LP-WEB-009, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-26`. `adapterHelpers.js` foi criado como camada compartilhada minima para `customerAdapter`, `vehicleAdapter` e `serviceAdapter`, com gate ampliado e sem integracao ao runtime. | Existe helper comum minimo, reversivel e fora do runtime, reduzindo drift estrutural antes do quarto adapter. | Change record, closure, `node --check` do helper e dos tres adapters, adapter gate, `primyo:gate`, build, verify e rollback documentado. |
 | LP-WEB-010 | Implementar quarto adapter puro de contrato para master data de produtos | P2 | Medio | LP-WEB-ADAPTER-HELPERS-001, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-26`. `productAdapter` foi criado em `app/adapters/productAdapter.js`, seguindo o baseline compartilhado dos adapters anteriores, com gate ampliado e sem integracao ao runtime. | O quarto adapter puro existe, e reversivel, e converte produto legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, closure, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
 | LP-DOC-EXEC-001 | Consolidar Primyo Lean Mode para prompts curtos e seguros | P2 | Baixo | LP-WEB-010 | Docs, Governanca | Baixo | Concluido em `2026-06-27`. Foi criada a base documental do Lean Mode para reduzir repeticao de regras nos proximos prompts sem reduzir gate, rollback, rastreabilidade ou controle de escopo. | Os prompts futuros podem referenciar regras locais consolidadas, com qualidade e seguranca preservadas. | Documentos de execucao, politica de prompt, formato de resposta, regras de commit, tipos de fase, change record e `npm.cmd run primyo:gate` aprovado. |
-| LP-WEB-011 | Implementar quinto adapter puro de contrato para master data de insumos | P2 | Medio | LP-WEB-010, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Proxima fatia recomendada apos o encerramento formal de `LP-WEB-010`. Deve criar `supplyAdapter` como quinto adapter puro oficial, preservando a diferenca entre produto vendavel, insumo tecnico e movimento de estoque, sem integrar adapters ao runtime. | O quinto adapter puro existe, e reversivel, e converte insumo legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
+| LP-WEB-011 | Implementar quinto adapter puro de contrato para master data de insumos | P2 | Medio | LP-WEB-010, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-27`. `supplyAdapter` foi criado em `app/adapters/supplyAdapter.js`, seguindo o baseline compartilhado dos adapters anteriores, com gate ampliado e sem integracao ao runtime. | O quinto adapter puro existe, e reversivel, e converte insumo legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, closure, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
 | LP-PERM-001 | Alinhar regras de administrador e operador | P1 | Alto | LP-SEC-003 | Web, Android | Medio | Concluido em `2026-06-23`. A matriz oficial de permissoes foi formalizada para Administrador e Operador, com perfis futuros planejados sem implementacao. | Cada permissao critica possui racional, politica, readiness RLS e cenarios de teste. | Matriz revisada, acoes sensiveis, politica de permissao, readiness RLS, cenarios de teste e validacoes tecnicas aprovadas. |
 | LP-TEST-001 | Formalizar baseline minima de testes web | P1 | Alto | Nenhuma | Web, CI, Docs | Baixo | Consolidar build, verificacoes existentes e fluxos manuais obrigatorios antes de qualquer mudanca funcional. | Existe pacote minimo repetivel para validar cada fatia web. | Documento de baseline, execucao registrada. |
 | LP-TEST-002 | Definir validacoes de regressao para fluxos criticos | P1 | Alto | LP-TEST-001 | Web, Android, Docs | Medio | Fixar os fluxos que nunca podem ser alterados sem revalidacao antes e depois. | Fluxos criticos listados com criterio de sucesso. | Checklist de regressao, evidencias manuais padronizadas. |
@@ -74,8 +74,8 @@
 25. `LP-WEB-ADAPTER-HELPERS-001` `concluido em 2026-06-26`
 26. `LP-WEB-010` `concluido em 2026-06-26`
 27. `LP-DOC-EXEC-001` `concluido em 2026-06-27`
-28. `LP-WEB-011` `recomendado em 2026-06-27`
-29. `LP-DATA-006`
+28. `LP-WEB-011` `concluido em 2026-06-27`
+29. `LP-DATA-006` `recomendado em 2026-06-27`
 30. `LP-SUPABASE-001`
 31. `LP-SEC-002`
 32. `LP-OPS-001`
@@ -889,3 +889,49 @@
   - `type` legado continua ambiguidade aberta enquanto `category` nao amadurecer;
   - `stockBalance` continua sendo projecao e nao trilha auditavel;
   - `supplyAdapter`, resolver de IDs cross-domain, integracao funcional e abertura de Supabase continuam exigindo fatias separadas.
+
+### LP-WEB-011
+
+- Status: `Concluido`
+- Data: `2026-06-27`
+- Arquivos alterados:
+  - `app/adapters/supplyAdapter.js`
+  - `scripts/primyo-adapter-gate.mjs`
+  - `scripts/primyo-gate.mjs`
+  - `docs/primyo-changes/LP-WEB-011.md`
+  - `docs/primyo-changes/LP-WEB-011-CLOSURE.md`
+  - `docs/primyo-baseline/BASELINE_SYSTEM_STATE.md`
+  - `docs/primyo-baseline/BASELINE_TECHNICAL_MAP.md`
+  - `docs/primyo-baseline/BASELINE_EXECUTION_REPORT.md`
+  - `docs/primyo-web-contracts/WEB_ADAPTER_EXTRACTION_ORDER.md`
+  - `docs/primyo-web-contracts/WEB_CONTRACT_TEST_REQUIREMENTS.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `supplyAdapter.js` criado como quinto adapter puro oficial da trilha;
+  - `node --check app/adapters/shared/adapterHelpers.js` -> sucesso;
+  - `node --check app/adapters/customerAdapter.js` -> sucesso;
+  - `node --check app/adapters/vehicleAdapter.js` -> sucesso;
+  - `node --check app/adapters/serviceAdapter.js` -> sucesso;
+  - `node --check app/adapters/productAdapter.js` -> sucesso;
+  - `node --check app/adapters/supplyAdapter.js` -> sucesso;
+  - `node --check scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso;
+  - `npm.cmd run verify:build` -> sucesso;
+  - encerramento formal registrado em `docs/primyo-changes/LP-WEB-011-CLOSURE.md`.
+- Observacoes:
+  - `app/main.js` permaneceu intacto;
+  - `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `adapterHelpers` permaneceram intactos nesta closure;
+  - nenhuma integracao funcional foi iniciada;
+  - o programa agora possui cinco adapters puros oficiais fora do runtime;
+  - a proxima fatia recomendada passa a ser `LP-DATA-006`.
+- Riscos remanescentes:
+  - `supplierName` continua restrito ao contrato `Supply` e ainda nao dialoga com ownership de fornecedor em outros dominios;
+  - `stockBalance` continua sendo projecao e nao trilha auditavel;
+  - relacoes entre servico e insumo ainda dependem de resolver de IDs e ownership cross-domain;
+  - integracao funcional e abertura de Supabase continuam exigindo fatias separadas.

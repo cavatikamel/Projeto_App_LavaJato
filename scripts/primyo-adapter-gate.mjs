@@ -12,7 +12,8 @@ const adapterFiles = {
   customer: "app/adapters/customerAdapter.js",
   vehicle: "app/adapters/vehicleAdapter.js",
   service: "app/adapters/serviceAdapter.js",
-  product: "app/adapters/productAdapter.js"
+  product: "app/adapters/productAdapter.js",
+  supply: "app/adapters/supplyAdapter.js"
 };
 
 const forbiddenRuntimePatterns = [
@@ -114,6 +115,7 @@ async function main() {
     const vehicleSource = loadAdapterSource(adapterFiles.vehicle);
     const serviceSource = loadAdapterSource(adapterFiles.service);
     const productSource = loadAdapterSource(adapterFiles.product);
+    const supplySource = loadAdapterSource(adapterFiles.supply);
 
     await runCheck("Adapter Helper Runtime Independence", () => {
       for (const entry of forbiddenRuntimePatterns) {
@@ -145,11 +147,18 @@ async function main() {
       }
     });
 
+    await runCheck("Supply Adapter Runtime Independence", () => {
+      for (const entry of forbiddenRuntimePatterns) {
+        assert(!entry.pattern.test(supplySource), `supplyAdapter contains forbidden ${entry.label}.`);
+      }
+    });
+
     const helperModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.helper)).href);
     const customerModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.customer)).href);
     const vehicleModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.vehicle)).href);
     const serviceModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.service)).href);
     const productModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.product)).href);
+    const supplyModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.supply)).href);
 
     await runCheck("Adapter Helper Imports", () => {
       assert(typeof helperModule.normalizeSourceId === "function", "normalizeSourceId export is missing.");
@@ -186,6 +195,10 @@ async function main() {
       assert(
         productSource.includes('./shared/adapterHelpers.js'),
         "productAdapter should import the shared adapter helpers module."
+      );
+      assert(
+        supplySource.includes('./shared/adapterHelpers.js'),
+        "supplyAdapter should import the shared adapter helpers module."
       );
     });
 
@@ -254,6 +267,23 @@ async function main() {
       assert(
         typeof productModule.PRODUCT_CONTRACT_VERSION === "string",
         "PRODUCT_CONTRACT_VERSION export is missing."
+      );
+    });
+
+    await runCheck("Supply Adapter Imports", () => {
+      assert(typeof supplyModule.toSupplyContract === "function", "toSupplyContract export is missing.");
+      assert(
+        typeof supplyModule.validateSupplyContract === "function",
+        "validateSupplyContract export is missing."
+      );
+      assert(
+        typeof supplyModule.createSupplyContractEnvelope === "function",
+        "createSupplyContractEnvelope export is missing."
+      );
+      assert(typeof supplyModule.SUPPLY_CONTRACT_NAME === "string", "SUPPLY_CONTRACT_NAME export is missing.");
+      assert(
+        typeof supplyModule.SUPPLY_CONTRACT_VERSION === "string",
+        "SUPPLY_CONTRACT_VERSION export is missing."
       );
     });
 
@@ -713,6 +743,152 @@ async function main() {
       assert(
         result.warnings.some((warning) => warning.includes("CTX_ORGANIZATION_ID_REQUIRED")),
         "product invalid context should report CTX_ORGANIZATION_ID_REQUIRED."
+      );
+    });
+
+    const supplyContext = {
+      organizationId: "org_primyo",
+      now: "2026-06-27T12:00:00.000Z",
+      defaultStatus: "active",
+      source: "web.supplyCatalog",
+      sourceId: "12",
+      strictMode: true,
+      allowWarnings: true
+    };
+    const supplyValidLegacy = {
+      id: 12,
+      sku: "INS-012",
+      name: "Cera limpadora tecnica",
+      unit: "ml",
+      cost: 0.08,
+      stock: 640,
+      minStock: 120,
+      active: true,
+      supplier: "Lab Prime Care",
+      notes: "Uso restrito a acabamento tecnico.",
+      riskTags: ["strong_alkaline_product"],
+      phType: "neutral",
+      phApproximate: "7",
+      aggressivenessLevel: "medium",
+      safeForCoating: "true",
+      safeForWrap: "unknown",
+      safeForMattePaint: "true",
+      createdAt: "2026-06-20T10:00:00.000Z",
+      updatedAt: "2026-06-27T09:00:00.000Z"
+    };
+    const supplyMissingNameLegacy = {
+      id: 12,
+      sku: "INS-012",
+      unit: "ml",
+      cost: 0.08,
+      active: true,
+      createdAt: "2026-06-20T10:00:00.000Z",
+      updatedAt: "2026-06-27T09:00:00.000Z"
+    };
+    const supplyMissingSourceLegacy = {
+      sku: "INS-012",
+      name: "Cera limpadora tecnica",
+      unit: "ml",
+      cost: 0.08,
+      active: true,
+      createdAt: "2026-06-20T10:00:00.000Z",
+      updatedAt: "2026-06-27T09:00:00.000Z"
+    };
+
+    await runCheck("Supply Adapter Valid Scenario", () => {
+      const legacySnapshot = JSON.stringify(supplyValidLegacy);
+      const result = supplyModule.toSupplyContract(supplyValidLegacy, supplyContext);
+
+      assert(result.ok === true, "valid supply result should be ok.");
+      assertValidationShape(result.validation, "supply valid result.validation");
+      assert(result.validation.ok === true, "supply valid result.validation.ok should be true.");
+      assertWarningsArray(result, "supply valid result");
+      assert(result.sourceId === supplyContext.sourceId, "supply valid result should preserve sourceId.");
+      assert(result.supplyContract.organizationId === supplyContext.organizationId, "supply organizationId should come from context.");
+      assert(result.supplyContract.createdAt === supplyValidLegacy.createdAt, "supply createdAt should preserve explicit legacy timestamp.");
+      assert(result.supplyContract.updatedAt === supplyValidLegacy.updatedAt, "supply updatedAt should preserve explicit legacy timestamp.");
+      assert(result.supplyContract.costPrice === 0.08, "supply costPrice should map from legacy cost.");
+      assert(result.supplyContract.stockBalance === 640, "supply stockBalance should map from legacy stock.");
+      assert(result.supplyContract.supplierName === "Lab Prime Care", "supply supplierName should map from legacy supplier.");
+      assert(Array.isArray(result.supplyContract.riskTags), "supply riskTags should be an array.");
+      assert(
+        result.supplyContract.compatibilityMetadata?.surfaceSafety?.coating === "true",
+        "supply compatibilityMetadata should preserve technical compatibility."
+      );
+      assert(
+        result.supplyContract.id !== result.sourceId,
+        "supply canonical id should remain separated from sourceId."
+      );
+      assert(
+        result.supplyContract.id.startsWith("supply:legacy:"),
+        "supply canonical id should follow the shared namespace strategy."
+      );
+      assertInputNotMutated(legacySnapshot, supplyValidLegacy, "supplyAdapter");
+
+      const envelopeResult = supplyModule.createSupplyContractEnvelope(result.supplyContract, supplyContext);
+      assert(envelopeResult.ok === true, "supply envelope should be valid.");
+      assertValidationShape(envelopeResult.validation, "supply envelope result.validation");
+      assertWarningsArray(envelopeResult, "supply envelope result");
+      assertEnvelopeShape(envelopeResult.supplyContractEnvelope, {
+        label: "supplyContractEnvelope",
+        contractName: supplyModule.SUPPLY_CONTRACT_NAME,
+        contractVersion: supplyModule.SUPPLY_CONTRACT_VERSION,
+        organizationId: supplyContext.organizationId,
+        sourceId: supplyContext.sourceId,
+        emittedAt: supplyContext.now,
+        createdAt: supplyValidLegacy.createdAt,
+        updatedAt: supplyValidLegacy.updatedAt
+      });
+    });
+
+    await runCheck("Supply Adapter Invalid Required Field Scenario", () => {
+      const result = supplyModule.toSupplyContract(supplyMissingNameLegacy, supplyContext);
+
+      assert(result.ok === false, "supply invalid required field result should fail.");
+      assertValidationShape(result.validation, "supply invalid required field validation");
+      assert(result.validation.ok === false, "supply invalid required field validation.ok should be false.");
+      assert(result.validation.blocking === true, "supply invalid required field validation should be blocking.");
+      assert(
+        result.missingRequiredFields.includes("name"),
+        "supply invalid required field should report missing name."
+      );
+      assertWarningsArray(result, "supply invalid required field result");
+    });
+
+    await runCheck("Supply Adapter Invalid Source Scenario", () => {
+      const result = supplyModule.toSupplyContract(supplyMissingSourceLegacy, {
+        ...supplyContext,
+        sourceId: ""
+      });
+
+      assert(result.ok === false, "supply invalid source result should fail.");
+      assertValidationShape(result.validation, "supply invalid source validation");
+      assert(
+        result.missingRequiredFields.includes("sourceId"),
+        "supply invalid source should report missing sourceId."
+      );
+      assert(result.missingRequiredFields.includes("id"), "supply invalid source should report missing id.");
+      assert(
+        result.warnings.some((warning) => warning.includes("CTX_SOURCE_ID_REQUIRED")),
+        "supply invalid source should report CTX_SOURCE_ID_REQUIRED."
+      );
+    });
+
+    await runCheck("Supply Adapter Invalid Context Scenario", () => {
+      const result = supplyModule.toSupplyContract(supplyValidLegacy, {
+        ...supplyContext,
+        organizationId: ""
+      });
+
+      assert(result.ok === false, "supply invalid context result should fail.");
+      assertValidationShape(result.validation, "supply invalid context validation");
+      assert(
+        result.missingRequiredFields.includes("organizationId"),
+        "supply invalid context should report missing organizationId."
+      );
+      assert(
+        result.warnings.some((warning) => warning.includes("CTX_ORGANIZATION_ID_REQUIRED")),
+        "supply invalid context should report CTX_ORGANIZATION_ID_REQUIRED."
       );
     });
 

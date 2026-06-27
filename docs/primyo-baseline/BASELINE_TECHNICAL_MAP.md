@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `LP-WEB-010` na baseline oficial.
+Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `LP-WEB-011` na baseline oficial.
 
 ## 2. Arquivos criticos
 
@@ -34,6 +34,9 @@ Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `L
 - `app/adapters/productAdapter.js`
   - hospeda o quarto adapter puro oficial de contrato do web
   - converte produto legado para o contrato `Product` sem integrar o runtime atual
+- `app/adapters/supplyAdapter.js`
+  - hospeda o quinto adapter puro oficial de contrato do web
+  - converte insumo legado para o contrato `Supply` sem integrar o runtime atual
 - `app/adapters/shared/adapterHelpers.js`
   - hospeda a camada compartilhada minima de helpers estruturais dos adapters puros
   - concentra identidade, envelope, metadata, warnings e `legacyRefs` sem integrar o runtime atual
@@ -361,7 +364,6 @@ Limitacoes atuais:
 
 Modulos documentados para criacao futura:
 
-- `supplyAdapter`
 - `attendanceAdapter`
 - `paymentAdapter`
 - `financialAdapter`
@@ -556,6 +558,64 @@ Relacao futura com Supabase:
 - ainda nao resolve fornecedor, movimento de estoque, relacionamento com insumo ou sincronizacao Android;
 - reduz o risco de abrir `LP-SUPABASE-001` antes de uma quarta evidencia pratica de adapter puro.
 
+#### `supplyAdapter`
+
+Localizacao atual:
+
+- `app/adapters/supplyAdapter.js`.
+
+API publica:
+
+- `toSupplyContract(...)`
+- `validateSupplyContract(...)`
+- `createSupplyContractEnvelope(...)`
+- `SUPPLY_CONTRACT_NAME`
+- `SUPPLY_CONTRACT_VERSION`
+
+Relacao com `SUPPLY_CONTRACT.md`:
+
+- converte o shape legado de insumo para o contrato `Supply`;
+- segue o baseline compartilhado de `id`, `sourceId`, `legacyRefs`, envelope, contexto, status, timestamps e compatibilidade;
+- traduz `cost -> costPrice`, `stock -> stockBalance` e `supplier -> supplierName` de forma explicita e controlada;
+- preserva `category`, `type`, relacoes com servicos e outros sinais ainda nao canonicos em `legacyRefs`;
+- preserva `stockBalance` como projecao atual, sem tratar esse campo como trilha auditavel de estoque.
+
+Relacao atual com `app/main.js`:
+
+- nenhuma integracao em runtime nesta baseline;
+- nenhum import ativo em `app/main.js`;
+- nenhuma alteracao de comportamento funcional, visual, estoque real ou movimento operacional.
+
+Relacao com `adapterHelpers`:
+
+- reutiliza a camada compartilhada minima para identidade, envelope, metadata, warnings e validation comum;
+- amplia a prova de repetibilidade da trilha de helpers para um quinto dominio puro;
+- confirma que o helper comum continua estrutural e nao absorve regra de negocio especifica de insumo.
+
+Relacao com `productAdapter`:
+
+- preserva a diferenca entre item vendavel e item de consumo tecnico;
+- mantem `supplierName` no contrato `Supply` sem promover fornecedor a ownership canonico de `Product`;
+- impede que estoque observado, consumo e reposicao virem a mesma coisa antes de fase propria.
+
+Relacao futura com `serviceAdapter`:
+
+- mantem `serviceSupplyProfiles` e outras relacoes tecnicas apenas como referencia legada nesta fase;
+- evita promover acoplamento por nome ou indice local a relacionamento oficial entre servico e insumo;
+- prepara terreno para uma futura fase de resolver de IDs entre dominios.
+
+Relacao futura com controle de estoque:
+
+- preserva `stockBalance` apenas como saldo observado;
+- nao implementa baixa, reposicao, consumo historico, inventario auditavel ou movimentacao de estoque;
+- deixa explicito que trilha de estoque continua sendo problema de fase futura propria.
+
+Relacao futura com Supabase:
+
+- prepara o dominio de insumos para futura traducao controlada entre legado, contratos e leitura remota;
+- ainda nao resolve ownership com servicos, IDs cross-domain, sincronizacao Android ou movimentacao auditavel;
+- reduz o risco de abrir `LP-SUPABASE-001` antes de uma quinta evidencia pratica de adapter puro.
+
 #### `adapterHelpers`
 
 Localizacao atual:
@@ -575,18 +635,18 @@ API publica:
 - `normalizeLegacyRefs(...)`
 - `createContractEnvelope(...)`
 
-Relacao com `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter`:
+Relacao com `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`:
 
 - fornece a camada compartilhada minima de identidade, envelope, metadata, warnings e `legacyRefs`;
 - reduz repeticao estrutural sem mover regras especificas de dominio para um helper generico;
-- e reutilizado pelos quatro adapters puros oficiais do web;
+- e reutilizado pelos cinco adapters puros oficiais do web;
 - nao substitui a validacao especifica local de `serviceAdapter`, que continua deliberadamente separada.
 
 Relacao com o Adapter Gate:
 
-- `scripts/primyo-adapter-gate.mjs` valida pureza estrutural, imports minimos e uso do helper comum pelos quatro adapters;
+- `scripts/primyo-adapter-gate.mjs` valida pureza estrutural, imports minimos e uso do helper comum pelos cinco adapters;
 - `scripts/primyo-gate.mjs` trata `app/adapters/shared/adapterHelpers.js` como modulo critico da trilha;
-- qualquer mudanca em `adapterHelpers.js` passa a exigir revalidacao conjunta dos quatro adapters, do Adapter Gate, do Primyo Gate, do build e do verify.
+- qualquer mudanca em `adapterHelpers.js` passa a exigir revalidacao conjunta dos cinco adapters, do Adapter Gate, do Primyo Gate, do build e do verify.
 
 Limites da camada:
 
@@ -620,8 +680,8 @@ Relacao entre os gates:
 
 Cobertura atual absorvida na baseline:
 
-- importacao em Node puro de `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter`;
-- checagem de exports minimos dos quatro adapters;
+- importacao em Node puro de `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`;
+- checagem de exports minimos dos cinco adapters;
 - fixture valida de cliente;
 - fixture invalida de cliente;
 - fixture valida de veiculo;
@@ -634,6 +694,10 @@ Cobertura atual absorvida na baseline:
 - fixture invalida de produto por campo obrigatorio;
 - fixture invalida de produto por `sourceId` ausente;
 - fixture invalida de produto por `organizationId` ausente;
+- fixture valida de insumo;
+- fixture invalida de insumo por campo obrigatorio;
+- fixture invalida de insumo por `sourceId` ausente;
+- fixture invalida de insumo por `organizationId` ausente;
 - validacao de envelope, `validation`, `warnings`, `organizationId`, timestamps e separacao entre `id` e `sourceId`;
 - verificacao de ausencia de dependencia de runtime do LavaPrime;
 - verificacao de ausencia de mutacao dos fixtures de entrada.
@@ -697,9 +761,10 @@ O mapa tecnico confirma que o LavaPrime agora possui duas fronteiras locais ofic
 - `vehicleAdapter` amplia essa trilha como segunda prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
 - `serviceAdapter` amplia essa trilha como terceira prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
 - `productAdapter` amplia essa trilha como quarta prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
+- `supplyAdapter` amplia essa trilha como quinta prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
 - `adapterHelpers` consolida a primeira camada compartilhada minima da trilha de adapters, sem integrar nada ao runtime;
-- `scripts/primyo-adapter-gate.mjs` agora protege os quatro adapters puros com regressao automatica minima antes de qualquer integracao funcional;
+- `scripts/primyo-adapter-gate.mjs` agora protege os cinco adapters puros com regressao automatica minima antes de qualquer integracao funcional;
 - as checagens mais sensiveis ja estao centralizadas, mas a cobertura ainda e parcial;
 - integracoes futuras existem, mas seguem proibidas nesta fase;
 - a proxima etapa nao deve integrar adapters ao runtime ainda;
-- a proxima prioridade recomendada passa a ser `LP-WEB-011`, com `supplyAdapter` como proximo adapter puro de master data agora que `productAdapter` foi absorvido sem alterar runtime.
+- a proxima prioridade recomendada passa a ser `LP-DATA-006`, para formalizar resolver de IDs, ownership cross-domain e relacoes entre produto, insumo e servico antes de qualquer integracao funcional ou abertura de Supabase.

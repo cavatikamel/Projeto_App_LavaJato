@@ -216,6 +216,59 @@ Ocorrencias operacionais:
 - nenhuma falha real de gate, build ou verify foi observada no resultado final desta closure;
 - nenhum lock transitorio em `dist` precisou de tratamento nesta revalidacao.
 
+## Atualizacao de baseline - LP-WEB-011
+
+Atualizacao registrada em: `2026-06-27`
+
+`LP-WEB-011` incorporou o quinto adapter puro oficial da trilha do web sem alterar runtime, e absorveu a nova cobertura do Adapter Contract Gate como parte do estado tecnico oficial.
+
+O estado oficial do gate apos esta absorcao passa a incluir:
+
+- `node --check app/adapters/shared/adapterHelpers.js`;
+- `node --check app/adapters/customerAdapter.js`;
+- `node --check app/adapters/vehicleAdapter.js`;
+- `node --check app/adapters/serviceAdapter.js`;
+- `node --check app/adapters/productAdapter.js`;
+- `node --check app/adapters/supplyAdapter.js`;
+- `node --check scripts/primyo-adapter-gate.mjs`;
+- `node scripts/primyo-adapter-gate.mjs` com cenarios validos e invalidos para cliente, veiculo, servico, produto e insumo;
+- `npm.cmd run primyo:gate`;
+- `npm.cmd run build`;
+- `npm.cmd run verify:build`.
+
+Evidencia de adocao:
+
+```text
+PASS Supply Adapter Runtime Independence
+PASS Supply Adapter Imports
+PASS Supply Adapter Valid Scenario
+PASS Supply Adapter Invalid Required Field Scenario
+PASS Supply Adapter Invalid Source Scenario
+PASS Supply Adapter Invalid Context Scenario
+
+Adapter Gate Result: SUCCESS
+Gate Result: SUCCESS
+```
+
+Comandos reexecutados nesta fase:
+
+- `node --check app/adapters/shared/adapterHelpers.js` -> sucesso
+- `node --check app/adapters/customerAdapter.js` -> sucesso
+- `node --check app/adapters/vehicleAdapter.js` -> sucesso
+- `node --check app/adapters/serviceAdapter.js` -> sucesso
+- `node --check app/adapters/productAdapter.js` -> sucesso
+- `node --check app/adapters/supplyAdapter.js` -> sucesso
+- `node --check scripts/primyo-adapter-gate.mjs` -> sucesso
+- `node scripts/primyo-adapter-gate.mjs` -> sucesso
+- `npm.cmd run primyo:gate` -> sucesso
+- `npm.cmd run build` -> sucesso
+- `npm.cmd run verify:build` -> sucesso
+
+Ocorrencias operacionais:
+
+- nenhuma falha real de gate, build ou verify foi observada no resultado final desta closure;
+- nenhum lock transitorio em `dist` precisou de tratamento nesta revalidacao.
+
 ## Atualizacao de baseline - LP-WEB-010
 
 Atualizacao registrada em: `2026-06-26`

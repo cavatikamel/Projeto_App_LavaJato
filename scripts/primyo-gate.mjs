@@ -26,6 +26,7 @@ const requiredFiles = [
   "app/adapters/vehicleAdapter.js",
   "app/adapters/serviceAdapter.js",
   "app/adapters/productAdapter.js",
+  "app/adapters/supplyAdapter.js",
   "app/adapters/shared/adapterHelpers.js",
   "app/src/main.jsx",
   "app/src/App.jsx",
@@ -86,6 +87,18 @@ const fileIntegrityChecks = [
       "export function toProductContract",
       "export function validateProductContract",
       "export function createProductContractEnvelope"
+    ]
+  },
+  {
+    file: "app/adapters/supplyAdapter.js",
+    description: "supply adapter foundation exports",
+    snippets: [
+      "./shared/adapterHelpers.js",
+      "export const SUPPLY_CONTRACT_NAME",
+      "export const SUPPLY_CONTRACT_VERSION",
+      "export function toSupplyContract",
+      "export function validateSupplyContract",
+      "export function createSupplyContractEnvelope"
     ]
   },
   {
@@ -303,6 +316,10 @@ async function main() {
     await runCommand("Syntax app/adapters/productAdapter.js", process.execPath, [
       "--check",
       "app/adapters/productAdapter.js"
+    ]);
+    await runCommand("Syntax app/adapters/supplyAdapter.js", process.execPath, [
+      "--check",
+      "app/adapters/supplyAdapter.js"
     ]);
     await runCommand("Syntax app/main.js", process.execPath, ["--check", "app/main.js"]);
     await runCommand("Syntax app/boundaries/sessionAccessBoundary.js", process.execPath, [

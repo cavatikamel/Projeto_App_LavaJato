@@ -35,6 +35,7 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-WEB-008 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-009 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-010 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-WEB-011 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-ADAPTER-HELPERS-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-TEST-AUTO-003 | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional |
 | LP-PERM-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -105,15 +106,16 @@ Cobertura tecnica minima agora esperada para adapters puros:
 - `vehicleAdapter` tratado como segunda prova de repetibilidade do baseline estrutural dos adapters puros.
 - `serviceAdapter` tratado como terceira prova de repetibilidade do baseline estrutural dos adapters puros.
 - `productAdapter` tratado como quarta prova de repetibilidade do baseline estrutural dos adapters puros.
+- `supplyAdapter` tratado como quinta prova de repetibilidade do baseline estrutural dos adapters puros.
 - todo novo adapter puro deve ser incorporado ao Adapter Contract Gate com pelo menos uma fixture valida e uma fixture invalida antes de qualquer integracao ao runtime.
-- futuras mudancas em gate, helpers comuns de adapter, resolucao de IDs ou integracao funcional devem revalidar `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter` em conjunto antes de avancar.
+- futuras mudancas em gate, helpers comuns de adapter, resolucao de IDs ou integracao funcional devem revalidar `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter` em conjunto antes de avancar.
 - cenarios validos e invalidos controlados devem continuar cobrindo `organizationId`, timestamps, `sourceId`, `id` canonico, envelope, `warnings` e `missingRequiredFields`.
-- o estado oficial atual do Adapter Contract Gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter` como baseline minima obrigatoria da trilha.
+- o estado oficial atual do Adapter Contract Gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter` como baseline minima obrigatoria da trilha.
 - `app/adapters/shared/adapterHelpers.js` passa a ser parte do baseline estrutural minimo e deve ser validado por `node --check`.
-- a regressao estrutural agora tambem deve provar que os quatro adapters continuam importando o helper compartilhado sem ganhar dependencia de runtime.
+- a regressao estrutural agora tambem deve provar que os cinco adapters continuam importando o helper compartilhado sem ganhar dependencia de runtime.
 - a consolidacao de helpers nao autoriza mudanca de API publica, `contractVersion`, `contractName` ou integracao funcional antecipada.
-- alteracoes em `adapterHelpers.js` passam a impactar simultaneamente `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter`, exigindo revalidacao conjunta dos quatro adapters, do Adapter Gate, do Primyo Gate, do build e do verify.
-- qualquer quinto adapter promovido a baseline deve entrar no Adapter Gate no mesmo slice da sua criacao, antes de qualquer integracao funcional ou abertura de Supabase.
+- alteracoes em `adapterHelpers.js` passam a impactar simultaneamente `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, exigindo revalidacao conjunta dos cinco adapters, do Adapter Gate, do Primyo Gate, do build e do verify.
+- qualquer sexto adapter promovido a baseline deve entrar no Adapter Gate no mesmo slice da sua criacao, antes de qualquer integracao funcional ou abertura de Supabase.
 
 Observacao para `LP-TEST-AUTO-003`:
 

@@ -193,3 +193,14 @@ Confirmacao apos `LP-WEB-010`:
 - a camada compartilhada de helpers agora esta provada em quatro dominios puros diferentes.
 - a proxima fatia recomendada do programa passa a ser `LP-WEB-011`, com foco em `supplyAdapter`;
 - `LP-WEB-011` deve continuar fora do runtime, sem abrir Supabase e sem misturar produto vendavel, insumo e movimento de estoque no mesmo contrato.
+
+Confirmacao apos `LP-WEB-011`:
+
+- `supplyAdapter` passa a existir como quinto adapter puro da trilha de master data;
+- o modulo reutiliza `app/adapters/shared/adapterHelpers.js` sem alterar a API publica dos adapters anteriores;
+- o Adapter Contract Gate passa a cobrir cliente, veiculo, servico, produto e insumo em Node puro;
+- nenhuma integracao funcional ao runtime foi iniciada nesta fase;
+- a separacao entre produto vendavel, insumo tecnico e movimentacao de estoque foi mantida fora do runtime;
+- a proxima criacao de adapter recomendada passa a ser `attendanceAdapter`;
+- a proxima fatia do programa ainda nao deve integrar adapters ao runtime nem abrir Supabase sem decisao formal propria;
+- qualquer proxima etapa que toque IDs cross-domain ou relacao entre servico e insumo deve continuar documentada e reversivel antes de runtime.
