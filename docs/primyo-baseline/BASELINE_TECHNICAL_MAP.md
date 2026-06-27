@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `LP-TEST-AUTO-003` na baseline oficial.
+Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `LP-WEB-009` na baseline oficial.
 
 ## 2. Arquivos criticos
 
@@ -28,6 +28,9 @@ Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `L
 - `app/adapters/vehicleAdapter.js`
   - hospeda o segundo adapter puro oficial de contrato do web
   - converte veiculo legado para o contrato `Vehicle` sem integrar o runtime atual
+- `app/adapters/serviceAdapter.js`
+  - hospeda o terceiro adapter puro oficial de contrato do web
+  - converte servico legado para o contrato `Service` sem integrar o runtime atual
 - `app/boundaries/sessionAccessBoundary.js`
   - hospeda as factories `createSessionBoundary(...)` e `createAccessBoundary(...)`
   - preserva a API publica das fronteiras locais extraidas em `LP-WEB-004`
@@ -65,8 +68,8 @@ Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `L
   - orquestra o gate tecnico oficial do LavaPrime
   - executa preflight, verificacao estrutural, adapter gate, build e verify
 - `scripts/primyo-adapter-gate.mjs`
-  - valida `customerAdapter.js` e `vehicleAdapter.js` em Node puro
-  - executa fixtures controlados validos e invalidos para cliente e veiculo
+  - valida `customerAdapter.js`, `vehicleAdapter.js` e `serviceAdapter.js` em Node puro
+  - executa fixtures controlados validos e invalidos para cliente, veiculo e servico
   - valida imports, exports minimos, envelope, `validation`, `warnings`, contexto e separacao entre `id` e `sourceId`
 
 ### Planejamento contratual absorvido
@@ -352,7 +355,6 @@ Limitacoes atuais:
 
 Modulos documentados para criacao futura:
 
-- `serviceAdapter`
 - `productAdapter`
 - `supplyAdapter`
 - `attendanceAdapter`
@@ -451,6 +453,60 @@ Relacao futura com Supabase:
 - ainda nao resolve ownership real, FIPE remoto ou sincronizacao Android;
 - reduz o risco de abrir `LP-SUPABASE-001` sem uma segunda evidenca pratica de adapter puro.
 
+#### `serviceAdapter`
+
+Localizacao atual:
+
+- `app/adapters/serviceAdapter.js`.
+
+API publica:
+
+- `toServiceContract(...)`
+- `validateServiceContract(...)`
+- `createServiceContractEnvelope(...)`
+- `SERVICE_CONTRACT_NAME`
+- `SERVICE_CONTRACT_VERSION`
+
+Relacao com `SERVICE_CONTRACT.md`:
+
+- converte o shape legado de servico para o contrato `Service`;
+- segue o baseline compartilhado de `id`, `sourceId`, `legacyRefs`, envelope, contexto, status, timestamps e compatibilidade;
+- deriva `serviceCode` de `sourceId` apenas quando o legado nao expone codigo tecnico estavel;
+- traduz `duration` textual para `durationMinutes` quando o parse e possivel;
+- preserva lacunas de `supplyProfileRefs` como risco controlado, sem lookup automatico.
+
+Relacao atual com `app/main.js`:
+
+- nenhuma integracao em runtime nesta baseline;
+- nenhum import ativo em `app/main.js`;
+- nenhuma alteracao de comportamento funcional ou visual.
+
+Relacao com `customerAdapter` e `vehicleAdapter` como padrao:
+
+- herda o mesmo baseline compartilhado ja comprovado por `customerAdapter` e `vehicleAdapter`;
+- funciona como terceira prova de repetibilidade da trilha de adapters puros;
+- reforca que contexto explicito, envelope comum e `legacyRefs` estruturado sao o padrao oficial antes de qualquer integracao funcional.
+
+Relacao futura com `supplyAdapter`:
+
+- prepara o dominio de servicos para uma futura traducao controlada de perfis de insumo por identificador opaco;
+- evita promover chave derivada por nome a relacionamento oficial;
+- reduz o risco de criar `supplyAdapter` antes de um ponto minimamente estavel de referencia de servico.
+
+Relacao futura com Supabase:
+
+- prepara o dominio de servicos para futura traducao controlada entre legado, contratos e leitura remota;
+- ainda nao resolve `serviceSupplyProfiles`, sincronizacao Android ou ownership tecnico de insumos;
+- reduz o risco de abrir `LP-SUPABASE-001` antes de uma terceira evidencia pratica de adapter puro.
+
+Riscos tecnicos ainda pendentes:
+
+- `sourceId` continua obrigatorio por contexto porque o legado nao expone `id` estavel;
+- `serviceCode` continua provisoriamente derivado quando o legado nao oferece codigo tecnico canonico;
+- `supplyProfileRefs` ainda depende de fatia futura especifica;
+- `duration` textual continua sujeita a warning quando o formato nao puder ser lido;
+- integrar qualquer adapter ao runtime antes de helper comum, quarto adapter ou maturidade maior de testes continua prematuro.
+
 Riscos tecnicos ainda pendentes:
 
 - `currentCustomerId` continua transitorio quando nasce de `currentClientId` legado;
@@ -469,12 +525,16 @@ Relacao entre os gates:
 
 Cobertura atual absorvida na baseline:
 
-- importacao em Node puro de `customerAdapter` e `vehicleAdapter`;
-- checagem de exports minimos dos dois adapters;
+- importacao em Node puro de `customerAdapter`, `vehicleAdapter` e `serviceAdapter`;
+- checagem de exports minimos dos tres adapters;
 - fixture valida de cliente;
 - fixture invalida de cliente;
 - fixture valida de veiculo;
 - fixture invalida de veiculo;
+- fixture valida de servico;
+- fixture invalida de servico por campo obrigatorio;
+- fixture invalida de servico por `sourceId` ausente;
+- fixture invalida de servico por `organizationId` ausente;
 - validacao de envelope, `validation`, `warnings`, `organizationId`, timestamps e separacao entre `id` e `sourceId`;
 - verificacao de ausencia de dependencia de runtime do LavaPrime;
 - verificacao de ausencia de mutacao dos fixtures de entrada.
@@ -502,7 +562,7 @@ Cobertura atual absorvida na baseline:
 - qualquer alteracao em `app/storage/storageBoundary.js` deve preservar chaves, payloads e fallback atual de persistencia local.
 - a maior parte da persistencia de negocio continua atravessando wrappers dentro de `app/main.js`.
 - os adapters puros ainda nao compartilham helpers comuns de identidade ou resolucao de relacionamentos.
-- o Adapter Contract Gate ainda cobre somente os dois adapters existentes e nao substitui smoke funcional futuro.
+- o Adapter Contract Gate agora cobre tres adapters oficiais e ainda nao substitui smoke funcional futuro.
 
 ## 11. Checagens legadas que ainda existem
 
@@ -522,12 +582,12 @@ Riscos de convivencia com legado:
 - divergencia futura se helpers puros passarem a carregar regra de negocio ou estado global;
 - divergencia futura se a `storageBoundary` passar a alterar formato, ownership ou semantica de fallback sem fatia propria;
 - divergencia futura se adapters passarem a ler ou publicar contratos sem envelope comum, `legacyRefs` ou politica clara de `contractVersion`;
-- divergencia futura se um terceiro adapter for criado sem fixture valida e invalida no Adapter Contract Gate;
+- divergencia futura se um quarto adapter for criado sem fixture valida e invalida no Adapter Contract Gate;
 - falsa sensacao de autorizacao real, ja que a camada continua local ao frontend.
 
 ## 12. Conclusao
 
-O mapa tecnico confirma que o LavaPrime agora possui duas fronteiras locais oficiais, dois modulos extraidos de baixo acoplamento no web, uma estrategia documental oficial para adapters contratuais e dois adapters puros criados, mas ainda precisa evoluir com controle:
+O mapa tecnico confirma que o LavaPrime agora possui duas fronteiras locais oficiais, dois modulos extraidos de baixo acoplamento no web, uma estrategia documental oficial para adapters contratuais e tres adapters puros criados, mas ainda precisa evoluir com controle:
 
 - o web continua dependendo de um unico arquivo funcional central;
 - sessao, perfil e autorizacao ficaram mais identificaveis e suas factories foram extraidas para `app/boundaries/sessionAccessBoundary.js`;
@@ -536,8 +596,9 @@ O mapa tecnico confirma que o LavaPrime agora possui duas fronteiras locais ofic
 - `customerAdapter` foi criado fora do runtime e conecta o shape legado ao contrato `Customer` sem consumo funcional nesta baseline;
 - `customerAdapter` revisado passa a ser o modelo de referencia para os proximos adapters puros, sem consumo funcional em runtime;
 - `vehicleAdapter` amplia essa trilha como segunda prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
-- `scripts/primyo-adapter-gate.mjs` agora protege os dois adapters puros com regressao automatica minima antes de qualquer integracao funcional;
+- `serviceAdapter` amplia essa trilha como terceira prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
+- `scripts/primyo-adapter-gate.mjs` agora protege os tres adapters puros com regressao automatica minima antes de qualquer integracao funcional;
 - as checagens mais sensiveis ja estao centralizadas, mas a cobertura ainda e parcial;
 - integracoes futuras existem, mas seguem proibidas nesta fase;
 - a proxima etapa nao deve integrar adapters ao runtime ainda;
-- a proxima prioridade recomendada passa a ser `LP-WEB-009`, como terceiro adapter puro e controlado, antes de helpers comuns, integracao funcional ou abertura de Supabase.
+- a proxima prioridade recomendada passa a ser `LP-WEB-ADAPTER-HELPERS-001`, como consolidacao minima de helper comum antes do quarto adapter, de integracao funcional ou de abertura de Supabase.

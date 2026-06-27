@@ -33,6 +33,7 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-WEB-007 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-007-REVISION | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-008 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-WEB-009 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-TEST-AUTO-003 | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional |
 | LP-PERM-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -100,9 +101,11 @@ Cobertura tecnica minima agora esperada para adapters puros:
 - envelope aderente ao padrao compartilhado com `payload`, `warnings`, `validation` e `metadata`.
 - `customerAdapter` revisado tratado como baseline de regressao estrutural para os proximos adapters.
 - `vehicleAdapter` tratado como segunda prova de repetibilidade do baseline estrutural dos adapters puros.
+- `serviceAdapter` tratado como terceira prova de repetibilidade do baseline estrutural dos adapters puros.
 - todo novo adapter puro deve ser incorporado ao Adapter Contract Gate com pelo menos uma fixture valida e uma fixture invalida antes de qualquer integracao ao runtime.
-- futuras mudancas em gate, helpers comuns de adapter, resolucao de IDs ou integracao funcional devem revalidar `customerAdapter` e `vehicleAdapter` em conjunto antes de avancar.
+- futuras mudancas em gate, helpers comuns de adapter, resolucao de IDs ou integracao funcional devem revalidar `customerAdapter`, `vehicleAdapter` e `serviceAdapter` em conjunto antes de avancar.
 - cenarios validos e invalidos controlados devem continuar cobrindo `organizationId`, timestamps, `sourceId`, `id` canonico, envelope, `warnings` e `missingRequiredFields`.
+- o estado oficial atual do Adapter Contract Gate cobre `customerAdapter`, `vehicleAdapter` e `serviceAdapter` como baseline minima obrigatoria da trilha.
 
 Observacao para `LP-TEST-AUTO-003`:
 

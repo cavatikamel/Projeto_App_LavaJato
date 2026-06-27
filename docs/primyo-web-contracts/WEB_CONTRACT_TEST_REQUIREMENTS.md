@@ -139,6 +139,19 @@ Obrigatorio validar:
 - preservacao de `maintenanceRequired`;
 - compatibilidade com `serviceSupplyProfiles`.
 
+Observacoes para `LP-WEB-009`:
+
+- o seed legado observado em `serviceCatalog` nao expone `id` estavel por item, entao `sourceId` por contexto continua obrigatorio;
+- `serviceCode` pode ser derivado de forma controlada a partir de `sourceId`, mas isso deve permanecer sinalizado por warning ate existir codigo tecnico oficial no legado;
+- `duration` textual legado deve virar `durationMinutes` quando o parse for possivel, sem inventar valor quando o formato nao puder ser lido;
+- `duration` textual invalida deve produzir warning controlado, nao fallback silencioso;
+- `status` legado deve influenciar `isActive`, enquanto o `status` do envelope continua vindo de contexto ou default controlado;
+- `defaultVehicleCareType` pode nascer de `autoCreateVehicleCareType`;
+- `supplyProfileRefs` nao deve ser resolvido automaticamente nesta fase a partir de `serviceSupplyProfiles`;
+- relacionamentos reais com insumos ainda nao devem ser integrados nesta fase;
+- ausencia de `name` ou de campos obrigatorios do contrato deve falhar de forma controlada;
+- `organizationId`, `createdAt` e `updatedAt` continuam vindo de contexto controlado.
+
 ### 4.4 Product
 
 Obrigatorio validar:
@@ -216,7 +229,7 @@ E, quando o adapter passar a ser consumido por runtime:
 
 ## 6.1 Cobertura automatizada minima adotada em `LP-TEST-AUTO-003`
 
-Enquanto `customerAdapter` e `vehicleAdapter` continuarem fora do runtime, o gate automatizado minimo da trilha deve continuar validando:
+Enquanto `customerAdapter`, `vehicleAdapter` e `serviceAdapter` continuarem fora do runtime, o gate automatizado minimo da trilha deve continuar validando:
 
 - importacao dos adapters em Node puro;
 - exports minimos esperados;
@@ -234,6 +247,22 @@ Enquanto `customerAdapter` e `vehicleAdapter` continuarem fora do runtime, o gat
 - preservacao de `sourceId`;
 - `warnings` como arrays;
 - ausencia de dependencia de runtime do LavaPrime.
+
+Cobertura expandida em `LP-WEB-009`:
+
+- importacao de `serviceAdapter` em Node puro;
+- exports minimos de `serviceAdapter`;
+- cenario valido de `serviceAdapter`;
+- cenario invalido de `serviceAdapter` sem nome;
+- cenario invalido de `serviceAdapter` sem `sourceId`;
+- cenario invalido de `serviceAdapter` sem `organizationId`;
+- geracao de envelope para servico com `validation`, `warnings`, `metadata` e `sourceId` preservado.
+
+Estado oficial apos a closure de `LP-WEB-009`:
+
+- o Adapter Contract Gate cobre os tres adapters puros oficiais do web;
+- qualquer novo adapter devera repetir a mesma dupla minima de fixture valida e invalida;
+- qualquer helper comum futuro devera revalidar `customerAdapter`, `vehicleAdapter` e `serviceAdapter` em conjunto antes de liberar o quarto adapter.
 
 Regra oficial para proximos adapters:
 

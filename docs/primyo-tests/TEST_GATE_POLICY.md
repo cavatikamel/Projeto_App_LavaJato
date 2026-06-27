@@ -18,6 +18,9 @@ Ele executa:
 
 - preflight de ambiente Node;
 - verificacao de arquivos obrigatorios;
+- `node --check app/adapters/customerAdapter.js`;
+- `node --check app/adapters/vehicleAdapter.js`;
+- `node --check app/adapters/serviceAdapter.js`;
 - `node --check scripts/primyo-adapter-gate.mjs`;
 - `node scripts/primyo-adapter-gate.mjs`;
 - `node --check app/main.js`;
@@ -73,11 +76,11 @@ Estado oficial apos `LP-TEST-AUTO-001`:
 Estado oficial apos `LP-TEST-AUTO-003`:
 
 - `scripts/primyo-adapter-gate.mjs` passa a ser executado dentro de `npm.cmd run primyo:gate`;
-- o gate importa `customerAdapter` e `vehicleAdapter` em Node puro;
+- o gate importa `customerAdapter`, `vehicleAdapter` e `serviceAdapter` em Node puro;
 - o gate valida exports minimos dos adapters;
-- o gate executa cenarios validos e invalidos controlados para cliente e veiculo;
+- o gate executa cenarios validos e invalidos controlados para cliente, veiculo e servico;
 - o gate valida envelope, `validation`, `warnings`, `organizationId`, timestamps, separacao entre `id` e `sourceId` e ausencia de dependencia de runtime;
-- `customerAdapter` e `vehicleAdapter` passam a estar protegidos por regressao automatica minima oficial;
+- `customerAdapter`, `vehicleAdapter` e `serviceAdapter` passam a estar protegidos por regressao automatica minima oficial;
 - todo novo adapter puro devera entrar no Adapter Contract Gate com fixture valida e fixture invalida antes de qualquer integracao ao runtime;
 - nenhuma dependencia nova foi instalada;
 - nenhum adapter foi integrado ao runtime;
@@ -85,7 +88,7 @@ Estado oficial apos `LP-TEST-AUTO-003`:
 
 Limites atuais desta cobertura:
 
-- o gate ainda cobre apenas `customerAdapter` e `vehicleAdapter`;
+- o gate ainda cobre apenas `customerAdapter`, `vehicleAdapter` e `serviceAdapter`;
 - a cobertura continua conceitual e local, nao browser-based;
 - smoke funcional continua obrigatorio quando futuras fatias tocarem runtime, navegacao, dados ou permissao.
 
@@ -191,6 +194,17 @@ Implementacao e closure do gate de adapters executadas em `2026-06-26` para abso
 - `node scripts/primyo-adapter-gate.mjs` -> sucesso
 - `node --check app/adapters/customerAdapter.js` -> sucesso
 - `node --check app/adapters/vehicleAdapter.js` -> sucesso
+- `npm.cmd run primyo:gate` -> sucesso
+- `npm.cmd run build` -> sucesso
+- `npm.cmd run verify:build` -> sucesso
+
+Revalidacao final executada em `2026-06-26` para encerrar `LP-WEB-009`:
+
+- `node --check app/adapters/customerAdapter.js` -> sucesso
+- `node --check app/adapters/vehicleAdapter.js` -> sucesso
+- `node --check app/adapters/serviceAdapter.js` -> sucesso
+- `node --check scripts/primyo-adapter-gate.mjs` -> sucesso
+- `node scripts/primyo-adapter-gate.mjs` -> sucesso
 - `npm.cmd run primyo:gate` -> sucesso
 - `npm.cmd run build` -> sucesso
 - `npm.cmd run verify:build` -> sucesso

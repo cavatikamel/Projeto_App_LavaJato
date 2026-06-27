@@ -23,6 +23,7 @@ const requiredFiles = [
   "app/main.js",
   "app/adapters/customerAdapter.js",
   "app/adapters/vehicleAdapter.js",
+  "app/adapters/serviceAdapter.js",
   "app/src/main.jsx",
   "app/src/App.jsx",
   "app/boundaries/sessionAccessBoundary.js",
@@ -56,6 +57,17 @@ const fileIntegrityChecks = [
       "export function toVehicleContract",
       "export function validateVehicleContract",
       "export function createVehicleContractEnvelope"
+    ]
+  },
+  {
+    file: "app/adapters/serviceAdapter.js",
+    description: "service adapter foundation exports",
+    snippets: [
+      "export const SERVICE_CONTRACT_NAME",
+      "export const SERVICE_CONTRACT_VERSION",
+      "export function toServiceContract",
+      "export function validateServiceContract",
+      "export function createServiceContractEnvelope"
     ]
   },
   {
@@ -248,6 +260,10 @@ async function main() {
     await runCommand("Syntax app/adapters/vehicleAdapter.js", process.execPath, [
       "--check",
       "app/adapters/vehicleAdapter.js"
+    ]);
+    await runCommand("Syntax app/adapters/serviceAdapter.js", process.execPath, [
+      "--check",
+      "app/adapters/serviceAdapter.js"
     ]);
     await runCommand("Syntax app/main.js", process.execPath, ["--check", "app/main.js"]);
     await runCommand("Syntax app/boundaries/sessionAccessBoundary.js", process.execPath, [

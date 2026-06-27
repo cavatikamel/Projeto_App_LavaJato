@@ -4,7 +4,7 @@
 
 - Produto: LavaPrime
 - Escopo de origem: `LP-TEST-001`
-- Ultima mudanca absorvida na baseline: `LP-TEST-AUTO-003`
+- Ultima mudanca absorvida na baseline: `LP-WEB-009`
 - Data da baseline: `2026-06-26`
 - Repositorio: `C:\Users\kamel\OneDrive\Projetos Kamel\Projeto_App_LavaJato`
 - Branch atual: `primyo/onboarding`
@@ -32,6 +32,7 @@ Alteracoes observadas fora do escopo de `LP-TEST-001`:
 - script local presente em `scripts/primyo-adapter-gate.mjs`
 - modulo local presente em `app/adapters/customerAdapter.js`
 - modulo local presente em `app/adapters/vehicleAdapter.js`
+- modulo local presente em `app/adapters/serviceAdapter.js`
 - modulo local presente em `app/boundaries/sessionAccessBoundary.js`
 - modulo local presente em `app/utils/textFormatters.js`
 - modulo local presente em `app/storage/storageBoundary.js`
@@ -80,6 +81,7 @@ app/legacy-body.html
 app/main.js
 app/adapters/customerAdapter.js
 app/adapters/vehicleAdapter.js
+app/adapters/serviceAdapter.js
 app/boundaries/sessionAccessBoundary.js
 app/utils/textFormatters.js
 app/storage/storageBoundary.js
@@ -142,11 +144,14 @@ Validacao estrutural observada no gate local atual:
 - `node scripts/primyo-adapter-gate.mjs`
 - `node --check app/adapters/customerAdapter.js`
 - `node --check app/adapters/vehicleAdapter.js`
+- `node --check app/adapters/serviceAdapter.js`
 - verificacao de existencia de `app/adapters/customerAdapter.js`
 - verificacao de existencia de `app/adapters/vehicleAdapter.js`
+- verificacao de existencia de `app/adapters/serviceAdapter.js`
 - verificacao de exports minimos do adapter
 - verificacao de exports minimos do adapter de veiculo
-- verificacao de cenarios validos e invalidos controlados para cliente e veiculo
+- verificacao de exports minimos do adapter de servico
+- verificacao de cenarios validos e invalidos controlados para cliente, veiculo e servico
 - verificacao de envelope, `validation`, `warnings`, `organizationId`, timestamps e separacao entre `id` e `sourceId`
 
 ## 7. Dependencias atuais
@@ -176,6 +181,7 @@ Dependencias externas e de suporte observadas:
 - core funcional web: `app/main.js`
 - modulo de adapter puro de cliente: `app/adapters/customerAdapter.js`
 - modulo de adapter puro de veiculo: `app/adapters/vehicleAdapter.js`
+- modulo de adapter puro de servico: `app/adapters/serviceAdapter.js`
 - subgate conceitual de adapters: `scripts/primyo-adapter-gate.mjs`, orquestrado por `scripts/primyo-gate.mjs`
 - modulo de fronteiras locais: `app/boundaries/sessionAccessBoundary.js`
 - modulo de helpers puros de texto e formatacao: `app/utils/textFormatters.js`
@@ -238,6 +244,7 @@ O LavaPrime atual e um produto multi-superficie com:
 - contratos oficiais agora conectados a uma estrategia web formal de adapters em `docs/primyo-web-contracts/`;
 - `customerAdapter` criado em `app/adapters/customerAdapter.js` como primeiro adapter puro oficial, depois revisado para aderir ao baseline compartilhado de contratos, ainda sem integracao ao runtime;
 - `vehicleAdapter` criado em `app/adapters/vehicleAdapter.js` como segundo adapter puro oficial, seguindo o mesmo baseline compartilhado e ainda sem integracao ao runtime;
+- `serviceAdapter` criado em `app/adapters/serviceAdapter.js` como terceiro adapter puro oficial, seguindo o mesmo baseline compartilhado e ainda sem integracao ao runtime;
 - adapters puros agora protegidos por regressao automatica minima via `scripts/primyo-adapter-gate.mjs`, ainda sem integracao ao runtime;
 - persistencia web local e distribuida;
 - Android existente, mas fora do escopo da primeira implementacao;
@@ -426,6 +433,30 @@ Validacoes de encerramento:
 - `node scripts/primyo-adapter-gate.mjs` -> `Adapter Gate Result: SUCCESS`
 - `node --check app/adapters/customerAdapter.js` -> sucesso
 - `node --check app/adapters/vehicleAdapter.js` -> sucesso
+- `npm.cmd run primyo:gate` -> `Gate Result: SUCCESS`
+- `npm.cmd run build` -> sucesso
+- `npm.cmd run verify:build` -> sucesso
+
+## 19. Baseline de LP-WEB-009
+
+`LP-WEB-009` passa a ser o estado oficial atual da camada de adapters puros do web.
+
+Estado absorvido:
+
+- `app/adapters/serviceAdapter.js` passa a existir como terceiro adapter puro oficial do LavaPrime Web;
+- o modulo expoe `toServiceContract(...)`, `validateServiceContract(...)` e `createServiceContractEnvelope(...)`;
+- o modulo segue o baseline compartilhado de identidade, envelope, contexto, `legacyRefs`, status, timestamps e compatibilidade;
+- `customerAdapter`, `vehicleAdapter` e `serviceAdapter` permanecem fora do runtime e sem qualquer integracao a `app/main.js`;
+- o Adapter Contract Gate passa a cobrir tres adapters oficiais em Node puro;
+- nenhuma regra de negocio, tela, persistencia, Supabase, banco, Android, CSS, UI ou dependencia foi alterada nesta closure.
+
+Validacoes de encerramento:
+
+- `node --check app/adapters/customerAdapter.js` -> sucesso
+- `node --check app/adapters/vehicleAdapter.js` -> sucesso
+- `node --check app/adapters/serviceAdapter.js` -> sucesso
+- `node --check scripts/primyo-adapter-gate.mjs` -> sucesso
+- `node scripts/primyo-adapter-gate.mjs` -> `Adapter Gate Result: SUCCESS`
 - `npm.cmd run primyo:gate` -> `Gate Result: SUCCESS`
 - `npm.cmd run build` -> sucesso
 - `npm.cmd run verify:build` -> sucesso

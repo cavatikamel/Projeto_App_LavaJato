@@ -9,7 +9,8 @@ const summary = [];
 
 const adapterFiles = {
   customer: "app/adapters/customerAdapter.js",
-  vehicle: "app/adapters/vehicleAdapter.js"
+  vehicle: "app/adapters/vehicleAdapter.js",
+  service: "app/adapters/serviceAdapter.js"
 };
 
 const forbiddenRuntimePatterns = [
@@ -108,6 +109,7 @@ async function main() {
   try {
     const customerSource = loadAdapterSource(adapterFiles.customer);
     const vehicleSource = loadAdapterSource(adapterFiles.vehicle);
+    const serviceSource = loadAdapterSource(adapterFiles.service);
 
     await runCheck("Customer Adapter Runtime Independence", () => {
       for (const entry of forbiddenRuntimePatterns) {
@@ -121,8 +123,15 @@ async function main() {
       }
     });
 
+    await runCheck("Service Adapter Runtime Independence", () => {
+      for (const entry of forbiddenRuntimePatterns) {
+        assert(!entry.pattern.test(serviceSource), `serviceAdapter contains forbidden ${entry.label}.`);
+      }
+    });
+
     const customerModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.customer)).href);
     const vehicleModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.vehicle)).href);
+    const serviceModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.service)).href);
 
     await runCheck("Customer Adapter Imports", () => {
       assert(typeof customerModule.toCustomerContract === "function", "toCustomerContract export is missing.");
@@ -155,6 +164,23 @@ async function main() {
       assert(
         typeof vehicleModule.VEHICLE_CONTRACT_VERSION === "string",
         "VEHICLE_CONTRACT_VERSION export is missing."
+      );
+    });
+
+    await runCheck("Service Adapter Imports", () => {
+      assert(typeof serviceModule.toServiceContract === "function", "toServiceContract export is missing.");
+      assert(
+        typeof serviceModule.validateServiceContract === "function",
+        "validateServiceContract export is missing."
+      );
+      assert(
+        typeof serviceModule.createServiceContractEnvelope === "function",
+        "createServiceContractEnvelope export is missing."
+      );
+      assert(typeof serviceModule.SERVICE_CONTRACT_NAME === "string", "SERVICE_CONTRACT_NAME export is missing.");
+      assert(
+        typeof serviceModule.SERVICE_CONTRACT_VERSION === "string",
+        "SERVICE_CONTRACT_VERSION export is missing."
       );
     });
 
@@ -349,6 +375,135 @@ async function main() {
       assert(
         result.warnings.some((warning) => warning.includes("CTX_SOURCE_ID_REQUIRED")),
         "vehicle invalid context should report CTX_SOURCE_ID_REQUIRED."
+      );
+    });
+
+    const serviceContext = {
+      organizationId: "org_primyo",
+      now: "2026-06-26T12:00:00.000Z",
+      defaultStatus: "active",
+      source: "web.serviceCatalog",
+      sourceId: "seed-service-1",
+      strictMode: true,
+      allowWarnings: true
+    };
+    const serviceValidLegacy = {
+      name: "Lavagem Prime",
+      price: 65,
+      duration: "35 min",
+      vehicleType: "Carro",
+      vehicleCategory: "Hatch",
+      status: "Ativo",
+      autoCreateVehicleCareType: "",
+      maintenanceRequired: false,
+      maintenanceInterval: "monthly",
+      maintenanceDate: ""
+    };
+    const serviceMissingNameLegacy = {
+      price: 65,
+      duration: "35 min",
+      vehicleType: "Carro",
+      vehicleCategory: "Hatch",
+      status: "Ativo",
+      maintenanceRequired: false
+    };
+    const serviceMissingSourceLegacy = {
+      name: "Lavagem Prime",
+      price: 65,
+      duration: "35 min",
+      vehicleType: "Carro",
+      vehicleCategory: "Hatch",
+      status: "Ativo"
+    };
+
+    await runCheck("Service Adapter Valid Scenario", () => {
+      const legacySnapshot = JSON.stringify(serviceValidLegacy);
+      const result = serviceModule.toServiceContract(serviceValidLegacy, serviceContext);
+
+      assert(result.ok === true, "valid service result should be ok.");
+      assertValidationShape(result.validation, "service valid result.validation");
+      assert(result.validation.ok === true, "service valid result.validation.ok should be true.");
+      assertWarningsArray(result, "service valid result");
+      assert(result.sourceId === serviceContext.sourceId, "service valid result should preserve sourceId.");
+      assert(result.serviceContract.organizationId === serviceContext.organizationId, "service organizationId should come from context.");
+      assert(result.serviceContract.createdAt === serviceContext.now, "service createdAt should come from context.now.");
+      assert(result.serviceContract.updatedAt === serviceContext.now, "service updatedAt should come from context.now.");
+      assert(result.serviceContract.durationMinutes === 35, "service durationMinutes should parse legacy duration.");
+      assert(result.serviceContract.isActive === true, "service isActive should reflect active legacy status.");
+      assert(
+        result.serviceContract.id !== result.sourceId,
+        "service canonical id should remain separated from sourceId."
+      );
+      assert(
+        result.serviceContract.id.startsWith("service:legacy:"),
+        "service canonical id should follow the shared namespace strategy."
+      );
+      assertInputNotMutated(legacySnapshot, serviceValidLegacy, "serviceAdapter");
+
+      const envelopeResult = serviceModule.createServiceContractEnvelope(result.serviceContract, serviceContext);
+      assert(envelopeResult.ok === true, "service envelope should be valid.");
+      assertValidationShape(envelopeResult.validation, "service envelope result.validation");
+      assertWarningsArray(envelopeResult, "service envelope result");
+      assertEnvelopeShape(envelopeResult.serviceContractEnvelope, {
+        label: "serviceContractEnvelope",
+        contractName: serviceModule.SERVICE_CONTRACT_NAME,
+        contractVersion: serviceModule.SERVICE_CONTRACT_VERSION,
+        organizationId: serviceContext.organizationId,
+        sourceId: serviceContext.sourceId,
+        emittedAt: serviceContext.now,
+        createdAt: serviceContext.now,
+        updatedAt: serviceContext.now
+      });
+    });
+
+    await runCheck("Service Adapter Invalid Required Field Scenario", () => {
+      const result = serviceModule.toServiceContract(serviceMissingNameLegacy, serviceContext);
+
+      assert(result.ok === false, "service invalid required field result should fail.");
+      assertValidationShape(result.validation, "service invalid required field validation");
+      assert(result.validation.ok === false, "service invalid required field validation.ok should be false.");
+      assert(result.validation.blocking === true, "service invalid required field validation should be blocking.");
+      assert(
+        result.missingRequiredFields.includes("name"),
+        "service invalid required field should report missing name."
+      );
+      assertWarningsArray(result, "service invalid required field result");
+    });
+
+    await runCheck("Service Adapter Invalid Source Scenario", () => {
+      const result = serviceModule.toServiceContract(serviceMissingSourceLegacy, {
+        ...serviceContext,
+        sourceId: ""
+      });
+
+      assert(result.ok === false, "service invalid source result should fail.");
+      assertValidationShape(result.validation, "service invalid source validation");
+      assert(
+        result.missingRequiredFields.includes("sourceId"),
+        "service invalid source should report missing sourceId."
+      );
+      assert(result.missingRequiredFields.includes("id"), "service invalid source should report missing id.");
+      assert(
+        result.warnings.some((warning) => warning.includes("CTX_SOURCE_ID_REQUIRED")),
+        "service invalid source should report CTX_SOURCE_ID_REQUIRED."
+      );
+    });
+
+    await runCheck("Service Adapter Invalid Context Scenario", () => {
+      const result = serviceModule.toServiceContract(serviceValidLegacy, {
+        ...serviceContext,
+        organizationId: ""
+      });
+
+      assert(result.ok === false, "service invalid context result should fail.");
+      assertValidationShape(result.validation, "service invalid context validation");
+      assert(
+        result.missingRequiredFields.includes("organizationId"),
+        "service invalid context should report missing organizationId."
+      );
+      assert(
+        result.warnings.some((warning) => warning.includes("CTX_ORGANIZATION_ID_REQUIRED")),
+        "service invalid context should report CTX_ORGANIZATION_ID_REQUIRED."
       );
     });
 

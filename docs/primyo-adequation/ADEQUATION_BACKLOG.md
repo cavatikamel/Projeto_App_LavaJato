@@ -25,6 +25,8 @@
 | LP-WEB-007 | Implementar primeiro adapter puro de contrato para master data de baixo risco | P2 | Medio | LP-WEB-003, LP-DATA-004, LP-TEST-AUTO-002 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-26`. `customerAdapter` foi criado em `app/adapters/customerAdapter.js`, com API publica minima, validacao controlada, envelope contratual e gate estrutural atualizado, sem integracao ao runtime. | O primeiro adapter puro existe, e reversivel, e converte cliente legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, closure, `node --check app/adapters/customerAdapter.js`, gate, build, verify, plano de rollback e evidencia de traducao de payload. |
 | LP-WEB-007-REVISION | Alinhar `customerAdapter` ao padrao compartilhado de identidade e envelope | P1 | Medio | LP-WEB-007, LP-DATA-005, LP-TEST-AUTO-002 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-26`. O `customerAdapter` foi revisado para aderir integralmente aos padroes compartilhados de `id`, `sourceId`, `legacyRefs`, envelope, contexto, status e timestamps, sem tocar no runtime. | O adapter de referencia segue o baseline transversal oficial, continua puro, reversivel, fora de `app/main.js` e passa a servir como modelo para os proximos adapters. | Change record, closure, `node --check`, gate, build, verify, validacao conceitual de payload e rollback documentado. |
 | LP-WEB-008 | Implementar segundo adapter puro de contrato para master data dependente | P2 | Medio | LP-WEB-007-REVISION, LP-DATA-005, LP-TEST-AUTO-002 | Web, Docs | Medio/Alto | Concluido e encerrado formalmente em `2026-06-26`. `vehicleAdapter` foi criado em `app/adapters/vehicleAdapter.js`, seguindo o baseline compartilhado do `customerAdapter` revisado, sem integracao ao runtime. | O segundo adapter puro amplia cobertura contratual sem alterar comportamento e sem conectar Supabase. | Change record, closure, `node --check` dos adapters, gate, build, verify, testes conceituais de traducao e rollback documentado. |
+| LP-WEB-009 | Implementar terceiro adapter puro de contrato para master data de servicos | P2 | Medio | LP-WEB-008, LP-TEST-AUTO-003, LP-DATA-005 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-26`. `serviceAdapter` foi criado em `app/adapters/serviceAdapter.js`, seguindo o baseline compartilhado de `customerAdapter` e `vehicleAdapter`, com gate ampliado e sem integracao ao runtime. | O terceiro adapter puro existe, e reversivel, e converte servico legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, closure, `node --check` dos tres adapters, adapter gate, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
+| LP-WEB-ADAPTER-HELPERS-001 | Consolidar helper comum minimo para adapters puros | P2 | Medio | LP-WEB-009, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Proxima fatia recomendada apos o encerramento formal de `LP-WEB-009`. Deve consolidar apenas o que se repetiu de forma estavel entre `customerAdapter`, `vehicleAdapter` e `serviceAdapter`, sem integrar adapters ao runtime. | Existe helper comum minimo, reversivel e fora do runtime, reduzindo drift estrutural antes do quarto adapter. | Change record, diff limitado, gate revalidando os tres adapters atuais, build, verify e rollback documentado. |
 | LP-PERM-001 | Alinhar regras de administrador e operador | P1 | Alto | LP-SEC-003 | Web, Android | Medio | Concluido em `2026-06-23`. A matriz oficial de permissoes foi formalizada para Administrador e Operador, com perfis futuros planejados sem implementacao. | Cada permissao critica possui racional, politica, readiness RLS e cenarios de teste. | Matriz revisada, acoes sensiveis, politica de permissao, readiness RLS, cenarios de teste e validacoes tecnicas aprovadas. |
 | LP-TEST-001 | Formalizar baseline minima de testes web | P1 | Alto | Nenhuma | Web, CI, Docs | Baixo | Consolidar build, verificacoes existentes e fluxos manuais obrigatorios antes de qualquer mudanca funcional. | Existe pacote minimo repetivel para validar cada fatia web. | Documento de baseline, execucao registrada. |
 | LP-TEST-002 | Definir validacoes de regressao para fluxos criticos | P1 | Alto | LP-TEST-001 | Web, Android, Docs | Medio | Fixar os fluxos que nunca podem ser alterados sem revalidacao antes e depois. | Fluxos criticos listados com criterio de sucesso. | Checklist de regressao, evidencias manuais padronizadas. |
@@ -65,15 +67,16 @@
 21. `LP-WEB-007-REVISION` `concluido em 2026-06-26`
 22. `LP-WEB-008` `concluido em 2026-06-26`
 23. `LP-TEST-AUTO-003` `concluido em 2026-06-26`
-24. `LP-WEB-009` `recomendado em 2026-06-26`
-25. `LP-DATA-006`
-26. `LP-SUPABASE-001`
-27. `LP-SEC-002`
-28. `LP-OPS-001`
-29. `LP-OPS-002`
-30. `LP-AND-001`
-31. `LP-AND-002`
-32. `LP-REL-001`
+24. `LP-WEB-009` `concluido em 2026-06-26`
+25. `LP-WEB-ADAPTER-HELPERS-001` `recomendado em 2026-06-26`
+26. `LP-DATA-006`
+27. `LP-SUPABASE-001`
+28. `LP-SEC-002`
+29. `LP-OPS-001`
+30. `LP-OPS-002`
+31. `LP-AND-001`
+32. `LP-AND-002`
+33. `LP-REL-001`
 
 ## Observacoes de governanca
 
@@ -744,3 +747,47 @@
   - os fixtures ainda cobrem apenas a baseline minima dos dois adapters atuais;
   - um helper comum ou integracao futura ainda exigira expansao do gate;
   - `LP-WEB-009` deve continuar puro, fora do runtime e sem abrir Supabase.
+
+### LP-WEB-009
+
+- Status: `Concluido`
+- Data: `2026-06-26`
+- Arquivos alterados:
+  - `app/adapters/serviceAdapter.js`
+  - `scripts/primyo-adapter-gate.mjs`
+  - `scripts/primyo-gate.mjs`
+  - `docs/primyo-changes/LP-WEB-009.md`
+  - `docs/primyo-changes/LP-WEB-009-CLOSURE.md`
+  - `docs/primyo-baseline/BASELINE_SYSTEM_STATE.md`
+  - `docs/primyo-baseline/BASELINE_TECHNICAL_MAP.md`
+  - `docs/primyo-baseline/BASELINE_EXECUTION_REPORT.md`
+  - `docs/primyo-web-contracts/WEB_ADAPTER_EXTRACTION_ORDER.md`
+  - `docs/primyo-web-contracts/WEB_CONTRACT_TEST_REQUIREMENTS.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `serviceAdapter` criado com API publica minima e sem integracao ao runtime;
+  - `node --check app/adapters/customerAdapter.js` -> sucesso;
+  - `node --check app/adapters/vehicleAdapter.js` -> sucesso;
+  - `node --check app/adapters/serviceAdapter.js` -> sucesso;
+  - `node --check scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso;
+  - `npm.cmd run verify:build` -> sucesso;
+  - validacao conceitual registrada para entrada valida, entrada incompleta, ausencia de nome, ausencia de `sourceId`, ausencia de `organizationId`, `serviceCode` derivado, `durationMinutes`, status padrao e envelope completo;
+  - encerramento formal registrado em `docs/primyo-changes/LP-WEB-009-CLOSURE.md`.
+- Observacoes:
+  - `app/main.js` permaneceu intacto;
+  - `customerAdapter` e `vehicleAdapter` permaneceram intactos;
+  - nenhuma integracao funcional foi iniciada;
+  - o programa agora possui tres adapters puros oficiais fora do runtime;
+  - a proxima fatia recomendada passa a ser `LP-WEB-ADAPTER-HELPERS-001`.
+- Riscos remanescentes:
+  - `sourceId` continua obrigatorio por contexto enquanto o legado de servicos nao expuser ID tecnico estavel;
+  - `serviceCode` continua provisoriamente derivado quando o legado nao oferece codigo tecnico canonico;
+  - `supplyProfileRefs` continua sem resolucao automatica;
+  - helpers comuns, integracao funcional e abertura de Supabase continuam exigindo fatias separadas e mais maturidade da trilha.

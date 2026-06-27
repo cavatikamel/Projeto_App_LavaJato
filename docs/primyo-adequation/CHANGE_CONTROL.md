@@ -239,3 +239,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: `scripts/primyo-adapter-gate.mjs` foi incorporado oficialmente ao `primyo:gate`, protegendo `customerAdapter` e `vehicleAdapter` com cenarios validos e invalidos, envelope, `validation`, `warnings`, contexto e separacao entre `id` e `sourceId`.
 - Observacao de risco: a proxima fatia deve permanecer fora do runtime e fora de Supabase; a prioridade recomendada passa a ser `LP-WEB-009` antes de helpers comuns ou integracao funcional.
+
+### LP-WEB-009
+
+- Change record: `docs/primyo-changes/LP-WEB-009.md`
+- Closure: `docs/primyo-changes/LP-WEB-009-CLOSURE.md`
+- Resultado: `Aceito`
+- Observacao principal: `serviceAdapter` foi aceito como terceiro adapter puro oficial do web, aderente ao baseline compartilhado e com o Adapter Contract Gate ampliado para tres adapters, sem qualquer integracao a `app/main.js` ou ao runtime.
+- Observacao de risco: a proxima fatia nao deve integrar adapters nem abrir Supabase; a prioridade recomendada passa a ser `LP-WEB-ADAPTER-HELPERS-001` para consolidar helper comum minimo antes do quarto adapter.

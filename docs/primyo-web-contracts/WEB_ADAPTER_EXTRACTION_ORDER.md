@@ -158,3 +158,14 @@ Confirmacao apos `LP-WEB-008`:
 - a proxima criacao de adapter recomendada continua sendo `serviceAdapter`, mas nao necessariamente a proxima fatia do programa;
 - antes de criar um terceiro adapter ou integrar qualquer adapter ao runtime, continua preferivel reforcar gate e regressao estruturais da trilha;
 - `customerAdapter` e `vehicleAdapter` continuam explicitamente nao autorizados para integracao funcional nesta etapa.
+
+Confirmacao apos `LP-WEB-009`:
+
+- `serviceAdapter` passa a existir como terceiro adapter puro da trilha de master data;
+- o modulo segue o baseline compartilhado validado em `customerAdapter` e `vehicleAdapter`;
+- o Adapter Contract Gate passa a cobrir cliente, veiculo e servico em Node puro;
+- nenhuma integracao funcional ao runtime foi iniciada nesta fase;
+- a proxima criacao de adapter recomendada passa a ser `productAdapter`;
+- a proxima fatia recomendada do programa passa a ser `LP-WEB-ADAPTER-HELPERS-001`, para consolidar helper comum minimo antes do quarto adapter;
+- helpers comuns continuam mais seguros agora do que antes, porque tres adapters puros ja provaram repetibilidade suficiente para extrair apenas o que for claramente estavel;
+- `serviceAdapter` continua explicitamente nao autorizado para integracao funcional nesta etapa.
