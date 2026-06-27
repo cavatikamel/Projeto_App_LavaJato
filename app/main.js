@@ -1,3 +1,17 @@
+import { createAccessBoundary, createSessionBoundary } from "./boundaries/sessionAccessBoundary.js";
+import { storageBoundary } from "./storage/storageBoundary.js";
+import {
+  capitalize,
+  cssEscape,
+  escapeHtml,
+  formatCnpj,
+  formatCpf,
+  formatPhone,
+  formatPlate,
+  normalizeText,
+  onlyDigits
+} from "./utils/textFormatters.js";
+
 const icons = {
   shield: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.7-2.8 8.6-7 10-4.2-1.4-7-5.3-7-10V6l7-3z"/><path d="M9 12l2 2 4-5"/></svg>',
   user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg>',
@@ -46,6 +60,13 @@ let selectedCashEntryId = null;
 let cashflowDialogDraft = null;
 let cashflowRegistryReturnToEntry = false;
 let activeSessionUser = "";
+const sessionBoundary = createSessionBoundary({
+  syncLegacySessionState({ activeProfile, currentUser }) {
+    selectedProfile = activeProfile;
+    activeSessionUser = currentUser;
+  }
+});
+const accessBoundary = createAccessBoundary(sessionBoundary);
 let lastOpenInvoiceNoticePlate = "";
 let messageDialogResolver = null;
 let editedStatusServices = [];
@@ -77,6 +98,10 @@ let vehicleRegistryDialogSource = "";
 let selectedVehicleSpecialCareId = null;
 let entryVehicleSpecialCareDraft = null;
 let lastEntryCareConflictSignature = "";
+
+window.__lavaprimeSessionBoundary = sessionBoundary;
+
+window.__lavaprimeAccessBoundary = accessBoundary;
 const vehicleOwnerTransferSearchModes = [
   { value: "name", label: "Nome / Razao social", placeholder: "Digite o nome ou a razao social" },
   { value: "document", label: "Documento", placeholder: "Digite o CPF ou CNPJ" },
@@ -1191,7 +1216,7 @@ function resolveMessageDialog(value) {
 }
 
 function selectProfile(button) {
-  selectedProfile = button.dataset.profile;
+  sessionBoundary.selectProfile(button.dataset.profile || "");
 
   $$(".profile-button").forEach((item) => {
     const isSelected = item === button;
@@ -1203,18 +1228,19 @@ function selectProfile(button) {
 function confirmLogin() {
   const user = $("#loginUser").value.trim();
   const password = $("#loginPassword").value.trim();
+  const activeProfile = sessionBoundary.getActiveProfile();
 
   if (!user || !password) {
     showToast("Preencha Usuario e Senha para continuar.");
     return null;
   }
 
-  if (!selectedProfile) {
+  if (!activeProfile) {
     showToast("Escolha Administrador ou Operador para continuar.");
     return null;
   }
 
-  if (selectedProfile === "Administrador") showAdmin(user);
+  if (activeProfile === "Administrador") showAdmin(user);
   else showPatio(user);
 }
 
@@ -1244,31 +1270,31 @@ function bindEvents() {
   $("#newVehicleButton").addEventListener("click", () => openVehicleDialog("entry"));
   $("#adminNewVehicleButton").addEventListener("click", () => openVehicleDialog("entry"));
   $("#startClientFormButton").addEventListener("click", () => {
-    showAdminView("clients");
+    if (!showAdminView("clients")) return;
     window.setTimeout(() => openClientDialog(), 0);
   });
   $("#startVehicleRegistryButton").addEventListener("click", () => {
-    showAdminView("vehicles");
+    if (!showAdminView("vehicles")) return;
     window.setTimeout(() => openAdminVehicleRegistryDialog(), 0);
   });
   $("#startOperatorFormButton").addEventListener("click", () => {
-    showAdminView("operators");
+    if (!showAdminView("operators")) return;
     window.setTimeout(() => openOperatorDialog(), 0);
   });
   $("#startServiceFormButton").addEventListener("click", () => {
-    showAdminView("services");
+    if (!showAdminView("services")) return;
     window.setTimeout(() => openServiceDialog(), 0);
   });
   $("#startProductFormButton")?.addEventListener("click", () => {
-    showAdminView("products");
+    if (!showAdminView("products")) return;
     window.setTimeout(() => openInventoryDialog({ mode: "product" }), 0);
   });
   $("#startSupplyFormButton")?.addEventListener("click", () => {
-    showAdminView("supplies");
+    if (!showAdminView("supplies")) return;
     window.setTimeout(() => openInventoryDialog({ mode: "supply" }), 0);
   });
   $("#startProductSaleButton")?.addEventListener("click", () => {
-    showAdminView("productSales");
+    if (!showAdminView("productSales")) return;
     window.setTimeout(() => openInventoryDialog({ mode: "sale" }), 0);
   });
   $$("[data-admin-view]").forEach((button) => {
@@ -1409,33 +1435,34 @@ function bindEvents() {
 }
 
 function showPatio(user) {
-  activeSessionUser = user;
+  const session = sessionBoundary.startSession({ user, profile: "Operador" });
   $(".login-screen").classList.add("is-hidden");
   $("#adminShell").hidden = true;
   $("#patioScreen").hidden = false;
-  $("#activeOperatorName").textContent = user;
+  $("#activeOperatorName").textContent = session.currentUser;
   renderPatio();
-  showToast(`Bem-vindo, ${user}.`);
+  showToast(`Bem-vindo, ${session.currentUser}.`);
 }
 
 function showAdmin(user) {
-  activeSessionUser = user;
+  const session = sessionBoundary.startSession({ user, profile: "Administrador" });
   $(".login-screen").classList.add("is-hidden");
   $("#patioScreen").hidden = true;
   $("#adminShell").hidden = false;
-  $("#activeAdminName").textContent = user;
+  $("#activeAdminName").textContent = session.currentUser;
   showAdminView("dashboard");
   renderPatio();
-  showToast(`Bem-vindo, ${user}.`);
+  showToast(`Bem-vindo, ${session.currentUser}.`);
 }
 
 function showAdminView(view) {
+  const normalizedView = view === "wallet" ? "businessFinance" : view === "serviceEntry" ? "patio" : view;
+  if (!accessBoundary.canAccessAdminView(normalizedView)) return false;
   if (view === "serviceEntry") {
     showAdminView("patio");
     window.setTimeout(() => openVehicleDialog("entry"), 0);
-    return;
+    return true;
   }
-  const normalizedView = view === "wallet" ? "businessFinance" : view;
   $$("[data-admin-view]").forEach((button) => {
     const isActive = button.dataset.adminView === normalizedView;
     button.classList.toggle("is-active", isActive);
@@ -1452,6 +1479,7 @@ function showAdminView(view) {
   if (normalizedView === "patio") renderPatio();
   if (normalizedView === "quotes") renderPatioQuotes();
   if (!["dashboard", "patio", "quotes"].includes(normalizedView)) renderAdminScreen(normalizedView);
+  return true;
 }
 
 function returnToLogin() {
@@ -1461,8 +1489,7 @@ function returnToLogin() {
   $("#loginPassword").value = "";
   $("#activeOperatorName").textContent = "";
   $("#activeAdminName").textContent = "";
-  activeSessionUser = "";
-  selectedProfile = "";
+  sessionBoundary.clearSession();
   $$(".profile-button").forEach((button) => {
     button.classList.remove("is-selected");
     button.setAttribute("aria-pressed", "false");
@@ -2894,7 +2921,7 @@ function setEntryRegistrationReadonly(isReadonly) {
 }
 
 function openEntryVehicleRegistryEditor(vehicleId) {
-  if (!$("#adminShell").hidden) {
+  if (accessBoundary.canPerformSensitiveAction("edit-vehicle-registry")) {
     openEntryVehicleRegistryDialog(vehicleId);
     return;
   }
@@ -2907,7 +2934,7 @@ function openEntryVehicleRegistryEditor(vehicleId) {
 }
 
 function openEntryClientRegistryEditor(clientId) {
-  if (!$("#adminShell").hidden) {
+  if (accessBoundary.canPerformSensitiveAction("edit-client-registry")) {
     entryRegistryEditContext = { type: "client", source: "entry", vehicleId: selectedEntryVehicleId, clientId };
     openClientDialog(clientId);
     return;
@@ -4352,65 +4379,6 @@ function updateOperatorCommissionInputMode(container) {
   delete input.dataset.moneyValue;
 }
 
-function capitalize(value) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function cssEscape(value) {
-  if (window.CSS?.escape) return CSS.escape(value);
-  return String(value).replace(/["\\]/g, "\\$&");
-}
-
-function normalizeText(value) {
-  return String(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
-function onlyDigits(value) {
-  return String(value || "").replace(/\D/g, "");
-}
-
-function formatPlate(value) {
-  return value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8);
-}
-
-function formatPhone(value) {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  if (digits.length <= 2) return digits ? `(${digits}` : "";
-  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-}
-
-function formatCpf(value) {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-}
-
-function formatCnpj(value) {
-  const digits = value.replace(/\D/g, "").slice(0, 14);
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
-  if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
-  if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
-  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
-}
-
 function getDefaultBusinessProfile() {
   return {
     cnpj: "",
@@ -5676,7 +5644,7 @@ function normalizeBusinessSocialLinks(links = {}) {
 
 function loadBusinessStorageItem(key, fallback) {
   try {
-    const rawValue = window.localStorage?.getItem(key);
+    const rawValue = storageBoundary.read(key);
     if (!rawValue) return fallback;
     const parsedValue = JSON.parse(rawValue);
     if (Array.isArray(fallback)) return Array.isArray(parsedValue) ? parsedValue : fallback;
@@ -5688,7 +5656,7 @@ function loadBusinessStorageItem(key, fallback) {
 
 function saveBusinessStorageItem(key, value) {
   try {
-    window.localStorage?.setItem(key, JSON.stringify(value));
+    storageBoundary.write(key, JSON.stringify(value));
   } catch (error) {
     showToast("Não foi possível salvar no navegador.");
   }
@@ -6568,7 +6536,7 @@ function renderQuoteLinkedRegistration(vehicle, dialog = $("#quoteDialog")) {
 }
 
 function openQuoteVehicleRegistryEditor(vehicleId) {
-  if (!$("#adminShell").hidden) {
+  if (accessBoundary.canPerformSensitiveAction("edit-vehicle-registry")) {
     entryRegistryEditContext = { type: "vehicle", source: "quote", vehicleId };
     openEntryVehicleRegistryDialog(vehicleId);
     return;
@@ -6582,7 +6550,7 @@ function openQuoteVehicleRegistryEditor(vehicleId) {
 }
 
 function openQuoteClientRegistryEditor(clientId, vehicleId = selectedQuoteVehicleId) {
-  if (!$("#adminShell").hidden) {
+  if (accessBoundary.canPerformSensitiveAction("edit-client-registry")) {
     entryRegistryEditContext = { type: "client", source: "quote", vehicleId, clientId };
     openClientDialog(clientId);
     return;
@@ -10209,7 +10177,7 @@ function getClientBillingLabel(client) {
 }
 
 function canEditClientRegistrations() {
-  return selectedProfile === "Administrador" && !$("#adminShell").hidden;
+  return accessBoundary.canManageClientRegistrations();
 }
 
 function getClientApprovalDisplayName() {
@@ -10223,7 +10191,7 @@ function getClientApprovalSaveName() {
 }
 
 function getActiveAdminApproverName() {
-  const sessionName = activeSessionUser.trim();
+  const sessionName = sessionBoundary.getCurrentUser().trim();
   const normalizedSession = normalizeText(sessionName);
   const admin = adminOperators.find((operator) => {
     if (operator.accessProfile !== "Administrador") return false;
@@ -15476,6 +15444,7 @@ function bindCashflowDialogControls(dialog) {
   });
   $$("[data-open-business-finance]", dialog).forEach((button) => {
     button.addEventListener("click", () => {
+      if (!accessBoundary.canPerformSensitiveAction("manage-finance-settings")) return;
       cashflowDialogDraft = getCashflowDialogDraft(dialog);
       closeCashflowDialog();
       showAdminView("businessFinance");

@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "primyo:gate": "node scripts/primyo-gate.mjs",
     "verify:build": "node scripts/verify-build-artifacts.mjs"
   },
   "dependencies": {
