@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `LP-WEB-009` na baseline oficial.
+Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `LP-WEB-ADAPTER-HELPERS-001` na baseline oficial.
 
 ## 2. Arquivos criticos
 
@@ -31,6 +31,9 @@ Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `L
 - `app/adapters/serviceAdapter.js`
   - hospeda o terceiro adapter puro oficial de contrato do web
   - converte servico legado para o contrato `Service` sem integrar o runtime atual
+- `app/adapters/shared/adapterHelpers.js`
+  - hospeda a camada compartilhada minima de helpers estruturais dos adapters puros
+  - concentra identidade, envelope, metadata, warnings e `legacyRefs` sem integrar o runtime atual
 - `app/boundaries/sessionAccessBoundary.js`
   - hospeda as factories `createSessionBoundary(...)` e `createAccessBoundary(...)`
   - preserva a API publica das fronteiras locais extraidas em `LP-WEB-004`
@@ -499,6 +502,44 @@ Relacao futura com Supabase:
 - ainda nao resolve `serviceSupplyProfiles`, sincronizacao Android ou ownership tecnico de insumos;
 - reduz o risco de abrir `LP-SUPABASE-001` antes de uma terceira evidencia pratica de adapter puro.
 
+#### `adapterHelpers`
+
+Localizacao atual:
+
+- `app/adapters/shared/adapterHelpers.js`.
+
+API publica:
+
+- `normalizeSourceId(...)`
+- `buildCanonicalId(...)`
+- `createError(...)`
+- `createWarning(...)`
+- `createValidationResult(...)`
+- `mergeValidationResults(...)`
+- `toValidationSummary(...)`
+- `createMetadata(...)`
+- `normalizeLegacyRefs(...)`
+- `createContractEnvelope(...)`
+
+Relacao com `customerAdapter`, `vehicleAdapter` e `serviceAdapter`:
+
+- fornece a camada compartilhada minima de identidade, envelope, metadata, warnings e `legacyRefs`;
+- reduz repeticao estrutural sem mover regras especificas de dominio para um helper generico;
+- e reutilizado pelos tres adapters puros oficiais do web;
+- nao substitui a validacao especifica local de `serviceAdapter`, que continua deliberadamente separada.
+
+Relacao com o Adapter Gate:
+
+- `scripts/primyo-adapter-gate.mjs` valida pureza estrutural, imports minimos e uso do helper comum pelos tres adapters;
+- `scripts/primyo-gate.mjs` trata `app/adapters/shared/adapterHelpers.js` como modulo critico da trilha;
+- qualquer mudanca em `adapterHelpers.js` passa a exigir revalidacao conjunta dos tres adapters, do Adapter Gate, do Primyo Gate, do build e do verify.
+
+Limites da camada:
+
+- nao conhece `app/main.js`, DOM, `window`, `localStorage`, Supabase ou runtime do LavaPrime;
+- nao resolve ownership, deduplicacao, relacionamento real entre dominios ou resolver de IDs cross-domain;
+- nao deve virar framework nem concentrar regra de negocio de cliente, veiculo ou servico.
+
 Riscos tecnicos ainda pendentes:
 
 - `sourceId` continua obrigatorio por contexto porque o legado nao expone `id` estavel;
@@ -561,7 +602,7 @@ Cobertura atual absorvida na baseline:
 - qualquer alteracao em `app/utils/textFormatters.js` deve considerar consumo transversal no monolito.
 - qualquer alteracao em `app/storage/storageBoundary.js` deve preservar chaves, payloads e fallback atual de persistencia local.
 - a maior parte da persistencia de negocio continua atravessando wrappers dentro de `app/main.js`.
-- os adapters puros ainda nao compartilham helpers comuns de identidade ou resolucao de relacionamentos.
+- os adapters puros ja compartilham helpers estruturais minimos, mas ainda nao possuem resolver comum de relacionamentos ou IDs cross-domain.
 - o Adapter Contract Gate agora cobre tres adapters oficiais e ainda nao substitui smoke funcional futuro.
 
 ## 11. Checagens legadas que ainda existem
@@ -597,8 +638,9 @@ O mapa tecnico confirma que o LavaPrime agora possui duas fronteiras locais ofic
 - `customerAdapter` revisado passa a ser o modelo de referencia para os proximos adapters puros, sem consumo funcional em runtime;
 - `vehicleAdapter` amplia essa trilha como segunda prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
 - `serviceAdapter` amplia essa trilha como terceira prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
+- `adapterHelpers` consolida a primeira camada compartilhada minima da trilha de adapters, sem integrar nada ao runtime;
 - `scripts/primyo-adapter-gate.mjs` agora protege os tres adapters puros com regressao automatica minima antes de qualquer integracao funcional;
 - as checagens mais sensiveis ja estao centralizadas, mas a cobertura ainda e parcial;
 - integracoes futuras existem, mas seguem proibidas nesta fase;
 - a proxima etapa nao deve integrar adapters ao runtime ainda;
-- a proxima prioridade recomendada passa a ser `LP-WEB-ADAPTER-HELPERS-001`, como consolidacao minima de helper comum antes do quarto adapter, de integracao funcional ou de abertura de Supabase.
+- a proxima prioridade recomendada passa a ser `LP-WEB-010`, com `productAdapter` como quarto adapter puro de master data agora que a camada compartilhada minima foi consolidada.

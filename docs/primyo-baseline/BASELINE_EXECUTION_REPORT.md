@@ -264,6 +264,52 @@ Ocorrencias operacionais:
 - a ocorrencia foi corrigida com ajuste minimo no fixture de `scripts/primyo-adapter-gate.mjs`, sem impacto em runtime ou comportamento funcional;
 - nao houve lock transitorio em `dist` na revalidacao final.
 
+## Atualizacao de baseline - LP-WEB-ADAPTER-HELPERS-001
+
+Atualizacao registrada em: `2026-06-26`
+
+`LP-WEB-ADAPTER-HELPERS-001` incorporou a camada compartilhada minima de helpers de adapter ao estado tecnico oficial do LavaPrime Web.
+
+O estado oficial do gate apos esta absorcao passa a incluir:
+
+- `node --check app/adapters/shared/adapterHelpers.js`;
+- `node --check app/adapters/customerAdapter.js`;
+- `node --check app/adapters/vehicleAdapter.js`;
+- `node --check app/adapters/serviceAdapter.js`;
+- `node --check scripts/primyo-adapter-gate.mjs`;
+- `node scripts/primyo-adapter-gate.mjs` com verificacao do helper compartilhado, dos imports dos tres adapters e dos cenarios validos e invalidos ja promovidos a baseline;
+- `npm.cmd run primyo:gate`;
+- `npm.cmd run build`;
+- `npm.cmd run verify:build`.
+
+Evidencia de adocao:
+
+```text
+PASS Adapter Helper Runtime Independence
+PASS Adapter Helper Imports
+PASS Adapters Use Shared Helpers
+
+Adapter Gate Result: SUCCESS
+Gate Result: SUCCESS
+```
+
+Comandos reexecutados nesta fase:
+
+- `node --check app/adapters/shared/adapterHelpers.js` -> sucesso
+- `node --check app/adapters/customerAdapter.js` -> sucesso
+- `node --check app/adapters/vehicleAdapter.js` -> sucesso
+- `node --check app/adapters/serviceAdapter.js` -> sucesso
+- `node --check scripts/primyo-adapter-gate.mjs` -> sucesso
+- `node scripts/primyo-adapter-gate.mjs` -> sucesso
+- `npm.cmd run primyo:gate` -> sucesso
+- `npm.cmd run build` -> sucesso
+- `npm.cmd run verify:build` -> sucesso
+
+Ocorrencias operacionais:
+
+- nenhuma falha real de gate, build ou verify foi observada no resultado final desta closure;
+- nenhum lock transitorio em `dist` precisou de tratamento nesta revalidacao.
+
 ## Conclusao
 
 O baseline de build e validacao automatica do LavaPrime foi estabelecido com sucesso.
@@ -277,3 +323,4 @@ O estado oficial observado nesta fase e:
 - arquivos obrigatorios do workflow estao presentes.
 - `npm.cmd run primyo:gate` e a validacao tecnica oficial minima para proximas mudancas web.
 - `scripts/primyo-adapter-gate.mjs` agora compoe a baseline oficial do gate para proteger `customerAdapter`, `vehicleAdapter` e `serviceAdapter`.
+- `app/adapters/shared/adapterHelpers.js` agora compoe a baseline oficial da camada compartilhada de adapters e deve ser revalidado junto com os tres adapters puros.

@@ -19,6 +19,7 @@ Ele executa:
 - preflight de ambiente Node;
 - verificacao de arquivos obrigatorios;
 - `node --check app/adapters/customerAdapter.js`;
+- `node --check app/adapters/shared/adapterHelpers.js`;
 - `node --check app/adapters/vehicleAdapter.js`;
 - `node --check app/adapters/serviceAdapter.js`;
 - `node --check scripts/primyo-adapter-gate.mjs`;
@@ -85,6 +86,16 @@ Estado oficial apos `LP-TEST-AUTO-003`:
 - nenhuma dependencia nova foi instalada;
 - nenhum adapter foi integrado ao runtime;
 - `app/main.js` permanece fora do escopo desta fase.
+
+Estado oficial apos `LP-WEB-ADAPTER-HELPERS-001`:
+
+- `app/adapters/shared/adapterHelpers.js` passa a ser modulo estrutural critico da trilha de adapters;
+- `npm.cmd run primyo:gate` passa a validar a existencia do diretorio `app/adapters/shared` e do arquivo `app/adapters/shared/adapterHelpers.js`;
+- o Primyo Gate passa a verificar exports minimos do helper compartilhado;
+- o Adapter Contract Gate passa a validar pureza estrutural do helper compartilhado;
+- o Adapter Contract Gate passa a provar que `customerAdapter`, `vehicleAdapter` e `serviceAdapter` continuam importando o helper comum;
+- qualquer mudanca em `adapterHelpers.js` passa a exigir revalidacao conjunta dos tres adapters, do Adapter Gate, do Primyo Gate, do build e do verify;
+- a cobertura continua local e sem runtime: nenhum adapter foi integrado ao produto por causa desta consolidacao.
 
 Limites atuais desta cobertura:
 
@@ -200,6 +211,18 @@ Implementacao e closure do gate de adapters executadas em `2026-06-26` para abso
 
 Revalidacao final executada em `2026-06-26` para encerrar `LP-WEB-009`:
 
+- `node --check app/adapters/customerAdapter.js` -> sucesso
+- `node --check app/adapters/vehicleAdapter.js` -> sucesso
+- `node --check app/adapters/serviceAdapter.js` -> sucesso
+- `node --check scripts/primyo-adapter-gate.mjs` -> sucesso
+- `node scripts/primyo-adapter-gate.mjs` -> sucesso
+- `npm.cmd run primyo:gate` -> sucesso
+- `npm.cmd run build` -> sucesso
+- `npm.cmd run verify:build` -> sucesso
+
+Revalidacao estrutural executada em `2026-06-26` para absorver `LP-WEB-ADAPTER-HELPERS-001`:
+
+- `node --check app/adapters/shared/adapterHelpers.js` -> sucesso
 - `node --check app/adapters/customerAdapter.js` -> sucesso
 - `node --check app/adapters/vehicleAdapter.js` -> sucesso
 - `node --check app/adapters/serviceAdapter.js` -> sucesso

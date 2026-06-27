@@ -264,6 +264,17 @@ Estado oficial apos a closure de `LP-WEB-009`:
 - qualquer novo adapter devera repetir a mesma dupla minima de fixture valida e invalida;
 - qualquer helper comum futuro devera revalidar `customerAdapter`, `vehicleAdapter` e `serviceAdapter` em conjunto antes de liberar o quarto adapter.
 
+Cobertura consolidada em `LP-WEB-ADAPTER-HELPERS-001`:
+
+- `app/adapters/shared/adapterHelpers.js` passa a ser modulo critico da trilha e deve permanecer puro;
+- mudancas no helper comum devem revalidar `customerAdapter`, `vehicleAdapter` e `serviceAdapter` em conjunto;
+- mudancas no helper comum devem revalidar `scripts/primyo-adapter-gate.mjs`, `npm.cmd run primyo:gate`, `npm.cmd run build` e `npm.cmd run verify:build`;
+- o helper comum deve preservar `id` canonico, `sourceId`, `legacyRefs`, `metadata`, `warnings`, `validation` e envelope sem introduzir comportamento de runtime;
+- `node --check app/adapters/shared/adapterHelpers.js` passa a ser validacao minima obrigatoria da trilha de helpers de adapter;
+- helpers comuns nao devem resolver ownership, deduplicacao ou relacionamento real entre dominios;
+- quando a regra nao for universal, ela deve permanecer local ao adapter de dominio, como no caso da validacao especifica de `serviceAdapter`;
+- qualquer helper novo deve provar que reduz repeticao estrutural real e nao apenas desloca complexidade para outro arquivo.
+
 Regra oficial para proximos adapters:
 
 - todo novo adapter puro deve entrar no Adapter Contract Gate no mesmo slice em que for criado;

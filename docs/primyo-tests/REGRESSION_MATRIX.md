@@ -34,6 +34,7 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-WEB-007-REVISION | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-008 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-009 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-WEB-ADAPTER-HELPERS-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-TEST-AUTO-003 | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional |
 | LP-PERM-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -106,6 +107,10 @@ Cobertura tecnica minima agora esperada para adapters puros:
 - futuras mudancas em gate, helpers comuns de adapter, resolucao de IDs ou integracao funcional devem revalidar `customerAdapter`, `vehicleAdapter` e `serviceAdapter` em conjunto antes de avancar.
 - cenarios validos e invalidos controlados devem continuar cobrindo `organizationId`, timestamps, `sourceId`, `id` canonico, envelope, `warnings` e `missingRequiredFields`.
 - o estado oficial atual do Adapter Contract Gate cobre `customerAdapter`, `vehicleAdapter` e `serviceAdapter` como baseline minima obrigatoria da trilha.
+- `app/adapters/shared/adapterHelpers.js` passa a ser parte do baseline estrutural minimo e deve ser validado por `node --check`.
+- a regressao estrutural agora tambem deve provar que os tres adapters continuam importando o helper compartilhado sem ganhar dependencia de runtime.
+- a consolidacao de helpers nao autoriza mudanca de API publica, `contractVersion`, `contractName` ou integracao funcional antecipada.
+- alteracoes em `adapterHelpers.js` passam a impactar simultaneamente `customerAdapter`, `vehicleAdapter` e `serviceAdapter`, exigindo revalidacao conjunta dos tres adapters, do Adapter Gate, do Primyo Gate, do build e do verify.
 
 Observacao para `LP-TEST-AUTO-003`:
 

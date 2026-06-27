@@ -247,3 +247,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: `serviceAdapter` foi aceito como terceiro adapter puro oficial do web, aderente ao baseline compartilhado e com o Adapter Contract Gate ampliado para tres adapters, sem qualquer integracao a `app/main.js` ou ao runtime.
 - Observacao de risco: a proxima fatia nao deve integrar adapters nem abrir Supabase; a prioridade recomendada passa a ser `LP-WEB-ADAPTER-HELPERS-001` para consolidar helper comum minimo antes do quarto adapter.
+
+### LP-WEB-ADAPTER-HELPERS-001
+
+- Change record: `docs/primyo-changes/LP-WEB-ADAPTER-HELPERS-001.md`
+- Closure: `docs/primyo-changes/LP-WEB-ADAPTER-HELPERS-001-CLOSURE.md`
+- Resultado: `Aceito`
+- Observacao principal: `app/adapters/shared/adapterHelpers.js` foi aceito como camada compartilhada minima oficial da trilha de adapters, com `customerAdapter`, `vehicleAdapter` e `serviceAdapter` refatorados sem mudanca de API publica e sem qualquer integracao a `app/main.js` ou ao runtime.
+- Observacao de risco: a proxima fatia nao deve integrar adapters nem abrir Supabase; a prioridade recomendada passa a ser `LP-WEB-010` com `productAdapter` como quarto adapter puro oficial, aproveitando o helper comum ja consolidado.

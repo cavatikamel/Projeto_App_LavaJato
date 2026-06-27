@@ -1,3 +1,15 @@
+import {
+  buildCanonicalId,
+  createContractEnvelope,
+  createError,
+  createMetadata,
+  createValidationResult as createValidation,
+  createWarning,
+  mergeValidationResults as mergeValidations,
+  normalizeSourceId,
+  toValidationSummary
+} from "./shared/adapterHelpers.js";
+
 export const VEHICLE_CONTRACT_NAME = "Vehicle";
 export const VEHICLE_CONTRACT_VERSION = "1.0.0";
 
@@ -83,7 +95,7 @@ export function createVehicleContractEnvelope(vehicleContract, context = {}) {
     emittedAt,
     notes: []
   });
-  const vehicleContractEnvelope = {
+  const vehicleContractEnvelope = createContractEnvelope({
     contractName: VEHICLE_CONTRACT_NAME,
     contractVersion: options.contractVersion || VEHICLE_CONTRACT_VERSION,
     payload,
@@ -93,14 +105,9 @@ export function createVehicleContractEnvelope(vehicleContract, context = {}) {
     createdAt: normalizeIsoTimestamp(payload.createdAt || options.createdAt),
     updatedAt: normalizeIsoTimestamp(payload.updatedAt || options.updatedAt),
     status: normalizeStatus(payload.status || options.status || options.defaultStatus),
-    warnings: [],
-    validation: createValidation(),
-    metadata
-  };
-
-  if (Object.keys(legacyRefs).length) {
-    vehicleContractEnvelope.legacyRefs = legacyRefs;
-  }
+    metadata,
+    legacyRefs
+  });
 
   const validation = mergeValidations(
     validateVehicleContract(vehicleContractEnvelope),
@@ -589,8 +596,9 @@ function resolveCanonicalId(options) {
   const preservedId = normalizeString(options.preservedId);
   if (options.idStrategy === "preserveCanonicalId" && preservedId) return preservedId;
 
-  if (options.idStrategy === DEFAULT_ID_STRATEGY && normalizeString(options.sourceId)) {
-    return `${CONTRACT_NAMESPACE}:legacy:${normalizeString(options.sourceId)}`;
+  const sourceId = normalizeSourceId(options.sourceId);
+  if (options.idStrategy === DEFAULT_ID_STRATEGY && sourceId) {
+    return buildCanonicalId(CONTRACT_NAMESPACE, sourceId);
   }
 
   return "";
@@ -897,22 +905,16 @@ function mergeLegacyRefs(baseRefs, extraRefs, currentPlate = "") {
 }
 
 function buildMetadata(adapterMode, options, extra = {}) {
-  const metadata = {
+  return createMetadata({
     adapterName: ADAPTER_NAME,
     adapterMode,
     contractNamespace: CONTRACT_NAMESPACE,
     idStrategy: normalizeIdStrategy(options.idStrategy) || DEFAULT_ID_STRATEGY,
     strictMode: options.strictMode !== false,
-    allowWarnings: options.allowWarnings !== false
-  };
-
-  const emittedAt = normalizeIsoTimestamp(extra.emittedAt || options.emittedAt || options.now);
-  if (emittedAt) metadata.emittedAt = emittedAt;
-
-  const notes = normalizeStringArray(extra.notes);
-  if (notes.length) metadata.notes = notes;
-
-  return metadata;
+    allowWarnings: options.allowWarnings !== false,
+    emittedAt: normalizeIsoTimestamp(extra.emittedAt || options.emittedAt || options.now),
+    notes: normalizeStringArray(extra.notes)
+  });
 }
 
 function validateLegacyRefsStructure(legacyRefs, pathLabel) {
@@ -1011,49 +1013,6 @@ function validateMetadataStructure(metadata, pathLabel) {
   }
 
   return createValidation(errors, warnings, []);
-}
-
-function createValidation(errors = [], warnings = [], missingRequiredFields = [], blocking = false) {
-  const uniqueErrors = uniqueStrings(errors.filter(Boolean));
-  const uniqueWarnings = uniqueStrings(warnings.filter(Boolean));
-  const uniqueMissingRequiredFields = uniqueStrings(missingRequiredFields.filter(Boolean));
-  const isBlocking = Boolean(blocking) || uniqueErrors.length > 0;
-  const ok = uniqueErrors.length === 0 && !isBlocking;
-
-  return {
-    ok,
-    isValid: ok,
-    blocking: isBlocking,
-    errors: uniqueErrors,
-    warnings: uniqueWarnings,
-    missingRequiredFields: uniqueMissingRequiredFields
-  };
-}
-
-function mergeValidations(...validations) {
-  return createValidation(
-    validations.flatMap((validation) => validation?.errors || []),
-    validations.flatMap((validation) => validation?.warnings || []),
-    validations.flatMap((validation) => validation?.missingRequiredFields || []),
-    validations.some((validation) => Boolean(validation?.blocking))
-  );
-}
-
-function toValidationSummary(validation) {
-  return {
-    ok: validation.ok,
-    errors: [...validation.errors],
-    missingRequiredFields: [...validation.missingRequiredFields],
-    blocking: validation.blocking
-  };
-}
-
-function createError(code, message) {
-  return `${code}: ${message}`;
-}
-
-function createWarning(code, message) {
-  return `${code}: ${message}`;
 }
 
 function inferSourceName(source) {

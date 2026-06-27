@@ -1,3 +1,12 @@
+import {
+  buildCanonicalId,
+  createContractEnvelope,
+  createError,
+  createMetadata,
+  createWarning,
+  normalizeSourceId
+} from "./shared/adapterHelpers.js";
+
 export const SERVICE_CONTRACT_NAME = "Service";
 export const SERVICE_CONTRACT_VERSION = "1.0.0";
 
@@ -80,7 +89,7 @@ export function createServiceContractEnvelope(serviceContract, context = {}) {
     emittedAt,
     notes: []
   });
-  const serviceContractEnvelope = {
+  const serviceContractEnvelope = createContractEnvelope({
     contractName: SERVICE_CONTRACT_NAME,
     contractVersion: options.contractVersion || SERVICE_CONTRACT_VERSION,
     payload,
@@ -90,14 +99,9 @@ export function createServiceContractEnvelope(serviceContract, context = {}) {
     createdAt: normalizeIsoTimestamp(payload.createdAt || options.createdAt),
     updatedAt: normalizeIsoTimestamp(payload.updatedAt || options.updatedAt),
     status: normalizeStatus(payload.status || options.status || options.defaultStatus),
-    warnings: [],
-    validation: createValidation(),
-    metadata
-  };
-
-  if (Object.keys(legacyRefs).length) {
-    serviceContractEnvelope.legacyRefs = legacyRefs;
-  }
+    metadata,
+    legacyRefs
+  });
 
   const validation = mergeValidations(
     validateServiceContract(serviceContractEnvelope),
@@ -501,14 +505,14 @@ function normalizeEnvelopeContext(payload, context) {
 }
 
 function resolveCanonicalId(options) {
-  const sourceId = normalizeString(options.sourceId);
+  const sourceId = normalizeSourceId(options.sourceId);
   if (!sourceId) return "";
 
   if (normalizeString(options.idStrategy) === "sourceOnly") {
     return sourceId;
   }
 
-  return `${CONTRACT_NAMESPACE}:legacy:${sourceId}`;
+  return buildCanonicalId(CONTRACT_NAMESPACE, sourceId);
 }
 
 function resolveServiceCode(source, options) {
@@ -633,7 +637,7 @@ function collectEnvelopeWarnings(payload, options) {
 }
 
 function buildMetadata(adapterMode, options, extra = {}) {
-  return compactPlainObject({
+  return createMetadata({
     adapterName: ADAPTER_NAME,
     adapterMode,
     contractName: SERVICE_CONTRACT_NAME,
@@ -956,12 +960,4 @@ function toValidationSummary(validation) {
     warnings: [...validation.warnings],
     missingRequiredFields: [...validation.missingRequiredFields]
   };
-}
-
-function createError(code, message) {
-  return `${code}: ${message}`;
-}
-
-function createWarning(code, message) {
-  return `${code}: ${message}`;
 }

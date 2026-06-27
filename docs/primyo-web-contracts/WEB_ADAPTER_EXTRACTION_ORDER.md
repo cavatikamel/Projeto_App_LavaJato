@@ -169,3 +169,15 @@ Confirmacao apos `LP-WEB-009`:
 - a proxima fatia recomendada do programa passa a ser `LP-WEB-ADAPTER-HELPERS-001`, para consolidar helper comum minimo antes do quarto adapter;
 - helpers comuns continuam mais seguros agora do que antes, porque tres adapters puros ja provaram repetibilidade suficiente para extrair apenas o que for claramente estavel;
 - `serviceAdapter` continua explicitamente nao autorizado para integracao funcional nesta etapa.
+
+Confirmacao apos `LP-WEB-ADAPTER-HELPERS-001`:
+
+- `LP-WEB-ADAPTER-HELPERS-001` passa a estar formalmente encerrado na trilha;
+- `app/adapters/shared/adapterHelpers.js` passa a existir como camada comum minima da trilha de adapters puros;
+- a extracao consolidou apenas responsabilidades estruturais repetidas entre `customerAdapter`, `vehicleAdapter` e `serviceAdapter`;
+- `customerAdapter`, `vehicleAdapter` e `serviceAdapter` permanecem puros, fora do runtime e com API publica preservada;
+- `id` canonico, `sourceId`, `metadata`, `legacyRefs`, `warnings`, `validation` compartilhada de `customer/vehicle` e envelope passam a ter um ponto unico de manutencao estrutural;
+- a semantica especifica de validacao de `serviceAdapter` permanece local e nao foi forçada para dentro do helper comum;
+- a proxima criacao de adapter recomendada continua sendo `productAdapter`;
+- a proxima fatia recomendada do programa passa a ser `LP-WEB-010`, com foco em `productAdapter`;
+- a integracao funcional de qualquer adapter ao runtime continua explicitamente nao autorizada nesta etapa.

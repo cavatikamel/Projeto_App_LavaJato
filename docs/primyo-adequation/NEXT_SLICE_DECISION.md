@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Registrar a decisao oficial da proxima fatia apos o encerramento formal de `LP-WEB-009`.
+Registrar a decisao oficial da proxima fatia apos o encerramento formal de `LP-WEB-ADAPTER-HELPERS-001`.
 
 ## Estado atual consolidado
 
@@ -11,81 +11,85 @@ Estado atual da trilha:
 - `customerAdapter` existe em `app/adapters/customerAdapter.js` e permanece como adapter de referencia da trilha;
 - `vehicleAdapter` existe em `app/adapters/vehicleAdapter.js` como segundo adapter puro oficial;
 - `serviceAdapter` existe em `app/adapters/serviceAdapter.js` como terceiro adapter puro oficial;
-- os tres seguem o baseline compartilhado de identidade, envelope, contexto, `legacyRefs`, status, timestamps e compatibilidade;
-- os tres permanecem puros e fora do runtime;
-- `scripts/primyo-adapter-gate.mjs` foi absorvido como subgate oficial do `primyo:gate`;
-- `customerAdapter`, `vehicleAdapter` e `serviceAdapter` agora contam com regressao automatica minima oficial;
+- `app/adapters/shared/adapterHelpers.js` agora concentra a camada compartilhada minima de identidade, envelope, metadata, warnings e `legacyRefs`;
+- os tres adapters seguem puros, fora do runtime e com API publica preservada;
+- `scripts/primyo-adapter-gate.mjs` e `scripts/primyo-gate.mjs` foram revalidados com o helper compartilhado;
 - `app/main.js` continua intacto;
 - `npm.cmd run primyo:gate`, build e verify passaram na revalidacao final desta closure;
 - nenhuma integracao funcional foi autorizada.
 
 ## Opcoes avaliadas
 
-### `LP-WEB-ADAPTER-HELPERS-001`
-
-- Vantagem: reduz duplicacao estrutural ja repetida em tres adapters puros.
-- Vantagem: ataca risco de drift antes do quarto adapter.
-- Vantagem: continua pequena, reversivel e fora do runtime.
-- Vantagem: prepara `productAdapter` sem congelar cedo demais um helper gigante.
-- Risco: exige disciplina para extrair apenas o que ja provou ser realmente comum.
-
 ### `LP-WEB-010`
 
-- Vantagem: seguiria a ordem natural de criacao com `productAdapter`.
-- Vantagem: manteria a trilha em master data de baixo risco.
-- Risco: criar um quarto adapter antes de consolidar helper minimo aumenta duplicacao e chance de divergencia entre modulos.
-- Risco: empurra para frente a consolidacao estrutural que agora ja tem evidencia suficiente para acontecer.
+- Vantagem: segue a ordem natural de criacao com `productAdapter` como quarto adapter puro oficial.
+- Vantagem: aproveita imediatamente a camada compartilhada minima ja consolidada.
+- Vantagem: continua em master data de baixo risco, sem integrar runtime e sem abrir Supabase.
+- Vantagem: ajuda a provar que o helper comum funciona em um quarto dominio antes de qualquer integracao funcional.
+- Risco: exige manter a disciplina de usar o helper apenas para estrutura comum, sem empurrar regra especifica de produto para a camada compartilhada.
 
 ### `LP-DATA-006`
 
-- Vantagem: ajudaria a planejar resolver de IDs entre dominios.
-- Risco: amplia camada documental antes de estabilizar o padrao tecnico local dos adapters.
-- Risco: pode criar abstracao de identidade cedo demais sem a consolidacao minima do helper comum.
+- Vantagem: pode planejar resolver de IDs entre dominios e reduzir ambiguidade futura.
+- Risco: amplia novamente a camada documental antes de validar o helper comum em um novo adapter real.
+- Risco: rende menos valor imediato do que provar o baseline tecnico comum no proximo dominio de master data.
 
-### `LP-WEB-009-INTEGRATION`
+### `LP-WEB-ADAPTER-HELPERS-002`
 
-- Risco: integrar `serviceAdapter` ao runtime agora continua cedo demais.
-- Risco: o dominio de servicos ainda tem `sourceId` obrigatorio por contexto e `serviceCode` provisoriamente derivado.
+- Vantagem: poderia aprofundar a camada compartilhada.
+- Risco: extrair mais helpers agora seria abstracao cedo demais.
+- Risco: o helper minimo ja consolidado ainda precisa ser provado em outro adapter antes de uma segunda rodada de consolidacao.
 
 ### `LP-WEB-007-INTEGRATION`
 
-- Risco: integrar `customerAdapter` ao runtime agora continua cedo demais.
-- Risco: ainda nao existe maturidade suficiente de testes funcionais, resolucao de IDs e relacionamento entre adapters.
+- Risco: integrar `customerAdapter` ao runtime continua cedo demais.
+- Risco: ainda nao existe resolver maduro de IDs entre `customer` e `vehicle`, nem cobertura funcional suficiente para absorver impacto em runtime.
+
+### `LP-WEB-008-INTEGRATION`
+
+- Risco: integrar `vehicleAdapter` ao runtime continua cedo demais.
+- Risco: ownership, historico e relacao com cliente ainda nao possuem camada de resolucao aprovada.
+
+### `LP-WEB-009-INTEGRATION`
+
+- Risco: integrar `serviceAdapter` ao runtime continua cedo demais.
+- Risco: o dominio de servicos ainda depende de `sourceId` por contexto e `serviceCode` derivado em parte do baseline atual.
 
 ### `LP-SUPABASE-001`
 
-- Risco: abrir Supabase antes de consolidar helper comum e quarto adapter continua prematuro.
-- Risco: aumentaria complexidade de rollback e de ownership sem maturidade suficiente da camada de adapters.
+- Risco: abrir Supabase antes do quarto adapter e antes de qualquer fatia especifica de integracao continua prematuro.
+- Risco: aumentaria muito a complexidade de rollback, ownership e troubleshooting antes de a camada de adapters amadurecer mais.
 
 ### `LP-TEST-AUTO-004`
 
 - Vantagem: poderia reforcar ainda mais a automacao.
-- Risco: o retorno marginal agora e menor do que consolidar o padrao tecnico comum ja repetido em tres adapters.
-- Risco: a cobertura atual ja protege a baseline minima; o gargalo imediato passa a ser consistencia estrutural entre adapters.
+- Risco: o retorno marginal agora e menor do que validar a nova camada compartilhada em um quarto adapter puro.
+- Risco: a baseline tecnica ja esta protegida o suficiente para a proxima fatia continuar em baixo risco.
 
 ## Decisao oficial
 
-Proxima fatia recomendada: `LP-WEB-ADAPTER-HELPERS-001`
+Proxima fatia recomendada: `LP-WEB-010`
 
 Direcao recomendada para a fatia:
 
-- consolidar helper comum minimo para adapters puros;
-- extrair apenas utilitarios claramente repetidos e estaveis;
-- manter helpers fora do runtime;
+- criar `productAdapter` como quarto adapter puro oficial do web;
+- reutilizar `app/adapters/shared/adapterHelpers.js` apenas para estrutura realmente comum;
 - manter `app/main.js` intacto;
-- nao criar novo adapter na mesma fatia;
+- manter o adapter fora do runtime;
+- atualizar o Adapter Gate para incluir fixture valida e invalida de produto;
 - nao abrir Supabase nesta fase.
 
 ## Justificativa
 
-`LP-WEB-ADAPTER-HELPERS-001` e a melhor proxima fatia porque:
+`LP-WEB-010` e a melhor proxima fatia porque:
 
-1. a trilha ja possui tres adapters puros oficiais e agora existe evidencia suficiente de repeticao estrutural;
-2. consolidar helper comum minimo antes do quarto adapter reduz drift, custo de manutencao e risco de divergencia entre modulos;
-3. a fatia continua pequena, reversivel e fora do runtime, preservando o principio de baixo risco;
-4. ainda e cedo para integrar adapters ao produto ou abrir Supabase;
-5. `productAdapter` continua sendo o proximo adapter recomendado por ordem de dominio, mas fica mais seguro depois de uma pequena consolidacao tecnica comum;
-6. o planejamento de resolver de IDs entre dominios continua importante, mas ainda rende mais valor depois da consolidacao desse helper minimo.
+1. a trilha ja possui tres adapters puros e uma camada compartilhada minima oficialmente consolidada;
+2. `productAdapter` e o proximo dominio natural de master data pela ordem tecnica ja aprovada;
+3. criar o quarto adapter agora prova que o helper comum reduz drift sem forcar integracao funcional;
+4. a fatia continua pequena, reversivel e fora do runtime, preservando o principio de baixo risco;
+5. ainda e cedo para integrar adapters ao produto ou abrir Supabase;
+6. `LP-DATA-006` continua importante, mas rende mais valor depois que o helper compartilhado for provado em mais um dominio real;
+7. uma segunda rodada de helpers (`LP-WEB-ADAPTER-HELPERS-002`) so faz sentido depois que `productAdapter` revelar nova repeticao estavel.
 
 ## Resultado desta fase
 
@@ -93,8 +97,8 @@ Nenhuma nova implementacao funcional foi iniciada.
 
 Esta fase apenas:
 
-- encerra formalmente `LP-WEB-009`;
-- absorve `serviceAdapter` como terceiro adapter puro oficial;
-- confirma que o Adapter Contract Gate cobre tres adapters;
-- confirma que adapters continuam fora do runtime;
-- escolhe `LP-WEB-ADAPTER-HELPERS-001` como proxima fatia oficial.
+- encerra formalmente `LP-WEB-ADAPTER-HELPERS-001`;
+- absorve `adapterHelpers` como modulo oficial da trilha de adapters;
+- confirma que `customerAdapter`, `vehicleAdapter` e `serviceAdapter` continuam fora do runtime;
+- confirma que o Adapter Gate continua protegendo os tres adapters e o helper compartilhado;
+- escolhe `LP-WEB-010` como proxima fatia oficial.

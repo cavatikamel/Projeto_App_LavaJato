@@ -11,6 +11,7 @@ const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 const requiredDirectories = [
   "app",
   "app/adapters",
+  "app/adapters/shared",
   "app/boundaries",
   "app/storage",
   "app/utils",
@@ -24,6 +25,7 @@ const requiredFiles = [
   "app/adapters/customerAdapter.js",
   "app/adapters/vehicleAdapter.js",
   "app/adapters/serviceAdapter.js",
+  "app/adapters/shared/adapterHelpers.js",
   "app/src/main.jsx",
   "app/src/App.jsx",
   "app/boundaries/sessionAccessBoundary.js",
@@ -41,6 +43,7 @@ const fileIntegrityChecks = [
     file: "app/adapters/customerAdapter.js",
     description: "customer adapter foundation exports",
     snippets: [
+      "./shared/adapterHelpers.js",
       "export const CUSTOMER_CONTRACT_NAME",
       "export const CUSTOMER_CONTRACT_VERSION",
       "export function toCustomerContract",
@@ -52,6 +55,7 @@ const fileIntegrityChecks = [
     file: "app/adapters/vehicleAdapter.js",
     description: "vehicle adapter foundation exports",
     snippets: [
+      "./shared/adapterHelpers.js",
       "export const VEHICLE_CONTRACT_NAME",
       "export const VEHICLE_CONTRACT_VERSION",
       "export function toVehicleContract",
@@ -63,11 +67,25 @@ const fileIntegrityChecks = [
     file: "app/adapters/serviceAdapter.js",
     description: "service adapter foundation exports",
     snippets: [
+      "./shared/adapterHelpers.js",
       "export const SERVICE_CONTRACT_NAME",
       "export const SERVICE_CONTRACT_VERSION",
       "export function toServiceContract",
       "export function validateServiceContract",
       "export function createServiceContractEnvelope"
+    ]
+  },
+  {
+    file: "app/adapters/shared/adapterHelpers.js",
+    description: "shared adapter helper exports",
+    snippets: [
+      "export function normalizeSourceId",
+      "export function buildCanonicalId",
+      "export function createValidationResult",
+      "export function createWarning",
+      "export function createMetadata",
+      "export function createContractEnvelope",
+      "export function normalizeLegacyRefs"
     ]
   },
   {
@@ -256,6 +274,10 @@ async function main() {
     await runCommand("Syntax app/adapters/customerAdapter.js", process.execPath, [
       "--check",
       "app/adapters/customerAdapter.js"
+    ]);
+    await runCommand("Syntax app/adapters/shared/adapterHelpers.js", process.execPath, [
+      "--check",
+      "app/adapters/shared/adapterHelpers.js"
     ]);
     await runCommand("Syntax app/adapters/vehicleAdapter.js", process.execPath, [
       "--check",

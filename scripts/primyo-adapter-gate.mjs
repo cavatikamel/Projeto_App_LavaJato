@@ -8,6 +8,7 @@ const workspaceRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const summary = [];
 
 const adapterFiles = {
+  helper: "app/adapters/shared/adapterHelpers.js",
   customer: "app/adapters/customerAdapter.js",
   vehicle: "app/adapters/vehicleAdapter.js",
   service: "app/adapters/serviceAdapter.js"
@@ -107,9 +108,16 @@ async function main() {
   console.log(`Workspace: ${workspaceRoot}`);
 
   try {
+    const helperSource = loadAdapterSource(adapterFiles.helper);
     const customerSource = loadAdapterSource(adapterFiles.customer);
     const vehicleSource = loadAdapterSource(adapterFiles.vehicle);
     const serviceSource = loadAdapterSource(adapterFiles.service);
+
+    await runCheck("Adapter Helper Runtime Independence", () => {
+      for (const entry of forbiddenRuntimePatterns) {
+        assert(!entry.pattern.test(helperSource), `adapterHelpers contains forbidden ${entry.label}.`);
+      }
+    });
 
     await runCheck("Customer Adapter Runtime Independence", () => {
       for (const entry of forbiddenRuntimePatterns) {
@@ -129,9 +137,44 @@ async function main() {
       }
     });
 
+    const helperModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.helper)).href);
     const customerModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.customer)).href);
     const vehicleModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.vehicle)).href);
     const serviceModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.service)).href);
+
+    await runCheck("Adapter Helper Imports", () => {
+      assert(typeof helperModule.normalizeSourceId === "function", "normalizeSourceId export is missing.");
+      assert(typeof helperModule.buildCanonicalId === "function", "buildCanonicalId export is missing.");
+      assert(typeof helperModule.createError === "function", "createError export is missing.");
+      assert(typeof helperModule.createWarning === "function", "createWarning export is missing.");
+      assert(
+        typeof helperModule.createValidationResult === "function",
+        "createValidationResult export is missing."
+      );
+      assert(
+        typeof helperModule.mergeValidationResults === "function",
+        "mergeValidationResults export is missing."
+      );
+      assert(typeof helperModule.toValidationSummary === "function", "toValidationSummary export is missing.");
+      assert(typeof helperModule.createMetadata === "function", "createMetadata export is missing.");
+      assert(typeof helperModule.normalizeLegacyRefs === "function", "normalizeLegacyRefs export is missing.");
+      assert(typeof helperModule.createContractEnvelope === "function", "createContractEnvelope export is missing.");
+    });
+
+    await runCheck("Adapters Use Shared Helpers", () => {
+      assert(
+        customerSource.includes('./shared/adapterHelpers.js'),
+        "customerAdapter should import the shared adapter helpers module."
+      );
+      assert(
+        vehicleSource.includes('./shared/adapterHelpers.js'),
+        "vehicleAdapter should import the shared adapter helpers module."
+      );
+      assert(
+        serviceSource.includes('./shared/adapterHelpers.js'),
+        "serviceAdapter should import the shared adapter helpers module."
+      );
+    });
 
     await runCheck("Customer Adapter Imports", () => {
       assert(typeof customerModule.toCustomerContract === "function", "toCustomerContract export is missing.");
