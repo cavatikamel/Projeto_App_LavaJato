@@ -162,6 +162,28 @@ Obrigatorio validar:
 - comportamento com saldo zero;
 - preservacao de `isActive`.
 
+Observacoes para `LP-WEB-010`:
+
+- `sourceId` por contexto ou legado continua obrigatorio para separar identidade canonica de rastreabilidade;
+- `id` canonico deve seguir `product:legacy:<sourceId>` e nunca usar `sku`, nome, barcode ou texto livre como identidade oficial;
+- `price -> salePrice`, `cost -> costPrice` e `stock -> stockBalance` devem ocorrer de forma explicita e reproduzivel;
+- `isActive` deve refletir o estado legado sem inventar nova regra de negocio;
+- `supplier` legado nao deve virar campo canonico de `Product` nesta fase e deve ficar restrito a `legacyRefs` quando presente;
+- `type` legado nao deve ser promovido automaticamente a `category`;
+- `stockBalance = 0` continua sendo valor valido e nao deve falhar por ausencia de estoque;
+- ausencia de `name`, `sku`, `sourceId` ou `organizationId` deve falhar de forma controlada;
+- o envelope deve continuar carregando `payload`, `warnings`, `validation`, `metadata`, `organizationId`, `sourceId` e timestamps.
+
+Aprendizados consolidados no encerramento de `LP-WEB-010`:
+
+- `sourceId` por contexto continua obrigatorio quando o legado nao oferece identidade contratual estavel suficiente;
+- `supplier` nao pertence ao contrato `Product` de primeiro nivel e deve permanecer em `legacyRefs` quando surgir no legado;
+- `type` legado deve permanecer em `legacyRefs` sempre que nao houver campo canonico aprovado;
+- `stockBalance` continua sendo projecao observada, nao trilha auditavel de estoque;
+- `category` e `barcode` podem estar ausentes no seed legado sem impedir o contrato minimo;
+- `productAdapter` nao deve alterar preco, margem ou estoque real;
+- sem `name` ou `sourceId` o contrato deve falhar de forma controlada.
+
 ### 4.5 Supply
 
 Obrigatorio validar:
@@ -275,12 +297,24 @@ Cobertura consolidada em `LP-WEB-ADAPTER-HELPERS-001`:
 - quando a regra nao for universal, ela deve permanecer local ao adapter de dominio, como no caso da validacao especifica de `serviceAdapter`;
 - qualquer helper novo deve provar que reduz repeticao estrutural real e nao apenas desloca complexidade para outro arquivo.
 
+Cobertura expandida em `LP-WEB-010`:
+
+- importacao de `productAdapter` em Node puro;
+- exports minimos de `productAdapter`;
+- cenario valido de `productAdapter`;
+- cenario invalido de `productAdapter` sem nome;
+- cenario invalido de `productAdapter` sem `sourceId`;
+- cenario invalido de `productAdapter` sem `organizationId`;
+- geracao de envelope para produto com `validation`, `warnings`, `metadata` e `sourceId` preservado.
+
 Regra oficial para proximos adapters:
 
 - todo novo adapter puro deve entrar no Adapter Contract Gate no mesmo slice em que for criado;
 - cada adapter novo deve adicionar ao menos uma fixture valida e uma fixture invalida controladas;
 - a fixture invalida deve demonstrar bloqueio formal por campo obrigatorio, contexto ou identidade ausente;
 - o gate deve continuar provando `organizationId`, timestamps, envelope, `warnings`, `validation` e separacao entre `id` e `sourceId` para cada adapter promovido ao baseline.
+- com `LP-WEB-010`, o baseline automatizado minimo passa a cobrir `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter`;
+- qualquer mudanca em `adapterHelpers.js` ou no Adapter Gate deve revalidar os quatro adapters em conjunto antes da liberacao de um quinto dominio.
 
 ## 7. Decisao desta fase
 

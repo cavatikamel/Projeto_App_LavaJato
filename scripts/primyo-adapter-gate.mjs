@@ -11,7 +11,8 @@ const adapterFiles = {
   helper: "app/adapters/shared/adapterHelpers.js",
   customer: "app/adapters/customerAdapter.js",
   vehicle: "app/adapters/vehicleAdapter.js",
-  service: "app/adapters/serviceAdapter.js"
+  service: "app/adapters/serviceAdapter.js",
+  product: "app/adapters/productAdapter.js"
 };
 
 const forbiddenRuntimePatterns = [
@@ -112,6 +113,7 @@ async function main() {
     const customerSource = loadAdapterSource(adapterFiles.customer);
     const vehicleSource = loadAdapterSource(adapterFiles.vehicle);
     const serviceSource = loadAdapterSource(adapterFiles.service);
+    const productSource = loadAdapterSource(adapterFiles.product);
 
     await runCheck("Adapter Helper Runtime Independence", () => {
       for (const entry of forbiddenRuntimePatterns) {
@@ -137,10 +139,17 @@ async function main() {
       }
     });
 
+    await runCheck("Product Adapter Runtime Independence", () => {
+      for (const entry of forbiddenRuntimePatterns) {
+        assert(!entry.pattern.test(productSource), `productAdapter contains forbidden ${entry.label}.`);
+      }
+    });
+
     const helperModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.helper)).href);
     const customerModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.customer)).href);
     const vehicleModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.vehicle)).href);
     const serviceModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.service)).href);
+    const productModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.product)).href);
 
     await runCheck("Adapter Helper Imports", () => {
       assert(typeof helperModule.normalizeSourceId === "function", "normalizeSourceId export is missing.");
@@ -173,6 +182,10 @@ async function main() {
       assert(
         serviceSource.includes('./shared/adapterHelpers.js'),
         "serviceAdapter should import the shared adapter helpers module."
+      );
+      assert(
+        productSource.includes('./shared/adapterHelpers.js'),
+        "productAdapter should import the shared adapter helpers module."
       );
     });
 
@@ -224,6 +237,23 @@ async function main() {
       assert(
         typeof serviceModule.SERVICE_CONTRACT_VERSION === "string",
         "SERVICE_CONTRACT_VERSION export is missing."
+      );
+    });
+
+    await runCheck("Product Adapter Imports", () => {
+      assert(typeof productModule.toProductContract === "function", "toProductContract export is missing.");
+      assert(
+        typeof productModule.validateProductContract === "function",
+        "validateProductContract export is missing."
+      );
+      assert(
+        typeof productModule.createProductContractEnvelope === "function",
+        "createProductContractEnvelope export is missing."
+      );
+      assert(typeof productModule.PRODUCT_CONTRACT_NAME === "string", "PRODUCT_CONTRACT_NAME export is missing.");
+      assert(
+        typeof productModule.PRODUCT_CONTRACT_VERSION === "string",
+        "PRODUCT_CONTRACT_VERSION export is missing."
       );
     });
 
@@ -547,6 +577,142 @@ async function main() {
       assert(
         result.warnings.some((warning) => warning.includes("CTX_ORGANIZATION_ID_REQUIRED")),
         "service invalid context should report CTX_ORGANIZATION_ID_REQUIRED."
+      );
+    });
+
+    const productContext = {
+      organizationId: "org_primyo",
+      now: "2026-06-26T12:00:00.000Z",
+      defaultStatus: "active",
+      source: "web.productCatalog",
+      sourceId: "55",
+      strictMode: true,
+      allowWarnings: true
+    };
+    const productValidLegacy = {
+      id: 55,
+      sku: "PRD-055",
+      name: "Shampoo concentrado premium",
+      unit: "un",
+      price: 49.9,
+      cost: 21.5,
+      stock: 12,
+      minStock: 4,
+      active: true,
+      category: "Vitrine",
+      notes: "Produto de giro rapido.",
+      createdAt: "2026-06-20T10:00:00.000Z",
+      updatedAt: "2026-06-26T11:00:00.000Z"
+    };
+    const productMissingNameLegacy = {
+      id: 55,
+      sku: "PRD-055",
+      unit: "un",
+      price: 49.9,
+      active: true,
+      createdAt: "2026-06-20T10:00:00.000Z",
+      updatedAt: "2026-06-26T11:00:00.000Z"
+    };
+    const productMissingSourceLegacy = {
+      sku: "PRD-055",
+      name: "Shampoo concentrado premium",
+      unit: "un",
+      price: 49.9,
+      active: true,
+      createdAt: "2026-06-20T10:00:00.000Z",
+      updatedAt: "2026-06-26T11:00:00.000Z"
+    };
+
+    await runCheck("Product Adapter Valid Scenario", () => {
+      const legacySnapshot = JSON.stringify(productValidLegacy);
+      const result = productModule.toProductContract(productValidLegacy, productContext);
+
+      assert(result.ok === true, "valid product result should be ok.");
+      assertValidationShape(result.validation, "product valid result.validation");
+      assert(result.validation.ok === true, "product valid result.validation.ok should be true.");
+      assertWarningsArray(result, "product valid result");
+      assert(result.sourceId === productContext.sourceId, "product valid result should preserve sourceId.");
+      assert(result.productContract.organizationId === productContext.organizationId, "product organizationId should come from context.");
+      assert(result.productContract.createdAt === productValidLegacy.createdAt, "product createdAt should preserve explicit legacy timestamp.");
+      assert(result.productContract.updatedAt === productValidLegacy.updatedAt, "product updatedAt should preserve explicit legacy timestamp.");
+      assert(result.productContract.salePrice === 49.9, "product salePrice should map from legacy price.");
+      assert(result.productContract.costPrice === 21.5, "product costPrice should map from legacy cost.");
+      assert(result.productContract.stockBalance === 12, "product stockBalance should map from legacy stock.");
+      assert(result.productContract.isActive === true, "product isActive should reflect legacy active state.");
+      assert(
+        result.productContract.id !== result.sourceId,
+        "product canonical id should remain separated from sourceId."
+      );
+      assert(
+        result.productContract.id.startsWith("product:legacy:"),
+        "product canonical id should follow the shared namespace strategy."
+      );
+      assertInputNotMutated(legacySnapshot, productValidLegacy, "productAdapter");
+
+      const envelopeResult = productModule.createProductContractEnvelope(result.productContract, productContext);
+      assert(envelopeResult.ok === true, "product envelope should be valid.");
+      assertValidationShape(envelopeResult.validation, "product envelope result.validation");
+      assertWarningsArray(envelopeResult, "product envelope result");
+      assertEnvelopeShape(envelopeResult.productContractEnvelope, {
+        label: "productContractEnvelope",
+        contractName: productModule.PRODUCT_CONTRACT_NAME,
+        contractVersion: productModule.PRODUCT_CONTRACT_VERSION,
+        organizationId: productContext.organizationId,
+        sourceId: productContext.sourceId,
+        emittedAt: productContext.now,
+        createdAt: productValidLegacy.createdAt,
+        updatedAt: productValidLegacy.updatedAt
+      });
+    });
+
+    await runCheck("Product Adapter Invalid Required Field Scenario", () => {
+      const result = productModule.toProductContract(productMissingNameLegacy, productContext);
+
+      assert(result.ok === false, "product invalid required field result should fail.");
+      assertValidationShape(result.validation, "product invalid required field validation");
+      assert(result.validation.ok === false, "product invalid required field validation.ok should be false.");
+      assert(result.validation.blocking === true, "product invalid required field validation should be blocking.");
+      assert(
+        result.missingRequiredFields.includes("name"),
+        "product invalid required field should report missing name."
+      );
+      assertWarningsArray(result, "product invalid required field result");
+    });
+
+    await runCheck("Product Adapter Invalid Source Scenario", () => {
+      const result = productModule.toProductContract(productMissingSourceLegacy, {
+        ...productContext,
+        sourceId: ""
+      });
+
+      assert(result.ok === false, "product invalid source result should fail.");
+      assertValidationShape(result.validation, "product invalid source validation");
+      assert(
+        result.missingRequiredFields.includes("sourceId"),
+        "product invalid source should report missing sourceId."
+      );
+      assert(result.missingRequiredFields.includes("id"), "product invalid source should report missing id.");
+      assert(
+        result.warnings.some((warning) => warning.includes("CTX_SOURCE_ID_REQUIRED")),
+        "product invalid source should report CTX_SOURCE_ID_REQUIRED."
+      );
+    });
+
+    await runCheck("Product Adapter Invalid Context Scenario", () => {
+      const result = productModule.toProductContract(productValidLegacy, {
+        ...productContext,
+        organizationId: ""
+      });
+
+      assert(result.ok === false, "product invalid context result should fail.");
+      assertValidationShape(result.validation, "product invalid context validation");
+      assert(
+        result.missingRequiredFields.includes("organizationId"),
+        "product invalid context should report missing organizationId."
+      );
+      assert(
+        result.warnings.some((warning) => warning.includes("CTX_ORGANIZATION_ID_REQUIRED")),
+        "product invalid context should report CTX_ORGANIZATION_ID_REQUIRED."
       );
     });
 

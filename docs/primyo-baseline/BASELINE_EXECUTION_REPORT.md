@@ -216,6 +216,57 @@ Ocorrencias operacionais:
 - nenhuma falha real de gate, build ou verify foi observada no resultado final desta closure;
 - nenhum lock transitorio em `dist` precisou de tratamento nesta revalidacao.
 
+## Atualizacao de baseline - LP-WEB-010
+
+Atualizacao registrada em: `2026-06-26`
+
+`LP-WEB-010` incorporou o quarto adapter puro oficial da trilha do web sem alterar runtime, e absorveu a nova cobertura do Adapter Contract Gate como parte do estado tecnico oficial.
+
+O estado oficial do gate apos esta absorcao passa a incluir:
+
+- `node --check app/adapters/shared/adapterHelpers.js`;
+- `node --check app/adapters/customerAdapter.js`;
+- `node --check app/adapters/vehicleAdapter.js`;
+- `node --check app/adapters/serviceAdapter.js`;
+- `node --check app/adapters/productAdapter.js`;
+- `node --check scripts/primyo-adapter-gate.mjs`;
+- `node scripts/primyo-adapter-gate.mjs` com cenarios validos e invalidos para cliente, veiculo, servico e produto;
+- `npm.cmd run primyo:gate`;
+- `npm.cmd run build`;
+- `npm.cmd run verify:build`.
+
+Evidencia de adocao:
+
+```text
+PASS Product Adapter Runtime Independence
+PASS Product Adapter Imports
+PASS Product Adapter Valid Scenario
+PASS Product Adapter Invalid Required Field Scenario
+PASS Product Adapter Invalid Source Scenario
+PASS Product Adapter Invalid Context Scenario
+
+Adapter Gate Result: SUCCESS
+Gate Result: SUCCESS
+```
+
+Comandos reexecutados nesta fase:
+
+- `node --check app/adapters/shared/adapterHelpers.js` -> sucesso
+- `node --check app/adapters/customerAdapter.js` -> sucesso
+- `node --check app/adapters/vehicleAdapter.js` -> sucesso
+- `node --check app/adapters/serviceAdapter.js` -> sucesso
+- `node --check app/adapters/productAdapter.js` -> sucesso
+- `node --check scripts/primyo-adapter-gate.mjs` -> sucesso
+- `node scripts/primyo-adapter-gate.mjs` -> sucesso
+- `npm.cmd run primyo:gate` -> sucesso
+- `npm.cmd run build` -> sucesso
+- `npm.cmd run verify:build` -> sucesso
+
+Ocorrencias operacionais:
+
+- nenhuma falha real de gate, build ou verify foi observada no resultado final desta closure;
+- nenhum lock transitorio em `dist` precisou de tratamento nesta revalidacao.
+
 ## Atualizacao de baseline - LP-WEB-009
 
 Atualizacao registrada em: `2026-06-26`
@@ -322,5 +373,5 @@ O estado oficial observado nesta fase e:
 - sintaxe do script FIPE passa;
 - arquivos obrigatorios do workflow estao presentes.
 - `npm.cmd run primyo:gate` e a validacao tecnica oficial minima para proximas mudancas web.
-- `scripts/primyo-adapter-gate.mjs` agora compoe a baseline oficial do gate para proteger `customerAdapter`, `vehicleAdapter` e `serviceAdapter`.
-- `app/adapters/shared/adapterHelpers.js` agora compoe a baseline oficial da camada compartilhada de adapters e deve ser revalidado junto com os tres adapters puros.
+- `scripts/primyo-adapter-gate.mjs` agora compoe a baseline oficial do gate para proteger `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter`.
+- `app/adapters/shared/adapterHelpers.js` agora compoe a baseline oficial da camada compartilhada de adapters e deve ser revalidado junto com os quatro adapters puros.

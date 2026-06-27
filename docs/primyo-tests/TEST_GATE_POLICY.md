@@ -22,6 +22,7 @@ Ele executa:
 - `node --check app/adapters/shared/adapterHelpers.js`;
 - `node --check app/adapters/vehicleAdapter.js`;
 - `node --check app/adapters/serviceAdapter.js`;
+- `node --check app/adapters/productAdapter.js`;
 - `node --check scripts/primyo-adapter-gate.mjs`;
 - `node scripts/primyo-adapter-gate.mjs`;
 - `node --check app/main.js`;
@@ -96,6 +97,18 @@ Estado oficial apos `LP-WEB-ADAPTER-HELPERS-001`:
 - o Adapter Contract Gate passa a provar que `customerAdapter`, `vehicleAdapter` e `serviceAdapter` continuam importando o helper comum;
 - qualquer mudanca em `adapterHelpers.js` passa a exigir revalidacao conjunta dos tres adapters, do Adapter Gate, do Primyo Gate, do build e do verify;
 - a cobertura continua local e sem runtime: nenhum adapter foi integrado ao produto por causa desta consolidacao.
+
+Estado oficial apos `LP-WEB-010`:
+
+- `scripts/primyo-adapter-gate.mjs` passa a importar `productAdapter` em Node puro;
+- o gate valida exports minimos de `productAdapter`;
+- o gate executa cenarios validos e invalidos controlados para produto;
+- o gate valida `price -> salePrice`, `cost -> costPrice`, `stock -> stockBalance`, `organizationId`, timestamps, envelope e separacao entre `id` e `sourceId` no dominio de produto;
+- `productAdapter` passa a estar protegido por regressao automatica minima oficial;
+- o estado oficial do gate passa a cobrir `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter`;
+- qualquer novo adapter puro deve entrar no Adapter Contract Gate no mesmo slice em que for criado;
+- nenhum adapter foi integrado ao runtime;
+- `app/main.js` permanece fora do escopo desta fase.
 
 Limites atuais desta cobertura:
 
@@ -222,6 +235,19 @@ Revalidacao final executada em `2026-06-26` para encerrar `LP-WEB-009`:
 
 Revalidacao estrutural executada em `2026-06-26` para absorver `LP-WEB-ADAPTER-HELPERS-001`:
 
+- `node --check app/adapters/shared/adapterHelpers.js` -> sucesso
+- `node --check app/adapters/customerAdapter.js` -> sucesso
+- `node --check app/adapters/vehicleAdapter.js` -> sucesso
+- `node --check app/adapters/serviceAdapter.js` -> sucesso
+- `node --check scripts/primyo-adapter-gate.mjs` -> sucesso
+- `node scripts/primyo-adapter-gate.mjs` -> sucesso
+- `npm.cmd run primyo:gate` -> sucesso
+- `npm.cmd run build` -> sucesso
+- `npm.cmd run verify:build` -> sucesso
+
+Revalidacao estrutural executada em `2026-06-26` para implementar `LP-WEB-010`:
+
+- `node --check app/adapters/productAdapter.js` -> sucesso
 - `node --check app/adapters/shared/adapterHelpers.js` -> sucesso
 - `node --check app/adapters/customerAdapter.js` -> sucesso
 - `node --check app/adapters/vehicleAdapter.js` -> sucesso

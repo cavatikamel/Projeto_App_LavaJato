@@ -255,3 +255,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: `app/adapters/shared/adapterHelpers.js` foi aceito como camada compartilhada minima oficial da trilha de adapters, com `customerAdapter`, `vehicleAdapter` e `serviceAdapter` refatorados sem mudanca de API publica e sem qualquer integracao a `app/main.js` ou ao runtime.
 - Observacao de risco: a proxima fatia nao deve integrar adapters nem abrir Supabase; a prioridade recomendada passa a ser `LP-WEB-010` com `productAdapter` como quarto adapter puro oficial, aproveitando o helper comum ja consolidado.
+
+### LP-WEB-010
+
+- Change record: `docs/primyo-changes/LP-WEB-010.md`
+- Closure: `docs/primyo-changes/LP-WEB-010-CLOSURE.md`
+- Resultado: `Aceito`
+- Observacao principal: `productAdapter` foi aceito como quarto adapter puro oficial do web, aderente ao baseline compartilhado e com o Adapter Contract Gate ampliado para quatro adapters, sem qualquer integracao a `app/main.js`, ao runtime ou ao estoque real.
+- Observacao de risco: a proxima fatia nao deve integrar adapters nem abrir Supabase; a prioridade recomendada passa a ser `LP-WEB-011` com `supplyAdapter` como proximo adapter puro oficial, preservando a diferenca entre produto vendavel, insumo tecnico e movimento de estoque.

@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `LP-WEB-ADAPTER-HELPERS-001` na baseline oficial.
+Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `LP-WEB-010` na baseline oficial.
 
 ## 2. Arquivos criticos
 
@@ -31,6 +31,9 @@ Identificar os pontos tecnicos mais sensiveis do LavaPrime apos a absorcao de `L
 - `app/adapters/serviceAdapter.js`
   - hospeda o terceiro adapter puro oficial de contrato do web
   - converte servico legado para o contrato `Service` sem integrar o runtime atual
+- `app/adapters/productAdapter.js`
+  - hospeda o quarto adapter puro oficial de contrato do web
+  - converte produto legado para o contrato `Product` sem integrar o runtime atual
 - `app/adapters/shared/adapterHelpers.js`
   - hospeda a camada compartilhada minima de helpers estruturais dos adapters puros
   - concentra identidade, envelope, metadata, warnings e `legacyRefs` sem integrar o runtime atual
@@ -358,7 +361,6 @@ Limitacoes atuais:
 
 Modulos documentados para criacao futura:
 
-- `productAdapter`
 - `supplyAdapter`
 - `attendanceAdapter`
 - `paymentAdapter`
@@ -502,6 +504,58 @@ Relacao futura com Supabase:
 - ainda nao resolve `serviceSupplyProfiles`, sincronizacao Android ou ownership tecnico de insumos;
 - reduz o risco de abrir `LP-SUPABASE-001` antes de uma terceira evidencia pratica de adapter puro.
 
+#### `productAdapter`
+
+Localizacao atual:
+
+- `app/adapters/productAdapter.js`.
+
+API publica:
+
+- `toProductContract(...)`
+- `validateProductContract(...)`
+- `createProductContractEnvelope(...)`
+- `PRODUCT_CONTRACT_NAME`
+- `PRODUCT_CONTRACT_VERSION`
+
+Relacao com `PRODUCT_CONTRACT.md`:
+
+- converte o shape legado de produto para o contrato `Product`;
+- segue o baseline compartilhado de `id`, `sourceId`, `legacyRefs`, envelope, contexto, status, timestamps e compatibilidade;
+- traduz `price -> salePrice`, `cost -> costPrice` e `stock -> stockBalance` de forma explicita e controlada;
+- preserva `supplier` e `type` em `legacyRefs` quando aparecem, sem promove-los a ownership canonico do contrato;
+- preserva `stockBalance` como projecao atual, sem tratar esse campo como trilha auditavel de estoque.
+
+Relacao atual com `app/main.js`:
+
+- nenhuma integracao em runtime nesta baseline;
+- nenhum import ativo em `app/main.js`;
+- nenhuma alteracao de comportamento funcional, visual, estoque real ou precificacao.
+
+Relacao com `adapterHelpers`:
+
+- reutiliza a camada compartilhada minima para identidade, envelope, metadata, warnings e validation comum;
+- amplia a prova de repetibilidade da trilha de helpers para um quarto dominio puro;
+- confirma que o helper comum continua estrutural e nao absorve regra de negocio especifica de produto.
+
+Relacao futura com `supplyAdapter`:
+
+- prepara a diferenca contratual entre item vendavel e item de consumo antes de qualquer integracao funcional;
+- reduz o risco de confundir produto de venda com insumo tecnico na proxima fatia;
+- abre caminho para `supplyAdapter` tratar `supplierName`, `compatibilityMetadata` e composicao tecnica sem contaminar o contrato `Product`.
+
+Relacao futura com controle de estoque:
+
+- preserva `stockBalance` apenas como estado observado;
+- nao implementa baixa, estorno, margem, inventario auditavel nem movimento de estoque;
+- deixa explicito que movimentacao historica continua sendo problema de fase futura propria.
+
+Relacao futura com Supabase:
+
+- prepara o dominio de produtos para futura traducao controlada entre legado, contratos e leitura remota;
+- ainda nao resolve fornecedor, movimento de estoque, relacionamento com insumo ou sincronizacao Android;
+- reduz o risco de abrir `LP-SUPABASE-001` antes de uma quarta evidencia pratica de adapter puro.
+
 #### `adapterHelpers`
 
 Localizacao atual:
@@ -521,18 +575,18 @@ API publica:
 - `normalizeLegacyRefs(...)`
 - `createContractEnvelope(...)`
 
-Relacao com `customerAdapter`, `vehicleAdapter` e `serviceAdapter`:
+Relacao com `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter`:
 
 - fornece a camada compartilhada minima de identidade, envelope, metadata, warnings e `legacyRefs`;
 - reduz repeticao estrutural sem mover regras especificas de dominio para um helper generico;
-- e reutilizado pelos tres adapters puros oficiais do web;
+- e reutilizado pelos quatro adapters puros oficiais do web;
 - nao substitui a validacao especifica local de `serviceAdapter`, que continua deliberadamente separada.
 
 Relacao com o Adapter Gate:
 
-- `scripts/primyo-adapter-gate.mjs` valida pureza estrutural, imports minimos e uso do helper comum pelos tres adapters;
+- `scripts/primyo-adapter-gate.mjs` valida pureza estrutural, imports minimos e uso do helper comum pelos quatro adapters;
 - `scripts/primyo-gate.mjs` trata `app/adapters/shared/adapterHelpers.js` como modulo critico da trilha;
-- qualquer mudanca em `adapterHelpers.js` passa a exigir revalidacao conjunta dos tres adapters, do Adapter Gate, do Primyo Gate, do build e do verify.
+- qualquer mudanca em `adapterHelpers.js` passa a exigir revalidacao conjunta dos quatro adapters, do Adapter Gate, do Primyo Gate, do build e do verify.
 
 Limites da camada:
 
@@ -566,8 +620,8 @@ Relacao entre os gates:
 
 Cobertura atual absorvida na baseline:
 
-- importacao em Node puro de `customerAdapter`, `vehicleAdapter` e `serviceAdapter`;
-- checagem de exports minimos dos tres adapters;
+- importacao em Node puro de `customerAdapter`, `vehicleAdapter`, `serviceAdapter` e `productAdapter`;
+- checagem de exports minimos dos quatro adapters;
 - fixture valida de cliente;
 - fixture invalida de cliente;
 - fixture valida de veiculo;
@@ -576,6 +630,10 @@ Cobertura atual absorvida na baseline:
 - fixture invalida de servico por campo obrigatorio;
 - fixture invalida de servico por `sourceId` ausente;
 - fixture invalida de servico por `organizationId` ausente;
+- fixture valida de produto;
+- fixture invalida de produto por campo obrigatorio;
+- fixture invalida de produto por `sourceId` ausente;
+- fixture invalida de produto por `organizationId` ausente;
 - validacao de envelope, `validation`, `warnings`, `organizationId`, timestamps e separacao entre `id` e `sourceId`;
 - verificacao de ausencia de dependencia de runtime do LavaPrime;
 - verificacao de ausencia de mutacao dos fixtures de entrada.
@@ -603,7 +661,7 @@ Cobertura atual absorvida na baseline:
 - qualquer alteracao em `app/storage/storageBoundary.js` deve preservar chaves, payloads e fallback atual de persistencia local.
 - a maior parte da persistencia de negocio continua atravessando wrappers dentro de `app/main.js`.
 - os adapters puros ja compartilham helpers estruturais minimos, mas ainda nao possuem resolver comum de relacionamentos ou IDs cross-domain.
-- o Adapter Contract Gate agora cobre tres adapters oficiais e ainda nao substitui smoke funcional futuro.
+- o Adapter Contract Gate agora cobre quatro adapters oficiais e ainda nao substitui smoke funcional futuro.
 
 ## 11. Checagens legadas que ainda existem
 
@@ -638,9 +696,10 @@ O mapa tecnico confirma que o LavaPrime agora possui duas fronteiras locais ofic
 - `customerAdapter` revisado passa a ser o modelo de referencia para os proximos adapters puros, sem consumo funcional em runtime;
 - `vehicleAdapter` amplia essa trilha como segunda prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
 - `serviceAdapter` amplia essa trilha como terceira prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
+- `productAdapter` amplia essa trilha como quarta prova de repetibilidade do baseline compartilhado, ainda sem consumo funcional em runtime;
 - `adapterHelpers` consolida a primeira camada compartilhada minima da trilha de adapters, sem integrar nada ao runtime;
-- `scripts/primyo-adapter-gate.mjs` agora protege os tres adapters puros com regressao automatica minima antes de qualquer integracao funcional;
+- `scripts/primyo-adapter-gate.mjs` agora protege os quatro adapters puros com regressao automatica minima antes de qualquer integracao funcional;
 - as checagens mais sensiveis ja estao centralizadas, mas a cobertura ainda e parcial;
 - integracoes futuras existem, mas seguem proibidas nesta fase;
 - a proxima etapa nao deve integrar adapters ao runtime ainda;
-- a proxima prioridade recomendada passa a ser `LP-WEB-010`, com `productAdapter` como quarto adapter puro de master data agora que a camada compartilhada minima foi consolidada.
+- a proxima prioridade recomendada passa a ser `LP-WEB-011`, com `supplyAdapter` como proximo adapter puro de master data agora que `productAdapter` foi absorvido sem alterar runtime.
