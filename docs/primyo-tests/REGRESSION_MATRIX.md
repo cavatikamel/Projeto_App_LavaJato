@@ -122,6 +122,16 @@ Cobertura tecnica minima agora esperada para adapters puros:
 - o Adapter Gate agora tambem deve cobrir `canonicalId` com entidade correta, falha por entidade errada, `legacyRefs` inexistentes, `legacyRefs` ambiguos, query vazia, indice vazio, entradas invalidas, contratos duplicados, imutabilidade das fixtures e falhas com `code` e `reason` explicitos.
 - futuras mudancas em `idResolver.js` devem revalidar Adapter Gate, Primyo Gate, build e verify junto com os cinco adapters puros oficiais.
 
+Cobertura minima esperada para futura integracao de adapter ou `idResolver` ao runtime:
+
+- `npm.cmd run primyo:gate`;
+- smoke manual do dominio tocado;
+- revalidacao de `LA`, `LO`, `LG`, `PA`, `AD` e `NV`;
+- console limpo no fluxo integrado;
+- comparacao controlada entre dado legado ativo e contrato derivado quando a fatia estiver em modo sombra;
+- proibicao de combinar primeira integracao de adapter com uso funcional de `idResolver` no mesmo slice;
+- proibicao de tocar estoque, financeiro ou Supabase na primeira entrada de runtime da trilha.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

@@ -31,6 +31,7 @@
 | LP-DOC-EXEC-001 | Consolidar Primyo Lean Mode para prompts curtos e seguros | P2 | Baixo | LP-WEB-010 | Docs, Governanca | Baixo | Concluido em `2026-06-27`. Foi criada a base documental do Lean Mode para reduzir repeticao de regras nos proximos prompts sem reduzir gate, rollback, rastreabilidade ou controle de escopo. | Os prompts futuros podem referenciar regras locais consolidadas, com qualidade e seguranca preservadas. | Documentos de execucao, politica de prompt, formato de resposta, regras de commit, tipos de fase, change record e `npm.cmd run primyo:gate` aprovado. |
 | LP-WEB-011 | Implementar quinto adapter puro de contrato para master data de insumos | P2 | Medio | LP-WEB-010, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-27`. `supplyAdapter` foi criado em `app/adapters/supplyAdapter.js`, seguindo o baseline compartilhado dos adapters anteriores, com gate ampliado e sem integracao ao runtime. | O quinto adapter puro existe, e reversivel, e converte insumo legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, closure, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
 | LP-WEB-ID-RESOLVER-002 | Implementar primeira camada pura de resolucao de IDs cross-domain | P2 | Medio | LP-WEB-ID-RESOLVER-001, LP-TEST-AUTO-003, LP-DATA-006 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-27`. `app/adapters/shared/idResolver.js` foi criado como modulo puro e reversivel, com gate ampliado e sem integracao ao runtime. | O resolvedor puro existe, bloqueia ambiguidade e lookup por nome/placa, preserva `legacyRefs` e nao altera comportamento percebido. | Change record, closure, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify e rollback documentado. |
+| LP-WEB-INTEGRATION-READINESS-001 | Avaliar readiness de runtime para adapters e idResolver | P1 | Alto | LP-WEB-011, LP-WEB-ID-RESOLVER-002, LP-TEST-AUTO-004 | Web, Docs | Medio/Alto | Concluido em `2026-06-28`. A readiness de runtime foi documentada com avaliacao dos cinco adapters, do `idResolver`, da cobertura do gate, dos riscos de integracao, do rollback, do smoke manual futuro e da primeira fatia recomendada. | Existe estrategia conservadora aprovada para a primeira integracao real ao runtime, sem tocar `app/main.js` nesta fase. | `docs/primyo-web-integration/`, change record da fase, `npm.cmd run primyo:gate` aprovado e decisao formal da primeira fatia futura. |
 | LP-DOC-HANDOFF-001 | Consolidar handoff seguro para compactacao do contexto do Codex | P3 | Baixo | LP-DOC-EXEC-001, LP-WEB-011 | Docs, Governanca | Baixo | Concluido em `2026-06-27`. Foi criada a base documental de handoff para registrar branch, commits relevantes, estado tecnico atual, fora de escopo persistente e checklist de compactacao segura do chat. | O proximo contexto consegue retomar a trilha Primyo com baixo risco de perda de contexto, sem reduzir gate, rollback ou controle de escopo. | Handoff summary, checklist de compactacao, change record, closure e `npm.cmd run primyo:gate` aprovado. |
 | LP-PERM-001 | Alinhar regras de administrador e operador | P1 | Alto | LP-SEC-003 | Web, Android | Medio | Concluido em `2026-06-23`. A matriz oficial de permissoes foi formalizada para Administrador e Operador, com perfis futuros planejados sem implementacao. | Cada permissao critica possui racional, politica, readiness RLS e cenarios de teste. | Matriz revisada, acoes sensiveis, politica de permissao, readiness RLS, cenarios de teste e validacoes tecnicas aprovadas. |
 | LP-TEST-001 | Formalizar baseline minima de testes web | P1 | Alto | Nenhuma | Web, CI, Docs | Baixo | Consolidar build, verificacoes existentes e fluxos manuais obrigatorios antes de qualquer mudanca funcional. | Existe pacote minimo repetivel para validar cada fatia web. | Documento de baseline, execucao registrada. |
@@ -1079,3 +1080,37 @@
   - a cobertura continua local e conceitual, sem uso funcional em runtime;
   - relacoes com atendimento, pagamento e financeiro continuam fora do baseline real de uso;
   - integrar runtime ou abrir Supabase continua prematuro antes do closure formal.
+
+### LP-WEB-INTEGRATION-READINESS-001
+
+- Status: `Concluido`
+- Data: `2026-06-28`
+- Arquivos alterados:
+  - `docs/primyo-web-integration/INTEGRATION_READINESS_ASSESSMENT.md`
+  - `docs/primyo-web-integration/FIRST_RUNTIME_INTEGRATION_CANDIDATES.md`
+  - `docs/primyo-web-integration/INTEGRATION_RISK_MATRIX.md`
+  - `docs/primyo-web-integration/INTEGRATION_ROLLBACK_PLAN.md`
+  - `docs/primyo-web-integration/INTEGRATION_SMOKE_TEST_PLAN.md`
+  - `docs/primyo-web-integration/RECOMMENDED_FIRST_SLICE.md`
+  - `docs/primyo-changes/LP-WEB-INTEGRATION-READINESS-001.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `git status --short` -> sucesso;
+  - `git diff --name-only` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - readiness de runtime registrada em `docs/primyo-web-integration/`;
+  - primeira fatia futura recomendada registrada como `LP-WEB-INTEGRATION-001`.
+- Observacoes:
+  - nenhum adapter foi alterado;
+  - `idResolver` permaneceu intacto;
+  - `app/main.js` permaneceu intacto;
+  - a fase consolidou apenas readiness, risco, rollback, smoke e decisao da primeira integracao futura;
+  - a proxima fatia recomendada passa a ser `LP-WEB-INTEGRATION-001`.
+- Riscos remanescentes:
+  - tocar `app/main.js` continua sendo risco alto;
+  - `idResolver` ainda nao deve entrar no primeiro slice funcional;
+  - veiculo, servico, produto, insumo, estoque e Supabase continuam cedo demais para a primeira integracao.

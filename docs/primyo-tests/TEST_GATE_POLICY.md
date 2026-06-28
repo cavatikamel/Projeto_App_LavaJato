@@ -163,6 +163,24 @@ Estado oficial apos `LP-TEST-AUTO-004`:
 - nenhuma integracao funcional foi iniciada;
 - `app/main.js` permanece fora do escopo desta fase.
 
+## Readiness para primeira integracao em runtime
+
+Antes de qualquer fase que passe a usar adapters ou `idResolver` dentro de `app/main.js`, passa a valer:
+
+- `npm.cmd run primyo:gate` continua obrigatorio;
+- o Adapter Gate continua obrigatorio e nao pode ser afrouxado;
+- o primeiro slice deve tocar um unico dominio;
+- o primeiro slice deve preferir leitura/sombra;
+- `idResolver` nao deve entrar no primeiro slice funcional;
+- estoque, financeiro e Supabase continuam proibidos na primeira integracao;
+- smoke manual do dominio tocado passa a ser obrigatorio junto com `LA`, `LO`, `LG`, `PA`, `AD` e `NV`;
+- rollback simples em `app/main.js` deve estar documentado antes da implementacao.
+
+Diretriz oficial de entrada:
+
+- a primeira integracao recomendada e `customerAdapter` em leitura/sombra;
+- `vehicleAdapter`, `serviceAdapter`, `productAdapter`, `supplyAdapter` e `idResolver` ficam rejeitados como primeira entrada de runtime.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

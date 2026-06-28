@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Registrar a decisao oficial da proxima fatia apos a implementacao de `LP-TEST-AUTO-004`.
+Registrar a decisao oficial da proxima fatia apos `LP-WEB-INTEGRATION-READINESS-001`.
 
 ## Estado atual consolidado
 
@@ -10,60 +10,80 @@ Estado atual da trilha:
 
 - `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter` continuam puros e fora do runtime;
 - `adapterHelpers` continua sendo a camada compartilhada minima dos adapters;
-- `idResolver` agora existe em `app/adapters/shared/idResolver.js` como modulo puro, reversivel e fechado formalmente;
-- o Adapter Gate agora cobre os cinco adapters puros e o resolvedor de IDs com regressao endurecida;
+- `idResolver` existe como modulo puro, endurecido por gate e ainda fora do runtime;
+- o Adapter Gate cobre os cinco adapters e o resolvedor de IDs;
 - `app/main.js` continua intacto;
 - nenhuma integracao funcional foi iniciada;
 - Supabase continua fechado.
 
 ## Opcoes avaliadas
 
-### `LP-TEST-AUTO-004-CLOSURE`
+### `LP-WEB-INTEGRATION-001`
 
-- Vantagem: absorve formalmente a nova baseline automatizada antes de qualquer nova fase tecnica;
-- Vantagem: atualiza baseline, backlog, policy e change control sem abrir escopo funcional;
-- Vantagem: preserva o padrao seguro de implementar, fechar e so depois decidir o proximo passo funcional ou estrutural.
+- Vantagem: inicia a primeira integracao real de forma pequena e reversivel;
+- Vantagem: usa o adapter mais maduro da trilha;
+- Vantagem: permite validar runtime sem abrir estoque, financeiro ou Supabase;
+- Vantagem: mantem `idResolver` fora do primeiro slice.
 
-### Integracao do resolvedor ao runtime
+### `vehicleAdapter` como primeira integracao
 
-- Risco: continua prematura;
-- Risco: attendance, payment e financial ainda nao passaram pela mesma maturidade de adaptacao e ownership;
-- Risco: aumentaria impacto funcional sem necessidade nesta janela.
+- Risco: ownership de cliente ainda e transitorio;
+- Risco: placa continua sendo pista forte do legado;
+- Risco: historico de ownership ainda nao esta maduro.
+
+### `serviceAdapter` como primeira integracao
+
+- Risco: aproxima a fase de atendimento e consumo tecnico cedo demais;
+- Risco: `supplyProfileRefs` ainda nao deve virar relacao funcional.
+
+### `productAdapter` ou `supplyAdapter` como primeira integracao
+
+- Risco: aproximam a trilha de estoque e consumo real;
+- Risco: `stockBalance` continua sendo projecao observada, nao trilha auditavel.
+
+### Integracao de `idResolver` no primeiro slice
+
+- Risco: eleva o risco relacional sem necessidade;
+- Risco: mistura identidade cross-domain com a primeira alteracao em `app/main.js`.
 
 ### `LP-SUPABASE-001`
 
-- Risco: abrir Supabase antes de amadurecer automacao e identidade cross-domain continua fora da ordem segura;
-- Risco: ampliaria troubleshooting, rollback e superficie de falha cedo demais.
+- Risco: abrir backend antes da primeira prova de runtime local continua fora da ordem segura;
+- Risco: aumentaria troubleshooting e rollback cedo demais.
 
 ## Decisao oficial
 
-Proxima fatia recomendada: `LP-TEST-AUTO-004-CLOSURE`
+Proxima fatia recomendada: `LP-WEB-INTEGRATION-001`
 
-Direcao recomendada para a fatia:
+Titulo sugerido:
 
-- fechar formalmente a baseline do `idResolver` endurecido;
-- manter `app/main.js` intacto;
-- manter adapters e resolvedor fora do runtime;
-- nao abrir Supabase;
-- nao alterar comportamento funcional.
+- `Customer Adapter Shadow Read`
+
+Direcao recomendada:
+
+- tocar um unico fluxo de cliente;
+- usar `customerAdapter` apenas em leitura/sombra;
+- manter legado como fonte ativa;
+- manter `idResolver` fora do runtime;
+- nao tocar estoque, financeiro ou Supabase.
 
 ## Justificativa
 
-`LP-TEST-AUTO-004-CLOSURE` passa a ser a melhor proxima fatia porque:
+`LP-WEB-INTEGRATION-001` passa a ser a melhor proxima fatia porque:
 
-1. `LP-TEST-AUTO-004` ja reforcou a automacao do `idResolver`;
-2. a nova cobertura precisa ser absorvida formalmente em baseline, backlog e policy antes de qualquer proximo movimento;
-3. a proxima mudanca mais segura continua sendo documental, reversivel e sem impacto funcional;
-4. integrar runtime ou abrir Supabase agora continuaria prematuro;
-5. a trilha fica mais robusta quando a automacao endurecida e fechada formalmente antes da proxima onda de uso real.
+1. a trilha ja provou cinco adapters puros, helper comum e resolvedor endurecido;
+2. falta agora uma primeira prova pequena de uso em runtime;
+3. `customerAdapter` e o dominio menos arriscado para essa entrada;
+4. `idResolver` ainda deve ficar fora do primeiro slice funcional;
+5. integrar veiculo, servico, produto, insumo ou Supabase agora aumentaria o risco sem necessidade.
 
 ## Resultado desta fase
 
-Nenhuma nova integracao funcional foi iniciada.
+Nenhuma integracao funcional foi iniciada.
 
 Esta fase apenas:
 
-- registra a implementacao de `LP-TEST-AUTO-004`;
-- amplia o gate do resolvedor sem tocar runtime;
-- preserva rollback simples;
-- escolhe `LP-TEST-AUTO-004-CLOSURE` como proxima fatia oficial.
+- documenta a readiness de runtime;
+- compara candidatos;
+- define riscos, rollback e smoke futuro;
+- escolhe `LP-WEB-INTEGRATION-001` como proxima fatia oficial.

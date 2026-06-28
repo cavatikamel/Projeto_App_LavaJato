@@ -319,3 +319,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: o Adapter Gate foi reforcado para ampliar a regressao automatica do `idResolver`, cobrindo entidade correta, entidade errada, `legacyRefs` inexistentes/ambiguos, query vazia, query por `name`, query por `plate`, contrato sem `id` explicito, contratos duplicados, entradas invalidas, indice vazio e imutabilidade das fixtures.
 - Observacao de risco: a proxima fatia nao deve integrar o resolvedor ao runtime nem abrir Supabase; a prioridade recomendada passa a ser `LP-TEST-AUTO-004-CLOSURE` para absorver formalmente a nova baseline antes de qualquer uso funcional.
+
+### LP-WEB-INTEGRATION-READINESS-001
+
+- Change record: `docs/primyo-changes/LP-WEB-INTEGRATION-READINESS-001.md`
+- Closure: `fase documental absorvida nos documentos de readiness`
+- Resultado: `Aceito`
+- Observacao principal: a readiness de runtime para adapters e `idResolver` foi documentada sem alterar `app/main.js`, adapters, `idResolver`, scripts ou qualquer comportamento funcional.
+- Observacao de risco: a primeira integracao recomendada passa a ser um slice pequeno de leitura/sombra com `customerAdapter`; `idResolver`, estoque, financeiro e Supabase continuam fora do primeiro uso em runtime.
