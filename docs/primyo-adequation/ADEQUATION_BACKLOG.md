@@ -39,6 +39,7 @@
 | LP-TEST-AUTO-001 | Implementar gate tecnico local sem dependencias novas | P1 | Alto | LP-TEST-003, LP-WEB-004 | Web, Docs | Baixo | Concluido e encerrado formalmente em `2026-06-24`. O comando `npm.cmd run primyo:gate` foi adotado como gate tecnico oficial minimo para mudancas futuras no LavaPrime Web. | Um comando local executa build, verify e `node --check`, gera resultado claro e preserva smoke manual obrigatorio. | Script sem dependencias novas, closure, rollback, `primyo:gate` aprovado, build aprovado, verify aprovado e smoke manual mantido. |
 | LP-TEST-AUTO-002 | Reforcar regressao automatizada assistida para extracoes web | P1 | Medio | LP-TEST-AUTO-001, LP-WEB-006 | Web, Docs | Baixo/Medio | Concluido em `2026-06-25`. O `primyo:gate` foi evoluido para validar diretorios obrigatorios, modulos criticos, imports essenciais, assinaturas esperadas e integridade minima das boundaries, sem alterar runtime ou dependencias. | O gate detecta ausencias estruturais e regressao basica de modulo antes de novas extracoes arquiteturais. | `scripts/primyo-gate.mjs`, doc da fase, `npm.cmd run primyo:gate`, build e verify aprovados. |
 | LP-TEST-AUTO-003 | Reforcar gate para adapters e contratos sem dependencias novas | P2 | Medio | LP-TEST-AUTO-002, LP-WEB-003 | Web, CI, Docs | Baixo/Medio | Concluido e encerrado formalmente em `2026-06-26`. O gate agora executa validacao automatica de `customerAdapter` e `vehicleAdapter`, com fixtures controlados, envelope, `validation`, `warnings`, contexto e separacao entre `id` e `sourceId`, sem tocar runtime ou dependencias. | O gate consegue bloquear regressao estrutural e conceitual minima da trilha de adapters antes de novas extracoes ou integracoes. | `scripts/primyo-adapter-gate.mjs`, `scripts/primyo-gate.mjs`, `docs/primyo-changes/LP-TEST-AUTO-003-CLOSURE.md`, politica de gate revisada, requisitos de teste revisados e evidencias de execucao. |
+| LP-TEST-AUTO-004 | Reforcar regressao automatica do resolvedor de IDs | P2 | Medio | LP-WEB-ID-RESOLVER-002, LP-TEST-AUTO-003 | Web, CI, Docs | Baixo/Medio | Implementado em `2026-06-27`. O Adapter Gate foi ampliado para endurecer a cobertura do `idResolver` com cenarios de entidade correta/errada, `legacyRefs` inexistentes/ambiguos, query vazia, query por `name` e `plate`, contrato sem `id` explicito, contratos duplicados, entradas invalidas, indice vazio e imutabilidade. | O gate bloqueia regressao conceitual mais ampla do resolvedor antes de qualquer integracao funcional. | `scripts/primyo-adapter-gate.mjs`, `docs/primyo-changes/LP-TEST-AUTO-004.md`, politica de gate revisada, requisitos de resolucao revisados, `primyo:gate`, build e verify aprovados. |
 | LP-DATA-005 | Formalizar regras canonicas de identidade, envelope e legacyRefs | P2 | Alto | LP-DATA-004, LP-WEB-003 | Web, Backend, Android, Docs | Medio | Concluido em `2026-06-26`. Foram formalizadas regras compartilhadas de `id`, `sourceId`, `legacyRefs`, `organizationId`, `contractVersion`, envelope, contexto de adapter, status, timestamps e compatibilidade, sem alterar runtime ou adapters em producao. | Existe especificacao unificada de identidade e envelope aplicavel a Web, Android, backend e futuros adapters. | Pasta `docs/primyo-data/contracts/shared/`, guidelines revisadas, requisitos de teste atualizados, ordem de adapters revisada, backlog/change control atualizados e validacoes tecnicas aprovadas. |
 | LP-SUPABASE-001 | Planejar primeira leitura controlada via cliente Supabase isolado | P1 | Critico | LP-WEB-007, LP-WEB-008, LP-DATA-005, LP-SEC-002 | Web, Backend | Alto | Definir e preparar a primeira fronteira controlada de leitura remota, com cliente Supabase isolado, sem substituir o runtime inteiro e sem romper rollback. | Existe plano ou implementacao controlada de leitura remota com isolamento, rollback e testes aprovados. | Change record, plano de rollout/rollback, gate, evidencias de isolamento e validacao de risco. |
 | LP-OPS-001 | Definir sinais minimos de observabilidade | P2 | Medio | LP-TEST-002 | Operacao, CI, Docs | Medio | Identificar indicadores e verificacoes que denunciem falhas apos mudancas controladas. | Sinais de saude e pontos de verificacao aprovados. | Checklist operacional, plano de observacao. |
@@ -1043,3 +1044,38 @@
   - o modulo ainda nao cobre integracao funcional com atendimento, pagamento ou financeiro;
   - o baseline oficial ainda precisara absorver o resolvedor em uma fase propria de baseline se o programa exigir propagacao adicional;
   - abrir runtime ou Supabase antes do encerramento formal continua prematuro.
+
+### LP-TEST-AUTO-004
+
+- Status: `Implementado`
+- Data: `2026-06-27`
+- Arquivos alterados:
+  - `scripts/primyo-adapter-gate.mjs`
+  - `docs/primyo-changes/LP-TEST-AUTO-004.md`
+  - `docs/primyo-web-contracts/id-resolution/RESOLVER_TEST_REQUIREMENTS.md`
+  - `docs/primyo-web-contracts/WEB_CONTRACT_TEST_REQUIREMENTS.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - o Adapter Gate passou a cobrir `canonicalId` com entidade correta e errada;
+  - o Adapter Gate passou a cobrir `legacyRefs` validos, inexistentes e ambiguos;
+  - o Adapter Gate passou a cobrir query vazia, query por `name`, query por `plate`, contrato sem `id` explicito, contratos duplicados, entradas invalidas, indice vazio e imutabilidade;
+  - `node --check app/adapters/shared/idResolver.js` -> sucesso;
+  - `node --check scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso;
+  - `npm.cmd run verify:build` -> sucesso;
+  - change record registrado em `docs/primyo-changes/LP-TEST-AUTO-004.md`.
+- Observacoes:
+  - `idResolver.js` permaneceu intacto nesta fase;
+  - nenhum adapter de dominio foi alterado;
+  - nenhuma integracao funcional foi iniciada;
+  - a proxima fatia recomendada passa a ser `LP-TEST-AUTO-004-CLOSURE`.
+- Riscos remanescentes:
+  - a cobertura continua local e conceitual, sem uso funcional em runtime;
+  - relacoes com atendimento, pagamento e financeiro continuam fora do baseline real de uso;
+  - integrar runtime ou abrir Supabase continua prematuro antes do closure formal.

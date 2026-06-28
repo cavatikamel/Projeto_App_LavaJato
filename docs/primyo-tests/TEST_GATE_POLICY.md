@@ -150,6 +150,19 @@ Estado oficial apos `LP-WEB-ID-RESOLVER-002`:
 - nenhum adapter foi integrado ao runtime;
 - `app/main.js` permanece fora do escopo desta fase.
 
+Estado oficial apos `LP-TEST-AUTO-004`:
+
+- o Adapter Gate reforca o `idResolver` sem alterar o modulo nem o runtime;
+- o gate passa a validar `canonicalId` correto com filtro de entidade e falha controlada para entidade errada;
+- o gate passa a validar `legacyRefs` aprovados preservando `source` e `sourceId`;
+- o gate passa a validar `legacyRefs` inexistentes e ambiguos com falha explicita;
+- o gate passa a validar query vazia, query por `name` e query por `plate` como casos bloqueados;
+- o gate passa a validar derivacao controlada de `id` canonico quando o contrato chega sem `id` explicito;
+- o gate passa a validar contratos duplicados, entradas invalidas, indice vazio e imutabilidade das fixtures do resolvedor;
+- falhas do resolvedor passam a exigir `code` e `reason` explicitos no baseline automatizado minimo;
+- nenhuma integracao funcional foi iniciada;
+- `app/main.js` permanece fora do escopo desta fase.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

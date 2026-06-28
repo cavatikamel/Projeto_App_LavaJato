@@ -76,3 +76,22 @@ O baseline automatizado minimo agora cobre:
 - bloqueio de lookup por placa como identidade oficial;
 - preservacao de `legacyRefs` no resultado;
 - ausencia de dependencia de runtime ou integracao funcional.
+
+## 7. Cobertura expandida em `LP-TEST-AUTO-004`
+
+O baseline automatizado do resolvedor agora tambem cobre:
+
+- `canonicalId` valido com filtro de entidade via `contractName`;
+- falha controlada quando o `canonicalId` encontra entidade de tipo diferente;
+- resolucao valida por `legacyRefs` aprovados preservando `source` e `sourceId`;
+- falha controlada quando o `legacyRef` aprovado nao encontra resultado;
+- falha controlada quando o `legacyRef` aprovado encontra mais de um contrato;
+- falha controlada para query vazia;
+- bloqueio de query por `name`;
+- bloqueio de query por `plate`;
+- contrato sem `id` explicito, com derivacao controlada a partir de `sourceId`;
+- indice com contratos duplicados emitindo warnings e metadata de duplicidade;
+- garantia de nao mutacao das fixtures usadas no gate;
+- indice vazio tratado como baseline valido;
+- indice com entradas invalidas tratado com warnings controlados;
+- exigencia de `code` e `reason` explicitos em falhas do resolvedor.

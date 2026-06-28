@@ -311,3 +311,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: `app/adapters/shared/idResolver.js` foi criado como modulo puro e reversivel para resolucao de IDs canonicos e `legacyRefs`, com gate ampliado e sem qualquer integracao ao runtime.
 - Observacao de risco: a proxima fatia nao deve integrar o resolvedor ao runtime nem abrir Supabase; a prioridade recomendada passa a ser `LP-TEST-AUTO-004` para reforcar a automacao antes de qualquer integracao funcional.
+
+### LP-TEST-AUTO-004
+
+- Change record: `docs/primyo-changes/LP-TEST-AUTO-004.md`
+- Closure: `pendente`
+- Resultado: `Implementado`
+- Observacao principal: o Adapter Gate foi reforcado para ampliar a regressao automatica do `idResolver`, cobrindo entidade correta, entidade errada, `legacyRefs` inexistentes/ambiguos, query vazia, query por `name`, query por `plate`, contrato sem `id` explicito, contratos duplicados, entradas invalidas, indice vazio e imutabilidade das fixtures.
+- Observacao de risco: a proxima fatia nao deve integrar o resolvedor ao runtime nem abrir Supabase; a prioridade recomendada passa a ser `LP-TEST-AUTO-004-CLOSURE` para absorver formalmente a nova baseline antes de qualquer uso funcional.

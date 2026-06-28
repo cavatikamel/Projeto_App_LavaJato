@@ -102,6 +102,22 @@ function assertResolutionShape(result, label) {
   assertValidationShape(result.validation, `${label}.validation`);
 }
 
+function assertFailureCodeAndReason(result, label, expectedCode) {
+  assertResolutionShape(result, label);
+  assert(result.ok === false, `${label}.ok should be false.`);
+  assert(result.validation.ok === false, `${label}.validation.ok should be false.`);
+  assert(result.validation.blocking === true, `${label}.validation.blocking should be true.`);
+  assert(typeof result.code === "string" && result.code.length > 0, `${label}.code should be explicit.`);
+  assert(
+    typeof result.reason === "string" && result.reason.length > 0,
+    `${label}.reason should be explicit.`
+  );
+
+  if (expectedCode) {
+    assert(result.code === expectedCode, `${label}.code should be ${expectedCode}.`);
+  }
+}
+
 function assertInputNotMutated(beforeSnapshot, afterValue, label) {
   assert(beforeSnapshot === JSON.stringify(afterValue), `${label} mutated the legacy input fixture.`);
 }
@@ -981,6 +997,21 @@ async function main() {
         }
       }
     ];
+    const resolverContractsWithoutExplicitId = [
+      {
+        contractName: "Customer",
+        source: "web.clientRegistry",
+        sourceId: "55",
+        payload: {
+          organizationId: "org_primyo",
+          legacyRefs: {
+            clientRegistry: {
+              id: "55"
+            }
+          }
+        }
+      }
+    ];
     const resolverAmbiguousContracts = [
       {
         contractName: "Vehicle",
@@ -1011,10 +1042,84 @@ async function main() {
         }
       }
     ];
+    const resolverLegacyAmbiguousContracts = [
+      {
+        contractName: "Vehicle",
+        source: "web.vehicleRegistry",
+        sourceId: "84",
+        payload: {
+          id: "vehicle:legacy:84",
+          organizationId: "org_primyo",
+          legacyRefs: {
+            currentClientRef: {
+              id: "42"
+            }
+          }
+        }
+      },
+      {
+        contractName: "Vehicle",
+        source: "web.vehicleRegistry",
+        sourceId: "85",
+        payload: {
+          id: "vehicle:legacy:85",
+          organizationId: "org_primyo",
+          legacyRefs: {
+            currentClientRef: {
+              id: "42"
+            }
+          }
+        }
+      }
+    ];
+    const resolverDuplicateContracts = [
+      {
+        contractName: "Customer",
+        source: "web.clientRegistry",
+        sourceId: "42",
+        payload: {
+          id: "customer:legacy:42",
+          organizationId: "org_primyo",
+          legacyRefs: {
+            clientRegistry: {
+              id: "42"
+            }
+          }
+        }
+      },
+      {
+        contractName: "Customer",
+        source: "web.clientRegistry",
+        sourceId: "42",
+        payload: {
+          id: "customer:legacy:42",
+          organizationId: "org_primyo",
+          legacyRefs: {
+            billingClients: {
+              legacyId: "billing-42-duplicate"
+            }
+          }
+        }
+      }
+    ];
+    const resolverInvalidContracts = [
+      null,
+      7,
+      {
+        contractName: "Customer",
+        payload: {
+          organizationId: "org_primyo"
+        }
+      }
+    ];
 
-    await runCheck("Id Resolver Valid Canonical Scenario", () => {
+    await runCheck("Id Resolver Valid Canonical With Entity Type Scenario", () => {
       const index = resolverModule.createResolutionIndex(resolverContracts);
-      const query = { canonicalId: "customer:legacy:42" };
+      const query = {
+        canonicalId: "customer:legacy:42",
+        contractName: "Customer",
+        organizationId: "org_primyo"
+      };
       const querySnapshot = JSON.stringify(query);
       const result = resolverModule.resolveCanonicalId(index, query);
 
@@ -1035,11 +1140,28 @@ async function main() {
       assertInputNotMutated(querySnapshot, query, "idResolver canonical query");
     });
 
-    await runCheck("Id Resolver Valid Legacy Reference Scenario", () => {
+    await runCheck("Id Resolver Wrong Entity Type Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverContracts);
+      const result = resolverModule.resolveCanonicalId(index, {
+        canonicalId: "customer:legacy:42",
+        contractName: "Vehicle",
+        organizationId: "org_primyo"
+      });
+
+      assertFailureCodeAndReason(
+        result,
+        "idResolver wrong entity type result",
+        "CANONICAL_NOT_FOUND"
+      );
+      assert(result.matches.length === 0, "wrong entity type result should keep matches empty.");
+    });
+
+    await runCheck("Id Resolver Valid Legacy Reference With Source Scenario", () => {
       const index = resolverModule.createResolutionIndex(resolverContracts);
       const result = resolverModule.resolveLegacyReference(index, {
         contractName: "Customer",
         organizationId: "org_primyo",
+        source: "web.clientRegistry",
         refPath: "billingClients.legacyId",
         refValue: "billing-42"
       });
@@ -1048,23 +1170,23 @@ async function main() {
       assert(result.ok === true, "legacy reference result should be ok.");
       assert(result.validation.ok === true, "legacy reference result.validation.ok should be true.");
       assert(result.canonicalId === "customer:legacy:42", "legacy reference should resolve canonical customer id.");
+      assert(result.source === "web.clientRegistry", "legacy reference result should preserve source.");
+      assert(result.sourceId === "42", "legacy reference result should preserve sourceId.");
       assert(
         result.legacyRefs?.billingClients?.legacyId === "billing-42",
         "legacy reference result should preserve billing legacy refs."
       );
     });
 
-    await runCheck("Id Resolver Missing Identifier Scenario", () => {
+    await runCheck("Id Resolver Empty Query Scenario", () => {
       const index = resolverModule.createResolutionIndex(resolverContracts);
-      const result = resolverModule.resolveCanonicalId(index, {
-        contractName: "Customer",
-        organizationId: "org_primyo"
-      });
+      const result = resolverModule.resolveCanonicalId(index, {});
 
-      assertResolutionShape(result, "idResolver missing identifier result");
-      assert(result.ok === false, "missing identifier result should fail.");
-      assert(result.validation.ok === false, "missing identifier validation.ok should be false.");
-      assert(result.validation.blocking === true, "missing identifier validation should be blocking.");
+      assertFailureCodeAndReason(
+        result,
+        "idResolver missing identifier result",
+        "RESOLUTION_IDENTIFIER_REQUIRED"
+      );
       assert(
         result.missingRequiredFields.includes("canonicalIdOrSourceId"),
         "missing identifier result should report canonicalIdOrSourceId."
@@ -1087,6 +1209,40 @@ async function main() {
       assert(result.matches.length === 2, "ambiguity result should preserve both matches.");
     });
 
+    await runCheck("Id Resolver Legacy Reference Ambiguity Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverLegacyAmbiguousContracts);
+      const result = resolverModule.resolveLegacyReference(index, {
+        contractName: "Vehicle",
+        organizationId: "org_primyo",
+        refPath: "currentClientRef.id",
+        refValue: "42"
+      });
+
+      assertFailureCodeAndReason(
+        result,
+        "idResolver legacy ambiguity result",
+        "LEGACY_REFERENCE_AMBIGUOUS"
+      );
+      assert(result.matches.length === 2, "legacy ambiguity should preserve both matches.");
+    });
+
+    await runCheck("Id Resolver Legacy Reference Not Found Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverContracts);
+      const result = resolverModule.resolveLegacyReference(index, {
+        contractName: "Vehicle",
+        organizationId: "org_primyo",
+        refPath: "currentClientRef.id",
+        refValue: "999"
+      });
+
+      assertFailureCodeAndReason(
+        result,
+        "idResolver legacy reference not found result",
+        "LEGACY_REFERENCE_NOT_FOUND"
+      );
+      assert(result.matches.length === 0, "legacy reference not found should keep matches empty.");
+    });
+
     await runCheck("Id Resolver Forbidden Name Lookup Scenario", () => {
       const index = resolverModule.createResolutionIndex(resolverContracts);
       const result = resolverModule.resolveCanonicalId(index, {
@@ -1094,12 +1250,28 @@ async function main() {
         name: "Joao Cliente"
       });
 
-      assertResolutionShape(result, "idResolver forbidden name result");
-      assert(result.ok === false, "forbidden name result should fail.");
-      assert(result.code === "FORBIDDEN_LOOKUP_FIELD", "forbidden name should expose FORBIDDEN_LOOKUP_FIELD.");
+      assertFailureCodeAndReason(
+        result,
+        "idResolver forbidden name result",
+        "FORBIDDEN_LOOKUP_FIELD"
+      );
     });
 
-    await runCheck("Id Resolver Forbidden Plate Lookup Scenario", () => {
+    await runCheck("Id Resolver Forbidden Plate Query Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverContracts);
+      const result = resolverModule.resolveCanonicalId(index, {
+        contractName: "Vehicle",
+        plate: "ABC1D23"
+      });
+
+      assertFailureCodeAndReason(
+        result,
+        "idResolver forbidden plate query result",
+        "FORBIDDEN_LOOKUP_FIELD"
+      );
+    });
+
+    await runCheck("Id Resolver Forbidden Plate Legacy Reference Scenario", () => {
       const index = resolverModule.createResolutionIndex(resolverContracts);
       const result = resolverModule.resolveLegacyReference(index, {
         contractName: "Vehicle",
@@ -1107,11 +1279,95 @@ async function main() {
         refValue: "ABC1D23"
       });
 
-      assertResolutionShape(result, "idResolver forbidden plate result");
-      assert(result.ok === false, "forbidden plate result should fail.");
+      assertFailureCodeAndReason(
+        result,
+        "idResolver forbidden plate result",
+        "FORBIDDEN_LEGACY_REFERENCE"
+      );
+    });
+
+    await runCheck("Id Resolver Contract Without Explicit Id Scenario", () => {
+      const contractsSnapshot = JSON.stringify(resolverContractsWithoutExplicitId);
+      const index = resolverModule.createResolutionIndex(resolverContractsWithoutExplicitId);
+      const result = resolverModule.resolveCanonicalId(index, {
+        canonicalId: "customer:legacy:55",
+        contractName: "Customer",
+        organizationId: "org_primyo"
+      });
+
+      assert(index.ok === true, "contract without explicit id index should remain valid.");
+      assert(index.entries[0]?.canonicalId === "customer:legacy:55", "contract without explicit id should derive canonical id from sourceId.");
+      assertResolutionShape(result, "idResolver contract without explicit id result");
+      assert(result.ok === true, "contract without explicit id should resolve successfully.");
+      assert(result.canonicalId === "customer:legacy:55", "derived canonical id should be queryable.");
+      assertInputNotMutated(
+        contractsSnapshot,
+        resolverContractsWithoutExplicitId,
+        "idResolver contract without explicit id fixture"
+      );
+    });
+
+    await runCheck("Id Resolver Duplicate Contract Warning Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverDuplicateContracts);
+
+      assert(index.ok === true, "duplicate contract index should still build.");
       assert(
-        result.code === "FORBIDDEN_LEGACY_REFERENCE",
-        "forbidden plate should expose FORBIDDEN_LEGACY_REFERENCE."
+        index.warnings.some((warning) => warning.includes("INDEX_CANONICAL_ID_AMBIGUOUS")),
+        "duplicate contract index should warn about duplicated canonical ids."
+      );
+      assert(
+        index.warnings.some((warning) => warning.includes("INDEX_SOURCE_ID_AMBIGUOUS")),
+        "duplicate contract index should warn about duplicated sourceIds."
+      );
+      assert(
+        Array.isArray(index.metadata.duplicateCanonicalIds) &&
+          index.metadata.duplicateCanonicalIds.includes("customer:legacy:42"),
+        "duplicate contract metadata should preserve duplicated canonical ids."
+      );
+    });
+
+    await runCheck("Id Resolver Immutability Scenario", () => {
+      const contractsSnapshot = JSON.stringify(resolverContracts);
+      const index = resolverModule.createResolutionIndex(resolverContracts);
+      const result = resolverModule.resolveLegacyReference(index, {
+        contractName: "Customer",
+        organizationId: "org_primyo",
+        source: "web.clientRegistry",
+        refPath: "billingClients.legacyId",
+        refValue: "billing-42"
+      });
+
+      assert(result.ok === true, "immutability scenario should resolve successfully.");
+      assertInputNotMutated(contractsSnapshot, resolverContracts, "idResolver contracts fixture");
+    });
+
+    await runCheck("Id Resolver Empty Index Scenario", () => {
+      const index = resolverModule.createResolutionIndex([]);
+
+      assert(index.ok === true, "empty index should remain valid.");
+      assert(index.validation.ok === true, "empty index validation should remain ok.");
+      assert(index.entries.length === 0, "empty index should not create entries.");
+      assert(index.metadata.entryCount === 0, "empty index should expose entryCount zero.");
+    });
+
+    await runCheck("Id Resolver Invalid Entries Scenario", () => {
+      const contractsSnapshot = JSON.stringify(resolverInvalidContracts);
+      const index = resolverModule.createResolutionIndex(resolverInvalidContracts);
+
+      assert(index.ok === true, "invalid entries array should still produce an index object.");
+      assert(index.entries.length === 3, "invalid entries array should preserve entry count.");
+      assert(
+        index.warnings.some((warning) => warning.includes("INDEX_ENTRY_CANONICAL_ID_MISSING")),
+        "invalid entries should warn about missing canonical ids."
+      );
+      assert(
+        index.warnings.some((warning) => warning.includes("INDEX_ENTRY_SOURCE_ID_MISSING")),
+        "invalid entries should warn about missing sourceIds."
+      );
+      assertInputNotMutated(
+        contractsSnapshot,
+        resolverInvalidContracts,
+        "idResolver invalid entries fixture"
       );
     });
 

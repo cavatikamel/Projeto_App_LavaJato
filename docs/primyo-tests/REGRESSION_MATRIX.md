@@ -119,6 +119,7 @@ Cobertura tecnica minima agora esperada para adapters puros:
 - qualquer sexto adapter promovido a baseline deve entrar no Adapter Gate no mesmo slice da sua criacao, antes de qualquer integracao funcional ou abertura de Supabase.
 - `app/adapters/shared/idResolver.js` passa a ser baseline tecnico da trilha de identidade cross-domain e deve ser validado por `node --check`.
 - o Adapter Gate agora deve cobrir resolucao canonica valida, resolucao por `legacyRefs` aprovados, falha por identificador ausente, ambiguidade bloqueada e proibicao de resolver por nome ou placa.
+- o Adapter Gate agora tambem deve cobrir `canonicalId` com entidade correta, falha por entidade errada, `legacyRefs` inexistentes, `legacyRefs` ambiguos, query vazia, indice vazio, entradas invalidas, contratos duplicados, imutabilidade das fixtures e falhas com `code` e `reason` explicitos.
 - futuras mudancas em `idResolver.js` devem revalidar Adapter Gate, Primyo Gate, build e verify junto com os cinco adapters puros oficiais.
 
 Observacao para `LP-TEST-AUTO-003`:

@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Registrar a decisao oficial da proxima fatia apos o encerramento formal de `LP-WEB-ID-RESOLVER-002`.
+Registrar a decisao oficial da proxima fatia apos a implementacao de `LP-TEST-AUTO-004`.
 
 ## Estado atual consolidado
 
@@ -11,19 +11,18 @@ Estado atual da trilha:
 - `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter` continuam puros e fora do runtime;
 - `adapterHelpers` continua sendo a camada compartilhada minima dos adapters;
 - `idResolver` agora existe em `app/adapters/shared/idResolver.js` como modulo puro, reversivel e fechado formalmente;
-- o Adapter Gate agora cobre os cinco adapters puros e o resolvedor de IDs;
+- o Adapter Gate agora cobre os cinco adapters puros e o resolvedor de IDs com regressao endurecida;
 - `app/main.js` continua intacto;
 - nenhuma integracao funcional foi iniciada;
 - Supabase continua fechado.
 
 ## Opcoes avaliadas
 
-### `LP-TEST-AUTO-004`
+### `LP-TEST-AUTO-004-CLOSURE`
 
-- Vantagem: reforca a regressao automatica agora que existe um sexto modulo critico na trilha de adapters/identidade;
-- Vantagem: reduz risco antes de qualquer integracao funcional futura;
-- Vantagem: continua respeitando a estrategia de manter runtime e Supabase fora do escopo;
-- Vantagem: ajuda a estabilizar a camada de identidade antes de qualquer uso em `Attendance`, `Payment` ou `Financial`.
+- Vantagem: absorve formalmente a nova baseline automatizada antes de qualquer nova fase tecnica;
+- Vantagem: atualiza baseline, backlog, policy e change control sem abrir escopo funcional;
+- Vantagem: preserva o padrao seguro de implementar, fechar e so depois decidir o proximo passo funcional ou estrutural.
 
 ### Integracao do resolvedor ao runtime
 
@@ -38,11 +37,11 @@ Estado atual da trilha:
 
 ## Decisao oficial
 
-Proxima fatia recomendada: `LP-TEST-AUTO-004`
+Proxima fatia recomendada: `LP-TEST-AUTO-004-CLOSURE`
 
 Direcao recomendada para a fatia:
 
-- reforcar o gate para a nova camada de identidade;
+- fechar formalmente a baseline do `idResolver` endurecido;
 - manter `app/main.js` intacto;
 - manter adapters e resolvedor fora do runtime;
 - nao abrir Supabase;
@@ -50,13 +49,13 @@ Direcao recomendada para a fatia:
 
 ## Justificativa
 
-`LP-TEST-AUTO-004` passa a ser a melhor proxima fatia porque:
+`LP-TEST-AUTO-004-CLOSURE` passa a ser a melhor proxima fatia porque:
 
-1. `LP-WEB-ID-RESOLVER-002` ja foi implementado e encerrado formalmente;
-2. o resolvedor puro amplia a trilha estrutural e merece protecao automatica mais forte antes de qualquer integracao;
-3. a proxima mudanca mais segura continua sendo estrutural, reversivel e sem impacto funcional;
+1. `LP-TEST-AUTO-004` ja reforcou a automacao do `idResolver`;
+2. a nova cobertura precisa ser absorvida formalmente em baseline, backlog e policy antes de qualquer proximo movimento;
+3. a proxima mudanca mais segura continua sendo documental, reversivel e sem impacto funcional;
 4. integrar runtime ou abrir Supabase agora continuaria prematuro;
-5. a trilha fica mais robusta quando automacao acompanha a nova camada de identidade antes da proxima onda de uso real.
+5. a trilha fica mais robusta quando a automacao endurecida e fechada formalmente antes da proxima onda de uso real.
 
 ## Resultado desta fase
 
@@ -64,7 +63,7 @@ Nenhuma nova integracao funcional foi iniciada.
 
 Esta fase apenas:
 
-- formaliza o encerramento de `LP-WEB-ID-RESOLVER-002`;
-- registra o resolvedor puro como mudanca aceita;
+- registra a implementacao de `LP-TEST-AUTO-004`;
+- amplia o gate do resolvedor sem tocar runtime;
 - preserva rollback simples;
-- escolhe `LP-TEST-AUTO-004` como proxima fatia oficial.
+- escolhe `LP-TEST-AUTO-004-CLOSURE` como proxima fatia oficial.

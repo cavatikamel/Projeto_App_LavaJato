@@ -392,3 +392,13 @@ Estado apos `LP-WEB-ID-RESOLVER-002`:
 - o Adapter Contract Gate passa a validar importacao, exports minimos, sucesso controlado, falha por identificador ausente, ambiguidade bloqueada, bloqueio por nome, bloqueio por placa e preservacao de `legacyRefs`;
 - nenhuma regra de resolucao cross-domain deve ser embutida silenciosamente em adapters futuros quando o resolvedor ja cobrir o caso de forma reutilizavel;
 - qualquer futura mudanca em `idResolver.js` deve revalidar `node --check`, Adapter Gate, `npm.cmd run primyo:gate`, build e verify antes de integracao funcional.
+
+Estado apos `LP-TEST-AUTO-004`:
+
+- o Adapter Contract Gate passa a validar `canonicalId` correto com filtro de entidade e falha controlada para entidade errada;
+- o gate passa a validar `legacyRefs` aprovados com `source` e `sourceId` preservados no resultado;
+- o gate passa a validar `legacyRefs` inexistentes, ambiguos e queries vazias com `code` e `reason` explicitos;
+- o gate passa a validar query proibida por `name` e query proibida por `plate`;
+- o gate passa a validar derivacao controlada de `id` canonico quando o contrato chega sem `id` explicito, mas com `sourceId` estavel;
+- o gate passa a validar warnings e metadata de indice para contratos duplicados e entradas invalidas;
+- o gate passa a validar explicitamente a imutabilidade das fixtures usadas pelo resolvedor.
