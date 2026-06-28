@@ -327,3 +327,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: a readiness de runtime para adapters e `idResolver` foi documentada sem alterar `app/main.js`, adapters, `idResolver`, scripts ou qualquer comportamento funcional.
 - Observacao de risco: a primeira integracao recomendada passa a ser um slice pequeno de leitura/sombra com `customerAdapter`; `idResolver`, estoque, financeiro e Supabase continuam fora do primeiro uso em runtime.
+
+### LP-WEB-INTEGRATION-001
+
+- Change record: `docs/primyo-changes/LP-WEB-INTEGRATION-001.md`
+- Closure: `pendente`
+- Resultado: `Implementado`
+- Observacao principal: `customerAdapter` foi integrado em `app/main.js` apenas em shadow read, restrito a edicao de cliente existente, com legado mantido como fonte ativa de renderizacao e salvamento.
+- Observacao de risco: a proxima fatia deve ser `LP-WEB-INTEGRATION-001-CLOSURE`; `idResolver`, escrita via adapter, veiculo, servico, produto, insumo, estoque, financeiro e Supabase continuam fora desta primeira entrada de runtime.

@@ -2,88 +2,80 @@
 
 ## Objetivo
 
-Registrar a decisao oficial da proxima fatia apos `LP-WEB-INTEGRATION-READINESS-001`.
+Registrar a decisao oficial da proxima fatia apos a implementacao de `LP-WEB-INTEGRATION-001`.
 
 ## Estado atual consolidado
 
-Estado atual da trilha:
-
-- `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter` continuam puros e fora do runtime;
-- `adapterHelpers` continua sendo a camada compartilhada minima dos adapters;
-- `idResolver` existe como modulo puro, endurecido por gate e ainda fora do runtime;
-- o Adapter Gate cobre os cinco adapters e o resolvedor de IDs;
-- `app/main.js` continua intacto;
-- nenhuma integracao funcional foi iniciada;
-- Supabase continua fechado.
+- `customerAdapter` passou a ser consumido em `app/main.js` apenas em `shadow read`;
+- o uso ficou restrito a edicao de cliente existente em `Cadastros > Clientes`;
+- o legado continua sendo a fonte ativa de renderizacao e salvamento;
+- `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter` continuam fora do runtime;
+- `idResolver` continua fora do runtime;
+- Supabase continua fechado;
+- `npm.cmd run primyo:gate`, build e verify passaram;
+- o smoke manual do fluxo de clientes e do patio admin/operador passou.
 
 ## Opcoes avaliadas
 
-### `LP-WEB-INTEGRATION-001`
+### `LP-WEB-INTEGRATION-001-CLOSURE`
 
-- Vantagem: inicia a primeira integracao real de forma pequena e reversivel;
-- Vantagem: usa o adapter mais maduro da trilha;
-- Vantagem: permite validar runtime sem abrir estoque, financeiro ou Supabase;
-- Vantagem: mantem `idResolver` fora do primeiro slice.
+- Vantagem: absorve formalmente a primeira alteracao real em `app/main.js`;
+- Vantagem: atualiza baseline, backlog e controle oficial antes de nova expansao;
+- Vantagem: reduz o risco de crescer a integracao sem estabilizar a primeira fatia.
 
-### `vehicleAdapter` como primeira integracao
+### Expandir `customerAdapter` para novos pontos do runtime
 
-- Risco: ownership de cliente ainda e transitorio;
-- Risco: placa continua sendo pista forte do legado;
-- Risco: historico de ownership ainda nao esta maduro.
+- Risco: aumentaria a area tocada antes de fechar a primeira entrada;
+- Risco: misturaria nova cobertura funcional com uma fatia ainda sem closure.
 
-### `serviceAdapter` como primeira integracao
+### Integrar `idResolver`
 
-- Risco: aproxima a fase de atendimento e consumo tecnico cedo demais;
-- Risco: `supplyProfileRefs` ainda nao deve virar relacao funcional.
+- Risco: misturaria runtime shadow read com resolucao relacional cross-domain cedo demais;
+- Risco: aumentaria troubleshooting e rollback na primeira alteracao real do monolito.
 
-### `productAdapter` ou `supplyAdapter` como primeira integracao
+### Integrar `vehicleAdapter`, `serviceAdapter`, `productAdapter` ou `supplyAdapter`
 
-- Risco: aproximam a trilha de estoque e consumo real;
-- Risco: `stockBalance` continua sendo projecao observada, nao trilha auditavel.
+- Risco: ampliaria a superficie antes de provar absorcao formal da primeira integracao;
+- Risco: produtos, insumos, servicos e veiculos ainda possuem dependencias e ownership mais sensiveis do que clientes.
 
-### Integracao de `idResolver` no primeiro slice
+### Abrir `LP-SUPABASE-001`
 
-- Risco: eleva o risco relacional sem necessidade;
-- Risco: mistura identidade cross-domain com a primeira alteracao em `app/main.js`.
-
-### `LP-SUPABASE-001`
-
-- Risco: abrir backend antes da primeira prova de runtime local continua fora da ordem segura;
-- Risco: aumentaria troubleshooting e rollback cedo demais.
+- Risco: backend continua fora da ordem segura antes da estabilizacao do primeiro uso local em runtime.
 
 ## Decisao oficial
 
-Proxima fatia recomendada: `LP-WEB-INTEGRATION-001`
+Proxima fatia recomendada: `LP-WEB-INTEGRATION-001-CLOSURE`
 
 Titulo sugerido:
 
-- `Customer Adapter Shadow Read`
+- `Customer Adapter Shadow Read Closure`
 
 Direcao recomendada:
 
-- tocar um unico fluxo de cliente;
-- usar `customerAdapter` apenas em leitura/sombra;
-- manter legado como fonte ativa;
+- formalizar encerramento da primeira integracao;
+- atualizar baseline e backlog oficial;
+- confirmar que `customerAdapter` continua em modo sombra;
 - manter `idResolver` fora do runtime;
-- nao tocar estoque, financeiro ou Supabase.
+- nao expandir a integracao antes do closure.
 
 ## Justificativa
 
-`LP-WEB-INTEGRATION-001` passa a ser a melhor proxima fatia porque:
+`LP-WEB-INTEGRATION-001-CLOSURE` passa a ser a melhor proxima fatia porque:
 
-1. a trilha ja provou cinco adapters puros, helper comum e resolvedor endurecido;
-2. falta agora uma primeira prova pequena de uso em runtime;
-3. `customerAdapter` e o dominio menos arriscado para essa entrada;
-4. `idResolver` ainda deve ficar fora do primeiro slice funcional;
-5. integrar veiculo, servico, produto, insumo ou Supabase agora aumentaria o risco sem necessidade.
+1. a trilha acabou de tocar `app/main.js` pela primeira vez;
+2. o uso em runtime continua pequeno, reversivel e com legado preservado;
+3. a primeira integracao precisa ser absorvida formalmente antes de ganhar novos pontos de uso;
+4. integrar `idResolver` ou outro adapter agora aumentaria risco sem necessidade;
+5. Supabase continua cedo demais para a ordem segura definida.
 
 ## Resultado desta fase
 
-Nenhuma integracao funcional foi iniciada.
+Nenhuma nova expansao funcional foi iniciada alem do `shadow read` aprovado.
 
-Esta fase apenas:
+Esta fase implementa apenas:
 
-- documenta a readiness de runtime;
-- compara candidatos;
-- define riscos, rollback e smoke futuro;
-- escolhe `LP-WEB-INTEGRATION-001` como proxima fatia oficial.
+- `customerAdapter` em leitura/sombra;
+- um unico fluxo de cliente;
+- sem escrita via adapter;
+- sem `idResolver`;
+- sem alterar UI, persistencia ou Supabase.

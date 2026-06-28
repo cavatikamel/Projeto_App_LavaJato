@@ -181,6 +181,16 @@ Diretriz oficial de entrada:
 - a primeira integracao recomendada e `customerAdapter` em leitura/sombra;
 - `vehicleAdapter`, `serviceAdapter`, `productAdapter`, `supplyAdapter` e `idResolver` ficam rejeitados como primeira entrada de runtime.
 
+Estado oficial apos `LP-WEB-INTEGRATION-001`:
+
+- `app/main.js` passa a executar `customerAdapter` apenas em shadow read;
+- o uso fica restrito a edicao de cliente existente em `Cadastros > Clientes`;
+- o resultado adaptado fica apenas em memoria local e nao altera renderizacao, persistencia ou save;
+- o legado continua fonte ativa de dados e de escrita;
+- `idResolver` continua fora do runtime;
+- a validacao minima desta primeira entrada exige `npm.cmd run primyo:gate`, build, verify e smoke manual do fluxo de clientes, do patio admin, do logout e do patio operador;
+- qualquer expansao para nova escrita, novo dominio, `idResolver`, estoque, financeiro ou Supabase continua bloqueada ate o closure formal da fase.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

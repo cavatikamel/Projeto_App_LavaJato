@@ -32,6 +32,7 @@
 | LP-WEB-011 | Implementar quinto adapter puro de contrato para master data de insumos | P2 | Medio | LP-WEB-010, LP-DATA-005, LP-TEST-AUTO-003 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-27`. `supplyAdapter` foi criado em `app/adapters/supplyAdapter.js`, seguindo o baseline compartilhado dos adapters anteriores, com gate ampliado e sem integracao ao runtime. | O quinto adapter puro existe, e reversivel, e converte insumo legado para contrato oficial com evidencias e sem alterar comportamento percebido. | Change record, closure, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify, testes conceituais de traducao e rollback documentado. |
 | LP-WEB-ID-RESOLVER-002 | Implementar primeira camada pura de resolucao de IDs cross-domain | P2 | Medio | LP-WEB-ID-RESOLVER-001, LP-TEST-AUTO-003, LP-DATA-006 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-27`. `app/adapters/shared/idResolver.js` foi criado como modulo puro e reversivel, com gate ampliado e sem integracao ao runtime. | O resolvedor puro existe, bloqueia ambiguidade e lookup por nome/placa, preserva `legacyRefs` e nao altera comportamento percebido. | Change record, closure, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify e rollback documentado. |
 | LP-WEB-INTEGRATION-READINESS-001 | Avaliar readiness de runtime para adapters e idResolver | P1 | Alto | LP-WEB-011, LP-WEB-ID-RESOLVER-002, LP-TEST-AUTO-004 | Web, Docs | Medio/Alto | Concluido em `2026-06-28`. A readiness de runtime foi documentada com avaliacao dos cinco adapters, do `idResolver`, da cobertura do gate, dos riscos de integracao, do rollback, do smoke manual futuro e da primeira fatia recomendada. | Existe estrategia conservadora aprovada para a primeira integracao real ao runtime, sem tocar `app/main.js` nesta fase. | `docs/primyo-web-integration/`, change record da fase, `npm.cmd run primyo:gate` aprovado e decisao formal da primeira fatia futura. |
+| LP-WEB-INTEGRATION-001 | Integrar `customerAdapter` em shadow read no runtime | P1 | Alto | LP-WEB-INTEGRATION-READINESS-001, LP-WEB-007-REVISION | Web | Alto | Implementado em `2026-06-28`. `customerAdapter` passou a rodar em modo sombra apenas na edicao de cliente existente via `openClientDialog(clientId)`, mantendo o legado como fonte ativa, sem escrita via adapter e sem `idResolver` no runtime. | A primeira integracao real existe, e pequena, reversivel e sem alterar comportamento visivel, persistencia, UI ou Supabase. | Change record, `node --check`, adapter gate, `primyo:gate`, build, verify, smoke manual do fluxo de clientes e rollback documentado. |
 | LP-DOC-HANDOFF-001 | Consolidar handoff seguro para compactacao do contexto do Codex | P3 | Baixo | LP-DOC-EXEC-001, LP-WEB-011 | Docs, Governanca | Baixo | Concluido em `2026-06-27`. Foi criada a base documental de handoff para registrar branch, commits relevantes, estado tecnico atual, fora de escopo persistente e checklist de compactacao segura do chat. | O proximo contexto consegue retomar a trilha Primyo com baixo risco de perda de contexto, sem reduzir gate, rollback ou controle de escopo. | Handoff summary, checklist de compactacao, change record, closure e `npm.cmd run primyo:gate` aprovado. |
 | LP-PERM-001 | Alinhar regras de administrador e operador | P1 | Alto | LP-SEC-003 | Web, Android | Medio | Concluido em `2026-06-23`. A matriz oficial de permissoes foi formalizada para Administrador e Operador, com perfis futuros planejados sem implementacao. | Cada permissao critica possui racional, politica, readiness RLS e cenarios de teste. | Matriz revisada, acoes sensiveis, politica de permissao, readiness RLS, cenarios de teste e validacoes tecnicas aprovadas. |
 | LP-TEST-001 | Formalizar baseline minima de testes web | P1 | Alto | Nenhuma | Web, CI, Docs | Baixo | Consolidar build, verificacoes existentes e fluxos manuais obrigatorios antes de qualquer mudanca funcional. | Existe pacote minimo repetivel para validar cada fatia web. | Documento de baseline, execucao registrada. |
@@ -1114,3 +1115,38 @@
   - tocar `app/main.js` continua sendo risco alto;
   - `idResolver` ainda nao deve entrar no primeiro slice funcional;
   - veiculo, servico, produto, insumo, estoque e Supabase continuam cedo demais para a primeira integracao.
+
+### LP-WEB-INTEGRATION-001
+
+- Status: `Implementado`
+- Data: `2026-06-28`
+- Arquivos alterados:
+  - `app/main.js`
+  - `docs/primyo-changes/LP-WEB-INTEGRATION-001.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `git status --short` -> sucesso;
+  - `git diff --name-only` -> sucesso;
+  - `node --check app/main.js` -> sucesso;
+  - `node --check app/adapters/customerAdapter.js` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso;
+  - `npm.cmd run verify:build` -> sucesso;
+  - smoke manual executado em `http://127.0.0.1:4174/` com login admin, fluxo de clientes, edicao de cliente existente, abertura de novo cliente sem salvar, patio admin, logout, login operador e patio operador sem shell administrativa;
+  - console do browser sem `warn` ou `error`.
+- Observacoes:
+  - `customerAdapter` passou a rodar apenas em leitura/sombra na edicao de cliente existente;
+  - o resultado adaptado ficou restrito a memoria local em `lastCustomerShadowReadReport`;
+  - renderizacao, populacao de formulario e salvamento continuaram no caminho legado;
+  - `idResolver` permaneceu fora do runtime;
+  - UI, persistencia, Supabase, banco, Android e CSS permaneceram intactos;
+  - a proxima fatia recomendada passa a ser `LP-WEB-INTEGRATION-001-CLOSURE`.
+- Riscos remanescentes:
+  - esta continua sendo a primeira alteracao real em `app/main.js` da trilha de adapters;
+  - clientes PF sem documento seguem invalidos para o contrato oficial, por isso a sombra nao pode virar dependencia funcional nesta etapa;
+  - qualquer expansao para escrita, `idResolver`, veiculo, servico, produto, insumo, estoque, financeiro ou Supabase continua exigindo closure formal e nova decisao de slice.

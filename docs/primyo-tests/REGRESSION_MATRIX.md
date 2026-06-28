@@ -30,6 +30,7 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-WEB-002 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Opcional |
 | LP-TEST-002 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Opcional | Opcional | Opcional |
 | LP-WEB-003 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-WEB-INTEGRATION-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Opcional | Opcional |
 | LP-WEB-007 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-007-REVISION | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-008 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -131,6 +132,15 @@ Cobertura minima esperada para futura integracao de adapter ou `idResolver` ao r
 - comparacao controlada entre dado legado ativo e contrato derivado quando a fatia estiver em modo sombra;
 - proibicao de combinar primeira integracao de adapter com uso funcional de `idResolver` no mesmo slice;
 - proibicao de tocar estoque, financeiro ou Supabase na primeira entrada de runtime da trilha.
+
+Regra aplicada em `LP-WEB-INTEGRATION-001`:
+
+- o smoke manual precisa cobrir lista de clientes preservada;
+- a abertura de edicao de cliente existente precisa continuar funcional;
+- a abertura de novo cliente sem salvar precisa continuar funcional;
+- o patio admin e o patio operador precisam continuar acessiveis;
+- o logout precisa continuar funcionando;
+- o console do browser deve permanecer sem erro bloqueante.
 
 Observacao para `LP-TEST-AUTO-003`:
 

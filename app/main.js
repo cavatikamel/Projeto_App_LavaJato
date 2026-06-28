@@ -1,4 +1,5 @@
 import { createAccessBoundary, createSessionBoundary } from "./boundaries/sessionAccessBoundary.js";
+import { toCustomerContract } from "./adapters/customerAdapter.js";
 import { storageBoundary } from "./storage/storageBoundary.js";
 import {
   capitalize,
@@ -98,6 +99,8 @@ let vehicleRegistryDialogSource = "";
 let selectedVehicleSpecialCareId = null;
 let entryVehicleSpecialCareDraft = null;
 let lastEntryCareConflictSignature = "";
+const CUSTOMER_SHADOW_READ_ORGANIZATION_ID = "org:lavaprime-local-web";
+let lastCustomerShadowReadReport = null;
 
 window.__lavaprimeSessionBoundary = sessionBoundary;
 
@@ -9671,6 +9674,8 @@ function openClientDialog(clientId = null) {
     return;
   }
 
+  if (client) runCustomerDialogShadowRead(client);
+
   selectedClientId = client?.id || null;
   selectedClientPersonType = client?.personType || "PF";
   pendingClientPlates = client ? [...client.plates] : [];
@@ -9687,6 +9692,52 @@ function openClientDialog(clientId = null) {
   else dialog.setAttribute("open", "");
 
   window.setTimeout(focusClientForm, 0);
+}
+
+function runCustomerDialogShadowRead(client) {
+  if (!client || client.id == null) return;
+
+  const context = {
+    organizationId: CUSTOMER_SHADOW_READ_ORGANIZATION_ID,
+    source: "web.clientDialog.shadowRead",
+    sourceCollection: "clientRegistry",
+    sourceId: String(client.id),
+    now: new Date().toISOString(),
+    allowWarnings: true,
+    strictMode: false
+  };
+
+  try {
+    const adapted = toCustomerContract(client, context);
+    lastCustomerShadowReadReport = {
+      flow: "clientDialog.edit",
+      clientId: client.id,
+      sourceId: context.sourceId,
+      ranAt: context.now,
+      ok: adapted.ok,
+      warningCount: Array.isArray(adapted.warnings) ? adapted.warnings.length : 0,
+      errorCount: Array.isArray(adapted.errors) ? adapted.errors.length : 0,
+      missingRequiredFields: Array.isArray(adapted.missingRequiredFields) ? [...adapted.missingRequiredFields] : [],
+      validation: adapted.validation || null,
+      customerContractId: adapted.customerContract?.id || "",
+      customerContractKind: adapted.customerContract?.kind || "",
+      customerContractName: adapted.customerContract?.name || ""
+    };
+  } catch (error) {
+    lastCustomerShadowReadReport = {
+      flow: "clientDialog.edit",
+      clientId: client.id,
+      sourceId: context.sourceId,
+      ranAt: context.now,
+      ok: false,
+      warningCount: 0,
+      errorCount: 1,
+      missingRequiredFields: [],
+      validation: null,
+      reason: "adapter_exception",
+      message: error instanceof Error ? error.message : String(error)
+    };
+  }
 }
 
 function closeClientDialog() {
