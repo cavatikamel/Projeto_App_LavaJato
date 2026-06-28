@@ -385,3 +385,10 @@ Relacoes prioritarias para a primeira onda:
 Regra:
 
 - nenhum adapter futuro deve esconder logica de resolucao cross-domain dentro do proprio modulo quando essa logica merecer uma camada dedicada e testavel de identidade.
+
+Estado apos `LP-WEB-ID-RESOLVER-002`:
+
+- `app/adapters/shared/idResolver.js` passa a existir como camada pura e reversivel de identidade cross-domain;
+- o Adapter Contract Gate passa a validar importacao, exports minimos, sucesso controlado, falha por identificador ausente, ambiguidade bloqueada, bloqueio por nome, bloqueio por placa e preservacao de `legacyRefs`;
+- nenhuma regra de resolucao cross-domain deve ser embutida silenciosamente em adapters futuros quando o resolvedor ja cobrir o caso de forma reutilizavel;
+- qualquer futura mudanca em `idResolver.js` deve revalidar `node --check`, Adapter Gate, `npm.cmd run primyo:gate`, build e verify antes de integracao funcional.
