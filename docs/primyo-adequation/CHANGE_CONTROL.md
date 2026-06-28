@@ -303,3 +303,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: a estrategia oficial da futura camada de resolucao de IDs foi documentada sem alterar runtime, adapters, scripts, `app/main.js` ou Supabase.
 - Observacao de risco: a proxima fatia nao deve integrar o resolvedor ao runtime; a prioridade recomendada passa a ser `LP-WEB-ID-RESOLVER-002` como implementacao pura, pequena e reversivel.
+
+### LP-WEB-ID-RESOLVER-002
+
+- Change record: `docs/primyo-changes/LP-WEB-ID-RESOLVER-002.md`
+- Closure: `docs/primyo-changes/LP-WEB-ID-RESOLVER-002-CLOSURE.md`
+- Resultado: `Aceito`
+- Observacao principal: `app/adapters/shared/idResolver.js` foi criado como modulo puro e reversivel para resolucao de IDs canonicos e `legacyRefs`, com gate ampliado e sem qualquer integracao ao runtime.
+- Observacao de risco: a proxima fatia nao deve integrar o resolvedor ao runtime nem abrir Supabase; a prioridade recomendada passa a ser `LP-TEST-AUTO-004` para reforcar a automacao antes de qualquer integracao funcional.

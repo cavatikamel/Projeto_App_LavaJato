@@ -56,3 +56,15 @@ Nenhum resolvedor foi criado, nenhum adapter foi alterado e nenhuma integracao f
 ## 7. Decisao oficial desta fase
 
 O programa considera segura apenas uma futura implementacao pura, documentada, coberta por gate e ainda fora do runtime.
+
+## 8. Estado apos `LP-WEB-ID-RESOLVER-002`
+
+Com `LP-WEB-ID-RESOLVER-002`, a primeira implementacao pura passou a existir em `app/adapters/shared/idResolver.js`.
+
+Estado atual:
+
+- o modulo continua fora do runtime;
+- `app/main.js` continua intacto;
+- nenhum adapter existente passou a depender do resolvedor;
+- o gate agora cobre sucesso controlado, falha por identificador ausente, ambiguidade bloqueada, bloqueio por nome, bloqueio por placa e preservacao de `legacyRefs`;
+- a proxima etapa recomendada passa a ser o encerramento formal da fase, nao a integracao funcional do resolvedor.

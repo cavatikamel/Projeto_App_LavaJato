@@ -61,3 +61,18 @@ O resolvedor futuro devera provar que:
 ## 5. Decisao oficial desta fase
 
 Nenhuma implementacao do resolvedor devera ser aprovada sem cobertura minima para sucesso controlado, falha controlada, ambiguidade bloqueada e preservacao de `legacyRefs`.
+
+## 6. Cobertura minima implementada em `LP-WEB-ID-RESOLVER-002`
+
+O baseline automatizado minimo agora cobre:
+
+- importacao de `app/adapters/shared/idResolver.js` em Node puro;
+- exports minimos do modulo;
+- resolucao canonica valida por `canonicalId`;
+- resolucao valida por `legacyRefs` aprovados;
+- falha controlada sem `canonicalId` ou `sourceId`;
+- falha controlada em caso ambiguo;
+- bloqueio de lookup por nome;
+- bloqueio de lookup por placa como identidade oficial;
+- preservacao de `legacyRefs` no resultado;
+- ausencia de dependencia de runtime ou integracao funcional.

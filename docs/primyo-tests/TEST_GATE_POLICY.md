@@ -20,6 +20,7 @@ Ele executa:
 - verificacao de arquivos obrigatorios;
 - `node --check app/adapters/customerAdapter.js`;
 - `node --check app/adapters/shared/adapterHelpers.js`;
+- `node --check app/adapters/shared/idResolver.js`;
 - `node --check app/adapters/vehicleAdapter.js`;
 - `node --check app/adapters/serviceAdapter.js`;
 - `node --check app/adapters/productAdapter.js`;
@@ -133,6 +134,19 @@ Estado oficial apos `LP-WEB-011`:
 - o gate valida `cost -> costPrice`, `stock -> stockBalance`, `supplier -> supplierName`, `organizationId`, timestamps, envelope e separacao entre `id` e `sourceId` no dominio de insumo;
 - `supplyAdapter` passa a estar protegido por regressao automatica minima oficial;
 - o estado oficial do gate passa a cobrir `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`;
+- nenhum adapter foi integrado ao runtime;
+- `app/main.js` permanece fora do escopo desta fase.
+
+Estado oficial apos `LP-WEB-ID-RESOLVER-002`:
+
+- `scripts/primyo-adapter-gate.mjs` passa a importar `app/adapters/shared/idResolver.js` em Node puro;
+- o gate valida exports minimos do resolvedor;
+- o gate executa resolucao canonica valida e resolucao valida por `legacyRefs` aprovados;
+- o gate executa falha controlada sem `canonicalId` ou `sourceId`;
+- o gate executa falha controlada em caso ambiguo;
+- o gate bloqueia lookup por nome e por placa como identidade oficial;
+- o gate prova preservacao de `legacyRefs` no resultado do resolvedor;
+- `idResolver` passa a estar protegido por regressao automatica minima oficial;
 - nenhum adapter foi integrado ao runtime;
 - `app/main.js` permanece fora do escopo desta fase.
 

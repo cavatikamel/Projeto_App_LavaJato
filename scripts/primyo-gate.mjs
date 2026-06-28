@@ -28,6 +28,7 @@ const requiredFiles = [
   "app/adapters/productAdapter.js",
   "app/adapters/supplyAdapter.js",
   "app/adapters/shared/adapterHelpers.js",
+  "app/adapters/shared/idResolver.js",
   "app/src/main.jsx",
   "app/src/App.jsx",
   "app/boundaries/sessionAccessBoundary.js",
@@ -112,6 +113,18 @@ const fileIntegrityChecks = [
       "export function createMetadata",
       "export function createContractEnvelope",
       "export function normalizeLegacyRefs"
+    ]
+  },
+  {
+    file: "app/adapters/shared/idResolver.js",
+    description: "shared id resolver exports",
+    snippets: [
+      "./adapterHelpers.js",
+      "export const ID_RESOLVER_VERSION",
+      "export function createResolutionIndex",
+      "export function resolveCanonicalId",
+      "export function resolveLegacyReference",
+      "export function createResolutionResult"
     ]
   },
   {
@@ -304,6 +317,10 @@ async function main() {
     await runCommand("Syntax app/adapters/shared/adapterHelpers.js", process.execPath, [
       "--check",
       "app/adapters/shared/adapterHelpers.js"
+    ]);
+    await runCommand("Syntax app/adapters/shared/idResolver.js", process.execPath, [
+      "--check",
+      "app/adapters/shared/idResolver.js"
     ]);
     await runCommand("Syntax app/adapters/vehicleAdapter.js", process.execPath, [
       "--check",

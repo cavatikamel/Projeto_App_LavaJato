@@ -36,6 +36,7 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-WEB-009 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-010 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-011 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-WEB-ID-RESOLVER-002 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-ADAPTER-HELPERS-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-TEST-AUTO-003 | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional |
 | LP-PERM-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -116,6 +117,9 @@ Cobertura tecnica minima agora esperada para adapters puros:
 - a consolidacao de helpers nao autoriza mudanca de API publica, `contractVersion`, `contractName` ou integracao funcional antecipada.
 - alteracoes em `adapterHelpers.js` passam a impactar simultaneamente `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, exigindo revalidacao conjunta dos cinco adapters, do Adapter Gate, do Primyo Gate, do build e do verify.
 - qualquer sexto adapter promovido a baseline deve entrar no Adapter Gate no mesmo slice da sua criacao, antes de qualquer integracao funcional ou abertura de Supabase.
+- `app/adapters/shared/idResolver.js` passa a ser baseline tecnico da trilha de identidade cross-domain e deve ser validado por `node --check`.
+- o Adapter Gate agora deve cobrir resolucao canonica valida, resolucao por `legacyRefs` aprovados, falha por identificador ausente, ambiguidade bloqueada e proibicao de resolver por nome ou placa.
+- futuras mudancas em `idResolver.js` devem revalidar Adapter Gate, Primyo Gate, build e verify junto com os cinco adapters puros oficiais.
 
 Observacao para `LP-TEST-AUTO-003`:
 

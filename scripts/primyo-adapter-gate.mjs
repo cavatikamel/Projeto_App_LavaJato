@@ -9,6 +9,7 @@ const summary = [];
 
 const adapterFiles = {
   helper: "app/adapters/shared/adapterHelpers.js",
+  resolver: "app/adapters/shared/idResolver.js",
   customer: "app/adapters/customerAdapter.js",
   vehicle: "app/adapters/vehicleAdapter.js",
   service: "app/adapters/serviceAdapter.js",
@@ -90,6 +91,17 @@ function assertWarningsArray(result, label) {
   assert(Array.isArray(result.warnings), `${label}.warnings must be an array.`);
 }
 
+function assertResolutionShape(result, label) {
+  assert(result && typeof result === "object", `${label} must be an object.`);
+  assert(typeof result.ok === "boolean", `${label}.ok must be boolean.`);
+  assert(typeof result.blocking === "boolean", `${label}.blocking must be boolean.`);
+  assert(typeof result.code === "string", `${label}.code must be string.`);
+  assert(typeof result.reason === "string", `${label}.reason must be string.`);
+  assert(Array.isArray(result.matches), `${label}.matches must be an array.`);
+  assertWarningsArray(result, label);
+  assertValidationShape(result.validation, `${label}.validation`);
+}
+
 function assertInputNotMutated(beforeSnapshot, afterValue, label) {
   assert(beforeSnapshot === JSON.stringify(afterValue), `${label} mutated the legacy input fixture.`);
 }
@@ -111,6 +123,7 @@ async function main() {
 
   try {
     const helperSource = loadAdapterSource(adapterFiles.helper);
+    const resolverSource = loadAdapterSource(adapterFiles.resolver);
     const customerSource = loadAdapterSource(adapterFiles.customer);
     const vehicleSource = loadAdapterSource(adapterFiles.vehicle);
     const serviceSource = loadAdapterSource(adapterFiles.service);
@@ -120,6 +133,12 @@ async function main() {
     await runCheck("Adapter Helper Runtime Independence", () => {
       for (const entry of forbiddenRuntimePatterns) {
         assert(!entry.pattern.test(helperSource), `adapterHelpers contains forbidden ${entry.label}.`);
+      }
+    });
+
+    await runCheck("Id Resolver Runtime Independence", () => {
+      for (const entry of forbiddenRuntimePatterns) {
+        assert(!entry.pattern.test(resolverSource), `idResolver contains forbidden ${entry.label}.`);
       }
     });
 
@@ -154,6 +173,7 @@ async function main() {
     });
 
     const helperModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.helper)).href);
+    const resolverModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.resolver)).href);
     const customerModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.customer)).href);
     const vehicleModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.vehicle)).href);
     const serviceModule = await import(pathToFileURL(resolve(workspaceRoot, adapterFiles.service)).href);
@@ -179,6 +199,29 @@ async function main() {
       assert(typeof helperModule.createContractEnvelope === "function", "createContractEnvelope export is missing.");
     });
 
+    await runCheck("Id Resolver Imports", () => {
+      assert(
+        typeof resolverModule.createResolutionIndex === "function",
+        "createResolutionIndex export is missing."
+      );
+      assert(
+        typeof resolverModule.resolveCanonicalId === "function",
+        "resolveCanonicalId export is missing."
+      );
+      assert(
+        typeof resolverModule.resolveLegacyReference === "function",
+        "resolveLegacyReference export is missing."
+      );
+      assert(
+        typeof resolverModule.createResolutionResult === "function",
+        "createResolutionResult export is missing."
+      );
+      assert(
+        typeof resolverModule.ID_RESOLVER_VERSION === "string",
+        "ID_RESOLVER_VERSION export is missing."
+      );
+    });
+
     await runCheck("Adapters Use Shared Helpers", () => {
       assert(
         customerSource.includes('./shared/adapterHelpers.js'),
@@ -199,6 +242,13 @@ async function main() {
       assert(
         supplySource.includes('./shared/adapterHelpers.js'),
         "supplyAdapter should import the shared adapter helpers module."
+      );
+    });
+
+    await runCheck("Id Resolver Uses Shared Helpers", () => {
+      assert(
+        resolverSource.includes('./adapterHelpers.js'),
+        "idResolver should import the shared adapter helpers module."
       );
     });
 
@@ -889,6 +939,179 @@ async function main() {
       assert(
         result.warnings.some((warning) => warning.includes("CTX_ORGANIZATION_ID_REQUIRED")),
         "supply invalid context should report CTX_ORGANIZATION_ID_REQUIRED."
+      );
+    });
+
+    const resolverContracts = [
+      {
+        contractName: "Customer",
+        source: "web.clientRegistry",
+        sourceId: "42",
+        payload: {
+          id: "customer:legacy:42",
+          organizationId: "org_primyo",
+          legacyRefs: {
+            clientRegistry: {
+              id: "42"
+            },
+            billingClients: {
+              legacyId: "billing-42"
+            },
+            aliases: {
+              displayName: "Joao Cliente"
+            }
+          }
+        }
+      },
+      {
+        contractName: "Vehicle",
+        source: "web.vehicleRegistry",
+        sourceId: "84",
+        payload: {
+          id: "vehicle:legacy:84",
+          organizationId: "org_primyo",
+          legacyRefs: {
+            currentClientRef: {
+              id: "42"
+            },
+            historicalPlate: {
+              plate: "ABC1D23"
+            }
+          }
+        }
+      }
+    ];
+    const resolverAmbiguousContracts = [
+      {
+        contractName: "Vehicle",
+        source: "web.vehicleRegistry",
+        sourceId: "84",
+        payload: {
+          id: "vehicle:legacy:84-a",
+          organizationId: "org_primyo",
+          legacyRefs: {
+            currentClientRef: {
+              id: "42"
+            }
+          }
+        }
+      },
+      {
+        contractName: "Vehicle",
+        source: "web.vehicleRegistry",
+        sourceId: "84",
+        payload: {
+          id: "vehicle:legacy:84-b",
+          organizationId: "org_primyo",
+          legacyRefs: {
+            currentClientRef: {
+              id: "77"
+            }
+          }
+        }
+      }
+    ];
+
+    await runCheck("Id Resolver Valid Canonical Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverContracts);
+      const query = { canonicalId: "customer:legacy:42" };
+      const querySnapshot = JSON.stringify(query);
+      const result = resolverModule.resolveCanonicalId(index, query);
+
+      assertResolutionShape(result, "idResolver canonical result");
+      assert(result.ok === true, "canonical result should be ok.");
+      assert(result.validation.ok === true, "canonical result.validation.ok should be true.");
+      assert(result.canonicalId === "customer:legacy:42", "canonical result should preserve canonical id.");
+      assert(result.sourceId === "42", "canonical result should preserve sourceId.");
+      assert(result.contractName === "Customer", "canonical result should preserve contractName.");
+      assert(
+        result.canonicalId !== result.sourceId,
+        "canonical result should keep canonicalId separated from sourceId."
+      );
+      assert(
+        result.legacyRefs?.clientRegistry?.id === "42",
+        "canonical result should preserve legacyRefs."
+      );
+      assertInputNotMutated(querySnapshot, query, "idResolver canonical query");
+    });
+
+    await runCheck("Id Resolver Valid Legacy Reference Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverContracts);
+      const result = resolverModule.resolveLegacyReference(index, {
+        contractName: "Customer",
+        organizationId: "org_primyo",
+        refPath: "billingClients.legacyId",
+        refValue: "billing-42"
+      });
+
+      assertResolutionShape(result, "idResolver legacy reference result");
+      assert(result.ok === true, "legacy reference result should be ok.");
+      assert(result.validation.ok === true, "legacy reference result.validation.ok should be true.");
+      assert(result.canonicalId === "customer:legacy:42", "legacy reference should resolve canonical customer id.");
+      assert(
+        result.legacyRefs?.billingClients?.legacyId === "billing-42",
+        "legacy reference result should preserve billing legacy refs."
+      );
+    });
+
+    await runCheck("Id Resolver Missing Identifier Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverContracts);
+      const result = resolverModule.resolveCanonicalId(index, {
+        contractName: "Customer",
+        organizationId: "org_primyo"
+      });
+
+      assertResolutionShape(result, "idResolver missing identifier result");
+      assert(result.ok === false, "missing identifier result should fail.");
+      assert(result.validation.ok === false, "missing identifier validation.ok should be false.");
+      assert(result.validation.blocking === true, "missing identifier validation should be blocking.");
+      assert(
+        result.missingRequiredFields.includes("canonicalIdOrSourceId"),
+        "missing identifier result should report canonicalIdOrSourceId."
+      );
+    });
+
+    await runCheck("Id Resolver Ambiguity Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverAmbiguousContracts);
+      const result = resolverModule.resolveCanonicalId(index, {
+        contractName: "Vehicle",
+        organizationId: "org_primyo",
+        sourceId: "84"
+      });
+
+      assertResolutionShape(result, "idResolver ambiguity result");
+      assert(result.ok === false, "ambiguity result should fail.");
+      assert(result.validation.ok === false, "ambiguity validation.ok should be false.");
+      assert(result.validation.blocking === true, "ambiguity validation should be blocking.");
+      assert(result.code === "CANONICAL_AMBIGUOUS", "ambiguity result should expose CANONICAL_AMBIGUOUS.");
+      assert(result.matches.length === 2, "ambiguity result should preserve both matches.");
+    });
+
+    await runCheck("Id Resolver Forbidden Name Lookup Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverContracts);
+      const result = resolverModule.resolveCanonicalId(index, {
+        contractName: "Customer",
+        name: "Joao Cliente"
+      });
+
+      assertResolutionShape(result, "idResolver forbidden name result");
+      assert(result.ok === false, "forbidden name result should fail.");
+      assert(result.code === "FORBIDDEN_LOOKUP_FIELD", "forbidden name should expose FORBIDDEN_LOOKUP_FIELD.");
+    });
+
+    await runCheck("Id Resolver Forbidden Plate Lookup Scenario", () => {
+      const index = resolverModule.createResolutionIndex(resolverContracts);
+      const result = resolverModule.resolveLegacyReference(index, {
+        contractName: "Vehicle",
+        refPath: "historicalPlate.plate",
+        refValue: "ABC1D23"
+      });
+
+      assertResolutionShape(result, "idResolver forbidden plate result");
+      assert(result.ok === false, "forbidden plate result should fail.");
+      assert(
+        result.code === "FORBIDDEN_LEGACY_REFERENCE",
+        "forbidden plate should expose FORBIDDEN_LEGACY_REFERENCE."
       );
     });
 
