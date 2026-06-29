@@ -2,83 +2,78 @@
 
 ## Objetivo
 
-Registrar a decisao oficial da proxima fatia apos a implementacao de `LP-WEB-INTEGRATION-002`.
+Registrar a decisao oficial da proxima fatia apos a conclusao de `LP-WEB-INTEGRATION-002` e da atualizacao de handoff mais recente.
 
 ## Estado atual consolidado
 
 - `customerAdapter` continua sendo consumido em `app/main.js` apenas em `shadow read`;
 - o uso continua restrito a edicao de cliente existente em `Cadastros > Clientes`;
-- o diagnostico da sombra agora registra snapshot rico e historico curto apenas em memoria;
+- o diagnostico da sombra registra sucesso, falha, campos obrigatorios ausentes e historico curto apenas em memoria;
 - o legado continua sendo a fonte ativa de renderizacao e salvamento;
 - `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter` continuam fora do runtime;
 - `idResolver` continua fora do runtime;
 - Supabase continua fechado;
 - `npm.cmd run primyo:gate`, build e verify passaram;
-- o smoke manual do fluxo de clientes e do patio admin/operador passou.
+- o warning de chunk acima de `500 kB` permanece nao bloqueante;
+- o working tree continua sujo apenas com `.gitignore`, `app/styles.css` e `LavaPrimeAndroidApp/**`, todos fora da trilha Primyo Web.
 
 ## Opcoes avaliadas
 
-### `LP-WEB-INTEGRATION-002-CLOSURE`
+### `LP-WEB-INTEGRATION-003`
 
-- Vantagem: absorve formalmente a melhoria diagnostica da primeira trilha funcional em `app/main.js`;
-- Vantagem: atualiza baseline, backlog e controle oficial antes de nova expansao;
-- Vantagem: reduz o risco de crescer a integracao sem estabilizar a sombra e seu diagnostico.
+- Vantagem: revisa a cobertura atual do `shadow read` antes de ampliar a integracao;
+- Vantagem: permite confirmar se a sombra atual em clientes esta entregando sinal suficiente;
+- Vantagem: mantem a proxima fatia pequena, reversivel e ainda centrada no dominio mais seguro;
+- Vantagem: preserva o legado como fonte ativa enquanto aumenta confianca operacional.
 
-### Expandir `customerAdapter` para novos pontos do runtime
+### Expandir `customerAdapter` para novos fluxos de cliente sem revisao previa
 
-- Risco: aumentaria a area tocada antes de fechar a diagnostica atual;
-- Risco: misturaria nova cobertura funcional com uma fatia ainda sem closure.
+- Risco: aumentaria a superficie tocada em `app/main.js` sem consolidar primeiro a cobertura atual;
+- Risco: misturaria observabilidade com expansao funcional cedo demais.
 
 ### Integrar `idResolver`
 
-- Risco: misturaria runtime shadow read com resolucao relacional cross-domain cedo demais;
-- Risco: aumentaria troubleshooting e rollback antes de absorver o diagnostico enriquecido.
+- Risco: adicionaria resolucao relacional cross-domain antes de fechar a analise da sombra atual;
+- Risco: ampliaria troubleshooting e rollback sem necessidade imediata.
 
 ### Integrar `vehicleAdapter`, `serviceAdapter`, `productAdapter` ou `supplyAdapter`
 
-- Risco: ampliaria a superficie antes de provar absorcao formal da primeira integracao;
-- Risco: produtos, insumos, servicos e veiculos ainda possuem dependencias e ownership mais sensiveis do que clientes.
+- Risco: ampliaria a superficie funcional antes de concluir a revisao do primeiro dominio em runtime;
+- Risco: veiculos, servicos, produtos e insumos ainda possuem dependencias e ownership mais sensiveis do que clientes.
 
 ### Abrir `LP-SUPABASE-001`
 
-- Risco: backend continua fora da ordem segura antes da estabilizacao do primeiro uso local em runtime.
+- Risco: backend continua fora da ordem segura antes da estabilizacao da primeira trilha local em runtime.
 
 ## Decisao oficial
 
-Proxima fatia recomendada: `LP-WEB-INTEGRATION-002-CLOSURE`
+Proxima fatia recomendada: `LP-WEB-INTEGRATION-003`
 
 Titulo sugerido:
 
-- `Customer Shadow Read Diagnostics Closure`
+- `Customer Shadow Read Coverage Review`
 
 Direcao recomendada:
 
-- formalizar encerramento da fase diagnostica da primeira integracao;
-- atualizar baseline e backlog oficial;
-- confirmar que `customerAdapter` continua em modo sombra;
-- confirmar que o diagnostico continua silencioso e apenas em memoria;
+- avaliar a cobertura atual do `shadow read`;
+- verificar se vale ampliar a sombra para mais fluxos de cliente;
+- manter o legado como fonte ativa;
 - manter `idResolver` fora do runtime;
-- nao expandir a integracao antes do closure.
+- manter Supabase fechado;
+- nao tocar em veiculos, servicos, produtos, insumos, financeiro ou estoque nesta proxima fatia.
 
 ## Justificativa
 
-`LP-WEB-INTEGRATION-002-CLOSURE` passa a ser a melhor proxima fatia porque:
+`LP-WEB-INTEGRATION-003` passa a ser a melhor proxima fatia porque:
 
-1. a trilha acabou de tocar `app/main.js` pela primeira vez;
-2. o uso em runtime continua pequeno, reversivel e com legado preservado;
-3. o diagnostico da sombra acabou de crescer e precisa ser absorvido formalmente antes de ganhar novos pontos de uso;
-4. integrar `idResolver` ou outro adapter agora aumentaria risco sem necessidade;
+1. a primeira integracao real e seu diagnostico ja foram implementados e fechados;
+2. ainda faz sentido permanecer no dominio de clientes antes de abrir novas entidades;
+3. uma revisao de cobertura reduz risco antes de expandir sombra ou considerar integracao mais profunda;
+4. integrar `idResolver` ou outros adapters agora aumentaria risco sem necessidade;
 5. Supabase continua cedo demais para a ordem segura definida.
 
-## Resultado desta fase
+## Resultado desta microfase documental
 
-Nenhuma nova expansao funcional foi iniciada alem do `shadow read` aprovado e do diagnostico interno em memoria.
+Nenhuma nova expansao funcional foi iniciada.
 
-Esta fase implementa apenas:
-
-- `customerAdapter` em leitura/sombra;
-- um unico fluxo de cliente;
-- diagnostico interno mais rico e silencioso;
-- sem escrita via adapter;
-- sem `idResolver`;
-- sem alterar UI, persistencia ou Supabase.
+Esta microfase atualiza apenas a decisao oficial da proxima fatia para substituir a referencia ultrapassada a `LP-WEB-INTEGRATION-002-CLOSURE`.
