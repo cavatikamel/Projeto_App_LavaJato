@@ -33,6 +33,7 @@
 | LP-WEB-ID-RESOLVER-002 | Implementar primeira camada pura de resolucao de IDs cross-domain | P2 | Medio | LP-WEB-ID-RESOLVER-001, LP-TEST-AUTO-003, LP-DATA-006 | Web, Docs | Medio | Concluido e encerrado formalmente em `2026-06-27`. `app/adapters/shared/idResolver.js` foi criado como modulo puro e reversivel, com gate ampliado e sem integracao ao runtime. | O resolvedor puro existe, bloqueia ambiguidade e lookup por nome/placa, preserva `legacyRefs` e nao altera comportamento percebido. | Change record, closure, `node --check`, adapter gate atualizado, `primyo:gate`, build, verify e rollback documentado. |
 | LP-WEB-INTEGRATION-READINESS-001 | Avaliar readiness de runtime para adapters e idResolver | P1 | Alto | LP-WEB-011, LP-WEB-ID-RESOLVER-002, LP-TEST-AUTO-004 | Web, Docs | Medio/Alto | Concluido em `2026-06-28`. A readiness de runtime foi documentada com avaliacao dos cinco adapters, do `idResolver`, da cobertura do gate, dos riscos de integracao, do rollback, do smoke manual futuro e da primeira fatia recomendada. | Existe estrategia conservadora aprovada para a primeira integracao real ao runtime, sem tocar `app/main.js` nesta fase. | `docs/primyo-web-integration/`, change record da fase, `npm.cmd run primyo:gate` aprovado e decisao formal da primeira fatia futura. |
 | LP-WEB-INTEGRATION-001 | Integrar `customerAdapter` em shadow read no runtime | P1 | Alto | LP-WEB-INTEGRATION-READINESS-001, LP-WEB-007-REVISION | Web | Alto | Implementado em `2026-06-28`. `customerAdapter` passou a rodar em modo sombra apenas na edicao de cliente existente via `openClientDialog(clientId)`, mantendo o legado como fonte ativa, sem escrita via adapter e sem `idResolver` no runtime. | A primeira integracao real existe, e pequena, reversivel e sem alterar comportamento visivel, persistencia, UI ou Supabase. | Change record, `node --check`, adapter gate, `primyo:gate`, build, verify, smoke manual do fluxo de clientes e rollback documentado. |
+| LP-WEB-INTEGRATION-002 | Reforcar diagnostico do `customerAdapter` em shadow read | P1 | Alto | LP-WEB-INTEGRATION-001 | Web | Alto | Implementado em `2026-06-28`. O `shadow read` do cliente passou a registrar diagnostico interno mais rico em memoria, com historico curto, motivo de falha, campos ausentes, tipo de cliente, presenca de documento, timestamp e rollback, sem alterar UI, escrita, permissoes ou Supabase. | O diagnostico de sombra fica mais observavel para engenharia sem mudar fonte ativa, renderizacao, save, runtime de outros dominios ou comportamento percebido. | Change record, `node --check`, adapter gate, `primyo:gate`, build, verify, smoke manual do fluxo de clientes e rollback documentado. |
 | LP-DOC-HANDOFF-001 | Consolidar handoff seguro para compactacao do contexto do Codex | P3 | Baixo | LP-DOC-EXEC-001, LP-WEB-011 | Docs, Governanca | Baixo | Concluido em `2026-06-27`. Foi criada a base documental de handoff para registrar branch, commits relevantes, estado tecnico atual, fora de escopo persistente e checklist de compactacao segura do chat. | O proximo contexto consegue retomar a trilha Primyo com baixo risco de perda de contexto, sem reduzir gate, rollback ou controle de escopo. | Handoff summary, checklist de compactacao, change record, closure e `npm.cmd run primyo:gate` aprovado. |
 | LP-PERM-001 | Alinhar regras de administrador e operador | P1 | Alto | LP-SEC-003 | Web, Android | Medio | Concluido em `2026-06-23`. A matriz oficial de permissoes foi formalizada para Administrador e Operador, com perfis futuros planejados sem implementacao. | Cada permissao critica possui racional, politica, readiness RLS e cenarios de teste. | Matriz revisada, acoes sensiveis, politica de permissao, readiness RLS, cenarios de teste e validacoes tecnicas aprovadas. |
 | LP-TEST-001 | Formalizar baseline minima de testes web | P1 | Alto | Nenhuma | Web, CI, Docs | Baixo | Consolidar build, verificacoes existentes e fluxos manuais obrigatorios antes de qualquer mudanca funcional. | Existe pacote minimo repetivel para validar cada fatia web. | Documento de baseline, execucao registrada. |
@@ -1150,3 +1151,37 @@
   - esta continua sendo a primeira alteracao real em `app/main.js` da trilha de adapters;
   - clientes PF sem documento seguem invalidos para o contrato oficial, por isso a sombra nao pode virar dependencia funcional nesta etapa;
   - qualquer expansao para escrita, `idResolver`, veiculo, servico, produto, insumo, estoque, financeiro ou Supabase continua exigindo closure formal e nova decisao de slice.
+
+### LP-WEB-INTEGRATION-002
+
+- Status: `Implementado`
+- Data: `2026-06-28`
+- Arquivos alterados:
+  - `app/main.js`
+  - `docs/primyo-changes/LP-WEB-INTEGRATION-002.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - o `shadow read` do cliente passou a manter snapshot e historico curto em `window.__lavaprimeCustomerShadowReadDiagnostics`;
+  - o diagnostico passou a registrar cliente analisado, sucesso/falha, motivo, campos obrigatorios ausentes, tipo, presenca de documento, timestamp, rollback e confirmacao de legado ativo;
+  - `node --check app/main.js` -> sucesso;
+  - `node --check app/adapters/customerAdapter.js` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso;
+  - `npm.cmd run verify:build` -> sucesso;
+  - smoke manual do fluxo de clientes executado com admin em `Clientes`, edicao de `Frota Prime Ltda`, `Novo cliente`, logout, login operador e console limpo.
+- Observacoes:
+  - o legado continua fonte ativa de renderizacao e salvamento;
+  - `Novo cliente` continua sem disparar `shadow read`;
+  - `idResolver` permaneceu fora do runtime;
+  - UI, persistencia, Supabase, banco, Android e CSS permaneceram intactos;
+  - a proxima fatia recomendada passa a ser `LP-WEB-INTEGRATION-002-CLOSURE`.
+- Riscos remanescentes:
+  - qualquer crescimento adicional em `app/main.js` sem closure aumentaria o risco da primeira trilha funcional;
+  - clientes PF sem documento continuam podendo gerar falha contratual esperada na sombra;
+  - o diagnostico em memoria nao pode virar persistencia, telemetria externa ou dependencia funcional;
+  - `idResolver`, escrita via adapter, outros dominios e Supabase continuam fora da ordem segura.

@@ -100,11 +100,26 @@ let selectedVehicleSpecialCareId = null;
 let entryVehicleSpecialCareDraft = null;
 let lastEntryCareConflictSignature = "";
 const CUSTOMER_SHADOW_READ_ORGANIZATION_ID = "org:lavaprime-local-web";
+const CUSTOMER_SHADOW_READ_DIAGNOSTICS_LIMIT = 10;
+const CUSTOMER_SHADOW_READ_ROLLBACK_PATH = Object.freeze([
+  "remove toCustomerContract import from app/main.js",
+  "remove customer shadow diagnostics constants and in-memory state",
+  "remove runCustomerDialogShadowRead(client) call from openClientDialog(clientId)",
+  "remove customer shadow diagnostics helpers from app/main.js",
+  "rerun node --check app/main.js, adapter gate, primyo:gate, build, verify and customer smoke"
+]);
 let lastCustomerShadowReadReport = null;
+const customerShadowReadDiagnostics = {
+  latest: null,
+  history: [],
+  rollbackPath: [...CUSTOMER_SHADOW_READ_ROLLBACK_PATH],
+  legacySourceActive: true
+};
 
 window.__lavaprimeSessionBoundary = sessionBoundary;
 
 window.__lavaprimeAccessBoundary = accessBoundary;
+window.__lavaprimeCustomerShadowReadDiagnostics = customerShadowReadDiagnostics;
 const vehicleOwnerTransferSearchModes = [
   { value: "name", label: "Nome / Razao social", placeholder: "Digite o nome ou a razao social" },
   { value: "document", label: "Documento", placeholder: "Digite o CPF ou CNPJ" },
@@ -9706,38 +9721,140 @@ function runCustomerDialogShadowRead(client) {
     allowWarnings: true,
     strictMode: false
   };
+  const baseReport = createCustomerShadowReadBaseReport(client, context);
 
   try {
     const adapted = toCustomerContract(client, context);
-    lastCustomerShadowReadReport = {
-      flow: "clientDialog.edit",
-      clientId: client.id,
-      sourceId: context.sourceId,
-      ranAt: context.now,
-      ok: adapted.ok,
-      warningCount: Array.isArray(adapted.warnings) ? adapted.warnings.length : 0,
-      errorCount: Array.isArray(adapted.errors) ? adapted.errors.length : 0,
-      missingRequiredFields: Array.isArray(adapted.missingRequiredFields) ? [...adapted.missingRequiredFields] : [],
-      validation: adapted.validation || null,
-      customerContractId: adapted.customerContract?.id || "",
-      customerContractKind: adapted.customerContract?.kind || "",
-      customerContractName: adapted.customerContract?.name || ""
-    };
+    recordCustomerShadowReadReport(buildCustomerShadowReadSuccessReport(baseReport, adapted));
   } catch (error) {
-    lastCustomerShadowReadReport = {
-      flow: "clientDialog.edit",
-      clientId: client.id,
-      sourceId: context.sourceId,
-      ranAt: context.now,
+    recordCustomerShadowReadReport({
+      ...baseReport,
       ok: false,
+      adaptationStatus: "failed",
       warningCount: 0,
       errorCount: 1,
       missingRequiredFields: [],
-      validation: null,
+      warnings: [],
+      errors: [error instanceof Error ? error.message : String(error)],
+      validation: {
+        ok: false,
+        errors: ["ADAPTER_EXCEPTION"],
+        missingRequiredFields: [],
+        blocking: true
+      },
       reason: "adapter_exception",
       message: error instanceof Error ? error.message : String(error)
-    };
+    });
   }
+}
+
+function createCustomerShadowReadBaseReport(client, context) {
+  const clientDisplayName = getClientDisplayName(client) || client.name || client.legalName || "";
+  const documentValue = normalizeCustomerShadowReadDocument(client.document);
+
+  return {
+    flow: "clientDialog.edit",
+    shadowMode: "read-only",
+    analyzedClient: {
+      id: client.id,
+      displayName: clientDisplayName,
+      personType: client.personType || "",
+      billingProfile: client.billing ? "billing" : "standard"
+    },
+    clientId: client.id,
+    sourceId: context.sourceId,
+    timestamp: context.now,
+    ranAt: context.now,
+    rollbackPath: [...CUSTOMER_SHADOW_READ_ROLLBACK_PATH],
+    legacySourceActive: true,
+    rollbackReady: true,
+    clientType: client.personType || "",
+    documentPresence: documentValue ? "present" : "missing",
+    hasDocument: Boolean(documentValue)
+  };
+}
+
+function buildCustomerShadowReadSuccessReport(baseReport, adapted) {
+  const warnings = cloneCustomerShadowReadList(adapted.warnings);
+  const errors = cloneCustomerShadowReadList(adapted.errors);
+  const missingRequiredFields = cloneCustomerShadowReadList(adapted.missingRequiredFields);
+  const validation = cloneCustomerShadowReadValidation(adapted.validation);
+  const failureReason = deriveCustomerShadowReadFailureReason(adapted, errors, missingRequiredFields, validation);
+
+  return {
+    ...baseReport,
+    ok: Boolean(adapted.ok),
+    adaptationStatus: adapted.ok ? "adapted" : "failed",
+    reason: adapted.ok ? "shadow_read_ok" : failureReason,
+    warningCount: warnings.length,
+    errorCount: errors.length,
+    missingRequiredFields,
+    warnings,
+    errors,
+    validation,
+    customerContractId: adapted.customerContract?.id || "",
+    customerContractKind: adapted.customerContract?.kind || "",
+    customerContractName: adapted.customerContract?.name || "",
+    customerContractStatus: adapted.customerContract?.status || "",
+    message: adapted.ok ? "legacy flow remained active while customerAdapter shadow diagnostics completed." : ""
+  };
+}
+
+function recordCustomerShadowReadReport(report) {
+  const snapshot = cloneCustomerShadowReadReport(report);
+  lastCustomerShadowReadReport = snapshot;
+  customerShadowReadDiagnostics.latest = snapshot;
+  customerShadowReadDiagnostics.history = [
+    ...customerShadowReadDiagnostics.history.slice(-(CUSTOMER_SHADOW_READ_DIAGNOSTICS_LIMIT - 1)),
+    snapshot
+  ];
+  customerShadowReadDiagnostics.legacySourceActive = true;
+  customerShadowReadDiagnostics.rollbackPath = [...CUSTOMER_SHADOW_READ_ROLLBACK_PATH];
+}
+
+function cloneCustomerShadowReadReport(report) {
+  return {
+    ...report,
+    analyzedClient: report?.analyzedClient ? { ...report.analyzedClient } : null,
+    rollbackPath: cloneCustomerShadowReadList(report?.rollbackPath),
+    missingRequiredFields: cloneCustomerShadowReadList(report?.missingRequiredFields),
+    warnings: cloneCustomerShadowReadList(report?.warnings),
+    errors: cloneCustomerShadowReadList(report?.errors),
+    validation: cloneCustomerShadowReadValidation(report?.validation)
+  };
+}
+
+function cloneCustomerShadowReadValidation(validation) {
+  if (!validation || typeof validation !== "object") return null;
+  return {
+    ok: Boolean(validation.ok),
+    errors: cloneCustomerShadowReadList(validation.errors),
+    missingRequiredFields: cloneCustomerShadowReadList(validation.missingRequiredFields),
+    blocking: Boolean(validation.blocking)
+  };
+}
+
+function cloneCustomerShadowReadList(values) {
+  return Array.isArray(values) ? [...values] : [];
+}
+
+function deriveCustomerShadowReadFailureReason(adapted, errors, missingRequiredFields, validation) {
+  if (adapted?.ok) return "shadow_read_ok";
+  if (missingRequiredFields.length) return "missing_required_fields";
+  if (validation?.blocking && errors.length) return extractCustomerShadowReadErrorCode(errors[0]) || "validation_blocked";
+  if (errors.length) return extractCustomerShadowReadErrorCode(errors[0]) || "validation_failed";
+  return "shadow_read_failed";
+}
+
+function extractCustomerShadowReadErrorCode(message) {
+  const normalized = typeof message === "string" ? message.trim() : "";
+  if (!normalized) return "";
+  const [code] = normalized.split(":");
+  return code ? code.trim() : "";
+}
+
+function normalizeCustomerShadowReadDocument(documentValue) {
+  return typeof documentValue === "string" ? documentValue.replace(/\D/g, "").trim() : "";
 }
 
 function closeClientDialog() {

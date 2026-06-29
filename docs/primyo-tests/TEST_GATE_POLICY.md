@@ -191,6 +191,18 @@ Estado oficial apos `LP-WEB-INTEGRATION-001`:
 - a validacao minima desta primeira entrada exige `npm.cmd run primyo:gate`, build, verify e smoke manual do fluxo de clientes, do patio admin, do logout e do patio operador;
 - qualquer expansao para nova escrita, novo dominio, `idResolver`, estoque, financeiro ou Supabase continua bloqueada ate o closure formal da fase.
 
+Estado oficial apos `LP-WEB-INTEGRATION-002`:
+
+- `app/main.js` continua executando `customerAdapter` apenas em shadow read;
+- o diagnostico da sombra passa a registrar snapshot rico e historico curto em `window.__lavaprimeCustomerShadowReadDiagnostics`;
+- o relatorio interno agora registra cliente analisado, sucesso/falha, motivo, campos obrigatorios ausentes, tipo de cliente, presenca de documento, timestamp, rollback e confirmacao de legado ativo;
+- o diagnostico continua silencioso para o usuario, sem nova UI, sem persistencia e sem envio externo;
+- `Novo cliente` continua fora do `shadow read`;
+- o legado continua fonte ativa de renderizacao e save;
+- `idResolver` continua fora do runtime;
+- a validacao minima continua exigindo `npm.cmd run primyo:gate`, build, verify e smoke manual do fluxo de clientes, do logout e do perfil operador;
+- qualquer expansao para escrita, novo dominio, `idResolver`, estoque, financeiro ou Supabase continua bloqueada ate o closure formal desta fase.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;
