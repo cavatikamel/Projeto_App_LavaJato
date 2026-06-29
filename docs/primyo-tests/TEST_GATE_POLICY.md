@@ -203,6 +203,29 @@ Estado oficial apos `LP-WEB-INTEGRATION-002`:
 - a validacao minima continua exigindo `npm.cmd run primyo:gate`, build, verify e smoke manual do fluxo de clientes, do logout e do perfil operador;
 - qualquer expansao para escrita, novo dominio, `idResolver`, estoque, financeiro ou Supabase continua bloqueada ate o closure formal desta fase.
 
+Estado oficial apos `LP-WEB-INTEGRATION-004`:
+
+- `app/main.js` continua executando `customerAdapter` apenas em shadow read;
+- `renderClientsScreen(container)` passa a executar validacao silenciosa da base legada antes de qualquer ampliacao da sombra;
+- o diagnostico consolidado fica restrito a `window.__lavaprimeCustomerLegacyDataValidation`;
+- a leitura continua apenas em memoria, sem persistencia, sem telemetria e sem alteracao visual;
+- `document` deixa de bloquear cliente comum e continua bloqueando apenas cliente faturado;
+- o diagnostico passa a separar compatibilidade estrutural, incompatibilidade real, registros `demo/teste`, ausencias opcionais de `document` e bloqueios especificos de faturamento;
+- a base atual de `clientRegistry` passa a ser tratada oficialmente como seed `demo/teste`, nao como base real pronta para Supabase;
+- a ampliacao da sombra continua bloqueada nesta fatia porque a massa `demo/teste` ainda precisa de limpeza/isolation controlada;
+- o legado continua fonte ativa de renderizacao e save;
+- `idResolver` continua fora do runtime;
+- a validacao minima continua exigindo `npm.cmd run primyo:gate`, build, verify e smoke manual do fluxo de clientes;
+- qualquer ampliacao para lista, `Novo cliente`, save, novo dominio, `idResolver`, estoque, financeiro ou Supabase continua bloqueada ate o closure formal desta fase.
+
+Estado oficial apos `LP-WEB-DATA-CLEANUP-001`:
+
+- `app/demo/lavaprimeDemoData.js` passa a ser o modulo dedicado da massa `demo/teste` central do LavaPrime Web;
+- a existencia do modulo isolado nao autoriza remocao direta de seed nem abertura de Supabase;
+- qualquer mudanca em `app/demo/lavaprimeDemoData.js` ou no consumo dele em `app/main.js` deve reexecutar `npm.cmd run primyo:gate`, build, verify e smoke manual de dashboard, clientes, patio e financeiro;
+- a massa `demo/teste` deve continuar classificada como nao real em qualquer diagnostico ou documentacao da trilha;
+- a proxima etapa segura passa a ser separar bootstrap demo de bootstrap limpo antes de qualquer remocao real.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

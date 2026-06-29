@@ -151,6 +151,28 @@ Regra aplicada em `LP-WEB-INTEGRATION-002`:
 - o fluxo de operador deve permanecer protegido;
 - o console do browser deve permanecer sem erro bloqueante.
 
+Regra aplicada em `LP-WEB-INTEGRATION-004`:
+
+- a lista de clientes precisa continuar preservada no caminho legado;
+- a validacao legada deve ficar silenciosa para o usuario;
+- o diagnostico tecnico deve registrar total analisado, compativeis estruturais, incompatibilidades reais, registros `demo/teste`, campos opcionais ausentes, bloqueios especificos de faturamento, exemplos limitados, recomendacao final e `legacySourceActive`;
+- `document` nao pode bloquear cliente comum;
+- `document` deve continuar bloqueando apenas cliente faturado;
+- os flags `canExpandShadowReadForCommonCustomers` e `canExpandShadowReadForBilledCustomers` devem permanecer separados;
+- a massa `demo/teste` nao pode ser tratada como base real pronta para Supabase;
+- a validacao nao pode alterar formulario, save, permissao, UI ou shell do operador;
+- o console do browser deve permanecer sem erro bloqueante;
+- a expansao da sombra continua proibida nesta fatia enquanto a massa `demo/teste` nao for limpa ou isolada de forma controlada.
+
+Regra aplicada em `LP-WEB-DATA-CLEANUP-001`:
+
+- a extracao de seeds para modulo dedicado nao pode alterar lista de clientes, dashboard, patio, financeiro ou relatorios;
+- a massa `demo/teste` deve continuar explicitamente classificada como nao real;
+- nenhuma remocao direta de seed pode ocorrer sem mapa previo de vinculos;
+- o smoke manual minimo deve cobrir dashboard, `Cadastros > Clientes`, patio e financeiro;
+- o console do browser deve permanecer sem erro bloqueante;
+- a proxima fatia deve separar bootstrap demo de bootstrap limpo antes de qualquer remocao real.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

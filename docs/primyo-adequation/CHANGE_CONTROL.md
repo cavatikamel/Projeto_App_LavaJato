@@ -351,3 +351,19 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito`
 - Observacao principal: a cobertura atual do `Customer Adapter Shadow Read` foi revisada sem alterar `app/main.js`, e a ordem segura passa a exigir uma microfase de validacao dos dados legados antes de qualquer ampliacao de sombra.
 - Observacao de risco: lista de clientes, `Novo cliente`, salvamento, `idResolver`, outros dominios e Supabase continuam fora da proxima ampliacao; a prioridade recomendada passa a ser `LP-WEB-INTEGRATION-004`.
+
+### LP-WEB-INTEGRATION-004
+
+- Change record: `docs/primyo-changes/LP-WEB-INTEGRATION-004.md`
+- Closure: `pendente`
+- Resultado: `Implementado`
+- Observacao principal: a validacao silenciosa da base legada de clientes foi ajustada para refletir a regra oficial do negocio, com `document` opcional para cliente comum, obrigatorio apenas para cliente faturado e classificacao explicita dos `5` registros atuais como massa `demo/teste`.
+- Observacao de risco: os seeds continuam ligados a faturamento, veiculos, patio, pagamentos, dashboard e relatorios, entao nenhuma remocao foi executada nesta fase; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-001` para limpeza controlada antes de Supabase.
+
+### LP-WEB-DATA-CLEANUP-001
+
+- Change record: `docs/primyo-changes/LP-WEB-DATA-CLEANUP-001.md`
+- Closure: `fase absorvida no proprio change record e em DEMO_DATA_CLEANUP_PLAN.md`
+- Resultado: `Implementado`
+- Observacao principal: a massa central `demo/teste` de clientes, veiculos, patio, faturamento, itens de fatura e pagamentos foi isolada de `app/main.js` para `app/demo/lavaprimeDemoData.js`, sem remocao direta de seed e sem alterar comportamento visual ou funcional.
+- Observacao de risco: dashboard, clientes, patio, financeiro e relatorios ainda dependem desses seeds; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-002` para separar bootstrap demo de bootstrap limpo antes de qualquer remocao real ou abertura de Supabase.

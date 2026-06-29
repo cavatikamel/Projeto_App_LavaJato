@@ -1,5 +1,16 @@
 import { createAccessBoundary, createSessionBoundary } from "./boundaries/sessionAccessBoundary.js";
 import { toCustomerContract } from "./adapters/customerAdapter.js";
+import {
+  billingClients,
+  billingInvoices,
+  clientRegistry,
+  invoiceAmounts,
+  invoiceLineItems,
+  lavaprimeDemoDataCleanupMap,
+  openPayments,
+  patioVehicles,
+  vehicleRegistry
+} from "./demo/lavaprimeDemoData.js";
 import { storageBoundary } from "./storage/storageBoundary.js";
 import {
   capitalize,
@@ -108,6 +119,13 @@ const CUSTOMER_SHADOW_READ_ROLLBACK_PATH = Object.freeze([
   "remove customer shadow diagnostics helpers from app/main.js",
   "rerun node --check app/main.js, adapter gate, primyo:gate, build, verify and customer smoke"
 ]);
+const CUSTOMER_LEGACY_DATA_VALIDATION_EXAMPLE_LIMIT = 3;
+const CUSTOMER_LEGACY_DATA_VALIDATION_ROLLBACK_PATH = Object.freeze([
+  "remove customer legacy data validation constants and in-memory state from app/main.js",
+  "remove runCustomerLegacyDataValidation(clientRegistry) call from renderClientsScreen(container)",
+  "remove customer legacy data validation helpers from app/main.js",
+  "rerun node --check app/main.js, adapter gate, primyo:gate, build, verify and customer smoke"
+]);
 let lastCustomerShadowReadReport = null;
 const customerShadowReadDiagnostics = {
   latest: null,
@@ -115,40 +133,24 @@ const customerShadowReadDiagnostics = {
   rollbackPath: [...CUSTOMER_SHADOW_READ_ROLLBACK_PATH],
   legacySourceActive: true
 };
+let lastCustomerLegacyDataValidationReport = null;
+const customerLegacyDataValidation = {
+  latest: null,
+  rollbackPath: [...CUSTOMER_LEGACY_DATA_VALIDATION_ROLLBACK_PATH],
+  exampleLimit: CUSTOMER_LEGACY_DATA_VALIDATION_EXAMPLE_LIMIT,
+  legacySourceActive: true
+};
 
 window.__lavaprimeSessionBoundary = sessionBoundary;
 
 window.__lavaprimeAccessBoundary = accessBoundary;
 window.__lavaprimeCustomerShadowReadDiagnostics = customerShadowReadDiagnostics;
+window.__lavaprimeCustomerLegacyDataValidation = customerLegacyDataValidation;
 const vehicleOwnerTransferSearchModes = [
   { value: "name", label: "Nome / Razao social", placeholder: "Digite o nome ou a razao social" },
   { value: "document", label: "Documento", placeholder: "Digite o CPF ou CNPJ" },
   { value: "phone", label: "Telefone", placeholder: "Digite o telefone" },
   { value: "plates", label: "Outras placas", placeholder: "Digite outra placa associada" }
-];
-
-const billingClients = [
-  { id: 1, name: "Frota Prime Ltda", document: "12.345.678/0001-90", phone: "(11) 91111-0001" },
-  { id: 2, name: "Condomínio Reserva Azul", document: "98.765.432/0001-10", phone: "(11) 92222-0002" },
-  { id: 3, name: "Auto Center Vila Norte", document: "23.456.789/0001-20", phone: "(11) 93333-0003" }
-];
-
-const billingInvoices = [
-  { id: 1, clientId: 1, code: "FAT-0526-001", dueDate: "2026-05-30" },
-  { id: 2, clientId: 2, code: "FAT-0526-002", dueDate: "2026-05-25" },
-  { id: 3, clientId: 3, code: "FAT-0626-001", dueDate: "2026-06-05" }
-];
-
-const invoiceAmounts = {
-  1: 980,
-  2: 620,
-  3: 440
-};
-
-const invoiceLineItems = [
-  { invoiceId: 1, clientId: 1, plate: "KML7D10", service: "Vitrificação", value: 490, operator: "Carlos" },
-  { invoiceId: 2, clientId: 2, plate: "AGD4H22", service: "Lavagem Prime", value: 65, operator: "Carlos" },
-  { invoiceId: 3, clientId: 3, plate: "LVP3E72", service: "Detailing completo", value: 320, operator: "Juliana" }
 ];
 
 const billingCycles = ["Mensal", "Bimestral", "Trimestral", "Semestral"];
@@ -552,71 +554,6 @@ const localVehicleAutocompleteLimit = 8;
 let localVehicleDatabasePromise = null;
 let localVehicleDatabase = null;
 
-const patioVehicles = [
-  {
-    id: 0,
-    plate: "AGD4H22",
-    model: "Tracker",
-    color: "Cinza",
-    owner: "Bruno Lima",
-    phone: "(11) 94444-4022",
-    service: "Lavagem Prime",
-    payment: "Pix",
-    entry: "14:30",
-    scheduledDate: "2026-05-22",
-    scheduledTime: "14:30",
-    status: "agendado"
-  },
-  {
-    id: 1,
-    plate: "FQJ2A19",
-    model: "Onix",
-    color: "Branco",
-    owner: "Marina Alves",
-    phone: "(11) 98888-1001",
-    service: "Lavagem Prime",
-    payment: "Pix",
-    entry: "08:30",
-    status: "aguardando"
-  },
-  {
-    id: 2,
-    plate: "BRT8C41",
-    model: "Corolla",
-    color: "Prata",
-    owner: "Rafael Nunes",
-    phone: "(21) 97777-2041",
-    service: "Higienização interna",
-    payment: "Cartão de débito",
-    entry: "09:15",
-    status: "lavando"
-  },
-  {
-    id: 3,
-    plate: "LVP3E72",
-    model: "Compass",
-    color: "Azul",
-    owner: "Camila Torres",
-    phone: "(31) 96666-3072",
-    service: "Detailing completo",
-    payment: "Cartão de crédito",
-    entry: "10:05",
-    status: "pronto"
-  },
-  {
-    id: 4,
-    plate: "KML7D10",
-    model: "Civic",
-    color: "Preto",
-    owner: "Pedro Martins",
-    phone: "(41) 95555-7010",
-    service: "Vitrificação",
-    payment: "Faturado",
-    entry: "11:20",
-    status: "cancelado"
-  }
-];
-
 const quoteEstimates = [
   {
     id: 1,
@@ -703,180 +640,6 @@ const quoteEstimates = [
     status: "Não aprovado",
     rejectedAt: "05/06/2026 09:30",
     operator: "Administrador"
-  }
-];
-
-const clientRegistry = [
-  {
-    id: 1,
-    billingClientId: 1,
-    personType: "PJ",
-    billing: true,
-    name: "",
-    legalName: "Frota Prime Ltda",
-    document: "12.345.678/0001-90",
-    phone: "(11) 91111-0001",
-    address: "Av. Paulista, 1000 - São Paulo/SP",
-    email: "financeiro@frotaprime.com.br",
-    responsible: "Roberto Silva",
-    approver: "Ana Admin",
-    billingApproved: true,
-    billingCycle: "Mensal",
-    allowMultipleOpenInvoices: true,
-    plates: ["KML7D10"]
-  },
-  {
-    id: 2,
-    billingClientId: 2,
-    personType: "PJ",
-    billing: true,
-    name: "",
-    legalName: "Condomínio Reserva Azul",
-    document: "98.765.432/0001-10",
-    phone: "(11) 92222-0002",
-    address: "Rua das Acácias, 450 - São Paulo/SP",
-    email: "administracao@reservaazul.com.br",
-    responsible: "Lívia Ramos",
-    approver: "Ana Admin",
-    billingApproved: true,
-    billingCycle: "Mensal",
-    allowMultipleOpenInvoices: false,
-    plates: ["AGD4H22"]
-  },
-  {
-    id: 3,
-    billingClientId: 3,
-    personType: "PJ",
-    billing: true,
-    name: "",
-    legalName: "Auto Center Vila Norte",
-    document: "23.456.789/0001-20",
-    phone: "(11) 93333-0003",
-    address: "Rua Norte, 78 - São Paulo/SP",
-    email: "contas@autocentervn.com.br",
-    responsible: "Diego Melo",
-    approver: "Ana Admin",
-    billingApproved: true,
-    billingCycle: "Bimestral",
-    allowMultipleOpenInvoices: true,
-    plates: ["LVP3E72"]
-  },
-  {
-    id: 4,
-    billingClientId: null,
-    personType: "PF",
-    billing: false,
-    name: "Marina Alves",
-    legalName: "",
-    document: "",
-    phone: "(11) 98888-1001",
-    address: "",
-    email: "",
-    responsible: "",
-    approver: "",
-    billingApproved: false,
-    billingCycle: "",
-    allowMultipleOpenInvoices: false,
-    plates: ["FQJ2A19"]
-  },
-  {
-    id: 5,
-    billingClientId: null,
-    personType: "PF",
-    billing: false,
-    name: "Rafael Nunes",
-    legalName: "",
-    document: "",
-    phone: "(21) 97777-2041",
-    address: "",
-    email: "",
-    responsible: "",
-    approver: "",
-    billingApproved: false,
-    billingCycle: "",
-    allowMultipleOpenInvoices: false,
-    plates: ["BRT8C41"]
-  }
-];
-
-const vehicleRegistry = [
-  {
-    id: 1,
-    plate: "FQJ2A19",
-    brand: "Chevrolet",
-    model: "Onix",
-    year: "2023",
-    color: "Branco",
-    type: "Carro",
-    category: "Hatch",
-    fuel: "Flex",
-    currentClientId: 4,
-    notes: "Veículo de cliente avulso com recorrência mensal.",
-    ownerHistory: [{ date: "2026-05-18", owner: "Marina Alves", note: "Proprietária atual" }],
-    serviceHistory: [{ date: "2026-05-18", service: "Lavagem Prime", status: "Aguardando serviço", value: 65 }]
-  },
-  {
-    id: 2,
-    plate: "BRT8C41",
-    brand: "Toyota",
-    model: "Corolla",
-    year: "2022",
-    color: "Prata",
-    type: "Carro",
-    category: "Sedan",
-    fuel: "Flex",
-    currentClientId: 5,
-    notes: "Cliente prefere higienização interna trimestral.",
-    ownerHistory: [{ date: "2026-05-18", owner: "Rafael Nunes", note: "Proprietário atual" }],
-    serviceHistory: [{ date: "2026-05-18", service: "Higienização interna", status: "Em Serviço", value: 140 }]
-  },
-  {
-    id: 3,
-    plate: "LVP3E72",
-    brand: "Jeep",
-    model: "Compass",
-    year: "2024",
-    color: "Azul",
-    type: "Carro",
-    category: "SUV",
-    fuel: "Flex",
-    currentClientId: 3,
-    notes: "Atendido por faturamento corporativo.",
-    ownerHistory: [{ date: "2026-05-18", owner: "Auto Center Vila Norte", note: "Cliente faturado atual" }],
-    serviceHistory: [{ date: "2026-05-18", service: "Detailing completo", status: "Pronto", value: 320 }]
-  },
-  {
-    id: 4,
-    plate: "KML7D10",
-    brand: "Honda",
-    model: "Civic",
-    year: "2021",
-    color: "Preto",
-    type: "Carro",
-    category: "Sedan",
-    fuel: "Flex",
-    currentClientId: 1,
-    notes: "Histórico preservado mesmo com serviço cancelado.",
-    ownerHistory: [
-      { date: "2025-11-10", owner: "Pedro Martins", note: "Proprietário anterior" },
-      { date: "2026-05-18", owner: "Frota Prime Ltda", note: "Transferido para cliente faturado" }
-    ],
-    serviceHistory: [{ date: "2026-05-18", service: "Vitrificação", status: "Cancelado", value: 490 }]
-  },
-  {
-    id: 5,
-    plate: "AGD4H22",
-    brand: "Chevrolet",
-    model: "Tracker",
-    year: "2023",
-    color: "Cinza",
-    type: "Carro",
-    category: "SUV",
-    fuel: "Flex",
-    currentClientId: 2,
-    notes: "Entrada agendada aguardando confirmação.",
-    ownerHistory: [{ date: "2026-05-18", owner: "Condomínio Reserva Azul", note: "Cliente faturado atual" }],
-    serviceHistory: [{ date: "2026-05-18", service: "Lavagem Prime", status: "Agendado", value: 65 }]
   }
 ];
 
@@ -1149,27 +912,6 @@ function getDefaultCashEntries() {
     }
   ];
 }
-
-const openPayments = [
-  {
-    id: 1,
-    clientId: 5,
-    clientName: "Rafael Nunes",
-    phone: "(21) 97777-2041",
-    plate: "BRT8C41",
-    service: "Higienização interna",
-    value: 140,
-    paymentMethod: "Pix",
-    createdAt: "2026-05-25 10:30",
-    dueDate: "2026-05-26",
-    status: "Aberto",
-    reminderFrequency: "Diário",
-    lastReminderAt: "",
-    operator: "Carlos",
-    vehicleId: 2,
-    cashEntryId: 3
-  }
-];
 
 const payableAccounts = [
   { supplier: "CleanPro Distribuidora", category: "Insumos", dueDate: "2026-05-20", value: 420, status: "A vencer" },
@@ -9374,6 +9116,8 @@ function normalizeWhatsappPhone(phone) {
 }
 
 function renderClientsScreen(container) {
+  runCustomerLegacyDataValidation(clientRegistry);
+
   container.innerHTML = `
     <section class="screen-metrics client-metrics" aria-label="Resumo de clientes">
       ${[
@@ -9855,6 +9599,302 @@ function extractCustomerShadowReadErrorCode(message) {
 
 function normalizeCustomerShadowReadDocument(documentValue) {
   return typeof documentValue === "string" ? documentValue.replace(/\D/g, "").trim() : "";
+}
+
+function runCustomerLegacyDataValidation(clients = []) {
+  const analyzedAt = new Date().toISOString();
+  const diagnostics = createCustomerLegacyDataValidationReport(clients, analyzedAt);
+  recordCustomerLegacyDataValidationReport(diagnostics);
+}
+
+function createCustomerLegacyDataValidationReport(clients, analyzedAt) {
+  const report = {
+    flow: "clientsScreen.review",
+    validationMode: "legacy-data-review",
+    sourceCollection: "clientRegistry",
+    datasetClassification: "embedded-demo-test-seed",
+    analyzedAt,
+    totalAnalyzed: 0,
+    realRecordsAnalyzed: 0,
+    demoTestRecords: 0,
+    demoTestRecordIds: [],
+    compatibleClients: 0,
+    structurallyCompatibleCustomers: 0,
+    incompatibleClients: 0,
+    realIncompatibleCustomers: 0,
+    demoTestIncompatibleCustomers: 0,
+    commonCustomerCount: 0,
+    billedCustomerCount: 0,
+    unknownBillingModeCount: 0,
+    customersWithoutDocument: 0,
+    customersWithoutName: 0,
+    customersWithoutPhone: 0,
+    customersWithoutType: 0,
+    customersWithoutLegacyId: 0,
+    customersWithoutOperationalPlate: 0,
+    customersWithMissingMinimumFields: 0,
+    missingFieldCounts: {},
+    optionalMissingFieldCounts: {},
+    billingBlockingFieldCounts: {},
+    issueCodeCounts: {},
+    billingBlockingIssueCounts: {},
+    issueExamples: [],
+    cleanupImpact: createCustomerLegacyCleanupImpact(),
+    recommendation: "prepare_demo_cleanup_before_shadow_expansion_decision",
+    canExpandShadowRead: false,
+    canExpandShadowReadForCommonCustomers: false,
+    canExpandShadowReadForBilledCustomers: false,
+    canPrepareSupabaseMigration: false,
+    cleanupDecision: "mapped_only_cleanup_slice_required",
+    rollbackPath: [...CUSTOMER_LEGACY_DATA_VALIDATION_ROLLBACK_PATH],
+    legacySourceActive: true,
+    recommendationReason:
+      "The current clientRegistry sample is an embedded demo/test seed, so it must be mapped and cleaned before any Supabase preparation or new shadow-read expansion decision."
+  };
+
+  const legacyClients = Array.isArray(clients) ? clients : [];
+  report.totalAnalyzed = legacyClients.length;
+  let commonCustomersEligible = true;
+  let billedCustomersEligible = true;
+
+  for (const client of legacyClients) {
+    const clientData = client && typeof client === "object" ? client : {};
+    const sourceId = clientData.id == null ? "" : String(clientData.id).trim();
+    const billingMode = classifyCustomerBillingMode(clientData);
+    const personType = typeof clientData.personType === "string" ? clientData.personType.trim() : "";
+    const displayName = getClientDisplayName(clientData) || clientData.name || clientData.legalName || "";
+    const documentValue = normalizeCustomerShadowReadDocument(clientData.document);
+    const phoneValue = onlyDigits(clientData.phone || "");
+    const legacyPlates = normalizeCustomerLegacyValidationPlates(clientData.plates);
+    const isDemoTestRecord = true;
+    const context = {
+      organizationId: CUSTOMER_SHADOW_READ_ORGANIZATION_ID,
+      source: "web.clientRegistry.legacyValidation",
+      sourceCollection: "clientRegistry",
+      sourceId,
+      now: analyzedAt,
+      allowWarnings: true,
+      strictMode: false
+    };
+
+    if (billingMode === "common") report.commonCustomerCount += 1;
+    else if (billingMode === "billed") report.billedCustomerCount += 1;
+    else report.unknownBillingModeCount += 1;
+
+    if (isDemoTestRecord) {
+      report.demoTestRecords += 1;
+      if (sourceId) report.demoTestRecordIds.push(sourceId);
+    } else {
+      report.realRecordsAnalyzed += 1;
+    }
+
+    if (!sourceId) report.customersWithoutLegacyId += 1;
+    if (!personType) report.customersWithoutType += 1;
+    if (!displayName.trim()) report.customersWithoutName += 1;
+    if (!documentValue) report.customersWithoutDocument += 1;
+    if (!phoneValue) report.customersWithoutPhone += 1;
+    if (!legacyPlates.length) report.customersWithoutOperationalPlate += 1;
+
+    let adapted;
+    try {
+      adapted = toCustomerContract(clientData, context);
+    } catch (error) {
+      adapted = {
+        ok: false,
+        errors: [error instanceof Error ? `ADAPTER_EXCEPTION: ${error.message}` : `ADAPTER_EXCEPTION: ${String(error)}`],
+        warnings: [],
+        missingRequiredFields: [],
+        validation: {
+          ok: false,
+          errors: ["ADAPTER_EXCEPTION"],
+          missingRequiredFields: [],
+          blocking: true
+        }
+      };
+    }
+
+    const missingRequiredFields = cloneCustomerShadowReadList(adapted.missingRequiredFields);
+    const optionalMissingFields = [];
+    const operationalBlockingFields = [];
+    const billedBlockingFields = [];
+    const customIssueMessages = [];
+
+    if (!displayName.trim()) {
+      operationalBlockingFields.push("name");
+      customIssueMessages.push("LEGACY_NAME_REQUIRED: Effective customer name is required for the operational routine.");
+    }
+
+    if (!phoneValue) {
+      operationalBlockingFields.push("phone");
+      customIssueMessages.push("LEGACY_PHONE_REQUIRED: Customer phone is required for the common operational routine.");
+    }
+
+    if (!personType) {
+      operationalBlockingFields.push("type");
+      customIssueMessages.push("LEGACY_TYPE_REQUIRED: Customer type is required for cross-surface classification.");
+    }
+
+    if (!sourceId) {
+      operationalBlockingFields.push("legacyId");
+      customIssueMessages.push("LEGACY_SOURCE_ID_REQUIRED: Legacy customer identifier is required for traceability.");
+    }
+
+    if (billingMode !== "billed" && !legacyPlates.length) {
+      operationalBlockingFields.push("vehiclePlate");
+      customIssueMessages.push("LEGACY_COMMON_PLATE_REQUIRED: Common-customer routine expects at least one vehicle plate.");
+    }
+
+    if (!documentValue) {
+      if (billingMode === "billed") {
+        billedBlockingFields.push("document");
+        customIssueMessages.push("LEGACY_BILLED_DOCUMENT_REQUIRED: Billed customers require document for formal billing.");
+      } else {
+        optionalMissingFields.push("document");
+      }
+    }
+
+    const issueCodes = uniqueCustomerLegacyValidationCodes([
+      ...cloneCustomerShadowReadList(adapted.errors),
+      ...cloneCustomerShadowReadList(adapted.warnings),
+      ...customIssueMessages
+    ]);
+    const isStructurallyCompatible =
+      adapted.ok && operationalBlockingFields.length === 0 && billedBlockingFields.length === 0;
+
+    if (isStructurallyCompatible) {
+      report.compatibleClients += 1;
+      report.structurallyCompatibleCustomers += 1;
+    } else {
+      report.incompatibleClients += 1;
+      if (isDemoTestRecord) report.demoTestIncompatibleCustomers += 1;
+      else report.realIncompatibleCustomers += 1;
+      if (missingRequiredFields.length || operationalBlockingFields.length || billedBlockingFields.length) {
+        report.customersWithMissingMinimumFields += 1;
+      }
+      const combinedBlockingFields = [...new Set([...missingRequiredFields, ...operationalBlockingFields, ...billedBlockingFields])];
+      recordCustomerLegacyValidationExample(report, {
+        clientId: sourceId || "missing",
+        customerBillingMode: billingMode,
+        clientType: personType || "missing",
+        operationalPlatePresence: legacyPlates.length ? "present" : "missing",
+        documentPresence: documentValue ? "present" : "missing",
+        phonePresence: phoneValue ? "present" : "missing",
+        missingRequiredFields: combinedBlockingFields.slice(0, 5),
+        optionalMissingFields: optionalMissingFields.slice(0, 5),
+        issueCodes: issueCodes.slice(0, 5)
+      });
+    }
+
+    if (billingMode === "common" && !isStructurallyCompatible) commonCustomersEligible = false;
+    if (billingMode === "billed" && !isStructurallyCompatible) billedCustomersEligible = false;
+    if (billingMode === "unknown") commonCustomersEligible = false;
+
+    [...new Set([...missingRequiredFields, ...operationalBlockingFields, ...billedBlockingFields])].forEach((field) => {
+      report.missingFieldCounts[field] = (report.missingFieldCounts[field] || 0) + 1;
+    });
+    optionalMissingFields.forEach((field) => {
+      report.optionalMissingFieldCounts[field] = (report.optionalMissingFieldCounts[field] || 0) + 1;
+    });
+    billedBlockingFields.forEach((field) => {
+      report.billingBlockingFieldCounts[field] = (report.billingBlockingFieldCounts[field] || 0) + 1;
+    });
+    issueCodes.forEach((code) => {
+      report.issueCodeCounts[code] = (report.issueCodeCounts[code] || 0) + 1;
+      if (code.startsWith("LEGACY_BILLED_") || code.startsWith("PAYLOAD_BILLED_")) {
+        report.billingBlockingIssueCounts[code] = (report.billingBlockingIssueCounts[code] || 0) + 1;
+      }
+    });
+  }
+
+  report.canExpandShadowReadForCommonCustomers = report.commonCustomerCount > 0 && commonCustomersEligible;
+  report.canExpandShadowReadForBilledCustomers = report.billedCustomerCount > 0 && billedCustomersEligible;
+  report.canExpandShadowRead = false;
+  report.recommendationReason =
+    report.canExpandShadowReadForCommonCustomers && report.canExpandShadowReadForBilledCustomers
+      ? "Common and billed customers are structurally compatible under the updated business rule, but the current embedded clientRegistry sample remains demo/test data and cannot be treated as migration-ready."
+      : "Legacy customer data still needs qualification before any new shadow-read expansion touches list, new-client or save flows.";
+
+  return report;
+}
+
+function recordCustomerLegacyDataValidationReport(report) {
+  const snapshot = cloneCustomerLegacyDataValidationReport(report);
+  lastCustomerLegacyDataValidationReport = snapshot;
+  customerLegacyDataValidation.latest = snapshot;
+  customerLegacyDataValidation.rollbackPath = [...CUSTOMER_LEGACY_DATA_VALIDATION_ROLLBACK_PATH];
+  customerLegacyDataValidation.exampleLimit = CUSTOMER_LEGACY_DATA_VALIDATION_EXAMPLE_LIMIT;
+  customerLegacyDataValidation.legacySourceActive = true;
+}
+
+function cloneCustomerLegacyDataValidationReport(report) {
+  return {
+    ...report,
+    rollbackPath: cloneCustomerShadowReadList(report?.rollbackPath),
+    demoTestRecordIds: cloneCustomerShadowReadList(report?.demoTestRecordIds),
+    issueExamples: Array.isArray(report?.issueExamples) ? report.issueExamples.map((example) => ({ ...example })) : [],
+    missingFieldCounts: report?.missingFieldCounts ? { ...report.missingFieldCounts } : {},
+    optionalMissingFieldCounts: report?.optionalMissingFieldCounts ? { ...report.optionalMissingFieldCounts } : {},
+    billingBlockingFieldCounts: report?.billingBlockingFieldCounts ? { ...report.billingBlockingFieldCounts } : {},
+    issueCodeCounts: report?.issueCodeCounts ? { ...report.issueCodeCounts } : {},
+    billingBlockingIssueCounts: report?.billingBlockingIssueCounts ? { ...report.billingBlockingIssueCounts } : {},
+    cleanupImpact: report?.cleanupImpact ? { ...report.cleanupImpact } : {}
+  };
+}
+
+function recordCustomerLegacyValidationExample(report, example) {
+  if (!Array.isArray(report.issueExamples)) report.issueExamples = [];
+  if (report.issueExamples.length >= CUSTOMER_LEGACY_DATA_VALIDATION_EXAMPLE_LIMIT) return;
+  report.issueExamples.push({
+    ...example,
+    missingRequiredFields: cloneCustomerShadowReadList(example.missingRequiredFields),
+    optionalMissingFields: cloneCustomerShadowReadList(example.optionalMissingFields),
+    issueCodes: cloneCustomerShadowReadList(example.issueCodes)
+  });
+}
+
+function uniqueCustomerLegacyValidationCodes(messages) {
+  const codes = messages
+    .map((message) => extractCustomerShadowReadErrorCode(message))
+    .filter(Boolean);
+  return [...new Set(codes)];
+}
+
+function classifyCustomerBillingMode(clientData) {
+  if (!clientData || typeof clientData !== "object") return "unknown";
+  if (
+    clientData.billing === true ||
+    clientData.billingApproved === true ||
+    clientData.billingClientId != null ||
+    (typeof clientData.billingCycle === "string" && clientData.billingCycle.trim()) ||
+    clientData.allowMultipleOpenInvoices === true
+  ) {
+    return "billed";
+  }
+  if (clientData.billing === false) return "common";
+  return "unknown";
+}
+
+function normalizeCustomerLegacyValidationPlates(plates) {
+  if (!Array.isArray(plates)) return [];
+  return [...new Set(plates.map((plate) => formatPlate(plate)).filter(Boolean))];
+}
+
+function createCustomerLegacyCleanupImpact() {
+  return {
+    demoDataModule: "app/demo/lavaprimeDemoData.js",
+    isolatedCollections: [...lavaprimeDemoDataCleanupMap.isolatedCollections],
+    clientRegistryRecords: clientRegistry.length,
+    linkedBillingClients: billingClients.filter((client) => getRegistryClientByBillingClientId(client.id)).length,
+    linkedVehicles: vehicleRegistry.filter((vehicle) => vehicle.currentClientId || findClientByPlate(vehicle.plate)).length,
+    linkedPatioVehicles: patioVehicles.filter((vehicle) => findClientByPlate(vehicle.plate) || findClientByPhone(vehicle.phone)).length,
+    linkedOpenPayments: openPayments.filter((payment) => payment.clientId || payment.vehicleId || payment.plate).length,
+    linkedBillingInvoices: billingInvoices.filter((invoice) => getRegistryClientByBillingClientId(invoice.clientId)).length,
+    linkedInvoiceLineItems: invoiceLineItems.filter((item) => item.invoiceId || item.plate).length,
+    linkedVehicleServiceSnapshots: vehicleRegistry.filter((vehicle) => Array.isArray(vehicle.serviceHistory) && vehicle.serviceHistory.length > 0).length,
+    dashboardDependsOnSeed: true,
+    reportsDependOnSeed: true,
+    removalSafeNow: false
+  };
 }
 
 function closeClientDialog() {
@@ -20270,6 +20310,7 @@ initIcons();
 preloadPdfLogoImage();
 startSplashScreen();
 bindEvents();
+
 
 
 

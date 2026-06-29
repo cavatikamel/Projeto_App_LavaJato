@@ -1186,3 +1186,76 @@
   - clientes PF sem documento continuam podendo gerar falha contratual esperada na sombra;
   - o diagnostico em memoria nao pode virar persistencia, telemetria externa ou dependencia funcional;
   - `idResolver`, escrita via adapter, outros dominios e Supabase continuam fora da ordem segura.
+
+### LP-WEB-INTEGRATION-004
+
+- Status: `Implementado`
+- Data: `2026-06-28`
+- Arquivos alterados:
+  - `app/adapters/customerAdapter.js`
+  - `app/main.js`
+  - `scripts/primyo-adapter-gate.mjs`
+  - `docs/primyo-changes/LP-WEB-INTEGRATION-004.md`
+  - `docs/primyo-web-integration/CUSTOMER_LEGACY_DATA_VALIDATION.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `node --check app/main.js` -> sucesso;
+  - `node --check app/adapters/customerAdapter.js` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso;
+  - `npm.cmd run verify:build` -> sucesso;
+  - validacao tecnica da base `clientRegistry` registrou `5` clientes analisados, `5` registros `demo/teste`, `5` clientes estruturalmente compativeis, `2` documentos opcionais ausentes em clientes comuns e `0` bloqueios de faturamento por documento;
+  - massa atual confirmada como seed embutido em `app/main.js`, nao base real pronta para Supabase.
+- Observacoes:
+  - a nova rotina roda apenas em `renderClientsScreen(container)` e alimenta somente `window.__lavaprimeCustomerLegacyDataValidation`;
+  - `document` deixou de bloquear cliente comum e continua bloqueando apenas cliente faturado;
+  - `customerAdapter` continua fora da escrita e o legado continua fonte ativa;
+  - os seeds continuam ligados a `billingClients`, `billingInvoices`, `invoiceLineItems`, `vehicleRegistry`, `patioVehicles`, `openPayments`, dashboard e relatorios;
+  - lista, formulario, save, permissao e UI permaneceram no caminho legado;
+  - `idResolver` permaneceu fora do runtime;
+  - nenhuma remocao de massa demo/teste foi executada nesta fase;
+  - a proxima fatia recomendada passa a ser `LP-WEB-DATA-CLEANUP-001`.
+- Riscos remanescentes:
+  - a massa demo/teste ainda sustenta partes visuais e operacionais do legado;
+  - `clientRegistry` e `billingClients` seguem paralelos no legado;
+  - o diagnostico em memoria nao pode virar persistencia nem telemetria;
+  - qualquer limpeza sem microfatiamento ainda pode quebrar patio, faturamento, pagamentos, dashboard ou relatorios.
+
+### LP-WEB-DATA-CLEANUP-001
+
+- Status: `Implementado`
+- Data: `2026-06-29`
+- Arquivos alterados:
+  - `app/main.js`
+  - `app/demo/lavaprimeDemoData.js`
+  - `docs/primyo-changes/LP-WEB-DATA-CLEANUP-001.md`
+  - `docs/primyo-web-integration/DEMO_DATA_CLEANUP_PLAN.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `node --check app/main.js` -> sucesso;
+  - `node --check app/adapters/customerAdapter.js` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso;
+  - `npm.cmd run verify:build` -> sucesso;
+  - smoke rapido com dashboard, `Cadastros > Clientes`, patio e financeiro sem erro bloqueante;
+  - massa central confirmada como seed `demo/teste` isolada em modulo dedicado.
+- Observacoes:
+  - a remocao de seed continua bloqueada nesta fatia;
+  - o legado continua fonte ativa;
+  - a extracao ficou restrita ao isolamento tecnico da massa demo principal;
+  - `quoteEstimates` e outros mocks paralelos permaneceram fora desta microfatia.
+- Riscos remanescentes:
+  - dashboard, patio, financeiro e relatorios ainda dependem da massa demo isolada;
+  - ainda nao existe bootstrap limpo separado do bootstrap demo;
+  - qualquer remocao prematura continua com risco de quebra operacional;
+  - Supabase continua bloqueado ate a segregacao entre ambiente demo e ambiente limpo.
