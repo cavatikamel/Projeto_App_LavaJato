@@ -25,7 +25,6 @@ const REQUIRED_FIELDS = [
   "organizationId",
   "kind",
   "name",
-  "document",
   "status",
   "billingApproved",
   "createdAt",
@@ -204,6 +203,24 @@ function validateCustomerPayload(payload) {
 
   if (payload.document && !isNormalizedDocument(payload.document)) {
     errors.push(createError("PAYLOAD_DOCUMENT_INVALID", "Field document must contain a normalized CPF or CNPJ."));
+  }
+
+  const billedCustomer = isBilledCustomerPayload(payload);
+  if (billedCustomer && !normalizeString(payload.document)) {
+    missingRequiredFields.push("document");
+    errors.push(
+      createError(
+        "PAYLOAD_BILLED_DOCUMENT_REQUIRED",
+        "Field document is required when the customer is configured for billed/faturado operation."
+      )
+    );
+  } else if (!billedCustomer && !normalizeString(payload.document)) {
+    warnings.push(
+      createWarning(
+        "PAYLOAD_COMMON_DOCUMENT_RECOMMENDED",
+        "Common customers may operate without document in the legacy routine, but document remains recommended for future billing readiness."
+      )
+    );
   }
 
   if (payload.phonePrimary && !isNormalizedPhone(payload.phonePrimary)) {
@@ -868,6 +885,16 @@ function resolveBoolean(primaryValue, fallbackValue) {
   if (typeof primaryValue === "boolean") return primaryValue;
   if (typeof fallbackValue === "boolean") return fallbackValue;
   return undefined;
+}
+
+function isBilledCustomerPayload(payload) {
+  const legacyRefs = toPlainObject(payload.legacyRefs);
+  if (payload.billingApproved === true) return true;
+  if (normalizeString(payload.billingCycle)) return true;
+  if (payload.allowMultipleOpenInvoices === true) return true;
+  if (legacyRefs.billingFlag === true) return true;
+  if (normalizeString(legacyRefs.alternateIds?.billingClientId)) return true;
+  return false;
 }
 
 function removeEmptyObjectKeys(value) {

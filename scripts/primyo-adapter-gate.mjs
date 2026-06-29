@@ -370,10 +370,19 @@ async function main() {
       phone: "(11) 99999-0000",
       billingApproved: true
     };
-    const customerMissingDocumentLegacy = {
+    const customerCommonMissingDocumentLegacy = {
+      id: "77",
+      personType: "PF",
+      name: "Cliente Comum Sem Documento",
+      phone: "(11) 98888-0000",
+      billingApproved: false
+    };
+    const customerBilledMissingDocumentLegacy = {
       id: "42",
       personType: "PF",
-      name: "Cliente Sem Documento"
+      name: "Cliente Faturado Sem Documento",
+      phone: "(11) 97777-0000",
+      billingApproved: true
     };
 
     await runCheck("Customer Adapter Valid Scenario", () => {
@@ -414,18 +423,39 @@ async function main() {
       });
     });
 
-    await runCheck("Customer Adapter Invalid Required Field Scenario", () => {
-      const result = customerModule.toCustomerContract(customerMissingDocumentLegacy, customerContext);
+    await runCheck("Customer Adapter Common Customer Missing Document Scenario", () => {
+      const result = customerModule.toCustomerContract(customerCommonMissingDocumentLegacy, {
+        ...customerContext,
+        sourceId: "77"
+      });
 
-      assert(result.ok === false, "customer invalid required field result should fail.");
-      assertValidationShape(result.validation, "customer invalid required field validation");
-      assert(result.validation.ok === false, "customer invalid required field validation.ok should be false.");
-      assert(result.validation.blocking === true, "customer invalid required field validation should be blocking.");
+      assert(result.ok === true, "common customer missing document should remain valid.");
+      assertValidationShape(result.validation, "customer common missing document validation");
+      assert(result.validation.ok === true, "customer common missing document validation.ok should be true.");
+      assert(result.missingRequiredFields.includes("document") === false, "common customer missing document should not report missing document.");
+      assert(
+        result.warnings.some((warning) => warning.includes("PAYLOAD_COMMON_DOCUMENT_RECOMMENDED")),
+        "common customer missing document should emit PAYLOAD_COMMON_DOCUMENT_RECOMMENDED."
+      );
+      assertWarningsArray(result, "customer common missing document result");
+    });
+
+    await runCheck("Customer Adapter Billed Customer Missing Document Scenario", () => {
+      const result = customerModule.toCustomerContract(customerBilledMissingDocumentLegacy, customerContext);
+
+      assert(result.ok === false, "customer billed missing document result should fail.");
+      assertValidationShape(result.validation, "customer billed missing document validation");
+      assert(result.validation.ok === false, "customer billed missing document validation.ok should be false.");
+      assert(result.validation.blocking === true, "customer billed missing document validation should be blocking.");
       assert(
         result.missingRequiredFields.includes("document"),
-        "customer invalid required field should report missing document."
+        "customer billed missing document should report missing document."
       );
-      assertWarningsArray(result, "customer invalid required field result");
+      assert(
+        result.errors.some((error) => error.includes("PAYLOAD_BILLED_DOCUMENT_REQUIRED")),
+        "customer billed missing document should emit PAYLOAD_BILLED_DOCUMENT_REQUIRED."
+      );
+      assertWarningsArray(result, "customer billed missing document result");
     });
 
     await runCheck("Customer Adapter Invalid Context Scenario", () => {
