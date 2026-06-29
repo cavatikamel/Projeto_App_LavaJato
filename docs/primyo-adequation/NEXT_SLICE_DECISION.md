@@ -2,13 +2,14 @@
 
 ## Objetivo
 
-Registrar a decisao oficial da proxima fatia apos a conclusao de `LP-WEB-INTEGRATION-002` e da atualizacao de handoff mais recente.
+Registrar a decisao oficial da proxima fatia apos a revisao de cobertura de `LP-WEB-INTEGRATION-003`.
 
 ## Estado atual consolidado
 
 - `customerAdapter` continua sendo consumido em `app/main.js` apenas em `shadow read`;
 - o uso continua restrito a edicao de cliente existente em `Cadastros > Clientes`;
 - o diagnostico da sombra registra sucesso, falha, campos obrigatorios ausentes e historico curto apenas em memoria;
+- `Novo cliente`, lista de clientes e salvamento continuam fora da sombra;
 - o legado continua sendo a fonte ativa de renderizacao e salvamento;
 - `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter` continuam fora do runtime;
 - `idResolver` continua fora do runtime;
@@ -19,61 +20,62 @@ Registrar a decisao oficial da proxima fatia apos a conclusao de `LP-WEB-INTEGRA
 
 ## Opcoes avaliadas
 
-### `LP-WEB-INTEGRATION-003`
+### Ampliar sombra para `Novo cliente`
 
-- Vantagem: revisa a cobertura atual do `shadow read` antes de ampliar a integracao;
-- Vantagem: permite confirmar se a sombra atual em clientes esta entregando sinal suficiente;
-- Vantagem: mantem a proxima fatia pequena, reversivel e ainda centrada no dominio mais seguro;
-- Vantagem: preserva o legado como fonte ativa enquanto aumenta confianca operacional.
+- Vantagem: aumentaria cobertura do formulario;
+- Risco: a abertura de novo cliente nao possui registro legado persistido nem `sourceId` estabilizado, o que reduz valor diagnostico nesta ordem.
 
-### Expandir `customerAdapter` para novos fluxos de cliente sem revisao previa
+### Ampliar sombra para lista de clientes
 
-- Risco: aumentaria a superficie tocada em `app/main.js` sem consolidar primeiro a cobertura atual;
-- Risco: misturaria observabilidade com expansao funcional cedo demais.
+- Vantagem: aumentaria volume de amostragem;
+- Risco: elevaria ruido e superficie de execucao em `app/main.js` antes de qualificar a base legada.
 
-### Integrar `idResolver`
+### Ampliar sombra para salvamento de cliente
 
-- Risco: adicionaria resolucao relacional cross-domain antes de fechar a analise da sombra atual;
-- Risco: ampliaria troubleshooting e rollback sem necessidade imediata.
+- Vantagem: aproximaria a sombra do ponto mais sensivel do fluxo;
+- Risco: tocaria o caminho ativo de escrita cedo demais, com risco maior de troubleshooting e rollback.
 
-### Integrar `vehicleAdapter`, `serviceAdapter`, `productAdapter` ou `supplyAdapter`
+### Nao ampliar e apenas observar
 
-- Risco: ampliaria a superficie funcional antes de concluir a revisao do primeiro dominio em runtime;
-- Risco: veiculos, servicos, produtos e insumos ainda possuem dependencias e ownership mais sensiveis do que clientes.
+- Vantagem: mantem risco minimo;
+- Risco: deixa sem resposta objetiva a qualidade da base legada antes da proxima expansao.
 
-### Abrir `LP-SUPABASE-001`
+### Validar dados legados de clientes antes de ampliar
 
-- Risco: backend continua fora da ordem segura antes da estabilizacao da primeira trilha local em runtime.
+- Vantagem: qualifica a base real antes de crescer a superficie em runtime;
+- Vantagem: reduz falsos negativos causados por PF sem documento, divergencia entre `clientRegistry` e `billingClients` e registros derivados;
+- Vantagem: preserva a ordem segura sem tocar save, UI, permissao ou Supabase.
 
 ## Decisao oficial
 
-Proxima fatia recomendada: `LP-WEB-INTEGRATION-003`
+Proxima fatia recomendada: `LP-WEB-INTEGRATION-004`
 
 Titulo sugerido:
 
-- `Customer Shadow Read Coverage Review`
+- `Customer Legacy Data Validation Before Shadow Expansion`
 
 Direcao recomendada:
 
-- avaliar a cobertura atual do `shadow read`;
-- verificar se vale ampliar a sombra para mais fluxos de cliente;
+- validar representativamente a base legada de clientes contra `CUSTOMER_CONTRACT.md`;
+- medir falhas esperadas por documento ausente, campos obrigatorios faltantes e divergencias entre fontes legadas;
 - manter o legado como fonte ativa;
 - manter `idResolver` fora do runtime;
 - manter Supabase fechado;
-- nao tocar em veiculos, servicos, produtos, insumos, financeiro ou estoque nesta proxima fatia.
+- nao tocar em veiculos, servicos, produtos, insumos, financeiro ou estoque;
+- so reconsiderar ampliacao do `shadow read` depois dessa validacao.
 
 ## Justificativa
 
-`LP-WEB-INTEGRATION-003` passa a ser a melhor proxima fatia porque:
+`LP-WEB-INTEGRATION-004` passa a ser a melhor proxima fatia porque:
 
 1. a primeira integracao real e seu diagnostico ja foram implementados e fechados;
-2. ainda faz sentido permanecer no dominio de clientes antes de abrir novas entidades;
-3. uma revisao de cobertura reduz risco antes de expandir sombra ou considerar integracao mais profunda;
-4. integrar `idResolver` ou outros adapters agora aumentaria risco sem necessidade;
-5. Supabase continua cedo demais para a ordem segura definida.
+2. a cobertura atual continua restrita a um unico ponto seguro do fluxo;
+3. existe incerteza real sobre a qualidade do dado legado antes de ampliar a sombra;
+4. expandir para lista, novo cliente ou save agora aumentaria risco em `app/main.js` sem ganho proporcional;
+5. integrar `idResolver` ou abrir Supabase continua cedo demais para a ordem segura definida.
 
-## Resultado desta microfase documental
+## Resultado desta fase
 
 Nenhuma nova expansao funcional foi iniciada.
 
-Esta microfase atualiza apenas a decisao oficial da proxima fatia para substituir a referencia ultrapassada a `LP-WEB-INTEGRATION-002-CLOSURE`.
+Esta fase apenas revisa a cobertura atual do `Customer Adapter Shadow Read` e redefine a proxima fatia recomendada para uma microfase de validacao de dados legados antes de qualquer ampliacao em runtime.

@@ -343,3 +343,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: o `customerAdapter` continua apenas em shadow read, mas o runtime agora passa a registrar diagnostico interno mais rico e historico curto em memoria para o fluxo de edicao de cliente existente.
 - Observacao de risco: a proxima fatia deve ser `LP-WEB-INTEGRATION-002-CLOSURE`; o diagnostico segue silencioso para o usuario, o legado continua fonte ativa e `idResolver`, escrita via adapter, outros dominios e Supabase continuam fora do runtime.
+
+### LP-WEB-INTEGRATION-003
+
+- Change record: `docs/primyo-changes/LP-WEB-INTEGRATION-003.md`
+- Closure: `fase documental absorvida no proprio change record e em CUSTOMER_SHADOW_READ_COVERAGE_REVIEW.md`
+- Resultado: `Aceito`
+- Observacao principal: a cobertura atual do `Customer Adapter Shadow Read` foi revisada sem alterar `app/main.js`, e a ordem segura passa a exigir uma microfase de validacao dos dados legados antes de qualquer ampliacao de sombra.
+- Observacao de risco: lista de clientes, `Novo cliente`, salvamento, `idResolver`, outros dominios e Supabase continuam fora da proxima ampliacao; a prioridade recomendada passa a ser `LP-WEB-INTEGRATION-004`.
