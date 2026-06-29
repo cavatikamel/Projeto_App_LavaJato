@@ -3940,7 +3940,7 @@ function saveBillingClient() {
   }
 
   const client = {
-    id: Math.max(...billingClients.map((item) => item.id)) + 1,
+    id: getNextBillingClientId(),
     name,
     document: $("#billingClientDocument").value.trim(),
     phone: $("#billingClientPhone").value.trim()
@@ -3985,7 +3985,7 @@ function openBillingInvoice() {
   }
 
   const invoice = {
-    id: Math.max(...billingInvoices.map((item) => item.id)) + 1,
+    id: getNextBillingInvoiceId(),
     clientId: Number(clientId),
     code: `FAT-${dueDate.slice(5, 7)}${dueDate.slice(2, 4)}-${String(billingInvoices.length + 1).padStart(3, "0")}`,
     dueDate,
@@ -9986,6 +9986,62 @@ function createCleanBootstrapReadinessReport(analyzedAt) {
       blockerCount: dependency.blockerCount,
       linkedCollections: [...dependency.linkedCollections]
     }));
+  const criticalSurfaceFallbacks = {
+    dashboard: {
+      fallbackState: "existing-safe-metrics",
+      hardenedThisPhase: false,
+      protections: ["safe reduce defaults", "protected max denominator"],
+      remainingRisk: "still depends on seeded operational relationships for meaningful cards and alerts"
+    },
+    clients: {
+      fallbackState: "empty-table-safe",
+      hardenedThisPhase: true,
+      protections: ["empty table row", "legacy validation remains read-only"],
+      remainingRisk: "clean mode still lacks seeded links between client, vehicle and billing"
+    },
+    vehicles: {
+      fallbackState: "empty-table-safe",
+      hardenedThisPhase: true,
+      protections: ["empty table row", "owner lookup already tolerates missing links"],
+      remainingRisk: "history and ownership views become informationally sparse without seed"
+    },
+    patio: {
+      fallbackState: "existing-empty-state",
+      hardenedThisPhase: false,
+      protections: ["existing empty operational states", "plate/client lookups already optional"],
+      remainingRisk: "operational flow still expects seeded vehicle and client context for realistic usage"
+    },
+    financial: {
+      fallbackState: "empty-table-safe",
+      hardenedThisPhase: true,
+      protections: ["empty open payments row", "empty cashflow row", "safe grouped chart empty state"],
+      remainingRisk: "financial summaries remain structurally safe but semantically empty without seed"
+    },
+    invoices: {
+      fallbackState: "empty-table-safe",
+      hardenedThisPhase: true,
+      protections: ["empty invoice row", "safe next invoice id generation"],
+      remainingRisk: "billing lifecycle still depends on approved billed customers and linked records"
+    },
+    reports: {
+      fallbackState: "partial-runtime-safe",
+      hardenedThisPhase: false,
+      protections: ["cashflow chart empty state", "document history empty state"],
+      remainingRisk: "report outputs still need seeded source collections for meaningful content"
+    },
+    documents: {
+      fallbackState: "existing-empty-state",
+      hardenedThisPhase: false,
+      protections: ["document history empty row", "safe receipt/report counters"],
+      remainingRisk: "receipt and document generation still reflects legacy/demo source data when present"
+    },
+    customerVehicleBillingLinks: {
+      fallbackState: "diagnostic-only",
+      hardenedThisPhase: false,
+      protections: ["protected readiness report", "non-blocking missing-link lookups"],
+      remainingRisk: "cross-domain links remain the main blocker for any clean bootstrap trial"
+    }
+  };
 
   return {
     flow: "bootstrap.cleanup.review",
@@ -10010,6 +10066,15 @@ function createCleanBootstrapReadinessReport(analyzedAt) {
     cleanBootstrapClassification: lavaprimeCleanBootstrapReadinessBaseline.classification,
     demoRelationshipSummary: { ...demoSummary },
     cleanRelationshipSummary: { ...cleanSummary },
+    criticalSurfaceFallbacks: Object.fromEntries(
+      Object.entries(criticalSurfaceFallbacks).map(([area, fallback]) => [
+        area,
+        {
+          ...fallback,
+          protections: [...fallback.protections]
+        }
+      ])
+    ),
     dependencyAreas: Object.fromEntries(
       Object.entries(dependencies).map(([area, dependency]) => [
         area,
@@ -10044,6 +10109,17 @@ function cloneCleanBootstrapReadinessReport(report) {
     rollbackPath: cloneCustomerShadowReadList(report?.rollbackPath),
     demoRelationshipSummary: report?.demoRelationshipSummary ? { ...report.demoRelationshipSummary } : {},
     cleanRelationshipSummary: report?.cleanRelationshipSummary ? { ...report.cleanRelationshipSummary } : {},
+    criticalSurfaceFallbacks: report?.criticalSurfaceFallbacks
+      ? Object.fromEntries(
+          Object.entries(report.criticalSurfaceFallbacks).map(([area, fallback]) => [
+            area,
+            {
+              ...fallback,
+              protections: cloneCustomerShadowReadList(fallback?.protections)
+            }
+          ])
+        )
+      : {},
     dependencyAreas: report?.dependencyAreas
       ? Object.fromEntries(
           Object.entries(report.dependencyAreas).map(([area, dependency]) => [
@@ -10508,6 +10584,10 @@ function removeBillingClientRecord(billingClientId) {
 }
 
 function renderClientRows() {
+  if (!clientRegistry.length) {
+    return renderEmptyTableRow(8, "Nenhum cliente cadastrado neste modo de bootstrap.");
+  }
+
   return clientRegistry
     .map((client) => {
       const plates = client.plates.length
@@ -10899,6 +10979,10 @@ function getVehicleChecklistHistory(vehicle) {
 }
 
 function renderVehicleRegistryRows() {
+  if (!vehicleRegistry.length) {
+    return renderEmptyTableRow(6, "Nenhum veículo cadastrado neste modo de bootstrap.");
+  }
+
   return vehicleRegistry
     .map((vehicle) => {
       const ownerName = getVehicleOwnerName(vehicle);
@@ -14420,6 +14504,7 @@ function renderOpenPaymentsScreen(container) {
   const active = getActiveOpenPayments();
   const overdue = active.filter((payment) => isOpenPaymentOverdue(payment));
   const total = active.reduce((sum, payment) => sum + Number(payment.value || 0), 0);
+  const paymentRows = openPayments.length ? openPayments.map(renderOpenPaymentRow).join("") : renderEmptyTableRow(8, "Nenhum pagamento em aberto ou baixado neste modo de bootstrap.");
 
   container.innerHTML = `
     <section class="screen-metrics cashflow-metrics" aria-label="Resumo dos pagamentos em aberto">
@@ -14497,7 +14582,7 @@ function renderOpenPaymentsScreen(container) {
             </tr>
           </thead>
           <tbody>
-            ${openPayments.map(renderOpenPaymentRow).join("")}
+            ${paymentRows}
           </tbody>
         </table>
       </div>
@@ -15313,6 +15398,7 @@ function renderCashflowOptionRows(list, kind) {
 }
 
 function renderCashflowTable() {
+  const rows = cashEntries.length ? cashEntries.map(renderCashflowTableRow).join("") : renderEmptyTableRow(9, "Nenhum lançamento disponível neste modo de bootstrap.");
   return `
     <div class="admin-table-wrap">
       <table class="admin-table cashflow-table">
@@ -15330,7 +15416,7 @@ function renderCashflowTable() {
           </tr>
         </thead>
         <tbody>
-          ${cashEntries.map(renderCashflowTableRow).join("")}
+          ${rows}
         </tbody>
       </table>
     </div>
@@ -17658,6 +17744,7 @@ function getPayablesScreenContent() {
 function renderInvoicesScreen(container) {
   const openInvoices = billingInvoices.filter((invoice) => invoice.status !== "Paga");
   const overdueInvoices = openInvoices.filter((invoice) => invoice.dueDate < getTodayISO());
+  const invoiceRows = billingInvoices.length ? billingInvoices.map(renderInvoiceRow).join("") : renderEmptyTableRow(6, "Nenhuma fatura cadastrada neste modo de bootstrap.");
   container.innerHTML = `
     <section class="screen-metrics cashflow-metrics" aria-label="Resumo da central de faturas">
       ${[
@@ -17702,7 +17789,7 @@ function renderInvoicesScreen(container) {
             </tr>
           </thead>
           <tbody>
-            ${billingInvoices.map(renderInvoiceRow).join("")}
+            ${invoiceRows}
           </tbody>
         </table>
       </div>
@@ -18023,6 +18110,10 @@ function renderScreenMetric(metric) {
       <strong>${escapeHtml(metric.value)}</strong>
     </article>
   `;
+}
+
+function renderEmptyTableRow(colspan, message) {
+  return `<tr><td colspan="${colspan}"><p class="empty-alert">${escapeHtml(message)}</p></td></tr>`;
 }
 
 function renderAdminTable(columns, rows) {
@@ -19819,7 +19910,7 @@ function openStatusBillingInvoice() {
   }
 
   const invoice = {
-    id: Math.max(...billingInvoices.map((item) => item.id)) + 1,
+    id: getNextBillingInvoiceId(),
     clientId: Number(selectedStatusBillingClientId),
     code: `FAT-${dueDate.slice(5, 7)}${dueDate.slice(2, 4)}-${String(billingInvoices.length + 1).padStart(3, "0")}`,
     dueDate,

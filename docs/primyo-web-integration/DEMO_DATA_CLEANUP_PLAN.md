@@ -209,15 +209,24 @@ Objetivo:
 - `DEMO_BOOTSTRAP` continua o unico modo seguro como padrao;
 - `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a default nesta etapa.
 
+## Estado apos LP-WEB-DATA-CLEANUP-004
+
+- superficies criticas passam a ter cobertura minima adicional de fallback estrutural;
+- clientes, veiculos, pagamentos, caixa e faturas agora exibem empty state explicito quando a colecao base estiver vazia;
+- geracao de IDs de clientes faturados e faturas fica protegida para colecoes vazias;
+- `window.__lavaprimeCleanBootstrapReadiness` passa a registrar cobertura de fallback por superficie;
+- `DEMO_BOOTSTRAP` continua o unico modo seguro como padrao;
+- nenhuma seed demo foi removida.
+
 ## Proxima microfase recomendada
 
-`LP-WEB-DATA-CLEANUP-004 - Critical surface fallback hardening before clean bootstrap trial`
+`LP-WEB-DATA-CLEANUP-005 - Protected CLEAN_BOOTSTRAP trial readiness`
 
 Objetivo:
 
-- endurecer estados vazios e fallback seguro nas superficies criticas;
-- reduzir dependencia estrutural de dashboard, clientes, patio, financeiro e relatorios;
-- manter `DEMO_BOOTSTRAP` como padrao enquanto a cobertura de fallback nao estiver pronta.
+- validar um trial controlado do bootstrap limpo sem troca de default;
+- medir quais superficies ficam apenas vazias e quais ainda exigem hardening adicional;
+- manter rollback simples e legado/demo como baseline segura.
 
 ## Rollback
 

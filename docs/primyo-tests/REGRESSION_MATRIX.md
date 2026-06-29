@@ -194,6 +194,17 @@ Regra aplicada em `LP-WEB-DATA-CLEANUP-003`:
 - o console do browser deve permanecer sem erro bloqueante;
 - a proxima fatia deve endurecer fallback de telas criticas antes de qualquer tentativa futura com bootstrap limpo.
 
+Regra aplicada em `LP-WEB-DATA-CLEANUP-004`:
+
+- `DEMO_BOOTSTRAP` deve continuar como modo padrao oficial;
+- clientes, veiculos, pagamentos, caixa e faturas devem permanecer renderizaveis com colecoes vazias;
+- o runtime nao pode gerar `undefined`, `null` ou `NaN` visiveis por ausencia das colecoes criticas;
+- `window.__lavaprimeCleanBootstrapReadiness` deve permanecer silencioso, somente leitura e em memoria, agora com cobertura adicional de fallback por superficie;
+- nenhuma seed demo pode ser removida;
+- o smoke manual minimo deve revalidar dashboard, `Cadastros > Clientes`, patio, financeiro, relatorios/documentos, logout e patio operador;
+- o console do browser deve permanecer sem erro bloqueante;
+- a proxima fatia deve continuar com trial protegido do bootstrap limpo, sem troca de default.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

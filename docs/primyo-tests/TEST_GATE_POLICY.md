@@ -243,6 +243,15 @@ Estado oficial apos `LP-WEB-DATA-CLEANUP-003`:
 - qualquer mudanca em diagnostico de bootstrap limpo deve reexecutar `node --check app/main.js`, `node --check app/demo/lavaprimeCleanBootstrap.js`, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke de dashboard, clientes, patio, financeiro e relatorios/documentos;
 - a proxima etapa segura continua sendo hardening de fallback antes de qualquer teste futuro com bootstrap limpo.
 
+Estado oficial apos `LP-WEB-DATA-CLEANUP-004`:
+
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a default nesta etapa;
+- `app/main.js` passa a endurecer fallback estrutural minimo para clientes, veiculos, pagamentos, caixa e faturas;
+- `window.__lavaprimeCleanBootstrapReadiness` continua silencioso em memoria e passa a refletir cobertura adicional de fallback por superficie;
+- qualquer mudanca nesses fallbacks deve reexecutar `node --check app/main.js`, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke de dashboard, clientes, patio, financeiro e relatorios/documentos;
+- nenhuma seed demo pode ser removida sem uma nova microfase dedicada e um trial protegido.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

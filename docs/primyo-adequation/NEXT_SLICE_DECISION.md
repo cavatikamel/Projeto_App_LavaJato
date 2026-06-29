@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Registrar a decisao oficial apos `LP-WEB-DATA-CLEANUP-003`.
+Registrar a decisao oficial apos `LP-WEB-DATA-CLEANUP-004`.
 
 ## Estado atual consolidado
 
@@ -11,6 +11,7 @@ Registrar a decisao oficial apos `LP-WEB-DATA-CLEANUP-003`.
 - `app/main.js` passou a consumir o bootstrap por meio de `app/demo/lavaprimeBootstrapMode.js`;
 - `app/demo/lavaprimeCleanBootstrap.js` passa a existir como bootstrap limpo estrutural e protegido;
 - `window.__lavaprimeCleanBootstrapReadiness` passa a mapear dependencias residuais sem trocar o modo padrao;
+- as superficies criticas agora possuem fallback estrutural minimo adicional para clientes, veiculos, pagamentos, caixa e faturas;
 - `DEMO_BOOTSTRAP` continua o modo padrao;
 - nenhuma remocao direta de seed foi executada;
 - dashboard, clientes, patio, financeiro e relatorios continuam dependendo da seed demo;
@@ -20,26 +21,26 @@ Registrar a decisao oficial apos `LP-WEB-DATA-CLEANUP-003`.
 
 ## Decisao oficial
 
-Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-004 - Critical surface fallback hardening before clean bootstrap trial`
+Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-005 - Protected CLEAN_BOOTSTRAP trial readiness`
 
 ## Justificativa
 
-`LP-WEB-DATA-CLEANUP-004` passa a ser a melhor proxima fatia porque:
+`LP-WEB-DATA-CLEANUP-005` passa a ser a melhor proxima fatia porque:
 
 1. a segregacao inicial entre bootstrap demo e bootstrap limpo ja existe;
 2. a revisao de dependencias residuais ja confirmou que o modo limpo ainda nao pode virar padrao;
-3. o proximo passo seguro e endurecer fallback e estados vazios das superficies criticas;
-4. isso prepara ambiente limpo e futura migracao sem abrir Supabase prematuramente;
-5. tambem evita trocar o modo padrao sem fallback protegido para dashboard, clientes, patio, financeiro, relatorios e documentos.
+3. o hardening minimo de fallback das superficies mais sensiveis ja foi aplicado;
+4. o proximo passo seguro passa a ser um trial protegido e nao padrao do bootstrap limpo;
+5. isso permite medir lacunas reais restantes sem abrir Supabase nem trocar o default.
 
 ## Fatias rejeitadas por enquanto
 
 - qualquer remocao direta da massa demo:
   - rejeitada enquanto houver dependencia ativa de renderizacao, smoke e relatorios;
 - qualquer ativacao do `CLEAN_BOOTSTRAP` como padrao:
-  - rejeitada enquanto a dependencia residual nao estiver validada;
+  - rejeitada enquanto o trial protegido nao provar que o runtime suporta a troca sem quebra;
 - qualquer remocao real da seed demo:
-  - rejeitada antes do hardening de fallback das telas criticas;
+  - rejeitada antes do trial protegido e da comprovacao de que as superficies criticas sobrevivem sem a seed;
 - qualquer ampliacao do `shadow read`:
   - rejeitada ate a trilha de cleanup estabilizar a diferenca entre ambiente demo e ambiente limpo;
 - qualquer integracao de `idResolver` ao runtime:
@@ -49,10 +50,10 @@ Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-004 - Critical surface fallback 
 
 ## Direcao recomendada
 
-`LP-WEB-DATA-CLEANUP-004` deve:
+`LP-WEB-DATA-CLEANUP-005` deve:
 
-1. endurecer estados vazios e fallback de dashboard, clientes, patio, financeiro, relatorios e documentos;
-2. validar fallback seguro antes de qualquer teste futuro com bootstrap limpo;
+1. exercitar um trial protegido do `CLEAN_BOOTSTRAP` sem trocar o modo padrao;
+2. medir quais superficies ficam estruturalmente seguras e quais ainda falham semanticamente;
 3. manter `DEMO_BOOTSTRAP` como padrao oficial;
 4. revalidar dashboard, clientes, patio, financeiro e relatorios em cada microajuste;
 5. continuar sem abrir Supabase runtime.
@@ -61,7 +62,8 @@ Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-004 - Critical surface fallback 
 
 - bootstrap demo e bootstrap limpo seguem segregados;
 - a dependencia residual da seed demo ficou mapeada por diagnostico protegido;
+- clientes, veiculos, pagamentos, caixa e faturas ganharam fallback estrutural minimo;
 - nenhuma seed foi removida;
 - nenhuma tela foi quebrada;
 - o modo demo continuou padrao;
-- a preparacao para um ambiente limpo controlado ficou mais clara.
+- a preparacao para um trial limpo controlado ficou mais clara.
