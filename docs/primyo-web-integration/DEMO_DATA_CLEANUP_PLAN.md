@@ -236,13 +236,22 @@ Objetivo:
 - `dashboard`, `patio`, `reports`, `documents` e `customerVehicleBillingLinks` continuam como bloqueios para qualquer promocao do modo limpo;
 - nenhuma seed demo foi removida.
 
+## Estado apos LP-WEB-DATA-CLEANUP-007
+
+- `dashboard`, `patio`, `reports`, `documents` e `customerVehicleBillingLinks` passam a contar com hardening semantico minimo adicional;
+- agregacoes numericas passam a ser protegidas contra `NaN`;
+- recibos, documentos e relatorios passam a normalizar linhas antes da geracao;
+- contextos de cliente, veiculo e faturamento passam a degradar com fallback por placa, telefone e `billingClientId`;
+- o trial protegido fica semanticamente mais seguro, mas o modo limpo continua sem base suficiente para virar default;
+- nenhuma seed demo foi removida.
+
 ## Proxima microfase recomendada
 
-`LP-WEB-DATA-CLEANUP-007 - Targeted semantic hardening after protected clean bootstrap trial`
+`LP-WEB-DATA-CLEANUP-008 - Protected clean bootstrap trial reassessment after semantic hardening`
 
 Objetivo:
 
-- atacar apenas as dependencias semanticas que ainda bloqueiam o modo limpo;
+- reexecutar e reavaliar o trial protegido com as novas garantias semanticas;
 - manter `DEMO_BOOTSTRAP` como default;
 - continuar sem Supabase e sem remocao da seed demo.
 

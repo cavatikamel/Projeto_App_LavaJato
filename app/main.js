@@ -4102,6 +4102,16 @@ function formatScheduleDateTime(date, time) {
   return `${formatDateBR(date)} às ${time}`;
 }
 
+function toFiniteNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function formatOptionalDateBR(value, fallback = "-") {
+  if (!value || typeof value !== "string" || !value.includes("-")) return fallback;
+  return formatDateBR(value);
+}
+
 function formatCurrency(value) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -7087,14 +7097,16 @@ function renderAdminDashboard() {
   const activeVehicles = patioVehicles.filter((vehicle) =>
     ["aguardando", "lavando", "pronto"].includes(vehicle.status)
   );
-  const expectedRevenue = activeVehicles.reduce((total, vehicle) => total + getVehiclePaymentTotal(vehicle), 0);
+  const expectedRevenue = activeVehicles.reduce((total, vehicle) => total + toFiniteNumber(getVehiclePaymentTotal(vehicle)), 0);
   const estimatedFees = cashEntries
     .filter((entry) => entry.value > 0)
-    .reduce((total, entry) => total + Number(entry.feeAmount || 0), 0);
-  const estimatedNet = cashEntries.filter((entry) => entry.value > 0).reduce((total, entry) => total + Number(entry.netAmount || entry.value || 0), 0);
+    .reduce((total, entry) => total + toFiniteNumber(entry.feeAmount), 0);
+  const estimatedNet = cashEntries
+    .filter((entry) => entry.value > 0)
+    .reduce((total, entry) => total + toFiniteNumber(entry.netAmount ?? entry.value), 0);
   const billedOpen = patioVehicles
     .filter((vehicle) => vehicle.payment === "Faturado" && !isFinalizedStatus(vehicle.status))
-    .reduce((total, vehicle) => total + getVehiclePaymentTotal(vehicle), 0);
+    .reduce((total, vehicle) => total + toFiniteNumber(getVehiclePaymentTotal(vehicle)), 0);
   const lowStockAlerts = getLowStockProducts().length + getLowStockSupplies().length;
   const servicesWithoutProfile = getServicesWithoutSupplyProfile().length;
   const patioVehiclesWithSpecialCare = activeVehicles.filter((vehicle) => hasVehicleSpecialCare(vehicle)).length;
@@ -8990,9 +9002,9 @@ function getMessageSampleContext(phone = "") {
 
 function getMessageContextFromVehicle(vehicle) {
   const registryVehicle = findVehicleByPlate(vehicle.plate);
-  const linkedClient = registryVehicle?.currentClientId ? getClientById(registryVehicle.currentClientId) : findClientByPlate(vehicle.plate);
+  const linkedClient = getLinkedClientForVehicleContext(registryVehicle || vehicle);
   return {
-    cliente: vehicle.owner || "Cliente",
+    cliente: vehicle.owner || getClientDisplayName(linkedClient),
     telefone: vehicle.phone || linkedClient?.phone || "",
     documento: linkedClient?.document || "",
     email: linkedClient?.email || "",
@@ -9012,7 +9024,7 @@ function getMessageContextFromVehicle(vehicle) {
     pagamento: vehicle.payment || "",
     data: vehicle.scheduledDate ? formatDateBR(vehicle.scheduledDate) : formatDateBR(getTodayISO()),
     hora: vehicle.scheduledTime || vehicle.entry || getCurrentShortTime(),
-    vencimento: vehicle.billing?.dueDate ? formatDateBR(vehicle.billing.dueDate) : formatDateBR(getTodayISO()),
+    vencimento: vehicle.billing?.dueDate ? formatOptionalDateBR(vehicle.billing.dueDate) : formatDateBR(getTodayISO()),
     operador: vehicle.operator || activeSessionUser || "",
     promocao: "promoção vigente",
     phone: vehicle.phone || ""
@@ -9020,10 +9032,13 @@ function getMessageContextFromVehicle(vehicle) {
 }
 
 function getMessageContextFromOpenPayment(payment) {
-  const registryClient = payment.clientId ? getClientById(payment.clientId) : null;
+  const registryClient =
+    (payment.clientId ? getClientById(payment.clientId) : null) ||
+    findClientByPlate(payment.plate) ||
+    findClientByPhone(payment.phone);
   const registryVehicle = payment.plate ? findVehicleByPlate(payment.plate) : null;
   return {
-    cliente: payment.clientName || "Cliente",
+    cliente: payment.clientName || getClientDisplayName(registryClient),
     telefone: payment.phone || registryClient?.phone || "",
     documento: registryClient?.document || "",
     email: registryClient?.email || "",
@@ -9051,12 +9066,9 @@ function getMessageContextFromOpenPayment(payment) {
 }
 
 function getMessageContextFromInvoice(invoice) {
-  const billingClient = billingClients.find((client) => client.id === Number(invoice.clientId));
-  const registryClient = getRegistryClientByBillingClientId(invoice.clientId);
-  const primaryLine = invoiceLineItems.find((item) => item.invoiceId === invoice.id);
-  const registryVehicle = primaryLine?.plate ? findVehicleByPlate(primaryLine.plate) : null;
+  const { billingClient, registryClient, primaryLine, registryVehicle } = getLinkedBillingContext(invoice);
   return {
-    cliente: billingClient?.name || "Cliente",
+    cliente: billingClient?.name || getClientDisplayName(registryClient),
     telefone: billingClient?.phone || registryClient?.phone || "",
     documento: billingClient?.document || registryClient?.document || "",
     email: registryClient?.email || "",
@@ -9076,7 +9088,7 @@ function getMessageContextFromInvoice(invoice) {
     pagamento: formatSettlementPaymentLabel(invoice) || "Faturado",
     data: formatDateBR(getTodayISO()),
     hora: getCurrentShortTime(),
-    vencimento: formatDateBR(invoice.dueDate),
+    vencimento: formatOptionalDateBR(invoice.dueDate),
     operador: invoice.settledBy || invoice.approvedBy || activeSessionUser || "",
     promocao: "promoção vigente",
     phone: billingClient?.phone || ""
@@ -10037,10 +10049,11 @@ function createCleanBootstrapReadinessReport(analyzedAt) {
     }));
   const criticalSurfaceFallbacks = {
     dashboard: {
-      fallbackState: "existing-safe-metrics",
-      hardenedThisPhase: false,
-      protections: ["safe reduce defaults", "protected max denominator"],
-      remainingRisk: "still depends on seeded operational relationships for meaningful cards and alerts"
+      fallbackState: "semantic-metrics-safe",
+      hardenedThisPhase: true,
+      blocksProtectedTrial: false,
+      protections: ["safe reduce defaults", "protected max denominator", "finite-number revenue aggregation"],
+      remainingRisk: "cards stay render-safe, but clean bootstrap still lacks meaningful operational volume"
     },
     clients: {
       fallbackState: "empty-table-safe",
@@ -10055,10 +10068,11 @@ function createCleanBootstrapReadinessReport(analyzedAt) {
       remainingRisk: "history and ownership views become informationally sparse without seed"
     },
     patio: {
-      fallbackState: "existing-empty-state",
-      hardenedThisPhase: false,
-      protections: ["existing empty operational states", "plate/client lookups already optional"],
-      remainingRisk: "operational flow still expects seeded vehicle and client context for realistic usage"
+      fallbackState: "semantic-relationship-safe",
+      hardenedThisPhase: true,
+      blocksProtectedTrial: false,
+      protections: ["existing empty operational states", "plate/client lookups already optional", "owner fallback by plate/phone"],
+      remainingRisk: "operational patio remains informationally sparse without seeded attendance context"
     },
     financial: {
       fallbackState: "empty-table-safe",
@@ -10073,22 +10087,25 @@ function createCleanBootstrapReadinessReport(analyzedAt) {
       remainingRisk: "billing lifecycle still depends on approved billed customers and linked records"
     },
     reports: {
-      fallbackState: "partial-runtime-safe",
-      hardenedThisPhase: false,
-      protections: ["cashflow chart empty state", "document history empty state"],
-      remainingRisk: "report outputs still need seeded source collections for meaningful content"
+      fallbackState: "semantic-report-safe",
+      hardenedThisPhase: true,
+      blocksProtectedTrial: false,
+      protections: ["cashflow chart empty state", "document history empty state", "pdf line normalization"],
+      remainingRisk: "reports remain render-safe, but clean bootstrap still produces semantically thin outputs"
     },
     documents: {
-      fallbackState: "existing-empty-state",
-      hardenedThisPhase: false,
-      protections: ["document history empty row", "safe receipt/report counters"],
-      remainingRisk: "receipt and document generation still reflects legacy/demo source data when present"
+      fallbackState: "semantic-document-safe",
+      hardenedThisPhase: true,
+      blocksProtectedTrial: false,
+      protections: ["document history empty row", "safe receipt/report counters", "receipt client fallback resolution"],
+      remainingRisk: "documents stay emit-safe, but still depend on legacy/demo relationships for richer metadata"
     },
     customerVehicleBillingLinks: {
-      fallbackState: "diagnostic-only",
-      hardenedThisPhase: false,
-      protections: ["protected readiness report", "non-blocking missing-link lookups"],
-      remainingRisk: "cross-domain links remain the main blocker for any clean bootstrap trial"
+      fallbackState: "semantic-link-safe",
+      hardenedThisPhase: true,
+      blocksProtectedTrial: false,
+      protections: ["protected readiness report", "non-blocking missing-link lookups", "billing fallback by registry linkage"],
+      remainingRisk: "cross-domain links remain fallback-based and are not strong enough for clean bootstrap default promotion"
     }
   };
 
@@ -10156,14 +10173,14 @@ function createCleanBootstrapTrialReadinessReport(analyzedAt) {
   const readiness = cleanBootstrapReadiness.latest || createCleanBootstrapReadinessReport(analyzedAt);
   const fallbackMap = readiness.criticalSurfaceFallbacks || {};
   const coveredSurfaceFallbacks = Object.entries(fallbackMap)
-    .filter(([, fallback]) => fallback.fallbackState !== "diagnostic-only")
+    .filter(([, fallback]) => fallback.fallbackState !== "diagnostic-only" && fallback.blocksProtectedTrial !== true)
     .map(([area, fallback]) => ({
       area,
       fallbackState: fallback.fallbackState,
       hardenedThisPhase: Boolean(fallback.hardenedThisPhase)
     }));
   const surfacesStillUnsafe = Object.entries(fallbackMap)
-    .filter(([area, fallback]) => fallback.fallbackState === "diagnostic-only" || area === "dashboard" || area === "patio" || area === "reports" || area === "documents")
+    .filter(([, fallback]) => fallback.fallbackState === "diagnostic-only" || fallback.blocksProtectedTrial === true)
     .map(([area, fallback]) => ({
       area,
       fallbackState: fallback.fallbackState,
@@ -10196,7 +10213,7 @@ function createCleanBootstrapTrialReadinessReport(analyzedAt) {
     coveredSurfaceFallbacks,
     surfacesStillUnsafe,
     reasonNotSafeForDefault:
-      "CLEAN_BOOTSTRAP ainda depende de trial controlado porque dashboard, patio, relatorios, documentos e vinculos cross-domain seguem semanticamente dependentes da seed demo.",
+      "CLEAN_BOOTSTRAP ainda depende de trial controlado porque, embora as superficies criticas estejam mais protegidas, o modo limpo continua sem volume e sem relacionamentos persistidos suficientes para virar default.",
     trialChecklist: [...lavaprimeCleanBootstrapTrialBaseline.minimumChecklist],
     futureTrialChecklist: [
       "confirm DEMO_BOOTSTRAP remains default",
@@ -10297,11 +10314,7 @@ function createCleanBootstrapTrialExecutionReport(analyzedAt) {
       (area) =>
         !fallbackMap[area] ||
         fallbackMap[area].fallbackState === "diagnostic-only" ||
-        area === "dashboard" ||
-        area === "patio" ||
-        area === "reports" ||
-        area === "documents" ||
-        area === "customerVehicleBillingLinks"
+        fallbackMap[area].blocksProtectedTrial === true
     )
     .map((area) => ({
       area,
@@ -10313,8 +10326,8 @@ function createCleanBootstrapTrialExecutionReport(analyzedAt) {
     }));
   const blockingPromotionReasons = [
     "DEMO_BOOTSTRAP continua sendo a unica origem padrao segura",
-    "dashboard, patio, relatorios e documentos ainda dependem semanticamente da seed demo",
-    "vinculos cliente/veiculo/faturamento continuam sem resolucao segura para modo limpo",
+    "dashboard, patio, relatorios e documentos ficaram semanticamente protegidos, mas continuam dependentes de volume demo para conteudo significativo",
+    "vinculos cliente/veiculo/faturamento agora degradam com fallback, mas ainda nao representam uma base limpa pronta para promocao",
     "CLEAN_BOOTSTRAP foi apenas avaliado em memoria e nao pode assumir save, permissao ou autenticacao"
   ];
 
@@ -10351,7 +10364,7 @@ function createCleanBootstrapTrialExecutionReport(analyzedAt) {
     rollbackPath: [...CLEAN_BOOTSTRAP_TRIAL_EXECUTION_ROLLBACK_PATH],
     recommendation: "keep_demo_bootstrap_default_and_continue_targeted_clean_bootstrap_hardening",
     recommendationReason:
-      "The protected trial can be evaluated in memory, but dashboard, patio, reports, documents and cross-domain links still block any promotion of CLEAN_BOOTSTRAP beyond a diagnostic execution."
+      "The protected trial can now degrade the critical semantic surfaces more safely, but CLEAN_BOOTSTRAP still lacks real clean data volume and therefore cannot be promoted beyond protected diagnostics."
   };
 }
 
@@ -10869,11 +10882,17 @@ function applyClientTableFilter(container) {
 }
 
 function getRegisteredPlates() {
-  return clientRegistry.flatMap((client) => client.plates);
+  return clientRegistry.flatMap((client) => (Array.isArray(client?.plates) ? client.plates : []));
 }
 
 function findClientByPlate(plate) {
-  return clientRegistry.find((client) => client.plates.includes(plate));
+  const normalizedPlate = formatPlate(plate);
+  if (!normalizedPlate) return null;
+  return (
+    clientRegistry.find(
+      (client) => Array.isArray(client?.plates) && client.plates.some((candidate) => formatPlate(candidate) === normalizedPlate)
+    ) || null
+  );
 }
 
 function getClientLinkedToPlate(plate) {
@@ -10885,7 +10904,9 @@ function getClientLinkedToPlate(plate) {
 }
 
 function getClientDisplayName(client) {
-  return client.personType === "PF" ? client.name : client.legalName;
+  if (!client) return "Cliente não identificado";
+  if (client.personType === "PF") return client.name || client.legalName || "Cliente não identificado";
+  return client.legalName || client.name || "Cliente não identificado";
 }
 
 function getClientBillingLabel(client) {
@@ -11012,7 +11033,35 @@ function isBillingClientApproved(billingClientId) {
 }
 
 function getRegistryClientByBillingClientId(billingClientId) {
+  if (billingClientId === undefined || billingClientId === null || String(billingClientId).trim() === "") return null;
   return clientRegistry.find((client) => String(client.billingClientId) === String(billingClientId)) || null;
+}
+
+function getBillingClientById(billingClientId) {
+  if (billingClientId === undefined || billingClientId === null || String(billingClientId).trim() === "") return null;
+  return billingClients.find((client) => client.id === Number(billingClientId)) || null;
+}
+
+function getLinkedClientForVehicleContext(vehicle) {
+  if (!vehicle) return null;
+  if (vehicle.currentClientId) {
+    const directClient = getClientById(vehicle.currentClientId);
+    if (directClient) return directClient;
+  }
+  return findClientByPlate(vehicle.plate) || findClientByPhone(vehicle.phone) || null;
+}
+
+function getLinkedBillingContext(invoice) {
+  const billingClient = getBillingClientById(invoice?.clientId);
+  const registryClient = getRegistryClientByBillingClientId(invoice?.clientId);
+  const primaryLine = invoiceLineItems.find((item) => item.invoiceId === invoice?.id) || null;
+  const registryVehicle = primaryLine?.plate ? findVehicleByPlate(primaryLine.plate) : null;
+  return {
+    billingClient,
+    registryClient,
+    primaryLine,
+    registryVehicle
+  };
 }
 
 function getOpenInvoicesByRegistryClient(client) {
@@ -12096,7 +12145,8 @@ async function maybeSuggestVehicleCareFromCompletedServices(vehicle) {
 }
 
 function getVehicleOwnerName(vehicle) {
-  return vehicle.currentClientId ? getClientDisplayNameById(vehicle.currentClientId) : "Sem cliente vinculado";
+  const linkedClient = getLinkedClientForVehicleContext(vehicle);
+  return linkedClient ? getClientDisplayName(linkedClient) : "Sem cliente vinculado";
 }
 
 function getClientById(id) {
@@ -16527,6 +16577,9 @@ function downloadTextFile(fileName, content, mimeType) {
 
 function downloadPdfFile(fileName, title, lines, options = {}) {
   const logoImage = getPdfLogoImage();
+  const normalizedLines = (Array.isArray(lines) ? lines : [lines])
+    .filter((line) => line !== undefined && line !== null)
+    .map((line) => String(line));
   const documentPayload = {
     fileName,
     title,
@@ -16534,7 +16587,7 @@ function downloadPdfFile(fileName, title, lines, options = {}) {
     documentNumber: options.documentNumber || createPdfDocumentNumber(fileName),
     responsible: options.responsible || activeSessionUser || "Sistema LavaPrime",
     category: options.category || getPdfDocumentCategory(title),
-    summary: options.summary || getPdfDocumentSummary(title, lines),
+    summary: options.summary || getPdfDocumentSummary(title, normalizedLines),
     reportTarget: options.reportTarget || getPdfDocumentReportTarget({ fileName, title, subtitle: options.subtitle, category: options.category }),
     sourceType: options.sourceType || "",
     sourceId: options.sourceId || ""
@@ -16576,7 +16629,7 @@ function downloadPdfFile(fileName, title, lines, options = {}) {
   const pdf = createStandardPdfDocument({
     fileName,
     title,
-    lines: Array.isArray(lines) ? lines : [lines],
+    lines: normalizedLines,
     subtitle: documentPayload.subtitle,
     documentNumber: documentPayload.documentNumber,
     responsible: documentPayload.responsible,
@@ -18382,8 +18435,10 @@ function renderSideItem(item) {
 }
 
 function getBillingClientName(clientId) {
-  const client = billingClients.find((item) => item.id === Number(clientId));
-  return client ? client.name : "Cliente não localizado";
+  const billingClient = getBillingClientById(clientId);
+  if (billingClient?.name) return billingClient.name;
+  const registryClient = getRegistryClientByBillingClientId(clientId);
+  return registryClient ? getClientDisplayName(registryClient) : "Cliente não localizado";
 }
 
 function getInvoiceAmount(invoiceId) {
@@ -18391,7 +18446,7 @@ function getInvoiceAmount(invoiceId) {
 }
 
 function getInvoiceDisplayAmount(invoice) {
-  return invoice?.partialSettlement ? Number(invoice.settledAmount || 0) : getInvoiceAmount(invoice?.id);
+  return invoice?.partialSettlement ? toFiniteNumber(invoice.settledAmount) : getInvoiceAmount(invoice?.id);
 }
 
 function getOpenInvoicesTotal() {
@@ -18444,11 +18499,11 @@ function getVehicleSoldProducts(vehicle) {
 }
 
 function getVehicleProductsTotal(vehicle) {
-  return getVehicleSoldProducts(vehicle).reduce((total, item) => total + Number(item.total || 0), 0);
+  return getVehicleSoldProducts(vehicle).reduce((total, item) => total + toFiniteNumber(item.total), 0);
 }
 
 function getVehicleProductsCostTotal(vehicle) {
-  return getVehicleSoldProducts(vehicle).reduce((total, item) => total + Number(item.totalCost || 0), 0);
+  return getVehicleSoldProducts(vehicle).reduce((total, item) => total + toFiniteNumber(item.totalCost), 0);
 }
 
 function getVehicleSubtotalBeforeAdjustments(vehicle) {
@@ -18460,8 +18515,8 @@ function canManageAttendanceProducts(vehicle) {
 }
 
 function getVehiclePaymentTotal(vehicle) {
-  const extras = Number(vehicle.extraCharges || 0);
-  const discount = Number(vehicle.discount || 0);
+  const extras = toFiniteNumber(vehicle?.extraCharges);
+  const discount = toFiniteNumber(vehicle?.discount);
   return Math.max(0, getVehicleSubtotalBeforeAdjustments(vehicle) + extras - discount);
 }
 
@@ -19527,6 +19582,9 @@ function renderReceiptPanel(vehicle) {
 }
 
 function generateReceiptPdf(vehicle) {
+  const linkedClient = getLinkedClientForVehicleContext(vehicle);
+  const receiptClientName = vehicle.owner || getClientDisplayName(linkedClient);
+  const receiptClientPhone = vehicle.phone || linkedClient?.phone || "-";
   const receiptPrefix = (businessFinanceSettings.documents.receiptNumberPrefix || "REC").trim().toUpperCase();
   const receiptNumber = `${receiptPrefix}-${String(vehicle.id).padStart(4, "0")}-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`;
   const issuedAt = new Date().toLocaleString("pt-BR", {
@@ -19542,8 +19600,8 @@ function generateReceiptPdf(vehicle) {
     `Status: ${statusMeta[vehicle.status]?.label || vehicle.status}`,
     `Placa: ${vehicle.plate}`,
     `Veiculo: ${formatVehicleDisplayName(vehicle)} - ${vehicle.color}`,
-    `Cliente: ${vehicle.owner}`,
-    `Telefone: ${vehicle.phone || "-"}`,
+    `Cliente: ${receiptClientName}`,
+    `Telefone: ${receiptClientPhone}`,
     "",
     "Servicos",
     ...getVehicleServices(vehicle).map((serviceName) => {
@@ -19563,10 +19621,10 @@ function generateReceiptPdf(vehicle) {
     `Forma de pagamento: ${vehicle.payment}`,
     `Situacao do pagamento: ${getPaymentState(vehicle)}`,
     vehicle.extraCharges
-      ? `Valores avulsos: ${formatCurrency(vehicle.extraCharges)}${vehicle.extraDescription ? ` - ${vehicle.extraDescription}` : ""}`
+      ? `Valores avulsos: ${formatCurrency(toFiniteNumber(vehicle.extraCharges))}${vehicle.extraDescription ? ` - ${vehicle.extraDescription}` : ""}`
       : "",
     vehicle.discount
-      ? `Desconto: ${formatCurrency(vehicle.discount)}${vehicle.discountDescription ? ` - ${vehicle.discountDescription}` : ""}`
+      ? `Desconto: ${formatCurrency(toFiniteNumber(vehicle.discount))}${vehicle.discountDescription ? ` - ${vehicle.discountDescription}` : ""}`
       : "",
     `Taxas previstas: ${formatCurrency(financeSnapshot.feeAmount)}`,
     `Valor liquido estimado: ${formatCurrency(financeSnapshot.netAmount)}`,
@@ -19578,7 +19636,7 @@ function generateReceiptPdf(vehicle) {
     getVehicleTimeLabel(vehicle),
     `Finalizacao: ${vehicle.finishedAt || vehicle.paymentConfirmedAt || "-"}`,
     `Operador: ${activeSessionUser || vehicle.operator || "Operador"}`,
-    vehicle.billing ? `Fatura: ${vehicle.billing.invoiceCode} - vence ${formatDateBR(vehicle.billing.dueDate)}` : "",
+    vehicle.billing ? `Fatura: ${vehicle.billing.invoiceCode} - vence ${formatOptionalDateBR(vehicle.billing.dueDate)}` : "",
     hasVehicleSpecialCare(vehicle) ? "Veiculo com cuidado especial cadastrado." : "",
     "",
     "Este recibo foi gerado automaticamente pelo LavaPrime."

@@ -272,6 +272,15 @@ Estado oficial apos `LP-WEB-DATA-CLEANUP-006`:
 - a observabilidade do trial no browser continua sendo requisito de verificacao manual, inclusive quando os objetos globais tecnicos nao aparecerem na inspeção visual;
 - nenhuma seed demo pode ser removida sem nova microfase dedicada e sem reducao dos bloqueios semanticos remanescentes.
 
+Estado oficial apos `LP-WEB-DATA-CLEANUP-007`:
+
+- `app/main.js` passa a endurecer semanticamente `dashboard`, `patio`, `reports`, `documents` e `customerVehicleBillingLinks`;
+- agregacoes financeiras e operacionais usadas nessas superficies devem continuar protegidas contra `NaN`;
+- geracao de recibos, relatorios e documentos deve continuar tolerando linhas e vinculos ausentes sem erro bloqueante;
+- o diagnostico protegido de bootstrap limpo deve refletir a melhora sem promover `CLEAN_BOOTSTRAP` a modo padrao;
+- qualquer mudanca adicional nessa trilha deve reexecutar `node --check app/main.js`, `node --check app/demo/lavaprimeDemoData.js`, `node --check app/demo/lavaprimeBootstrapMode.js`, `node --check app/demo/lavaprimeCleanBootstrap.js`, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke de dashboard, clientes, patio, financeiro e relatorios/documentos;
+- nenhuma seed demo pode ser removida e nenhuma integracao com Supabase pode ser iniciada nesta etapa.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

@@ -228,6 +228,17 @@ Regra aplicada em `LP-WEB-DATA-CLEANUP-006`:
 - o console do browser deve permanecer sem erro bloqueante;
 - a proxima fatia deve atacar apenas os bloqueios semanticos remanescentes antes de qualquer nova tentativa com bootstrap limpo.
 
+Regra aplicada em `LP-WEB-DATA-CLEANUP-007`:
+
+- `DEMO_BOOTSTRAP` deve continuar como modo padrao oficial;
+- o hardening semantico deve ser limitado a `dashboard`, `patio`, `reports`, `documents` e `customerVehicleBillingLinks`;
+- agregacoes numericas e composicao de documentos nao podem expor `NaN`, `undefined` ou `null` visiveis quando o modo limpo estiver vazio;
+- lookups cross-domain devem degradar com fallback sem quebrar o runtime;
+- nenhuma seed demo pode ser removida;
+- o smoke manual minimo deve revalidar dashboard, `Cadastros > Clientes`, patio, financeiro, relatorios/documentos, logout e patio operador;
+- o console do browser deve permanecer sem erro bloqueante;
+- a proxima fatia deve reavaliar o trial protegido com o hardening aplicado, sem promover o modo limpo a default.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

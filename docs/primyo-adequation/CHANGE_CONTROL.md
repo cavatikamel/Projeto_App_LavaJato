@@ -407,3 +407,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: `window.__lavaprimeCleanBootstrapTrialExecution` foi adicionado para executar o trial protegido apenas como diagnostico tecnico em memoria, mantendo `DEMO_BOOTSTRAP` como default e `CLEAN_BOOTSTRAP` fora do runtime funcional.
 - Observacao de risco: `dashboard`, `patio`, `reports`, `documents` e `customerVehicleBillingLinks` continuam bloqueando qualquer promocao do modo limpo, e a inspecao visual do browser segue sem expor os objetos globais tecnicos; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-007`.
+
+### LP-WEB-DATA-CLEANUP-007
+
+- Change record: `docs/primyo-changes/LP-WEB-DATA-CLEANUP-007.md`
+- Closure: `pendente`
+- Resultado: `Implementado`
+- Observacao principal: o runtime recebeu hardening semantico minimo para `dashboard`, `patio`, `reports`, `documents` e `customerVehicleBillingLinks`, reduzindo o risco de `NaN`, contexto ausente e lookup cruzado quebrado durante o trial protegido.
+- Observacao de risco: `CLEAN_BOOTSTRAP` continua improprio para virar default porque a base limpa permanece sem volume e sem relacionamentos persistidos suficientes; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-008`.
