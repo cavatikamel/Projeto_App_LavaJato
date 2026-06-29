@@ -1,16 +1,18 @@
 import { createAccessBoundary, createSessionBoundary } from "./boundaries/sessionAccessBoundary.js";
 import { toCustomerContract } from "./adapters/customerAdapter.js";
 import {
+  ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
   billingClients,
   billingInvoices,
   clientRegistry,
   invoiceAmounts,
   invoiceLineItems,
   lavaprimeDemoDataCleanupMap,
+  lavaprimeBootstrapModeState,
   openPayments,
   patioVehicles,
   vehicleRegistry
-} from "./demo/lavaprimeDemoData.js";
+} from "./demo/lavaprimeBootstrapMode.js";
 import { storageBoundary } from "./storage/storageBoundary.js";
 import {
   capitalize,
@@ -146,6 +148,10 @@ window.__lavaprimeSessionBoundary = sessionBoundary;
 window.__lavaprimeAccessBoundary = accessBoundary;
 window.__lavaprimeCustomerShadowReadDiagnostics = customerShadowReadDiagnostics;
 window.__lavaprimeCustomerLegacyDataValidation = customerLegacyDataValidation;
+window.__lavaprimeBootstrapMode = {
+  ...lavaprimeBootstrapModeState,
+  activeMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
+};
 const vehicleOwnerTransferSearchModes = [
   { value: "name", label: "Nome / Razao social", placeholder: "Digite o nome ou a razao social" },
   { value: "document", label: "Documento", placeholder: "Digite o CPF ou CNPJ" },
@@ -9881,7 +9887,13 @@ function normalizeCustomerLegacyValidationPlates(plates) {
 
 function createCustomerLegacyCleanupImpact() {
   return {
+    bootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+    bootstrapSourceModule: lavaprimeBootstrapModeState.sourceModule,
     demoDataModule: "app/demo/lavaprimeDemoData.js",
+    cleanBootstrapModule: "app/demo/lavaprimeCleanBootstrap.js",
+    cleanBootstrapAvailable: lavaprimeBootstrapModeState.cleanBootstrapAvailable,
+    cleanBootstrapProtected: lavaprimeBootstrapModeState.cleanBootstrapProtected,
+    futurePersistedBootstrapReserved: lavaprimeBootstrapModeState.futurePersistedBootstrapReserved,
     isolatedCollections: [...lavaprimeDemoDataCleanupMap.isolatedCollections],
     clientRegistryRecords: clientRegistry.length,
     linkedBillingClients: billingClients.filter((client) => getRegistryClientByBillingClientId(client.id)).length,

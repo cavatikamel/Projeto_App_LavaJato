@@ -175,6 +175,14 @@ Motivo:
 - criar bootstrap limpo opcional para ambiente sem seed demo
 - manter bootstrap demo separado para demonstracao local
 
+Status apos `LP-WEB-DATA-CLEANUP-002`:
+
+- `app/demo/lavaprimeBootstrapMode.js` passa a ser o ponto unico de selecao do bootstrap;
+- `app/demo/lavaprimeCleanBootstrap.js` passa a existir como placeholder seguro e vazio;
+- `DEMO_BOOTSTRAP` permanece o padrao oficial;
+- `CLEAN_BOOTSTRAP` permanece protegido e inativo por padrao;
+- `FUTURE_PERSISTED_BOOTSTRAP` fica reservado apenas como direcao estrutural, sem runtime ativo.
+
 ### Etapa 3
 
 - remover referencias demo que nao forem mais necessarias para smoke visual
@@ -193,6 +201,16 @@ Objetivo:
 - permitir ambiente local demo continuar existindo;
 - permitir ambiente limpo sem seed central de clientes/faturamento/patio;
 - continuar sem abrir Supabase runtime.
+
+## Proxima microfase apos a segregacao inicial
+
+`LP-WEB-DATA-CLEANUP-003 - Clean bootstrap dependency review with protected fallback`
+
+Objetivo:
+
+- mapear quais telas ainda dependem obrigatoriamente da seed demo;
+- preparar uma validacao controlada do bootstrap limpo sem troca de padrao;
+- manter a UI atual estavel enquanto a dependencia residual for reduzida.
 
 ## Rollback
 

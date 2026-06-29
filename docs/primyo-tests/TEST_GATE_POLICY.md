@@ -226,6 +226,15 @@ Estado oficial apos `LP-WEB-DATA-CLEANUP-001`:
 - a massa `demo/teste` deve continuar classificada como nao real em qualquer diagnostico ou documentacao da trilha;
 - a proxima etapa segura passa a ser separar bootstrap demo de bootstrap limpo antes de qualquer remocao real.
 
+Estado oficial apos `LP-WEB-DATA-CLEANUP-002`:
+
+- `app/demo/lavaprimeBootstrapMode.js` passa a ser o ponto unico de bootstrap da massa demo;
+- `app/demo/lavaprimeCleanBootstrap.js` passa a existir como bootstrap limpo estrutural e protegido;
+- `DEMO_BOOTSTRAP` continua o modo padrao oficial;
+- `CLEAN_BOOTSTRAP` nao pode ser promovido a padrao enquanto dashboard, clientes, patio, financeiro e relatorios dependerem da seed demo;
+- a regressao minima desta trilha passa a exigir `node --check` do seletor de bootstrap e de qualquer modulo novo em `app/demo/`;
+- a proxima etapa segura passa a ser revisar dependencias residuais antes de qualquer ativacao do bootstrap limpo.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

@@ -173,6 +173,16 @@ Regra aplicada em `LP-WEB-DATA-CLEANUP-001`:
 - o console do browser deve permanecer sem erro bloqueante;
 - a proxima fatia deve separar bootstrap demo de bootstrap limpo antes de qualquer remocao real.
 
+Regra aplicada em `LP-WEB-DATA-CLEANUP-002`:
+
+- a segregacao entre bootstrap demo e bootstrap limpo nao pode mudar o modo padrao atual;
+- `DEMO_BOOTSTRAP` deve continuar sustentando dashboard, `Cadastros > Clientes`, patio, financeiro e relatorios;
+- `CLEAN_BOOTSTRAP` pode existir apenas como estrutura protegida e inativa por padrao;
+- nenhuma seed demo pode ser removida nesta fatia;
+- a validacao minima deve cobrir admin em dashboard, clientes, patio e financeiro, alem de operador no patio;
+- o console do browser deve permanecer sem erro bloqueante;
+- a proxima fatia deve revisar dependencias residuais antes de qualquer ativacao do bootstrap limpo.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

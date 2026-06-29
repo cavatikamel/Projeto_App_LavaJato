@@ -367,3 +367,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a massa central `demo/teste` de clientes, veiculos, patio, faturamento, itens de fatura e pagamentos foi isolada de `app/main.js` para `app/demo/lavaprimeDemoData.js`, sem remocao direta de seed e sem alterar comportamento visual ou funcional.
 - Observacao de risco: dashboard, clientes, patio, financeiro e relatorios ainda dependem desses seeds; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-002` para separar bootstrap demo de bootstrap limpo antes de qualquer remocao real ou abertura de Supabase.
+
+### LP-WEB-DATA-CLEANUP-002
+
+- Change record: `docs/primyo-changes/LP-WEB-DATA-CLEANUP-002.md`
+- Closure: `fase absorvida no proprio change record e em DEMO_DATA_CLEANUP_PLAN.md`
+- Resultado: `Implementado`
+- Observacao principal: o runtime passou a consumir a massa demo por meio de `app/demo/lavaprimeBootstrapMode.js`, com `app/demo/lavaprimeCleanBootstrap.js` preparado como bootstrap limpo estrutural e protegido, sem mudar o comportamento padrao do produto.
+- Observacao de risco: dashboard, clientes, patio, financeiro e relatorios ainda dependem da seed demo; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-003` para revisar dependencias residuais antes de qualquer ativacao do bootstrap limpo.

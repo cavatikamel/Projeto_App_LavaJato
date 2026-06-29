@@ -1259,3 +1259,39 @@
   - ainda nao existe bootstrap limpo separado do bootstrap demo;
   - qualquer remocao prematura continua com risco de quebra operacional;
   - Supabase continua bloqueado ate a segregacao entre ambiente demo e ambiente limpo.
+
+### LP-WEB-DATA-CLEANUP-002
+
+- Status: `Implementado`
+- Data: `2026-06-29`
+- Arquivos alterados:
+  - `app/main.js`
+  - `app/demo/lavaprimeBootstrapMode.js`
+  - `app/demo/lavaprimeCleanBootstrap.js`
+  - `docs/primyo-changes/LP-WEB-DATA-CLEANUP-002.md`
+  - `docs/primyo-web-integration/DEMO_DATA_CLEANUP_PLAN.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `node --check app/main.js` -> sucesso;
+  - `node --check app/demo/lavaprimeDemoData.js` -> sucesso;
+  - `node --check app/demo/lavaprimeBootstrapMode.js` -> sucesso;
+  - `node --check app/demo/lavaprimeCleanBootstrap.js` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso com warning nao bloqueante de chunk acima de `500 kB`;
+  - `npm.cmd run verify:build` -> sucesso;
+  - smoke rapido em `http://127.0.0.1:4174/` com dashboard, clientes, patio, financeiro, relatorios, logout e patio operador sem erro bloqueante no console.
+- Observacoes:
+  - a segregacao ficou restrita ao bootstrap, sem trocar o modo padrao do runtime;
+  - `DEMO_BOOTSTRAP` continua ativo por padrao;
+  - `CLEAN_BOOTSTRAP` existe apenas como placeholder seguro e protegido;
+  - nenhuma seed demo foi removida;
+  - Supabase continua fechado.
+- Riscos remanescentes:
+  - dashboard, clientes, patio, financeiro e relatorios continuam dependentes da seed demo;
+  - o bootstrap limpo ainda nao foi exercitado como modo alternativo;
+  - qualquer troca de padrao sem fallback protegido continua arriscada.
