@@ -14,16 +14,17 @@ O `Primyo Transformation Program` existe para transformar o conhecimento operaci
 
 ## 4. Ultimo commit
 
-- `4e868ff` — `feat(primyo): add customer shadow diagnostics`
+- `ea21a61` - `test(primyo): validate legacy customer data`
 
 ## 5. Ultimos commits relevantes
 
-- `6a7063b` — `chore(primyo): add pure id resolver foundation`
-- `b936250` — `docs(primyo): align web contract resolver test requirements`
-- `ae59d49` — `test(primyo): harden id resolver regression gate`
-- `2a6548e` — `docs(primyo): assess runtime integration readiness`
-- `0ac89d6` — `feat(primyo): add customer adapter shadow read`
-- `4e868ff` — `feat(primyo): add customer shadow diagnostics`
+- `08a81d6` - `refactor(primyo): extract demo data seed`
+- `ea21a61` - `test(primyo): validate legacy customer data`
+- `9c52840` - `docs(primyo): review customer shadow coverage`
+- `41cb954` - `docs(primyo): update next slice decision`
+- `1fc6a21` - `docs(primyo): update codex handoff summary`
+- `4e868ff` - `feat(primyo): add customer shadow diagnostics`
+- `0ac89d6` - `feat(primyo): add customer adapter shadow read`
 
 ## 6. Status do working tree
 
@@ -32,7 +33,7 @@ O `Primyo Transformation Program` existe para transformar o conhecimento operaci
   - `app/styles.css`
   - `LavaPrimeAndroidApp/**`
 - nenhum desses itens deve entrar em commit Primyo Web sem fase dedicada;
-- nao ha push executado apos os commits acima.
+- nenhum push foi executado apos os commits recentes acima.
 
 ## 7. Status tecnico atual
 
@@ -45,19 +46,29 @@ O `Primyo Transformation Program` existe para transformar o conhecimento operaci
 - `adapterHelpers` oficial em `app/adapters/shared/adapterHelpers.js`
 - `idResolver` puro existente em `app/adapters/shared/idResolver.js`
 - Adapter Gate reforcado e validando cinco adapters, helper compartilhado e `idResolver`
-- `customerAdapter` ja foi integrado ao runtime apenas em `shadow read`
-- `Customer Shadow Read Diagnostics` ja foi implementado em `app/main.js`
-- o legado continua fonte ativa de renderizacao e salvamento
-- `idResolver` continua fora do runtime
-- Supabase continua fechado
-- Android continua fora da trilha atual
+- `customerAdapter` segue integrado ao runtime apenas em `shadow read`
+- `Customer Shadow Read Diagnostics` segue implementado em `app/main.js`
+- `LP-WEB-INTEGRATION-004` foi encerrada separadamente:
+  - objetivo: validar dados legados de clientes antes de ampliar `Customer Shadow Read`
+  - arquivos principais: `app/adapters/customerAdapter.js`, `scripts/primyo-adapter-gate.mjs` e `docs/primyo-web-integration/CUSTOMER_LEGACY_DATA_VALIDATION.md`
+  - `customerAdapter` nao virou fonte ativa
+  - `idResolver` continua fora do runtime
+  - o legado continua fonte ativa
+  - Supabase continua fechado
+- `LP-WEB-DATA-CLEANUP-001` foi aceita como fase valida separada:
+  - nasceu como desvio de escopo controlado
+  - isolou a massa demo hardcoded em `app/demo/lavaprimeDemoData.js`
+  - `app/main.js` passou a consumir o modulo demo dedicado
+  - nenhuma seed foi removida
+  - comportamento visual e funcional foi preservado
+  - Supabase continua fechado
 
 ## 8. Validacoes recentes
 
 - `npm.cmd run primyo:gate` -> aprovado
 - `npm.cmd run build` -> aprovado
 - `npm.cmd run verify:build` -> aprovado
-- observacao operacional: o build continua podendo emitir o warning nao bloqueante de chunk acima de `500 kB`
+- observacao operacional: o build continua emitindo o warning nao bloqueante de chunk acima de `500 kB`
 
 ## 9. Regras permanentes
 
@@ -72,13 +83,12 @@ O `Primyo Transformation Program` existe para transformar o conhecimento operaci
 
 ## 10. Proxima decisao recomendada
 
-- o documento formal `docs/primyo-adequation/NEXT_SLICE_DECISION.md` ainda aponta para `LP-WEB-INTEGRATION-002-CLOSURE`
-- essa closure ja foi executada e commitada em `4e868ff`
-- portanto, a proxima conversa deve abrir uma nova fase curta para atualizar formalmente a decisao da proxima fatia antes de qualquer nova integracao
-- direcao conservadora atual:
-  - nao expandir `customerAdapter` no runtime ainda
-  - nao integrar `idResolver` ao runtime ainda
-  - nao abrir Supabase ainda
+- proxima decisao sugerida: `LP-WEB-DATA-CLEANUP-002 - Segregacao entre bootstrap demo e bootstrap limpo`
+- nao iniciar automaticamente;
+- a proxima fatia deve ser pequena, reversivel e sem Supabase;
+- nao remover massa demo sem alternativa segura para renderizacao e smoke;
+- manter o fluxo legado funcionando;
+- manter Android, CSS e `.gitignore` fora.
 
 ## 11. Criterios para compactar novamente no futuro
 
