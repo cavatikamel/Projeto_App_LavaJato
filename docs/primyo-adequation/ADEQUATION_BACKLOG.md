@@ -1295,3 +1295,39 @@
   - dashboard, clientes, patio, financeiro e relatorios continuam dependentes da seed demo;
   - o bootstrap limpo ainda nao foi exercitado como modo alternativo;
   - qualquer troca de padrao sem fallback protegido continua arriscada.
+
+### LP-WEB-DATA-CLEANUP-003
+
+- Status: `Implementado`
+- Data: `2026-06-29`
+- Arquivos alterados:
+  - `app/main.js`
+  - `app/demo/lavaprimeCleanBootstrap.js`
+  - `docs/primyo-changes/LP-WEB-DATA-CLEANUP-003.md`
+  - `docs/primyo-web-integration/CLEAN_BOOTSTRAP_DEPENDENCY_REVIEW.md`
+  - `docs/primyo-web-integration/DEMO_DATA_CLEANUP_PLAN.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `node --check app/main.js` -> sucesso;
+  - `node --check app/demo/lavaprimeDemoData.js` -> sucesso;
+  - `node --check app/demo/lavaprimeBootstrapMode.js` -> sucesso;
+  - `node --check app/demo/lavaprimeCleanBootstrap.js` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso com warning nao bloqueante de chunk acima de `500 kB`;
+  - `npm.cmd run verify:build` -> sucesso;
+  - readiness protegido em memoria confirma dependencia residual de dashboard, clientes, veiculos, patio, financeiro, faturas, pagamentos, relatorios e documentos.
+- Observacoes:
+  - `DEMO_BOOTSTRAP` continua como modo padrao oficial;
+  - `CLEAN_BOOTSTRAP` segue protegido e nao ativo por padrao;
+  - nenhuma seed demo foi removida;
+  - smoke rapido em `http://127.0.0.1:4174/` manteve dashboard, clientes, patio, financeiro, documentos, logout e patio operador funcionais;
+  - Supabase permanece fechado.
+- Riscos remanescentes:
+  - as superficies criticas continuam dependentes da seed demo;
+  - o bootstrap limpo ainda nao suporta troca de padrao;
+  - qualquer remocao sem hardening de fallback ainda pode quebrar runtime e smoke.

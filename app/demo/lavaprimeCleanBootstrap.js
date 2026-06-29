@@ -30,3 +30,12 @@ export const lavaprimeCleanBootstrapMap = {
     invoiceLineItemCount: 0
   }
 };
+
+export const lavaprimeCleanBootstrapReadinessBaseline = Object.freeze({
+  mode: "CLEAN_BOOTSTRAP",
+  sourceModule: "app/demo/lavaprimeCleanBootstrap.js",
+  classification: "clean-bootstrap-placeholder",
+  protectedFallback: true,
+  safeAsDefault: false,
+  intendedUse: "protected-readiness-review-only"
+});

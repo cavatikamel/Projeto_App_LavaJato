@@ -375,3 +375,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: o runtime passou a consumir a massa demo por meio de `app/demo/lavaprimeBootstrapMode.js`, com `app/demo/lavaprimeCleanBootstrap.js` preparado como bootstrap limpo estrutural e protegido, sem mudar o comportamento padrao do produto.
 - Observacao de risco: dashboard, clientes, patio, financeiro e relatorios ainda dependem da seed demo; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-003` para revisar dependencias residuais antes de qualquer ativacao do bootstrap limpo.
+
+### LP-WEB-DATA-CLEANUP-003
+
+- Change record: `docs/primyo-changes/LP-WEB-DATA-CLEANUP-003.md`
+- Closure: `pendente`
+- Resultado: `Implementado`
+- Observacao principal: o runtime passou a publicar `window.__lavaprimeCleanBootstrapReadiness` apenas como diagnostico protegido em memoria, confirmando que dashboard, clientes, veiculos, patio, financeiro, faturas, pagamentos, relatorios e documentos ainda dependem da seed demo.
+- Observacao de risco: `CLEAN_BOOTSTRAP` continua inseguro como modo padrao e nenhuma seed foi removida; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-004` para endurecer fallback das superficies criticas antes de qualquer teste futuro com bootstrap limpo.

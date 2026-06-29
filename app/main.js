@@ -13,6 +13,7 @@ import {
   patioVehicles,
   vehicleRegistry
 } from "./demo/lavaprimeBootstrapMode.js";
+import { lavaprimeCleanBootstrapMap, lavaprimeCleanBootstrapReadinessBaseline } from "./demo/lavaprimeCleanBootstrap.js";
 import { storageBoundary } from "./storage/storageBoundary.js";
 import {
   capitalize,
@@ -128,6 +129,13 @@ const CUSTOMER_LEGACY_DATA_VALIDATION_ROLLBACK_PATH = Object.freeze([
   "remove customer legacy data validation helpers from app/main.js",
   "rerun node --check app/main.js, adapter gate, primyo:gate, build, verify and customer smoke"
 ]);
+const CLEAN_BOOTSTRAP_READINESS_ROLLBACK_PATH = Object.freeze([
+  "remove clean bootstrap readiness constants and in-memory state from app/main.js",
+  "remove refreshCleanBootstrapReadiness() call from renderAdminScreen(view)",
+  "remove clean bootstrap readiness helpers from app/main.js",
+  "remove clean bootstrap readiness baseline export from app/demo/lavaprimeCleanBootstrap.js",
+  "rerun node --check app/main.js, node --check app/demo/lavaprimeCleanBootstrap.js, adapter gate, primyo:gate, build, verify and cleanup smoke"
+]);
 let lastCustomerShadowReadReport = null;
 const customerShadowReadDiagnostics = {
   latest: null,
@@ -142,12 +150,20 @@ const customerLegacyDataValidation = {
   exampleLimit: CUSTOMER_LEGACY_DATA_VALIDATION_EXAMPLE_LIMIT,
   legacySourceActive: true
 };
+const cleanBootstrapReadiness = {
+  latest: null,
+  rollbackPath: [...CLEAN_BOOTSTRAP_READINESS_ROLLBACK_PATH],
+  protectedFallback: true,
+  legacySourceActive: true,
+  defaultMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
+};
 
 window.__lavaprimeSessionBoundary = sessionBoundary;
 
 window.__lavaprimeAccessBoundary = accessBoundary;
 window.__lavaprimeCustomerShadowReadDiagnostics = customerShadowReadDiagnostics;
 window.__lavaprimeCustomerLegacyDataValidation = customerLegacyDataValidation;
+window.__lavaprimeCleanBootstrapReadiness = cleanBootstrapReadiness;
 window.__lavaprimeBootstrapMode = {
   ...lavaprimeBootstrapModeState,
   activeMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
@@ -7153,6 +7169,8 @@ function renderAdminAlerts(billedOpen) {
 }
 
 function renderAdminScreen(view) {
+  refreshCleanBootstrapReadiness();
+
   if (view === "wallet") {
     renderAdminScreen("businessFinance");
     return;
@@ -9883,6 +9901,167 @@ function classifyCustomerBillingMode(clientData) {
 function normalizeCustomerLegacyValidationPlates(plates) {
   if (!Array.isArray(plates)) return [];
   return [...new Set(plates.map((plate) => formatPlate(plate)).filter(Boolean))];
+}
+
+function refreshCleanBootstrapReadiness() {
+  const analyzedAt = new Date().toISOString();
+  const report = createCleanBootstrapReadinessReport(analyzedAt);
+  recordCleanBootstrapReadinessReport(report);
+}
+
+function createCleanBootstrapReadinessReport(analyzedAt) {
+  const demoSummary = lavaprimeDemoDataCleanupMap?.relationshipSummary || {};
+  const cleanSummary = lavaprimeCleanBootstrapMap?.relationshipSummary || {};
+  const linkedBillingClients = billingClients.filter((client) => getRegistryClientByBillingClientId(client.id)).length;
+  const linkedVehicles = vehicleRegistry.filter((vehicle) => vehicle.currentClientId || findClientByPlate(vehicle.plate)).length;
+  const linkedPatioVehicles = patioVehicles.filter((vehicle) => findClientByPlate(vehicle.plate) || findClientByPhone(vehicle.phone)).length;
+  const linkedOpenPayments = openPayments.filter((payment) => payment.clientId || payment.vehicleId || payment.plate).length;
+  const linkedBillingInvoices = billingInvoices.filter((invoice) => getRegistryClientByBillingClientId(invoice.clientId)).length;
+  const linkedInvoiceLineItems = invoiceLineItems.filter((item) => item.invoiceId || item.plate).length;
+  const linkedVehicleServiceSnapshots = vehicleRegistry.filter(
+    (vehicle) => Array.isArray(vehicle.serviceHistory) && vehicle.serviceHistory.length > 0
+  ).length;
+  const dependencies = {
+    dashboard: {
+      dependsOnDemoSeed: true,
+      linkedCollections: ["patioVehicles", "openPayments", "billingInvoices", "invoiceLineItems", "vehicleRegistry"],
+      blockerCount: patioVehicles.length + openPayments.length + billingInvoices.length
+    },
+    clients: {
+      dependsOnDemoSeed: true,
+      linkedCollections: ["clientRegistry", "billingClients", "vehicleRegistry"],
+      blockerCount: clientRegistry.length + linkedBillingClients + linkedVehicles
+    },
+    vehicles: {
+      dependsOnDemoSeed: true,
+      linkedCollections: ["vehicleRegistry", "clientRegistry", "patioVehicles"],
+      blockerCount: vehicleRegistry.length + linkedVehicles + linkedPatioVehicles
+    },
+    patio: {
+      dependsOnDemoSeed: true,
+      linkedCollections: ["patioVehicles", "vehicleRegistry", "clientRegistry", "openPayments"],
+      blockerCount: patioVehicles.length + linkedPatioVehicles + linkedOpenPayments
+    },
+    financial: {
+      dependsOnDemoSeed: true,
+      linkedCollections: ["openPayments", "billingClients", "billingInvoices", "invoiceLineItems", "clientRegistry"],
+      blockerCount: openPayments.length + billingClients.length + billingInvoices.length + invoiceLineItems.length
+    },
+    invoices: {
+      dependsOnDemoSeed: true,
+      linkedCollections: ["billingInvoices", "billingClients", "invoiceLineItems", "clientRegistry"],
+      blockerCount: billingInvoices.length + linkedBillingInvoices + linkedInvoiceLineItems
+    },
+    payments: {
+      dependsOnDemoSeed: true,
+      linkedCollections: ["openPayments", "clientRegistry", "vehicleRegistry", "patioVehicles"],
+      blockerCount: openPayments.length + linkedOpenPayments
+    },
+    reports: {
+      dependsOnDemoSeed: true,
+      linkedCollections: ["billingInvoices", "invoiceLineItems", "openPayments", "vehicleRegistry", "clientRegistry"],
+      blockerCount: billingInvoices.length + invoiceLineItems.length + openPayments.length + vehicleRegistry.length
+    },
+    documents: {
+      dependsOnDemoSeed: true,
+      linkedCollections: ["billingInvoices", "invoiceLineItems", "billingClients", "clientRegistry"],
+      blockerCount: billingInvoices.length + invoiceLineItems.length + billingClients.length
+    },
+    customerVehicleBillingLinks: {
+      dependsOnDemoSeed: true,
+      linkedCollections: ["clientRegistry", "billingClients", "vehicleRegistry", "billingInvoices", "openPayments"],
+      blockerCount:
+        linkedBillingClients +
+        linkedVehicles +
+        linkedPatioVehicles +
+        linkedOpenPayments +
+        linkedBillingInvoices +
+        linkedVehicleServiceSnapshots
+    }
+  };
+  const criticalBlockers = Object.entries(dependencies)
+    .filter(([, dependency]) => dependency.dependsOnDemoSeed && dependency.blockerCount > 0)
+    .map(([area, dependency]) => ({
+      area,
+      blockerCount: dependency.blockerCount,
+      linkedCollections: [...dependency.linkedCollections]
+    }));
+
+  return {
+    flow: "bootstrap.cleanup.review",
+    readinessMode: "protected-fallback-review",
+    analyzedAt,
+    activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+    defaultBootstrapMode: lavaprimeBootstrapModeState.defaultMode,
+    bootstrapSourceModule: lavaprimeBootstrapModeState.sourceModule,
+    cleanBootstrapModule: lavaprimeCleanBootstrapReadinessBaseline.sourceModule,
+    demoDataModule: "app/demo/lavaprimeDemoData.js",
+    defaultModeIsDemo: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE === "DEMO_BOOTSTRAP",
+    cleanBootstrapAvailable: lavaprimeBootstrapModeState.cleanBootstrapAvailable,
+    cleanBootstrapProtected: lavaprimeBootstrapModeState.cleanBootstrapProtected,
+    futurePersistedBootstrapReserved: lavaprimeBootstrapModeState.futurePersistedBootstrapReserved,
+    demoSeedActive: lavaprimeBootstrapModeState.demoSeedActive,
+    protectedFallback: true,
+    cleanBootstrapCanBecomeDefaultNow: false,
+    fallbackRequired: true,
+    safeToExerciseReadOnlyReview: true,
+    legacySourceActive: true,
+    datasetClassification: lavaprimeDemoDataCleanupMap?.classification || "embedded-demo-test-seed",
+    cleanBootstrapClassification: lavaprimeCleanBootstrapReadinessBaseline.classification,
+    demoRelationshipSummary: { ...demoSummary },
+    cleanRelationshipSummary: { ...cleanSummary },
+    dependencyAreas: Object.fromEntries(
+      Object.entries(dependencies).map(([area, dependency]) => [
+        area,
+        {
+          dependsOnDemoSeed: dependency.dependsOnDemoSeed,
+          blockerCount: dependency.blockerCount,
+          linkedCollections: [...dependency.linkedCollections]
+        }
+      ])
+    ),
+    criticalBlockers,
+    readinessDecision: "keep_demo_bootstrap_default_with_protected_fallback",
+    recommendation: "map_and_reduce_domain_dependencies_before_any_clean_bootstrap_trial",
+    recommendationReason:
+      "Dashboard, clients, vehicles, patio, financial flows, invoices, payments, reports and documents still depend on the embedded demo seed, so CLEAN_BOOTSTRAP must remain protected and non-default.",
+    rollbackPath: [...CLEAN_BOOTSTRAP_READINESS_ROLLBACK_PATH]
+  };
+}
+
+function recordCleanBootstrapReadinessReport(report) {
+  const snapshot = cloneCleanBootstrapReadinessReport(report);
+  cleanBootstrapReadiness.latest = snapshot;
+  cleanBootstrapReadiness.rollbackPath = [...CLEAN_BOOTSTRAP_READINESS_ROLLBACK_PATH];
+  cleanBootstrapReadiness.protectedFallback = true;
+  cleanBootstrapReadiness.legacySourceActive = true;
+  cleanBootstrapReadiness.defaultMode = ACTIVE_LAVAPRIME_BOOTSTRAP_MODE;
+}
+
+function cloneCleanBootstrapReadinessReport(report) {
+  return {
+    ...report,
+    rollbackPath: cloneCustomerShadowReadList(report?.rollbackPath),
+    demoRelationshipSummary: report?.demoRelationshipSummary ? { ...report.demoRelationshipSummary } : {},
+    cleanRelationshipSummary: report?.cleanRelationshipSummary ? { ...report.cleanRelationshipSummary } : {},
+    dependencyAreas: report?.dependencyAreas
+      ? Object.fromEntries(
+          Object.entries(report.dependencyAreas).map(([area, dependency]) => [
+            area,
+            {
+              ...dependency,
+              linkedCollections: cloneCustomerShadowReadList(dependency?.linkedCollections)
+            }
+          ])
+        )
+      : {},
+    criticalBlockers: Array.isArray(report?.criticalBlockers)
+      ? report.criticalBlockers.map((blocker) => ({
+          ...blocker,
+          linkedCollections: cloneCustomerShadowReadList(blocker?.linkedCollections)
+        }))
+      : []
+  };
 }
 
 function createCustomerLegacyCleanupImpact() {

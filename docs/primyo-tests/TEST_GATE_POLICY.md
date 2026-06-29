@@ -235,6 +235,14 @@ Estado oficial apos `LP-WEB-DATA-CLEANUP-002`:
 - a regressao minima desta trilha passa a exigir `node --check` do seletor de bootstrap e de qualquer modulo novo em `app/demo/`;
 - a proxima etapa segura passa a ser revisar dependencias residuais antes de qualquer ativacao do bootstrap limpo.
 
+Estado oficial apos `LP-WEB-DATA-CLEANUP-003`:
+
+- `app/main.js` passa a publicar `window.__lavaprimeCleanBootstrapReadiness` apenas como diagnostico interno e silencioso;
+- o diagnostico confirma que `DEMO_BOOTSTRAP` continua o unico modo seguro como padrao;
+- o diagnostico nao autoriza troca automatica de bootstrap, remocao de seed, persistencia ou telemetria externa;
+- qualquer mudanca em diagnostico de bootstrap limpo deve reexecutar `node --check app/main.js`, `node --check app/demo/lavaprimeCleanBootstrap.js`, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke de dashboard, clientes, patio, financeiro e relatorios/documentos;
+- a proxima etapa segura continua sendo hardening de fallback antes de qualquer teste futuro com bootstrap limpo.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

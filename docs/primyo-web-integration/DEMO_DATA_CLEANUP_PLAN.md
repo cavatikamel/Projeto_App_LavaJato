@@ -202,15 +202,22 @@ Objetivo:
 - permitir ambiente limpo sem seed central de clientes/faturamento/patio;
 - continuar sem abrir Supabase runtime.
 
-## Proxima microfase apos a segregacao inicial
+## Estado apos LP-WEB-DATA-CLEANUP-003
 
-`LP-WEB-DATA-CLEANUP-003 - Clean bootstrap dependency review with protected fallback`
+- `window.__lavaprimeCleanBootstrapReadiness` passa a existir como diagnostico silencioso em memoria;
+- o readiness confirma que dashboard, clientes, veiculos, patio, financeiro, faturas, pagamentos, relatorios, documentos e vinculos cross-domain ainda dependem da seed demo;
+- `DEMO_BOOTSTRAP` continua o unico modo seguro como padrao;
+- `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a default nesta etapa.
+
+## Proxima microfase recomendada
+
+`LP-WEB-DATA-CLEANUP-004 - Critical surface fallback hardening before clean bootstrap trial`
 
 Objetivo:
 
-- mapear quais telas ainda dependem obrigatoriamente da seed demo;
-- preparar uma validacao controlada do bootstrap limpo sem troca de padrao;
-- manter a UI atual estavel enquanto a dependencia residual for reduzida.
+- endurecer estados vazios e fallback seguro nas superficies criticas;
+- reduzir dependencia estrutural de dashboard, clientes, patio, financeiro e relatorios;
+- manter `DEMO_BOOTSTRAP` como padrao enquanto a cobertura de fallback nao estiver pronta.
 
 ## Rollback
 
