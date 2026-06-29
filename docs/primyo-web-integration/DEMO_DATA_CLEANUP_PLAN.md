@@ -218,13 +218,22 @@ Objetivo:
 - `DEMO_BOOTSTRAP` continua o unico modo seguro como padrao;
 - nenhuma seed demo foi removida.
 
+## Estado apos LP-WEB-DATA-CLEANUP-005
+
+- `window.__lavaprimeCleanBootstrapTrialReadiness` passa a existir como diagnostico protegido para um futuro trial do bootstrap limpo;
+- o trial readiness diferencia explicitamente readiness para teste protegido de readiness para default;
+- `canStartProtectedTrial` pode ficar habilitado para a proxima microfase;
+- `canPromoteCleanBootstrapToDefault` permanece bloqueado;
+- `DEMO_BOOTSTRAP` continua o unico modo seguro como padrao;
+- nenhuma seed demo foi removida.
+
 ## Proxima microfase recomendada
 
-`LP-WEB-DATA-CLEANUP-005 - Protected CLEAN_BOOTSTRAP trial readiness`
+`LP-WEB-DATA-CLEANUP-006 - Protected CLEAN_BOOTSTRAP trial execution`
 
 Objetivo:
 
-- validar um trial controlado do bootstrap limpo sem troca de default;
+- executar um trial controlado do bootstrap limpo sem troca de default;
 - medir quais superficies ficam apenas vazias e quais ainda exigem hardening adicional;
 - manter rollback simples e legado/demo como baseline segura.
 

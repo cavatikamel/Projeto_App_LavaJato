@@ -13,7 +13,11 @@ import {
   patioVehicles,
   vehicleRegistry
 } from "./demo/lavaprimeBootstrapMode.js";
-import { lavaprimeCleanBootstrapMap, lavaprimeCleanBootstrapReadinessBaseline } from "./demo/lavaprimeCleanBootstrap.js";
+import {
+  lavaprimeCleanBootstrapMap,
+  lavaprimeCleanBootstrapReadinessBaseline,
+  lavaprimeCleanBootstrapTrialBaseline
+} from "./demo/lavaprimeCleanBootstrap.js";
 import { storageBoundary } from "./storage/storageBoundary.js";
 import {
   capitalize,
@@ -136,6 +140,13 @@ const CLEAN_BOOTSTRAP_READINESS_ROLLBACK_PATH = Object.freeze([
   "remove clean bootstrap readiness baseline export from app/demo/lavaprimeCleanBootstrap.js",
   "rerun node --check app/main.js, node --check app/demo/lavaprimeCleanBootstrap.js, adapter gate, primyo:gate, build, verify and cleanup smoke"
 ]);
+const CLEAN_BOOTSTRAP_TRIAL_READINESS_ROLLBACK_PATH = Object.freeze([
+  "remove clean bootstrap trial readiness constants and in-memory state from app/main.js",
+  "remove refreshCleanBootstrapTrialReadiness() call from renderAdminScreen(view)",
+  "remove clean bootstrap trial readiness helpers from app/main.js",
+  "remove clean bootstrap trial baseline export from app/demo/lavaprimeCleanBootstrap.js",
+  "rerun node --check app/main.js, node --check app/demo/lavaprimeCleanBootstrap.js, adapter gate, primyo:gate, build, verify and cleanup smoke"
+]);
 let lastCustomerShadowReadReport = null;
 const customerShadowReadDiagnostics = {
   latest: null,
@@ -157,6 +168,13 @@ const cleanBootstrapReadiness = {
   legacySourceActive: true,
   defaultMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
 };
+const cleanBootstrapTrialReadiness = {
+  latest: null,
+  rollbackPath: [...CLEAN_BOOTSTRAP_TRIAL_READINESS_ROLLBACK_PATH],
+  protectedTrialOnly: true,
+  legacySourceActive: true,
+  defaultMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
+};
 
 window.__lavaprimeSessionBoundary = sessionBoundary;
 
@@ -164,6 +182,7 @@ window.__lavaprimeAccessBoundary = accessBoundary;
 window.__lavaprimeCustomerShadowReadDiagnostics = customerShadowReadDiagnostics;
 window.__lavaprimeCustomerLegacyDataValidation = customerLegacyDataValidation;
 window.__lavaprimeCleanBootstrapReadiness = cleanBootstrapReadiness;
+window.__lavaprimeCleanBootstrapTrialReadiness = cleanBootstrapTrialReadiness;
 window.__lavaprimeBootstrapMode = {
   ...lavaprimeBootstrapModeState,
   activeMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
@@ -7170,6 +7189,7 @@ function renderAdminAlerts(billedOpen) {
 
 function renderAdminScreen(view) {
   refreshCleanBootstrapReadiness();
+  refreshCleanBootstrapTrialReadiness();
 
   if (view === "wallet") {
     renderAdminScreen("businessFinance");
@@ -9909,6 +9929,12 @@ function refreshCleanBootstrapReadiness() {
   recordCleanBootstrapReadinessReport(report);
 }
 
+function refreshCleanBootstrapTrialReadiness() {
+  const analyzedAt = new Date().toISOString();
+  const report = createCleanBootstrapTrialReadinessReport(analyzedAt);
+  recordCleanBootstrapTrialReadinessReport(report);
+}
+
 function createCleanBootstrapReadinessReport(analyzedAt) {
   const demoSummary = lavaprimeDemoDataCleanupMap?.relationshipSummary || {};
   const cleanSummary = lavaprimeCleanBootstrapMap?.relationshipSummary || {};
@@ -10103,6 +10129,69 @@ function recordCleanBootstrapReadinessReport(report) {
   cleanBootstrapReadiness.defaultMode = ACTIVE_LAVAPRIME_BOOTSTRAP_MODE;
 }
 
+function createCleanBootstrapTrialReadinessReport(analyzedAt) {
+  const readiness = cleanBootstrapReadiness.latest || createCleanBootstrapReadinessReport(analyzedAt);
+  const fallbackMap = readiness.criticalSurfaceFallbacks || {};
+  const coveredSurfaceFallbacks = Object.entries(fallbackMap)
+    .filter(([, fallback]) => fallback.fallbackState !== "diagnostic-only")
+    .map(([area, fallback]) => ({
+      area,
+      fallbackState: fallback.fallbackState,
+      hardenedThisPhase: Boolean(fallback.hardenedThisPhase)
+    }));
+  const surfacesStillUnsafe = Object.entries(fallbackMap)
+    .filter(([area, fallback]) => fallback.fallbackState === "diagnostic-only" || area === "dashboard" || area === "patio" || area === "reports" || area === "documents")
+    .map(([area, fallback]) => ({
+      area,
+      fallbackState: fallback.fallbackState,
+      remainingRisk: fallback.remainingRisk
+    }));
+  const canStartProtectedTrial =
+    readiness.defaultModeIsDemo &&
+    readiness.cleanBootstrapAvailable &&
+    readiness.cleanBootstrapProtected &&
+    coveredSurfaceFallbacks.length >= 5;
+
+  return {
+    flow: "bootstrap.cleanup.trial-readiness",
+    trialReadinessMode: "protected-clean-bootstrap-trial",
+    analyzedAt,
+    activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+    defaultBootstrapMode: lavaprimeBootstrapModeState.defaultMode,
+    bootstrapSourceModule: lavaprimeBootstrapModeState.sourceModule,
+    cleanBootstrapModule: lavaprimeCleanBootstrapTrialBaseline.sourceModule,
+    cleanBootstrapAvailable: lavaprimeBootstrapModeState.cleanBootstrapAvailable,
+    cleanBootstrapProtected: lavaprimeBootstrapModeState.cleanBootstrapProtected,
+    protectedTrialOnly: lavaprimeCleanBootstrapTrialBaseline.protectedTrialOnly,
+    trialActiveByDefault: lavaprimeCleanBootstrapTrialBaseline.trialActiveByDefault,
+    canStartProtectedTrial,
+    canPromoteCleanBootstrapToDefault: false,
+    defaultModeIsDemo: readiness.defaultModeIsDemo,
+    legacySourceActive: true,
+    demoSeedActive: lavaprimeBootstrapModeState.demoSeedActive,
+    fallbackCoverageCount: coveredSurfaceFallbacks.length,
+    coveredSurfaceFallbacks,
+    surfacesStillUnsafe,
+    reasonNotSafeForDefault:
+      "CLEAN_BOOTSTRAP ainda depende de trial controlado porque dashboard, patio, relatorios, documentos e vinculos cross-domain seguem semanticamente dependentes da seed demo.",
+    trialChecklist: [...lavaprimeCleanBootstrapTrialBaseline.minimumChecklist],
+    futureTrialChecklist: [
+      "confirm DEMO_BOOTSTRAP remains default",
+      "run protected diagnostics only",
+      "revalidate dashboard and Cadastros > Clientes",
+      "revalidate patio and financeiro",
+      "revalidate relatorios e documentos",
+      "confirm console without blocking errors"
+    ],
+    readinessReference: {
+      recommendation: readiness.recommendation,
+      recommendationReason: readiness.recommendationReason,
+      readinessDecision: readiness.readinessDecision
+    },
+    rollbackPath: [...CLEAN_BOOTSTRAP_TRIAL_READINESS_ROLLBACK_PATH]
+  };
+}
+
 function cloneCleanBootstrapReadinessReport(report) {
   return {
     ...report,
@@ -10137,6 +10226,31 @@ function cloneCleanBootstrapReadinessReport(report) {
           linkedCollections: cloneCustomerShadowReadList(blocker?.linkedCollections)
         }))
       : []
+  };
+}
+
+function recordCleanBootstrapTrialReadinessReport(report) {
+  const snapshot = cloneCleanBootstrapTrialReadinessReport(report);
+  cleanBootstrapTrialReadiness.latest = snapshot;
+  cleanBootstrapTrialReadiness.rollbackPath = [...CLEAN_BOOTSTRAP_TRIAL_READINESS_ROLLBACK_PATH];
+  cleanBootstrapTrialReadiness.protectedTrialOnly = true;
+  cleanBootstrapTrialReadiness.legacySourceActive = true;
+  cleanBootstrapTrialReadiness.defaultMode = ACTIVE_LAVAPRIME_BOOTSTRAP_MODE;
+}
+
+function cloneCleanBootstrapTrialReadinessReport(report) {
+  return {
+    ...report,
+    rollbackPath: cloneCustomerShadowReadList(report?.rollbackPath),
+    trialChecklist: cloneCustomerShadowReadList(report?.trialChecklist),
+    futureTrialChecklist: cloneCustomerShadowReadList(report?.futureTrialChecklist),
+    coveredSurfaceFallbacks: Array.isArray(report?.coveredSurfaceFallbacks)
+      ? report.coveredSurfaceFallbacks.map((item) => ({ ...item }))
+      : [],
+    surfacesStillUnsafe: Array.isArray(report?.surfacesStillUnsafe)
+      ? report.surfacesStillUnsafe.map((item) => ({ ...item }))
+      : [],
+    readinessReference: report?.readinessReference ? { ...report.readinessReference } : {}
   };
 }
 

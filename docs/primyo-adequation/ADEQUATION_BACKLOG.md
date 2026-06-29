@@ -1365,3 +1365,38 @@
   - dashboard, patio, relatorios e documentos continuam semanticamente dependentes da seed demo;
   - os vinculos cross-domain continuam sendo o maior bloqueio para trial limpo;
   - um trial protegido ainda e necessario antes de qualquer troca de padrao.
+
+### LP-WEB-DATA-CLEANUP-005
+
+- Status: `Implementado`
+- Data: `2026-06-29`
+- Arquivos alterados:
+  - `app/main.js`
+  - `app/demo/lavaprimeCleanBootstrap.js`
+  - `docs/primyo-changes/LP-WEB-DATA-CLEANUP-005.md`
+  - `docs/primyo-web-integration/CLEAN_BOOTSTRAP_TRIAL_READINESS.md`
+  - `docs/primyo-web-integration/DEMO_DATA_CLEANUP_PLAN.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `node --check app/main.js` -> sucesso;
+  - `node --check app/demo/lavaprimeDemoData.js` -> sucesso;
+  - `node --check app/demo/lavaprimeBootstrapMode.js` -> sucesso;
+  - `node --check app/demo/lavaprimeCleanBootstrap.js` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso com warning nao bloqueante de chunk acima de `500 kB`;
+  - `npm.cmd run verify:build` -> sucesso;
+  - smoke rapido com dashboard, clientes, patio, financeiro, documentos, logout admin e patio operador sem erro bloqueante.
+- Observacoes:
+  - a fase prepara readiness de trial sem executar o bootstrap limpo;
+  - `DEMO_BOOTSTRAP` continua ativo por padrao;
+  - `CLEAN_BOOTSTRAP` continua protegido e nao ativo;
+  - nenhuma seed demo foi removida.
+- Riscos remanescentes:
+  - dashboard, patio, relatorios e documentos continuam semanticamente dependentes da seed demo;
+  - o trial protegido ainda nao foi executado de fato;
+  - os vinculos cross-domain continuam sendo o maior bloqueio para qualquer promocao do modo limpo.

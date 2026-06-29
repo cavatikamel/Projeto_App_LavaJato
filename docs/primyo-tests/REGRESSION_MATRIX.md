@@ -205,6 +205,17 @@ Regra aplicada em `LP-WEB-DATA-CLEANUP-004`:
 - o console do browser deve permanecer sem erro bloqueante;
 - a proxima fatia deve continuar com trial protegido do bootstrap limpo, sem troca de default.
 
+Regra aplicada em `LP-WEB-DATA-CLEANUP-005`:
+
+- `DEMO_BOOTSTRAP` deve continuar como modo padrao oficial;
+- `CLEAN_BOOTSTRAP` nao pode ser ativado como default nesta fatia;
+- `window.__lavaprimeCleanBootstrapTrialReadiness` deve permanecer silencioso, somente leitura e em memoria;
+- o diagnostico de trial deve diferenciar readiness para teste protegido de readiness para promocao do modo limpo;
+- nenhuma seed demo pode ser removida;
+- o smoke manual minimo deve revalidar dashboard, `Cadastros > Clientes`, patio, financeiro, relatorios/documentos, logout e patio operador;
+- o console do browser deve permanecer sem erro bloqueante;
+- a proxima fatia pode executar trial protegido, mas ainda sem troca de default.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

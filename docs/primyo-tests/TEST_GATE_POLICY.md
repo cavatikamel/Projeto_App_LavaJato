@@ -252,6 +252,15 @@ Estado oficial apos `LP-WEB-DATA-CLEANUP-004`:
 - qualquer mudanca nesses fallbacks deve reexecutar `node --check app/main.js`, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke de dashboard, clientes, patio, financeiro e relatorios/documentos;
 - nenhuma seed demo pode ser removida sem uma nova microfase dedicada e um trial protegido.
 
+Estado oficial apos `LP-WEB-DATA-CLEANUP-005`:
+
+- `window.__lavaprimeCleanBootstrapTrialReadiness` passa a existir como diagnostico protegido de trial;
+- o diagnostico distingue `canStartProtectedTrial` de `canPromoteCleanBootstrapToDefault`;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a default nesta etapa;
+- qualquer mudanca no readiness de trial deve reexecutar `node --check app/main.js`, `node --check app/demo/lavaprimeCleanBootstrap.js`, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke de dashboard, clientes, patio, financeiro e relatorios/documentos;
+- nenhuma seed demo pode ser removida sem uma nova microfase dedicada e um trial protegido executado.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

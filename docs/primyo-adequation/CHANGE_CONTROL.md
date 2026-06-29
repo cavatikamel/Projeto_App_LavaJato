@@ -391,3 +391,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: fallbacks estruturais minimos foram endurecidos em `app/main.js` para clientes, veiculos, pagamentos em aberto, caixa e faturas, enquanto o readiness protegido passou a registrar cobertura adicional por superficie critica.
 - Observacao de risco: `DEMO_BOOTSTRAP` continua o unico modo padrao seguro, nenhuma seed foi removida e os vinculos cross-domain ainda bloqueiam qualquer tentativa agressiva com `CLEAN_BOOTSTRAP`; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-005`.
+
+### LP-WEB-DATA-CLEANUP-005
+
+- Change record: `docs/primyo-changes/LP-WEB-DATA-CLEANUP-005.md`
+- Closure: `pendente`
+- Resultado: `Implementado`
+- Observacao principal: `window.__lavaprimeCleanBootstrapTrialReadiness` foi preparado como mecanismo protegido para trial futuro, distinguindo readiness para teste controlado de readiness para promocao de `CLEAN_BOOTSTRAP` a default.
+- Observacao de risco: o trial ainda nao foi executado, nenhuma seed foi removida e os vinculos cross-domain seguem bloqueando qualquer promocao do modo limpo; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-006`.

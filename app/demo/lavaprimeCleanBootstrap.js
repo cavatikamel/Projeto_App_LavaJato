@@ -39,3 +39,19 @@ export const lavaprimeCleanBootstrapReadinessBaseline = Object.freeze({
   safeAsDefault: false,
   intendedUse: "protected-readiness-review-only"
 });
+
+export const lavaprimeCleanBootstrapTrialBaseline = Object.freeze({
+  mode: "CLEAN_BOOTSTRAP",
+  sourceModule: "app/demo/lavaprimeCleanBootstrap.js",
+  protectedTrialOnly: true,
+  trialActiveByDefault: false,
+  safeAsDefault: false,
+  intendedUse: "protected-clean-bootstrap-trial-only",
+  minimumChecklist: [
+    "keep DEMO_BOOTSTRAP as default",
+    "exercise clean bootstrap only in protected diagnostics",
+    "revalidate dashboard, clients, patio, financial, reports and documents",
+    "keep legacy/demo seed available for immediate rollback",
+    "do not open Supabase or change persistence"
+  ]
+});
