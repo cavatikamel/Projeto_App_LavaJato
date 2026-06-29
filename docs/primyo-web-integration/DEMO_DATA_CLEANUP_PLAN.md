@@ -227,15 +227,24 @@ Objetivo:
 - `DEMO_BOOTSTRAP` continua o unico modo seguro como padrao;
 - nenhuma seed demo foi removida.
 
+## Estado apos LP-WEB-DATA-CLEANUP-006
+
+- `window.__lavaprimeCleanBootstrapTrialExecution` passa a existir como diagnostico tecnico previsto para trial protegido;
+- o trial permanece somente leitura e nao altera o modo padrao;
+- `fallbackCoverageCount` esperado do trial: `8`;
+- `unsafeSurfaceCount` esperado do trial: `5`;
+- `dashboard`, `patio`, `reports`, `documents` e `customerVehicleBillingLinks` continuam como bloqueios para qualquer promocao do modo limpo;
+- nenhuma seed demo foi removida.
+
 ## Proxima microfase recomendada
 
-`LP-WEB-DATA-CLEANUP-006 - Protected CLEAN_BOOTSTRAP trial execution`
+`LP-WEB-DATA-CLEANUP-007 - Targeted semantic hardening after protected clean bootstrap trial`
 
 Objetivo:
 
-- executar um trial controlado do bootstrap limpo sem troca de default;
-- medir quais superficies ficam apenas vazias e quais ainda exigem hardening adicional;
-- manter rollback simples e legado/demo como baseline segura.
+- atacar apenas as dependencias semanticas que ainda bloqueiam o modo limpo;
+- manter `DEMO_BOOTSTRAP` como default;
+- continuar sem Supabase e sem remocao da seed demo.
 
 ## Rollback
 

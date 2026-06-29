@@ -55,3 +55,23 @@ export const lavaprimeCleanBootstrapTrialBaseline = Object.freeze({
     "do not open Supabase or change persistence"
   ]
 });
+
+export const lavaprimeCleanBootstrapTrialExecutionBaseline = Object.freeze({
+  mode: "CLEAN_BOOTSTRAP",
+  sourceModule: "app/demo/lavaprimeCleanBootstrap.js",
+  protectedTrialOnly: true,
+  executionActiveByDefault: false,
+  safeAsDefault: false,
+  intendedUse: "protected-clean-bootstrap-trial-execution-only",
+  trialEvaluationScope: [
+    "dashboard",
+    "clients",
+    "vehicles",
+    "patio",
+    "financial",
+    "invoices",
+    "reports",
+    "documents",
+    "customerVehicleBillingLinks"
+  ]
+});

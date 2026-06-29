@@ -399,3 +399,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: `window.__lavaprimeCleanBootstrapTrialReadiness` foi preparado como mecanismo protegido para trial futuro, distinguindo readiness para teste controlado de readiness para promocao de `CLEAN_BOOTSTRAP` a default.
 - Observacao de risco: o trial ainda nao foi executado, nenhuma seed foi removida e os vinculos cross-domain seguem bloqueando qualquer promocao do modo limpo; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-006`.
+
+### LP-WEB-DATA-CLEANUP-006
+
+- Change record: `docs/primyo-changes/LP-WEB-DATA-CLEANUP-006.md`
+- Closure: `pendente`
+- Resultado: `Implementado`
+- Observacao principal: `window.__lavaprimeCleanBootstrapTrialExecution` foi adicionado para executar o trial protegido apenas como diagnostico tecnico em memoria, mantendo `DEMO_BOOTSTRAP` como default e `CLEAN_BOOTSTRAP` fora do runtime funcional.
+- Observacao de risco: `dashboard`, `patio`, `reports`, `documents` e `customerVehicleBillingLinks` continuam bloqueando qualquer promocao do modo limpo, e a inspecao visual do browser segue sem expor os objetos globais tecnicos; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-007`.

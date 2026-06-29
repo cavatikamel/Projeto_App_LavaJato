@@ -16,7 +16,8 @@ import {
 import {
   lavaprimeCleanBootstrapMap,
   lavaprimeCleanBootstrapReadinessBaseline,
-  lavaprimeCleanBootstrapTrialBaseline
+  lavaprimeCleanBootstrapTrialBaseline,
+  lavaprimeCleanBootstrapTrialExecutionBaseline
 } from "./demo/lavaprimeCleanBootstrap.js";
 import { storageBoundary } from "./storage/storageBoundary.js";
 import {
@@ -147,6 +148,13 @@ const CLEAN_BOOTSTRAP_TRIAL_READINESS_ROLLBACK_PATH = Object.freeze([
   "remove clean bootstrap trial baseline export from app/demo/lavaprimeCleanBootstrap.js",
   "rerun node --check app/main.js, node --check app/demo/lavaprimeCleanBootstrap.js, adapter gate, primyo:gate, build, verify and cleanup smoke"
 ]);
+const CLEAN_BOOTSTRAP_TRIAL_EXECUTION_ROLLBACK_PATH = Object.freeze([
+  "remove clean bootstrap trial execution constants and in-memory state from app/main.js",
+  "remove refreshCleanBootstrapTrialExecution() call from renderAdminScreen(view)",
+  "remove clean bootstrap trial execution helpers from app/main.js",
+  "remove clean bootstrap trial execution baseline export from app/demo/lavaprimeCleanBootstrap.js",
+  "rerun node --check app/main.js, node --check app/demo/lavaprimeCleanBootstrap.js, adapter gate, primyo:gate, build, verify and cleanup smoke"
+]);
 let lastCustomerShadowReadReport = null;
 const customerShadowReadDiagnostics = {
   latest: null,
@@ -175,6 +183,13 @@ const cleanBootstrapTrialReadiness = {
   legacySourceActive: true,
   defaultMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
 };
+const cleanBootstrapTrialExecution = {
+  latest: null,
+  rollbackPath: [...CLEAN_BOOTSTRAP_TRIAL_EXECUTION_ROLLBACK_PATH],
+  protectedTrialOnly: true,
+  legacySourceActive: true,
+  defaultMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
+};
 
 window.__lavaprimeSessionBoundary = sessionBoundary;
 
@@ -183,6 +198,7 @@ window.__lavaprimeCustomerShadowReadDiagnostics = customerShadowReadDiagnostics;
 window.__lavaprimeCustomerLegacyDataValidation = customerLegacyDataValidation;
 window.__lavaprimeCleanBootstrapReadiness = cleanBootstrapReadiness;
 window.__lavaprimeCleanBootstrapTrialReadiness = cleanBootstrapTrialReadiness;
+window.__lavaprimeCleanBootstrapTrialExecution = cleanBootstrapTrialExecution;
 window.__lavaprimeBootstrapMode = {
   ...lavaprimeBootstrapModeState,
   activeMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
@@ -7190,6 +7206,7 @@ function renderAdminAlerts(billedOpen) {
 function renderAdminScreen(view) {
   refreshCleanBootstrapReadiness();
   refreshCleanBootstrapTrialReadiness();
+  refreshCleanBootstrapTrialExecution();
 
   if (view === "wallet") {
     renderAdminScreen("businessFinance");
@@ -9935,6 +9952,12 @@ function refreshCleanBootstrapTrialReadiness() {
   recordCleanBootstrapTrialReadinessReport(report);
 }
 
+function refreshCleanBootstrapTrialExecution() {
+  const analyzedAt = new Date().toISOString();
+  const report = createCleanBootstrapTrialExecutionReport(analyzedAt);
+  recordCleanBootstrapTrialExecutionReport(report);
+}
+
 function createCleanBootstrapReadinessReport(analyzedAt) {
   const demoSummary = lavaprimeDemoDataCleanupMap?.relationshipSummary || {};
   const cleanSummary = lavaprimeCleanBootstrapMap?.relationshipSummary || {};
@@ -10251,6 +10274,109 @@ function cloneCleanBootstrapTrialReadinessReport(report) {
       ? report.surfacesStillUnsafe.map((item) => ({ ...item }))
       : [],
     readinessReference: report?.readinessReference ? { ...report.readinessReference } : {}
+  };
+}
+
+function createCleanBootstrapTrialExecutionReport(analyzedAt) {
+  const readiness = cleanBootstrapReadiness.latest || createCleanBootstrapReadinessReport(analyzedAt);
+  const trialReadiness = cleanBootstrapTrialReadiness.latest || createCleanBootstrapTrialReadinessReport(analyzedAt);
+  const fallbackMap = readiness.criticalSurfaceFallbacks || {};
+  const dependencyAreas = readiness.dependencyAreas || {};
+  const trialScope = cloneCustomerShadowReadList(lavaprimeCleanBootstrapTrialExecutionBaseline.trialEvaluationScope);
+  const surfacesPassingWithFallback = trialScope
+    .filter((area) => fallbackMap[area] && fallbackMap[area].fallbackState !== "diagnostic-only")
+    .map((area) => ({
+      area,
+      fallbackState: fallbackMap[area].fallbackState,
+      semanticRisk:
+        area === "dashboard" || area === "patio" || area === "reports" || area === "documents" ? "medium" : "low",
+      remainingRisk: fallbackMap[area].remainingRisk
+    }));
+  const surfacesStillUnsafe = trialScope
+    .filter(
+      (area) =>
+        !fallbackMap[area] ||
+        fallbackMap[area].fallbackState === "diagnostic-only" ||
+        area === "dashboard" ||
+        area === "patio" ||
+        area === "reports" ||
+        area === "documents" ||
+        area === "customerVehicleBillingLinks"
+    )
+    .map((area) => ({
+      area,
+      fallbackState: fallbackMap[area]?.fallbackState || "missing-fallback-map",
+      blockerCount: dependencyAreas[area]?.blockerCount ?? null,
+      remainingRisk:
+        fallbackMap[area]?.remainingRisk ||
+        "Surface still depends on demo seed relationships and cannot be treated as clean-bootstrap-safe."
+    }));
+  const blockingPromotionReasons = [
+    "DEMO_BOOTSTRAP continua sendo a unica origem padrao segura",
+    "dashboard, patio, relatorios e documentos ainda dependem semanticamente da seed demo",
+    "vinculos cliente/veiculo/faturamento continuam sem resolucao segura para modo limpo",
+    "CLEAN_BOOTSTRAP foi apenas avaliado em memoria e nao pode assumir save, permissao ou autenticacao"
+  ];
+
+  return {
+    flow: "bootstrap.cleanup.trial-execution",
+    trialExecutionMode: "protected-clean-bootstrap-trial-execution",
+    analyzedAt,
+    activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+    defaultBootstrapMode: lavaprimeBootstrapModeState.defaultMode,
+    bootstrapSourceModule: lavaprimeBootstrapModeState.sourceModule,
+    cleanBootstrapModule: lavaprimeCleanBootstrapTrialExecutionBaseline.sourceModule,
+    demoBootstrapStillActive: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE === "DEMO_BOOTSTRAP",
+    cleanBootstrapAvailable: lavaprimeBootstrapModeState.cleanBootstrapAvailable,
+    cleanBootstrapProtected: lavaprimeBootstrapModeState.cleanBootstrapProtected,
+    protectedTrialOnly: lavaprimeCleanBootstrapTrialExecutionBaseline.protectedTrialOnly,
+    executionActiveByDefault: lavaprimeCleanBootstrapTrialExecutionBaseline.executionActiveByDefault,
+    cleanBootstrapEvaluatedOnly: true,
+    cleanBootstrapActivatedInRuntime: false,
+    cleanBootstrapActivatedAsDefault: false,
+    trialWasExecuted: true,
+    legacySourceActive: true,
+    demoSeedActive: lavaprimeBootstrapModeState.demoSeedActive,
+    trialEvaluationScope: trialScope,
+    surfacesPassingWithFallback,
+    surfacesStillUnsafe,
+    fallbackCoverageCount: surfacesPassingWithFallback.length,
+    unsafeSurfaceCount: surfacesStillUnsafe.length,
+    blockingPromotionReasons,
+    trialReadinessReference: {
+      canStartProtectedTrial: trialReadiness.canStartProtectedTrial,
+      canPromoteCleanBootstrapToDefault: trialReadiness.canPromoteCleanBootstrapToDefault,
+      reasonNotSafeForDefault: trialReadiness.reasonNotSafeForDefault
+    },
+    rollbackPath: [...CLEAN_BOOTSTRAP_TRIAL_EXECUTION_ROLLBACK_PATH],
+    recommendation: "keep_demo_bootstrap_default_and_continue_targeted_clean_bootstrap_hardening",
+    recommendationReason:
+      "The protected trial can be evaluated in memory, but dashboard, patio, reports, documents and cross-domain links still block any promotion of CLEAN_BOOTSTRAP beyond a diagnostic execution."
+  };
+}
+
+function recordCleanBootstrapTrialExecutionReport(report) {
+  const snapshot = cloneCleanBootstrapTrialExecutionReport(report);
+  cleanBootstrapTrialExecution.latest = snapshot;
+  cleanBootstrapTrialExecution.rollbackPath = [...CLEAN_BOOTSTRAP_TRIAL_EXECUTION_ROLLBACK_PATH];
+  cleanBootstrapTrialExecution.protectedTrialOnly = true;
+  cleanBootstrapTrialExecution.legacySourceActive = true;
+  cleanBootstrapTrialExecution.defaultMode = ACTIVE_LAVAPRIME_BOOTSTRAP_MODE;
+}
+
+function cloneCleanBootstrapTrialExecutionReport(report) {
+  return {
+    ...report,
+    rollbackPath: cloneCustomerShadowReadList(report?.rollbackPath),
+    trialEvaluationScope: cloneCustomerShadowReadList(report?.trialEvaluationScope),
+    blockingPromotionReasons: cloneCustomerShadowReadList(report?.blockingPromotionReasons),
+    surfacesPassingWithFallback: Array.isArray(report?.surfacesPassingWithFallback)
+      ? report.surfacesPassingWithFallback.map((item) => ({ ...item }))
+      : [],
+    surfacesStillUnsafe: Array.isArray(report?.surfacesStillUnsafe)
+      ? report.surfacesStillUnsafe.map((item) => ({ ...item }))
+      : [],
+    trialReadinessReference: report?.trialReadinessReference ? { ...report.trialReadinessReference } : {}
   };
 }
 

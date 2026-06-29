@@ -216,6 +216,18 @@ Regra aplicada em `LP-WEB-DATA-CLEANUP-005`:
 - o console do browser deve permanecer sem erro bloqueante;
 - a proxima fatia pode executar trial protegido, mas ainda sem troca de default.
 
+Regra aplicada em `LP-WEB-DATA-CLEANUP-006`:
+
+- `DEMO_BOOTSTRAP` deve continuar como modo padrao oficial;
+- o trial protegido pode apenas avaliar `CLEAN_BOOTSTRAP` em memoria;
+- `CLEAN_BOOTSTRAP` nao pode ser ativado como default nem como origem funcional de runtime;
+- o diagnostico de trial deve registrar superfícies que passam com fallback e superfícies ainda inseguras;
+- nenhuma seed demo pode ser removida;
+- o smoke manual minimo deve revalidar dashboard, `Cadastros > Clientes`, patio, financeiro, relatorios/documentos, logout e patio operador;
+- a inspeção do browser deve registrar se os objetos globais tecnicos aparecem ou nao;
+- o console do browser deve permanecer sem erro bloqueante;
+- a proxima fatia deve atacar apenas os bloqueios semanticos remanescentes antes de qualquer nova tentativa com bootstrap limpo.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;
