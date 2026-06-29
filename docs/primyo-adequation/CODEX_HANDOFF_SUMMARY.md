@@ -10,18 +10,31 @@ O `Primyo Transformation Program` existe para transformar o conhecimento operaci
 
 ## 3. Branch atual
 
-- Branch esperada e validada nesta fase: `primyo/onboarding`
+- Branch atual validada: `primyo/onboarding`
 
-## 4. Ultimos commits relevantes
+## 4. Ultimo commit
 
-- `62c0c13` — web boundaries, adapters e regression gate
-- `fc3d19a` — serviceAdapter
-- `5a77ded` — shared adapter helpers
-- `774958c` — productAdapter
-- `a3f26fa` — Lean Mode (`docs(primyo): introduce lean execution mode`)
-- `6052b1e` — supplyAdapter
+- `4e868ff` — `feat(primyo): add customer shadow diagnostics`
 
-## 5. Status tecnico atual
+## 5. Ultimos commits relevantes
+
+- `6a7063b` — `chore(primyo): add pure id resolver foundation`
+- `b936250` — `docs(primyo): align web contract resolver test requirements`
+- `ae59d49` — `test(primyo): harden id resolver regression gate`
+- `2a6548e` — `docs(primyo): assess runtime integration readiness`
+- `0ac89d6` — `feat(primyo): add customer adapter shadow read`
+- `4e868ff` — `feat(primyo): add customer shadow diagnostics`
+
+## 6. Status do working tree
+
+- Working tree atual continua sujo apenas com itens fora de escopo da trilha Primyo Web:
+  - `.gitignore`
+  - `app/styles.css`
+  - `LavaPrimeAndroidApp/**`
+- nenhum desses itens deve entrar em commit Primyo Web sem fase dedicada;
+- nao ha push executado apos os commits acima.
+
+## 7. Status tecnico atual
 
 - adapters puros existentes:
   - `customerAdapter`
@@ -30,12 +43,23 @@ O `Primyo Transformation Program` existe para transformar o conhecimento operaci
   - `productAdapter`
   - `supplyAdapter`
 - `adapterHelpers` oficial em `app/adapters/shared/adapterHelpers.js`
-- Adapter Gate cobrindo cinco adapters puros
-- `app/main.js` continua fora da trilha de adapters
-- runtime ainda nao integrado aos adapters
-- Supabase ainda nao conectado ao runtime
+- `idResolver` puro existente em `app/adapters/shared/idResolver.js`
+- Adapter Gate reforcado e validando cinco adapters, helper compartilhado e `idResolver`
+- `customerAdapter` ja foi integrado ao runtime apenas em `shadow read`
+- `Customer Shadow Read Diagnostics` ja foi implementado em `app/main.js`
+- o legado continua fonte ativa de renderizacao e salvamento
+- `idResolver` continua fora do runtime
+- Supabase continua fechado
+- Android continua fora da trilha atual
 
-## 6. Regras permanentes
+## 8. Validacoes recentes
+
+- `npm.cmd run primyo:gate` -> aprovado
+- `npm.cmd run build` -> aprovado
+- `npm.cmd run verify:build` -> aprovado
+- observacao operacional: o build continua podendo emitir o warning nao bloqueante de chunk acima de `500 kB`
+
+## 9. Regras permanentes
 
 - seguir `docs/primyo-adequation/EXECUTION_RULES.md`
 - seguir Lean Mode em `docs/primyo-adequation/LEAN_PROMPT_POLICY.md`
@@ -46,34 +70,27 @@ O `Primyo Transformation Program` existe para transformar o conhecimento operaci
 - preservar `primyo:gate`, build e verify quando aplicavel
 - preservar rollback e staging seletivo
 
-## 7. Fora de escopo atual
+## 10. Proxima decisao recomendada
 
-O working tree continua sujo apenas com itens fora da trilha Primyo Web atual:
+- o documento formal `docs/primyo-adequation/NEXT_SLICE_DECISION.md` ainda aponta para `LP-WEB-INTEGRATION-002-CLOSURE`
+- essa closure ja foi executada e commitada em `4e868ff`
+- portanto, a proxima conversa deve abrir uma nova fase curta para atualizar formalmente a decisao da proxima fatia antes de qualquer nova integracao
+- direcao conservadora atual:
+  - nao expandir `customerAdapter` no runtime ainda
+  - nao integrar `idResolver` ao runtime ainda
+  - nao abrir Supabase ainda
 
-- `.gitignore`
-- `app/styles.css`
-- `LavaPrimeAndroidApp/**`
-
-Esses itens nao devem entrar em commits Primyo Web sem fase especifica.
-
-## 8. Proxima decisao recomendada
-
-- escolher entre `LP-DATA-006`, `LP-WEB-ID-RESOLVER-001` ou `LP-TEST-AUTO-004`
-- nao integrar adapters ao runtime ainda
-- nao abrir Supabase ainda
-- manter `LP-DATA-006` como proxima fatia oficial ate nova decisao formal
-
-## 9. Criterios para compactar novamente no futuro
+## 11. Criterios para compactar novamente no futuro
 
 - fase atual fechada
-- closure criada
+- closure criada quando aplicavel
 - commit seletivo criado
 - `npm.cmd run primyo:gate` aprovado
 - sem staging pendente
 - sem fase critica aberta
 - handoff atualizado
 
-## 10. Criterios para nao compactar
+## 12. Criterios para nao compactar
 
 - working tree misturado com fase aberta
 - commit pendente da fase atual
