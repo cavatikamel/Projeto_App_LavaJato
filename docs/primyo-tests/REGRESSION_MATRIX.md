@@ -239,6 +239,18 @@ Regra aplicada em `LP-WEB-DATA-CLEANUP-007`:
 - o console do browser deve permanecer sem erro bloqueante;
 - a proxima fatia deve reavaliar o trial protegido com o hardening aplicado, sem promover o modo limpo a default.
 
+Regra aplicada em `LP-WEB-DATA-CLEANUP-008`:
+
+- `DEMO_BOOTSTRAP` deve continuar como modo padrao oficial;
+- a reavaliacao deve comparar explicitamente o estado pre-hardening com o estado atual do trial protegido;
+- o diagnostico deve registrar quais superficies melhoraram e se restou alguma superficie insegura para o trial protegido;
+- `CLEAN_BOOTSTRAP` nao pode ser promovido a default mesmo quando o contador de superficies inseguras do trial cair para `0`;
+- nenhuma seed demo pode ser removida;
+- o smoke manual minimo deve revalidar dashboard, `Cadastros > Clientes`, patio, financeiro, relatorios/documentos, logout e patio operador;
+- a inspecao do browser deve confirmar que `DEMO_BOOTSTRAP` continua o comportamento observado padrao;
+- o console do browser deve permanecer sem erro bloqueante;
+- a proxima fatia deve priorizar observabilidade do trial antes de qualquer conversa sobre promocao do modo limpo.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

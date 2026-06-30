@@ -1470,3 +1470,38 @@
   - o modo limpo continua semanticamente pobre sem uma base real/persistida;
   - os vinculos cross-domain continuam fallback-based e nao autorizam promocao do modo limpo;
   - Supabase continua fora de escopo.
+
+### LP-WEB-DATA-CLEANUP-008
+
+- Status: `Implementado`
+- Data: `2026-06-29`
+- Arquivos alterados:
+  - `app/main.js`
+  - `docs/primyo-changes/LP-WEB-DATA-CLEANUP-008.md`
+  - `docs/primyo-web-integration/CLEAN_BOOTSTRAP_TRIAL_REASSESSMENT.md`
+  - `docs/primyo-web-integration/DEMO_DATA_CLEANUP_PLAN.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `node --check app/main.js` -> sucesso;
+  - `node --check app/demo/lavaprimeDemoData.js` -> sucesso;
+  - `node --check app/demo/lavaprimeBootstrapMode.js` -> sucesso;
+  - `node --check app/demo/lavaprimeCleanBootstrap.js` -> sucesso;
+  - `node scripts/primyo-adapter-gate.mjs` -> sucesso;
+  - `npm.cmd run primyo:gate` -> sucesso;
+  - `npm.cmd run build` -> sucesso com warning nao bloqueante de chunk acima de `500 kB`;
+  - `npm.cmd run verify:build` -> sucesso;
+  - smoke rapido com dashboard, clientes, patio, financeiro, documentos, logout admin e patio operador -> sucesso sem erro bloqueante.
+- Observacoes:
+  - a reavaliacao comparou explicitamente o estado do trial protegido antes e depois do hardening semantico;
+  - as `5` superficies antes inseguras deixaram de bloquear o diagnostico protegido;
+  - `DEMO_BOOTSTRAP` continua ativo por padrao;
+  - `CLEAN_BOOTSTRAP` continua protegido e nao ativo;
+  - nenhuma seed demo foi removida.
+- Riscos remanescentes:
+  - o modo limpo continua semanticamente pobre sem base limpa/persistida suficiente;
+  - a observabilidade tecnica do trial no browser continua limitada;
+  - Supabase continua fora de escopo.

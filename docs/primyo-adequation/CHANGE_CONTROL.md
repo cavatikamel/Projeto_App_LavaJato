@@ -415,3 +415,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: o runtime recebeu hardening semantico minimo para `dashboard`, `patio`, `reports`, `documents` e `customerVehicleBillingLinks`, reduzindo o risco de `NaN`, contexto ausente e lookup cruzado quebrado durante o trial protegido.
 - Observacao de risco: `CLEAN_BOOTSTRAP` continua improprio para virar default porque a base limpa permanece sem volume e sem relacionamentos persistidos suficientes; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-008`.
+
+### LP-WEB-DATA-CLEANUP-008
+
+- Change record: `docs/primyo-changes/LP-WEB-DATA-CLEANUP-008.md`
+- Closure: `pendente`
+- Resultado: `Implementado`
+- Observacao principal: a reavaliacao do trial protegido registrou comparacao explicita entre o estado pre-hardening e o estado atual, e as `5` superficies antes inseguras deixaram de bloquear o diagnostico protegido do `CLEAN_BOOTSTRAP`.
+- Observacao de risco: a promocao de `CLEAN_BOOTSTRAP` para modo padrao continua bloqueada por falta de volume limpo, relacionamentos persistidos e observabilidade suficiente no browser; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-009`.

@@ -194,7 +194,7 @@ Status apos `LP-WEB-DATA-CLEANUP-002`:
 
 ## Proxima microfase recomendada
 
-`LP-WEB-DATA-CLEANUP-002 — Segregacao entre bootstrap demo e bootstrap limpo`
+`LP-WEB-DATA-CLEANUP-002 - Segregacao entre bootstrap demo e bootstrap limpo`
 
 Objetivo:
 
@@ -245,13 +245,21 @@ Objetivo:
 - o trial protegido fica semanticamente mais seguro, mas o modo limpo continua sem base suficiente para virar default;
 - nenhuma seed demo foi removida.
 
+## Estado apos LP-WEB-DATA-CLEANUP-008
+
+- a reavaliacao do trial protegido passa a registrar comparacao explicita entre o estado pre-hardening e o estado atual;
+- as `5` superficies antes inseguras deixam de aparecer como bloqueios do trial protegido;
+- o trial protegido passa a ser tratado como mais viavel para diagnostico interno, mas ainda nao para promocao de `default`;
+- o bloqueio remanescente deixa de ser fallback semantico imediato e passa a ser falta de volume limpo, relacionamentos persistidos e observabilidade suficiente;
+- nenhuma seed demo foi removida.
+
 ## Proxima microfase recomendada
 
-`LP-WEB-DATA-CLEANUP-008 - Protected clean bootstrap trial reassessment after semantic hardening`
+`LP-WEB-DATA-CLEANUP-009 - Protected clean bootstrap trial observability review`
 
 Objetivo:
 
-- reexecutar e reavaliar o trial protegido com as novas garantias semanticas;
+- melhorar a evidencia pratica dos diagnosticos internos no browser/runtime;
 - manter `DEMO_BOOTSTRAP` como default;
 - continuar sem Supabase e sem remocao da seed demo.
 

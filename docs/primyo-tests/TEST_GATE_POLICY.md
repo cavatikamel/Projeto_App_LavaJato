@@ -281,6 +281,16 @@ Estado oficial apos `LP-WEB-DATA-CLEANUP-007`:
 - qualquer mudanca adicional nessa trilha deve reexecutar `node --check app/main.js`, `node --check app/demo/lavaprimeDemoData.js`, `node --check app/demo/lavaprimeBootstrapMode.js`, `node --check app/demo/lavaprimeCleanBootstrap.js`, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke de dashboard, clientes, patio, financeiro e relatorios/documentos;
 - nenhuma seed demo pode ser removida e nenhuma integracao com Supabase pode ser iniciada nesta etapa.
 
+Estado oficial apos `LP-WEB-DATA-CLEANUP-008`:
+
+- a reavaliacao do trial protegido passa a registrar comparacao explicita com as `5` superficies inseguras do estado pre-hardening;
+- `window.__lavaprimeCleanBootstrapTrialReadiness` e `window.__lavaprimeCleanBootstrapTrialExecution` passam a refletir `improvedSurfaceCount`, `previousUnsafeSurfaceCount` e `currentUnsafeSurfaceCount`;
+- o estado esperado do trial protegido apos o hardening passa a ser `currentUnsafeSurfaceCount = 0` sem autorizar promocao de `CLEAN_BOOTSTRAP` a `default`;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- qualquer mudanca adicional nessa trilha deve reexecutar `node --check app/main.js`, `node --check app/demo/lavaprimeDemoData.js`, `node --check app/demo/lavaprimeBootstrapMode.js`, `node --check app/demo/lavaprimeCleanBootstrap.js`, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke de dashboard, clientes, patio, financeiro e relatorios/documentos;
+- a proxima etapa segura deixa de ser novo hardening imediato e passa a ser melhoria de observabilidade do trial protegido;
+- nenhuma seed demo pode ser removida e nenhuma integracao com Supabase pode ser iniciada nesta etapa.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

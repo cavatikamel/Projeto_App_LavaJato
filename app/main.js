@@ -155,6 +155,13 @@ const CLEAN_BOOTSTRAP_TRIAL_EXECUTION_ROLLBACK_PATH = Object.freeze([
   "remove clean bootstrap trial execution baseline export from app/demo/lavaprimeCleanBootstrap.js",
   "rerun node --check app/main.js, node --check app/demo/lavaprimeCleanBootstrap.js, adapter gate, primyo:gate, build, verify and cleanup smoke"
 ]);
+const CLEAN_BOOTSTRAP_PRE_HARDENING_UNSAFE_SURFACES = Object.freeze([
+  "dashboard",
+  "patio",
+  "reports",
+  "documents",
+  "customerVehicleBillingLinks"
+]);
 let lastCustomerShadowReadReport = null;
 const customerShadowReadDiagnostics = {
   latest: null,
@@ -10152,10 +10159,10 @@ function createCleanBootstrapReadinessReport(analyzedAt) {
       ])
     ),
     criticalBlockers,
-    readinessDecision: "keep_demo_bootstrap_default_with_protected_fallback",
-    recommendation: "map_and_reduce_domain_dependencies_before_any_clean_bootstrap_trial",
+    readinessDecision: "keep_demo_bootstrap_default_after_semantic_reassessment",
+    recommendation: "improve_protected_trial_observability_before_any_clean_bootstrap_promotion",
     recommendationReason:
-      "Dashboard, clients, vehicles, patio, financial flows, invoices, payments, reports and documents still depend on the embedded demo seed, so CLEAN_BOOTSTRAP must remain protected and non-default.",
+      "The protected trial is safer after semantic hardening, but CLEAN_BOOTSTRAP still depends on thin clean data and non-persisted relationships, so DEMO_BOOTSTRAP must remain the only default mode.",
     rollbackPath: [...CLEAN_BOOTSTRAP_READINESS_ROLLBACK_PATH]
   };
 }
@@ -10172,6 +10179,7 @@ function recordCleanBootstrapReadinessReport(report) {
 function createCleanBootstrapTrialReadinessReport(analyzedAt) {
   const readiness = cleanBootstrapReadiness.latest || createCleanBootstrapReadinessReport(analyzedAt);
   const fallbackMap = readiness.criticalSurfaceFallbacks || {};
+  const previousUnsafeSurfaces = [...CLEAN_BOOTSTRAP_PRE_HARDENING_UNSAFE_SURFACES];
   const coveredSurfaceFallbacks = Object.entries(fallbackMap)
     .filter(([, fallback]) => fallback.fallbackState !== "diagnostic-only" && fallback.blocksProtectedTrial !== true)
     .map(([area, fallback]) => ({
@@ -10186,6 +10194,9 @@ function createCleanBootstrapTrialReadinessReport(analyzedAt) {
       fallbackState: fallback.fallbackState,
       remainingRisk: fallback.remainingRisk
     }));
+  const improvedSurfaces = previousUnsafeSurfaces.filter(
+    (area) => !surfacesStillUnsafe.some((unsafeSurface) => unsafeSurface.area === area)
+  );
   const canStartProtectedTrial =
     readiness.defaultModeIsDemo &&
     readiness.cleanBootstrapAvailable &&
@@ -10206,11 +10217,18 @@ function createCleanBootstrapTrialReadinessReport(analyzedAt) {
     trialActiveByDefault: lavaprimeCleanBootstrapTrialBaseline.trialActiveByDefault,
     canStartProtectedTrial,
     canPromoteCleanBootstrapToDefault: false,
+    reassessmentAfterSemanticHardening: true,
     defaultModeIsDemo: readiness.defaultModeIsDemo,
     legacySourceActive: true,
     demoSeedActive: lavaprimeBootstrapModeState.demoSeedActive,
     fallbackCoverageCount: coveredSurfaceFallbacks.length,
+    previousUnsafeSurfaceCount: previousUnsafeSurfaces.length,
+    currentUnsafeSurfaceCount: surfacesStillUnsafe.length,
+    improvedSurfaceCount: improvedSurfaces.length,
+    protectedTrialViability:
+      surfacesStillUnsafe.length === 0 ? "improved-and-viable-for-protected-diagnostics" : "still-limited",
     coveredSurfaceFallbacks,
+    improvedSurfaces,
     surfacesStillUnsafe,
     reasonNotSafeForDefault:
       "CLEAN_BOOTSTRAP ainda depende de trial controlado porque, embora as superficies criticas estejam mais protegidas, o modo limpo continua sem volume e sem relacionamentos persistidos suficientes para virar default.",
@@ -10284,6 +10302,7 @@ function cloneCleanBootstrapTrialReadinessReport(report) {
     rollbackPath: cloneCustomerShadowReadList(report?.rollbackPath),
     trialChecklist: cloneCustomerShadowReadList(report?.trialChecklist),
     futureTrialChecklist: cloneCustomerShadowReadList(report?.futureTrialChecklist),
+    improvedSurfaces: cloneCustomerShadowReadList(report?.improvedSurfaces),
     coveredSurfaceFallbacks: Array.isArray(report?.coveredSurfaceFallbacks)
       ? report.coveredSurfaceFallbacks.map((item) => ({ ...item }))
       : [],
@@ -10299,6 +10318,7 @@ function createCleanBootstrapTrialExecutionReport(analyzedAt) {
   const trialReadiness = cleanBootstrapTrialReadiness.latest || createCleanBootstrapTrialReadinessReport(analyzedAt);
   const fallbackMap = readiness.criticalSurfaceFallbacks || {};
   const dependencyAreas = readiness.dependencyAreas || {};
+  const previousUnsafeSurfaces = [...CLEAN_BOOTSTRAP_PRE_HARDENING_UNSAFE_SURFACES];
   const trialScope = cloneCustomerShadowReadList(lavaprimeCleanBootstrapTrialExecutionBaseline.trialEvaluationScope);
   const surfacesPassingWithFallback = trialScope
     .filter((area) => fallbackMap[area] && fallbackMap[area].fallbackState !== "diagnostic-only")
@@ -10324,6 +10344,9 @@ function createCleanBootstrapTrialExecutionReport(analyzedAt) {
         fallbackMap[area]?.remainingRisk ||
         "Surface still depends on demo seed relationships and cannot be treated as clean-bootstrap-safe."
     }));
+  const improvedSurfaces = previousUnsafeSurfaces.filter(
+    (area) => !surfacesStillUnsafe.some((unsafeSurface) => unsafeSurface.area === area)
+  );
   const blockingPromotionReasons = [
     "DEMO_BOOTSTRAP continua sendo a unica origem padrao segura",
     "dashboard, patio, relatorios e documentos ficaram semanticamente protegidos, mas continuam dependentes de volume demo para conteudo significativo",
@@ -10353,8 +10376,12 @@ function createCleanBootstrapTrialExecutionReport(analyzedAt) {
     trialEvaluationScope: trialScope,
     surfacesPassingWithFallback,
     surfacesStillUnsafe,
+    reassessmentAfterSemanticHardening: true,
     fallbackCoverageCount: surfacesPassingWithFallback.length,
+    previousUnsafeSurfaceCount: previousUnsafeSurfaces.length,
     unsafeSurfaceCount: surfacesStillUnsafe.length,
+    improvedSurfaceCount: improvedSurfaces.length,
+    improvedSurfaces,
     blockingPromotionReasons,
     trialReadinessReference: {
       canStartProtectedTrial: trialReadiness.canStartProtectedTrial,
@@ -10362,7 +10389,7 @@ function createCleanBootstrapTrialExecutionReport(analyzedAt) {
       reasonNotSafeForDefault: trialReadiness.reasonNotSafeForDefault
     },
     rollbackPath: [...CLEAN_BOOTSTRAP_TRIAL_EXECUTION_ROLLBACK_PATH],
-    recommendation: "keep_demo_bootstrap_default_and_continue_targeted_clean_bootstrap_hardening",
+    recommendation: "keep_demo_bootstrap_default_and_improve_trial_observability",
     recommendationReason:
       "The protected trial can now degrade the critical semantic surfaces more safely, but CLEAN_BOOTSTRAP still lacks real clean data volume and therefore cannot be promoted beyond protected diagnostics."
   };
@@ -10382,6 +10409,7 @@ function cloneCleanBootstrapTrialExecutionReport(report) {
     ...report,
     rollbackPath: cloneCustomerShadowReadList(report?.rollbackPath),
     trialEvaluationScope: cloneCustomerShadowReadList(report?.trialEvaluationScope),
+    improvedSurfaces: cloneCustomerShadowReadList(report?.improvedSurfaces),
     blockingPromotionReasons: cloneCustomerShadowReadList(report?.blockingPromotionReasons),
     surfacesPassingWithFallback: Array.isArray(report?.surfacesPassingWithFallback)
       ? report.surfacesPassingWithFallback.map((item) => ({ ...item }))
