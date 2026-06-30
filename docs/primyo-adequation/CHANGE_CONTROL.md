@@ -431,3 +431,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a observabilidade tecnica do trial protegido passou a ter leitura oficial via `window.__lavaprimeGetCleanBootstrapDiagnostics?.()` e `window.__lavaprimeDiagnostics?.cleanBootstrap`, com espelho somente leitura no DOM para automacao e inspecoes mais confiaveis.
 - Observacao de risco: a promocao de `CLEAN_BOOTSTRAP` continua bloqueada por falta de volume limpo, relacionamentos persistidos e readiness operacional; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-010`.
+
+### LP-ANDROID-001
+
+- Change record: `docs/primyo-changes/LP-ANDROID-001.md`
+- Closure: `docs/primyo-changes/LP-ANDROID-001-CLOSURE.md`
+- Resultado: `Aceito com observacoes`
+- Observacao principal: a baseline do `LavaPrimeAndroidApp` foi auditada e alinhada ao programa sem alterar codigo Android, criando a primeira camada documental oficial da trilha mobile em `docs/primyo-android/`.
+- Observacao de risco: o build Android nao ficou validado porque `gradlew tasks` falhou por lock externo no download da toolchain JetBrains JDK `21`; a prioridade recomendada passa a ser `LP-AND-001` para estrategia de dados Android vs backend antes de qualquer expansao funcional.

@@ -48,7 +48,8 @@
 | LP-SUPABASE-001 | Planejar primeira leitura controlada via cliente Supabase isolado | P1 | Critico | LP-WEB-007, LP-WEB-008, LP-DATA-005, LP-SEC-002 | Web, Backend | Alto | Definir e preparar a primeira fronteira controlada de leitura remota, com cliente Supabase isolado, sem substituir o runtime inteiro e sem romper rollback. | Existe plano ou implementacao controlada de leitura remota com isolamento, rollback e testes aprovados. | Change record, plano de rollout/rollback, gate, evidencias de isolamento e validacao de risco. |
 | LP-OPS-001 | Definir sinais minimos de observabilidade | P2 | Medio | LP-TEST-002 | Operacao, CI, Docs | Medio | Identificar indicadores e verificacoes que denunciem falhas apos mudancas controladas. | Sinais de saude e pontos de verificacao aprovados. | Checklist operacional, plano de observacao. |
 | LP-OPS-002 | Formalizar checklist de publicacao controlada | P2 | Medio | LP-OPS-001 | Web, Android, Docs | Baixo | Padronizar como validar release, rollback e aceite antes de publicar. | Checklist aplicado ao menos em simulacao documental. | Checklist de release, aprovadores definidos. |
-| LP-AND-001 | Revisar estrategia de dados Android vs backend | P2 | Alto | LP-DATA-001, LP-SEC-001 | Android, Backend | Alto | Definir como o Android saira do acoplamento atual com dados locais e migracoes destrutivas. | Existe plano de convergencia aprovado. | Estrategia mobile, risco de dados, rollback. |
+| LP-ANDROID-001 | Auditar baseline do app Android nativo e alinhar governanca mobile | P2 | Alto | LP-DATA-001, LP-DATA-004, LP-WEB-003 | Android, Docs | Medio/Alto | Concluido em `2026-06-30`. A fase auditou `LavaPrimeAndroidApp`, mapeou stack, modulos, dependencias, build, telas, riscos e desalinhamentos, e criou a baseline inicial em `docs/primyo-android/`, sem alterar codigo Android. | Existe baseline auditavel do Android alinhada ao programa, com estrategia, arquitetura, offline-first, sync, seguranca, testes, impressao e roadmap documentados. | `docs/primyo-android/`, `docs/primyo-changes/LP-ANDROID-001-CLOSURE.md`, backlog atualizado, change control atualizado e validacoes documentais registradas. |
+| LP-AND-001 | Revisar estrategia de dados Android vs backend | P2 | Alto | LP-ANDROID-001, LP-DATA-001, LP-SEC-001 | Android, Backend | Alto | Definir como o Android saira do acoplamento atual com dados locais e migracoes destrutivas. | Existe plano de convergencia aprovado. | Estrategia mobile, risco de dados, rollback. |
 | LP-AND-002 | Planejar substituicao controlada de migracao destrutiva | P2 | Alto | LP-AND-001 | Android | Alto | Preparar caminho para eliminar dependencia permanente de `fallbackToDestructiveMigration()`. | Existe sequencia segura de migracao de dados mobile. | Plano tecnico, cenarios de teste e reversao. |
 | LP-REL-001 | Atualizar documentacao operacional junto com cada fase | P1 | Medio | Todas as fases ativas | Docs | Baixo | Garantir que conhecimento consolidado acompanhe cada mudanca aprovada. | Nenhuma fase fecha sem documentos atualizados. | Documentos revisados, referencias cruzadas e historico. |
 
@@ -88,9 +89,10 @@
 32. `LP-SEC-002`
 33. `LP-OPS-001`
 33. `LP-OPS-002`
-34. `LP-AND-001`
-35. `LP-AND-002`
-36. `LP-REL-001`
+34. `LP-ANDROID-001` `concluido em 2026-06-30`
+35. `LP-AND-001`
+36. `LP-AND-002`
+37. `LP-REL-001`
 
 ## Observacoes de governanca
 
@@ -1540,3 +1542,37 @@
   - a promocao de `CLEAN_BOOTSTRAP` continua bloqueada por falta de volume limpo, relacionamentos persistidos e readiness operacional;
   - a leitura dos globais tecnicos ainda pode variar conforme o contexto de inspecao automatizada;
   - Supabase continua fora de escopo.
+
+### LP-ANDROID-001
+
+- Status: `Concluido`
+- Data: `2026-06-30`
+- Arquivos alterados:
+  - `docs/primyo-android/ANDROID_APP_STRATEGY.md`
+  - `docs/primyo-android/ANDROID_ARCHITECTURE.md`
+  - `docs/primyo-android/ANDROID_OFFLINE_FIRST.md`
+  - `docs/primyo-android/ANDROID_SYNC_STRATEGY.md`
+  - `docs/primyo-android/ANDROID_PRINTING_STRATEGY.md`
+  - `docs/primyo-android/ANDROID_WEB_PARITY_MAP.md`
+  - `docs/primyo-android/ANDROID_SECURITY_MODEL.md`
+  - `docs/primyo-android/ANDROID_TEST_PLAN.md`
+  - `docs/primyo-android/ANDROID_ROADMAP.md`
+  - `docs/primyo-changes/LP-ANDROID-001.md`
+  - `docs/primyo-changes/LP-ANDROID-001-CLOSURE.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+- Evidencias:
+  - leitura estrutural de `LavaPrimeAndroidApp` executada;
+  - `applicationId`, `namespace`, stack e versoes principais identificados;
+  - `gradlew tasks --no-daemon --console=plain` -> falha por lock externo em download da toolchain JetBrains JDK `21`;
+  - `git status --short` -> executado;
+  - `git diff --name-only` -> executado;
+  - `npm.cmd run primyo:gate` -> sucesso.
+- Observacoes:
+  - nenhuma alteracao funcional foi feita em `LavaPrimeAndroidApp/**`;
+  - a auditoria confirmou base nativa com `Compose`, `Room`, `StateFlow`, fila local de sync e alinhamento visual parcial ao web;
+  - a auditoria tambem confirmou placeholders relevantes e ausencia de sync remoto real.
+- Riscos remanescentes:
+  - `fallbackToDestructiveMigration()` continua ativo;
+  - auth real, contratos oficiais e sync remoto ainda nao chegaram ao runtime Android;
+  - o app nao foi validado manualmente em aparelho ou emulador nesta fase.
