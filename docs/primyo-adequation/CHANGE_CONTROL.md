@@ -439,3 +439,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito com observacoes`
 - Observacao principal: a baseline do `LavaPrimeAndroidApp` foi auditada e alinhada ao programa sem alterar codigo Android, criando a primeira camada documental oficial da trilha mobile em `docs/primyo-android/`.
 - Observacao de risco: o build Android nao ficou validado porque `gradlew tasks` falhou por lock externo no download da toolchain JetBrains JDK `21`; a prioridade recomendada passa a ser `LP-AND-001` para estrategia de dados Android vs backend antes de qualquer expansao funcional.
+
+### LP-ANDROID-002
+
+- Change record: `docs/primyo-changes/LP-ANDROID-002.md`
+- Closure: `docs/primyo-changes/LP-ANDROID-002-CLOSURE.md`
+- Resultado: `Aceito com observacoes`
+- Observacao principal: a estrategia de dados Android foi revisada contra o dominio do Web e os contratos oficiais, com matriz documental de equivalencias, ausencias, conflitos, IDs, offline e sync registrada em `docs/primyo-android/ANDROID_DATA_PARITY_MATRIX.md`.
+- Observacao de risco: o Android continua sem dominios locais de pagamento, financeiro, documentos e empresa, e a prioridade recomendada passa a ser `LP-AND-002` para sair de `fallbackToDestructiveMigration()` antes de qualquer sync real ou expansao funcional.

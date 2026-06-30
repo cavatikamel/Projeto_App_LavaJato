@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Registrar a arquitetura observada em `LavaPrimeAndroidApp` e a direcao de consolidacao tecnica apos `LP-ANDROID-001`.
+Registrar a arquitetura observada em `LavaPrimeAndroidApp` e a direcao de consolidacao tecnica apos `LP-ANDROID-002`.
 
 ## Stack e runtime atual
 
@@ -50,6 +50,22 @@ Registrar a arquitetura observada em `LavaPrimeAndroidApp` e a direcao de consol
 - migracoes versionadas nao foram encontradas;
 - `fallbackToDestructiveMigration()` continua ativo.
 
+## Modelo de dados real por tela
+
+- `DashboardScreen` combina `repository.produtos`, `patioState.atendimentos` e `syncState`;
+- `PatioScreen` e `PatioViewModel` operam sobre `AtendimentoEntity` e `ServicoEntity`;
+- `CadastrosScreen` e `CadastroViewModel` operam sobre `ClienteEntity` e `VeiculoEntity`;
+- `ProductsScreen` le `ProdutoEntity` em modo somente leitura;
+- `SecuritySyncScreen` consome `SyncQueueEntity`, `AuditLogEntity`, conectividade e runtime de sync.
+
+## Desalinhamentos estruturais de dados
+
+- nao existe entidade Android propria para `Payment`, `Financial`, `Document`, `Quote` ou configuracao de empresa;
+- `ProdutoEntity` mistura catalogo comercial com pseudo-insumo via campo `tipo`, sem fronteira contratual propria para `Supply`;
+- `AtendimentoEntity` guarda snapshots de nome e placa, mas nao possui colecoes locais para servicos executados, produtos consumidos, historico de status nem refs financeiras;
+- `SyncQueueEntity` registra apenas texto resumido de mutacao e nao o envelope contratual oficial com `contractVersion`, `sourceId`, `legacyRefs` e `validation`;
+- `empresaId` local continua servindo como marcador demo e nao como tenancy oficial alinhada a `organizationId`.
+
 ## Pontos fortes
 
 - base pequena e legivel;
@@ -63,7 +79,8 @@ Registrar a arquitetura observada em `LavaPrimeAndroidApp` e a direcao de consol
 - nao existe camada formal de contratos/mappers entre modelo local e modelo oficial do programa;
 - navegacao e DI ainda sao manuais;
 - sem testes automatizados observados;
-- sync remoto e agendamento real ainda nao entraram em runtime.
+- sync remoto e agendamento real ainda nao entraram em runtime;
+- a arquitetura local ainda nao separa claramente `id` canonico, `sourceId` e referencias legadas por dominio.
 
 ## Direcao arquitetural recomendada
 
@@ -71,4 +88,5 @@ Registrar a arquitetura observada em `LavaPrimeAndroidApp` e a direcao de consol
 2. introduzir camada explicita de contratos Android <-> backend antes de sync real;
 3. substituir migracao destrutiva por plano versionado e testavel;
 4. manter `Room` como cache offline e fila local, nunca como verdade compartilhada;
-5. so introduzir auth, sync remoto e impressao em fases dedicadas e pequenas.
+5. separar `Product` de `Supply`, `Attendance` de `Payment` e configuracao de empresa da seed demo antes de imprimir ou sincronizar de verdade;
+6. usar `docs/primyo-android/ANDROID_DATA_PARITY_MATRIX.md` como mapa oficial de convergencia.

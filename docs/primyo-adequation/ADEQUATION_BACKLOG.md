@@ -49,7 +49,7 @@
 | LP-OPS-001 | Definir sinais minimos de observabilidade | P2 | Medio | LP-TEST-002 | Operacao, CI, Docs | Medio | Identificar indicadores e verificacoes que denunciem falhas apos mudancas controladas. | Sinais de saude e pontos de verificacao aprovados. | Checklist operacional, plano de observacao. |
 | LP-OPS-002 | Formalizar checklist de publicacao controlada | P2 | Medio | LP-OPS-001 | Web, Android, Docs | Baixo | Padronizar como validar release, rollback e aceite antes de publicar. | Checklist aplicado ao menos em simulacao documental. | Checklist de release, aprovadores definidos. |
 | LP-ANDROID-001 | Auditar baseline do app Android nativo e alinhar governanca mobile | P2 | Alto | LP-DATA-001, LP-DATA-004, LP-WEB-003 | Android, Docs | Medio/Alto | Concluido em `2026-06-30`. A fase auditou `LavaPrimeAndroidApp`, mapeou stack, modulos, dependencias, build, telas, riscos e desalinhamentos, e criou a baseline inicial em `docs/primyo-android/`, sem alterar codigo Android. | Existe baseline auditavel do Android alinhada ao programa, com estrategia, arquitetura, offline-first, sync, seguranca, testes, impressao e roadmap documentados. | `docs/primyo-android/`, `docs/primyo-changes/LP-ANDROID-001-CLOSURE.md`, backlog atualizado, change control atualizado e validacoes documentais registradas. |
-| LP-AND-001 | Revisar estrategia de dados Android vs backend | P2 | Alto | LP-ANDROID-001, LP-DATA-001, LP-SEC-001 | Android, Backend | Alto | Definir como o Android saira do acoplamento atual com dados locais e migracoes destrutivas. | Existe plano de convergencia aprovado. | Estrategia mobile, risco de dados, rollback. |
+| LP-AND-001 | Revisar estrategia de dados Android vs backend | P2 | Alto | LP-ANDROID-001, LP-DATA-001, LP-SEC-001 | Android, Backend | Alto | Concluido em `2026-06-30` por meio da fase documental `LP-ANDROID-002`. A trilha comparou Room, telas reais, fila de sync, dominio Web e contratos oficiais, registrando ownership, IDs, lacunas e conflitos em `docs/primyo-android/ANDROID_DATA_PARITY_MATRIX.md`. | Existe plano de convergencia aprovado e backlog de riscos priorizado. | `docs/primyo-android/ANDROID_DATA_PARITY_MATRIX.md`, `docs/primyo-changes/LP-ANDROID-002-CLOSURE.md`, arquitetura/offline/sync/paridade/seguranca/roadmap Android revisados e validacoes documentais registradas. |
 | LP-AND-002 | Planejar substituicao controlada de migracao destrutiva | P2 | Alto | LP-AND-001 | Android | Alto | Preparar caminho para eliminar dependencia permanente de `fallbackToDestructiveMigration()`. | Existe sequencia segura de migracao de dados mobile. | Plano tecnico, cenarios de teste e reversao. |
 | LP-REL-001 | Atualizar documentacao operacional junto com cada fase | P1 | Medio | Todas as fases ativas | Docs | Baixo | Garantir que conhecimento consolidado acompanhe cada mudanca aprovada. | Nenhuma fase fecha sem documentos atualizados. | Documentos revisados, referencias cruzadas e historico. |
 
@@ -90,7 +90,7 @@
 33. `LP-OPS-001`
 33. `LP-OPS-002`
 34. `LP-ANDROID-001` `concluido em 2026-06-30`
-35. `LP-AND-001`
+35. `LP-AND-001` `concluido em 2026-06-30` por `LP-ANDROID-002`
 36. `LP-AND-002`
 37. `LP-REL-001`
 
@@ -1576,3 +1576,30 @@
   - `fallbackToDestructiveMigration()` continua ativo;
   - auth real, contratos oficiais e sync remoto ainda nao chegaram ao runtime Android;
   - o app nao foi validado manualmente em aparelho ou emulador nesta fase.
+
+### LP-AND-001
+
+- Status: `Concluido`
+- Data: `2026-06-30`
+- Arquivos alterados:
+  - `docs/primyo-android/ANDROID_ARCHITECTURE.md`
+  - `docs/primyo-android/ANDROID_OFFLINE_FIRST.md`
+  - `docs/primyo-android/ANDROID_SYNC_STRATEGY.md`
+  - `docs/primyo-android/ANDROID_WEB_PARITY_MAP.md`
+  - `docs/primyo-android/ANDROID_SECURITY_MODEL.md`
+  - `docs/primyo-android/ANDROID_ROADMAP.md`
+  - `docs/primyo-android/ANDROID_DATA_PARITY_MATRIX.md`
+  - `docs/primyo-changes/LP-ANDROID-002.md`
+  - `docs/primyo-changes/LP-ANDROID-002-CLOSURE.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+- Evidencias:
+  - leitura das entidades `UsuarioEntity`, `ClienteEntity`, `VeiculoEntity`, `ServicoEntity`, `ProdutoEntity`, `AtendimentoEntity`, `AuditLogEntity` e `SyncQueueEntity`;
+  - leitura dos contratos `Customer`, `Vehicle`, `Attendance`, `Service`, `Product`, `Supply`, `Payment` e `Financial`;
+  - auditoria dos pontos de dados usados por `Dashboard`, `Patio`, `Cadastros`, `Produtos` e `Seguranca/Sync`;
+  - `git status --short`
+  - `git diff --name-only`
+  - `npm.cmd run primyo:gate`
+- Observacoes:
+  - o objetivo previsto como `LP-AND-001` foi formalmente executado na mudanca `LP-ANDROID-002`;
+  - o principal risco remanescente migra para `LP-AND-002`, focado em preservacao de dados e saida de `fallbackToDestructiveMigration()`.
