@@ -272,14 +272,23 @@ Objetivo:
 - nenhuma seed demo foi removida;
 - Supabase continua fechado.
 
+## Estado apos LP-WEB-DATA-CLEANUP-011
+
+- os bloqueios restantes para promocao de `CLEAN_BOOTSTRAP` a default passam a ficar consolidados em documento tecnico unico;
+- a trilha separa explicitamente bloqueios ja mitigados de observabilidade e hardening dos bloqueios ainda abertos de dados limpos, relacionamentos persistidos e readiness operacional;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao ativo como default;
+- nenhuma seed demo foi removida;
+- Supabase continua fechado.
+
 ## Proxima microfase recomendada
 
-`LP-WEB-DATA-CLEANUP-011 - Clean bootstrap default blockers consolidation`
+`LP-WEB-DATA-CLEANUP-012 - Clean bootstrap activation prerequisites plan`
 
 Objetivo:
 
-- consolidar bloqueios remanescentes para promocao de `CLEAN_BOOTSTRAP` a default;
-- separar bloqueios de observabilidade ja resolvidos dos bloqueios de volume limpo, relacionamentos persistidos e readiness operacional;
+- transformar os bloqueios consolidados em prerequisitos formais de ativacao gradual;
+- definir criterios de entrada e saida para futuro trial de ativacao;
 - manter `DEMO_BOOTSTRAP` como default;
 - continuar sem Supabase e sem remocao da seed demo.
 

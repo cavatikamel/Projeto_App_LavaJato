@@ -440,6 +440,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: a confirmacao repetiu com sucesso a leitura tecnica por `window.__lavaprimeGetCleanBootstrapDiagnostics?.()`, `window.__lavaprimeDiagnostics?.cleanBootstrap`, `document.documentElement.dataset.*` e `#lavaprime-clean-bootstrap-diagnostics`, mantendo `DEMO_BOOTSTRAP` como padrao e `CLEAN_BOOTSTRAP` apenas como diagnostico protegido.
 - Observacao de risco: o estado pre-login ainda mostra snapshot parcial e a promocao de `CLEAN_BOOTSTRAP` continua bloqueada por falta de base limpa e relacionamentos persistidos; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-011`.
 
+### LP-WEB-DATA-CLEANUP-011
+
+- Change record: `docs/primyo-changes/LP-WEB-DATA-CLEANUP-011.md`
+- Closure: `fase absorvida no proprio change record e em CLEAN_BOOTSTRAP_DEFAULT_BLOCKERS.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase consolidou em documento unico os bloqueios remanescentes para promocao de `CLEAN_BOOTSTRAP` a default, separando gargalos ja mitigados de observabilidade e hardening dos gargalos ainda abertos de dados limpos, relacionamentos persistidos e readiness operacional.
+- Observacao de risco: a promocao do modo limpo continua bloqueada e a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-012`, focada em prerequisitos formais de ativacao gradual.
+
 ### LP-ANDROID-001
 
 - Change record: `docs/primyo-changes/LP-ANDROID-001.md`
