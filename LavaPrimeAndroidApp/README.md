@@ -1,66 +1,57 @@
-# LavaPrime Android App — Starter Mobile Nativo
+# LavaPrime Android App
 
-Base Android nativa do LavaPrime para tablets e smartphones, sem WebView e sem depender de conexão constante para operar.
+Base Android nativa do LavaPrime para smartphone e tablet, sem WebView e preparada para operar offline com sincronizacao posterior.
 
-## O que esta versão entrega
+## Versao
 
-- App Android em Kotlin + Jetpack Compose + Material 3.
-- Ícone nativo/adaptativo com marca LavaPrime em vetor.
-- Tela de inicialização com identidade LavaPrime.
-- Login mobile no padrão visual do produto.
-- Perfis Administrador e Operador.
-- Menu lateral que abre pelo botão menu e recolhe pelo toque fora/seleção.
-- Pátio operacional com cards apropriados para toque.
-- Popup mobile de novo atendimento.
-- Cadastro rápido de cliente, veículo e alerta especial.
-- Serviços com regra inicial de risco por produto ácido/alcalino/pH.
-- Módulos espelhados do LavaPrime Web, adaptados ao formato mobile.
-- Room como banco local offline-first.
-- Estrutura preparada para Supabase, backend do LavaPrime Web, Netlify no front web e Primyo Console.
-- Entidades com empresaId/tenant, syncStatus, trilha de auditoria e fila de sincronização.
-- Proteção contra backup sensível no Manifest/data extraction rules.
+`LavaPrime_Mobile_V1.09`
 
-## Credenciais de demonstração
+## O que esta base entrega agora
 
-- Administrador: qualquer e-mail que não contenha `operador`, senha com 4 caracteres ou mais.
-- Operador: `operador@lavaprime.local`, senha `1234`.
+- Kotlin + Jetpack Compose + Material 3.
+- Room como base local principal.
+- Estrutura pronta para backend compartilhado com a plataforma web.
+- Login mobile com perfis Administrador e Operador.
+- Menu lateral no padrao mobile, aberto por botao e recolhido ao tocar fora.
+- Patio com cards grandes, filtro por status, alertas e acoes rapidas.
+- Cadastro mobile funcional de clientes e veiculos.
+- Auditoria local e fila de sincronizacao para mudancas importantes.
+- Politica de conflito preparada como `last_write_wins` usando `updatedAt`.
+- Monitor de conectividade para refletir online/offline na interface.
 
-Este login é apenas uma simulação local para desenvolvimento. A autenticação final deve usar Supabase Auth/Primyo Console, mantendo sessão offline controlada após primeira validação online.
+## Arquitetura atual
+
+- `ui/screens/` concentra telas menores e mais focadas.
+- `ui/viewmodel/` concentra estado por dominio: autenticacao, patio, cadastros e sync.
+- `data/repository/` centraliza regras locais e escrita em Room.
+- `sync/` concentra conectividade, configuracao de backend e coordenacao de sincronizacao.
 
 ## Como abrir no Android Studio
 
-1. Extraia o ZIP.
-2. Abra a pasta `LavaPrimeAndroidApp` no Android Studio.
-3. Aguarde o Gradle Sync.
-4. Execute em celular, tablet ou emulador.
+1. Abra a pasta `LavaPrimeAndroidApp`.
+2. Aguarde o Gradle Sync.
+3. Execute em aparelho ou emulador com o JDK embutido do Android Studio.
 
-## Diretriz de evolução
+## Como apontar para a mesma base do web
 
-O LavaPrime Web continua sendo a referência funcional e visual. Sempre que a web mudar, o mobile deve receber a mesma regra de negócio, porém adaptada para:
+Defina no ambiente local ou em `local.properties`:
 
-- cards em vez de tabelas extensas;
-- formulários verticais;
-- botões grandes;
-- navegação por menu lateral;
-- operação offline-first;
-- sincronização posterior segura.
+- `LAVAPRIME_SUPABASE_URL=https://SEU-PROJETO.supabase.co`
+- `LAVAPRIME_SUPABASE_ANON_KEY=...`
+- `LAVAPRIME_SUPABASE_ORGANIZATION_ID=local-demo`
 
-## Versão
+Esses valores entram no `BuildConfig` do app Android. A arquitetura ja ficou pronta para compartilhar a mesma base do web, mas a sincronizacao remota efetiva ainda depende das credenciais reais e da conclusao do conector Supabase/API.
 
-`LavaPrime_Mobile_V1.03`
+## Regra de continuidade
 
+O LavaPrime Web continua sendo a referencia funcional e visual. Cada modulo Android deve preservar a regra de negocio da web, mas com:
 
-## Correção V1.03 - Compose Compiler Kotlin 2.x
+- formularios verticais e largos;
+- cards no lugar de tabelas extensas;
+- acoes principais acessiveis no polegar;
+- funcionamento offline-first;
+- sincronizacao segura ao reconectar.
 
-Esta versão corrige o erro do Android Studio:
+## Status da sincronizacao
 
-`Starting in Kotlin 2.0, the Compose Compiler Gradle plugin is required when compose is enabled.`
-
-A correção aplicada foi:
-
-- inclusão do plugin `org.jetbrains.kotlin.plugin.compose` no `build.gradle.kts` raiz;
-- aplicação do plugin no módulo `app`;
-- remoção do bloco antigo `composeOptions.kotlinCompilerExtensionVersion`, que não deve ser usado com Kotlin 2.x;
-- incremento da versão para `LavaPrime_Mobile_V1.03`.
-
-Depois de abrir no Android Studio, use **File > Sync Project with Gradle Files** e rode novamente no aparelho.
+Nesta fase, a arquitetura offline/sync foi preparada, a fila local esta ativa e o app ja registra auditoria e pendencias. O conector remoto definitivo ainda precisa ser ligado ao Supabase do projeto web.
