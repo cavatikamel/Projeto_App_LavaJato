@@ -1,7 +1,7 @@
 package br.com.primyo.lavaprime.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,17 +12,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,13 +40,16 @@ import br.com.primyo.lavaprime.data.model.UsuarioEntity
 import br.com.primyo.lavaprime.ui.components.EmptyState
 import br.com.primyo.lavaprime.ui.components.HeroPanel
 import br.com.primyo.lavaprime.ui.components.LandingBadge
+import br.com.primyo.lavaprime.ui.components.LavaPrimeActionButton
+import br.com.primyo.lavaprime.ui.components.LavaPrimeActionStyle
+import br.com.primyo.lavaprime.ui.components.LavaPrimeCard
+import br.com.primyo.lavaprime.ui.components.LavaPrimeStatusChip
+import br.com.primyo.lavaprime.ui.components.LavaPrimeStatusTone
+import br.com.primyo.lavaprime.ui.components.LavaPrimeTextField
 import br.com.primyo.lavaprime.ui.components.money
 import br.com.primyo.lavaprime.ui.components.statusLabel
-import br.com.primyo.lavaprime.ui.theme.Mint
-import br.com.primyo.lavaprime.ui.theme.PrimeBlue
-import br.com.primyo.lavaprime.ui.theme.SoftLine
-import br.com.primyo.lavaprime.ui.theme.TextPrimary
-import br.com.primyo.lavaprime.ui.theme.WaterBlue
+import br.com.primyo.lavaprime.ui.components.syncStatusLabel
+import br.com.primyo.lavaprime.ui.components.syncStatusTone
 import br.com.primyo.lavaprime.ui.viewmodel.PatioUiState
 
 @Composable
@@ -68,17 +68,17 @@ fun PatioScreen(
     ) {
         item {
             HeroPanel(
-                title = "Patio operacional",
-                description = "Cards grandes, status claro e alerta do veiculo em destaque para uso com uma mao.",
-                icon = "PA"
+                title = "Pátio operacional",
+                description = "Fila de veículos em atendimento com status claro, alerta visível e ações rápidas.",
+                icon = Icons.Filled.DirectionsCar
             )
         }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 item { LandingBadge("Todos ${state.atendimentos.size}") }
-                item { LandingBadge("Execucao ${state.atendimentos.count { it.status == AtendimentoStatus.EXECUCAO }}") }
+                item { LandingBadge("Execução ${state.atendimentos.count { it.status == AtendimentoStatus.EXECUCAO }}") }
                 item { LandingBadge("Com alerta ${state.atendimentos.count { !it.observacoes.isNullOrBlank() }}") }
-                item { LandingBadge("Filtro ${state.filtroStatus?.name ?: "TODOS"}") }
+                item { LandingBadge("Filtro ${state.filtroStatus?.let(::statusLabel) ?: "Todos"}") }
             }
         }
         item {
@@ -116,8 +116,8 @@ fun PatioScreen(
         if (state.listaFiltrada.isEmpty()) {
             item {
                 EmptyState(
-                    title = "Nenhum veiculo no patio",
-                    description = "Toque em Novo atendimento para iniciar uma entrada rapida."
+                    title = "Nenhum veículo no pátio",
+                    description = "Toque em Novo atendimento para iniciar uma entrada rápida."
                 )
             }
         }
@@ -130,71 +130,85 @@ fun AtendimentoCard(
     onAdvance: (() -> Unit)?,
     onBack: (() -> Unit)?
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(24.dp),
-        border = BorderStroke(1.dp, SoftLine)
-    ) {
-        androidx.compose.foundation.layout.Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.height(52.dp),
-                    color = Color(0xFFE5F8FB),
-                    shape = RoundedCornerShape(18.dp)
-                ) {
+    LavaPrimeCard(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            LavaPrimeStatusChip(
+                text = item.placaSnapshot,
+                tone = LavaPrimeStatusTone.Info,
+                icon = Icons.Filled.DirectionsCar
+            )
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    item.clienteNomeSnapshot,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0F2230),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(item.servicoNomeSnapshot, style = MaterialTheme.typography.bodySmall, color = Color(0xFF4E6470))
+            }
+            LavaPrimeStatusChip(
+                text = statusLabel(item.status),
+                tone = when (item.status) {
+                    AtendimentoStatus.AGENDADO -> LavaPrimeStatusTone.Warning
+                    AtendimentoStatus.PATIO -> LavaPrimeStatusTone.Info
+                    AtendimentoStatus.EXECUCAO -> LavaPrimeStatusTone.Info
+                    AtendimentoStatus.FINALIZADO -> LavaPrimeStatusTone.Success
+                    AtendimentoStatus.CANCELADO -> LavaPrimeStatusTone.Danger
+                }
+            )
+        }
+
+        if (!item.observacoes.isNullOrBlank()) {
+            LavaPrimeCard(
+                modifier = Modifier.fillMaxWidth(),
+                tonal = true,
+                contentPadding = PaddingValues(14.dp)
+            ) {
+                Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.Icon(
+                        Icons.Filled.WarningAmber,
+                        contentDescription = null,
+                        tint = Color(0xFFB45309)
+                    )
                     Text(
-                        "PA",
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                        fontWeight = FontWeight.Bold,
-                        color = PrimeBlue
+                        "Atenção: ${item.observacoes}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF7E5600)
                     )
                 }
-                Spacer(Modifier.padding(horizontal = 6.dp))
-                androidx.compose.foundation.layout.Column(Modifier.weight(1f)) {
-                    Text(item.placaSnapshot, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = PrimeBlue)
-                    Text(item.clienteNomeSnapshot, maxLines = 1, overflow = TextOverflow.Ellipsis, color = Color(0xFF435F67))
-                    Text(item.servicoNomeSnapshot, style = MaterialTheme.typography.labelMedium, color = WaterBlue, fontWeight = FontWeight.Bold)
-                }
-                AssistChip(onClick = {}, label = { Text(statusLabel(item.status)) })
             }
-            if (!item.observacoes.isNullOrBlank()) {
-                Surface(
-                    color = Color(0xFFFFF2D9),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, Color(0xFFFFD58A))
-                ) {
-                    Text(
-                        "Alerta: ${item.observacoes}",
-                        modifier = Modifier.padding(12.dp),
-                        color = Color(0xFF744600),
-                        style = MaterialTheme.typography.bodySmall
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LavaPrimeStatusChip(
+                text = money(item.valorCentavos),
+                tone = LavaPrimeStatusTone.Success
+            )
+            LavaPrimeStatusChip(
+                text = syncStatusLabel(item.syncStatus),
+                tone = syncStatusTone(item.syncStatus)
+            )
+        }
+
+        if (onAdvance != null || onBack != null) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (onBack != null) {
+                    LavaPrimeActionButton(
+                        text = "Voltar",
+                        onClick = onBack,
+                        style = LavaPrimeActionStyle.Outline,
+                        modifier = Modifier.weight(1f)
                     )
                 }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                LandingBadge(money(item.valorCentavos))
-                LandingBadge(item.syncStatus.name.replace('_', ' '))
-            }
-            if (onAdvance != null || onBack != null) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (onBack != null) {
-                        OutlinedButton(onClick = onBack, shape = RoundedCornerShape(14.dp)) {
-                            Text("Voltar")
-                        }
-                    }
-                    if (onAdvance != null) {
-                        Button(
-                            onClick = onAdvance,
-                            colors = ButtonDefaults.buttonColors(containerColor = Mint, contentColor = TextPrimary),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Text(if (item.status == AtendimentoStatus.EXECUCAO) "Finalizar" else "Avancar")
-                        }
-                    }
+                if (onAdvance != null) {
+                    LavaPrimeActionButton(
+                        text = if (item.status == AtendimentoStatus.EXECUCAO) "Finalizar" else "Avançar",
+                        onClick = onAdvance,
+                        style = LavaPrimeActionStyle.Primary,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
@@ -220,47 +234,70 @@ fun NovoAtendimentoDialog(
     AlertDialog(
         onDismissRequest = onClose,
         confirmButton = {
-            Button(
-                enabled = servicoSelecionado != null,
+            LavaPrimeActionButton(
+                text = if (exigeCiencia) "Confirmar com ciência" else "Adicionar ao pátio",
                 onClick = {
                     servicoSelecionado?.let { srv ->
                         onSave(cliente, telefone, placa, veiculo, alerta, srv)
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Mint, contentColor = TextPrimary)
-            ) {
-                Text(if (exigeCiencia) "Confirmar com ciencia" else "Adicionar ao patio")
+                enabled = servicoSelecionado != null
+            )
+        },
+        dismissButton = {
+            TextButton(onClick = onClose) {
+                Text("Cancelar")
             }
         },
-        dismissButton = { TextButton(onClick = onClose) { Text("Cancelar") } },
-        title = { Text("Novo atendimento", color = PrimeBlue, fontWeight = FontWeight.Black) },
+        title = {
+            Text("Novo atendimento", color = Color(0xFF0B3348), fontWeight = FontWeight.Bold)
+        },
         text = {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 item {
-                    OutlinedTextField(cliente, { cliente = it }, label = { Text("Cliente") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(14.dp))
-                }
-                item {
-                    OutlinedTextField(telefone, { telefone = it }, label = { Text("Telefone") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(14.dp))
-                }
-                item {
-                    OutlinedTextField(placa, { placa = it.uppercase().take(8) }, label = { Text("Placa") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(14.dp))
-                }
-                item {
-                    OutlinedTextField(veiculo, { veiculo = it }, label = { Text("Marca/modelo/cor") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(14.dp))
-                }
-                item {
-                    OutlinedTextField(
-                        alerta,
-                        { alerta = it },
-                        label = { Text("Alerta especial do veiculo") },
-                        placeholder = { Text("Ex.: vitrificado, usar shampoo neutro") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 2,
-                        shape = RoundedCornerShape(14.dp)
+                    LavaPrimeTextField(
+                        value = cliente,
+                        onValueChange = { cliente = it },
+                        label = "Cliente",
+                        singleLine = true
                     )
                 }
                 item {
-                    Text("Servico", fontWeight = FontWeight.Black, color = PrimeBlue)
+                    LavaPrimeTextField(
+                        value = telefone,
+                        onValueChange = { telefone = it },
+                        label = "Telefone",
+                        singleLine = true
+                    )
+                }
+                item {
+                    LavaPrimeTextField(
+                        value = placa,
+                        onValueChange = { placa = it.uppercase().take(8) },
+                        label = "Placa",
+                        singleLine = true
+                    )
+                }
+                item {
+                    LavaPrimeTextField(
+                        value = veiculo,
+                        onValueChange = { veiculo = it },
+                        label = "Marca, modelo e cor",
+                        singleLine = true
+                    )
+                }
+                item {
+                    LavaPrimeTextField(
+                        value = alerta,
+                        onValueChange = { alerta = it },
+                        label = "Alerta especial do veículo",
+                        placeholder = "Ex.: vitrificado, usar shampoo neutro",
+                        minLines = 2
+                    )
+                }
+                item {
+                    Text("Serviço", fontWeight = FontWeight.Bold, color = Color(0xFF0B3348))
+                    Spacer(Modifier.height(8.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(servicos, key = { it.id }) { srv ->
                             FilterChip(
@@ -273,22 +310,25 @@ fun NovoAtendimentoDialog(
                 }
                 if (exigeCiencia) {
                     item {
-                        Surface(
-                            color = Color(0xFFFFF2D9),
-                            shape = RoundedCornerShape(16.dp),
-                            border = BorderStroke(1.dp, Color(0xFFFFD58A))
-                        ) {
-                            Text(
-                                "Atencao: o veiculo possui alerta e o servico selecionado pode usar produto acido/alcalino ou pH fora da faixa neutra.",
-                                modifier = Modifier.padding(12.dp),
-                                color = Color(0xFF744600)
-                            )
+                        LavaPrimeCard(tonal = true, contentPadding = PaddingValues(14.dp)) {
+                            Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                androidx.compose.material3.Icon(
+                                    Icons.Filled.WarningAmber,
+                                    contentDescription = null,
+                                    tint = Color(0xFFB45309)
+                                )
+                                Text(
+                                    "Atenção: o veículo possui alerta e o serviço selecionado pode usar produto ácido, alcalino ou pH fora da faixa neutra.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF7E5600)
+                                )
+                            }
                         }
                     }
                 }
             }
         },
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
         containerColor = Color.White
     )
 }

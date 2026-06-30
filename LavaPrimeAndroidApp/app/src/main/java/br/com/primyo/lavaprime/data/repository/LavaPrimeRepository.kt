@@ -73,8 +73,8 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
         db.servicoDao().salvar(
             ServicoEntity(
                 "srv-descontaminacao",
-                nome = "Descontaminacao tecnica",
-                categoria = "Estetica",
+                nome = "Descontaminação técnica",
+                categoria = "Estética",
                 precoBaseCentavos = 18000,
                 tempoEstimadoMin = 120,
                 usaProdutoAcido = true,
@@ -94,7 +94,7 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
         db.produtoDao().salvar(
             ProdutoEntity(
                 "prd-limpa-rodas",
-                nome = "Limpa rodas acido",
+                nome = "Limpa rodas ácido",
                 tipo = "Insumo",
                 estoqueAtual = 1.0,
                 estoqueMinimo = 2.0,
@@ -111,7 +111,7 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             marca = "Toyota",
             modelo = "Corolla",
             cor = "Prata",
-            alertaEspecial = "Veiculo vitrificado: usar produto neutro. Evitar acidos e alcalinos fortes.",
+            alertaEspecial = "Veículo vitrificado: usar produto neutro. Evitar ácidos e alcalinos fortes.",
             restringirProdutosAcidos = true,
             restringirProdutosAlcalinos = true,
             phMinimoRecomendado = 6.0,
@@ -186,7 +186,7 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
         db.veiculoDao().salvar(veiculo)
         db.atendimentoDao().salvar(atendimento)
         registrarMudanca("clients", cliente.id, "upsert", "Cliente ${cliente.nome}", usuario)
-        registrarMudanca("vehicles", veiculo.id, "upsert", "Veiculo ${veiculo.placa}", usuario)
+        registrarMudanca("vehicles", veiculo.id, "upsert", "Veículo ${veiculo.placa}", usuario)
         registrarMudanca("attendances", atendimento.id, "insert", "Atendimento ${atendimento.placaSnapshot}", usuario)
     }
 
@@ -228,7 +228,7 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
         db.clienteDao().salvar(cliente)
         db.veiculoDao().salvar(veiculo)
         registrarMudanca("clients", cliente.id, "insert", "Cliente ${cliente.nome}", usuario)
-        registrarMudanca("vehicles", veiculo.id, "insert", "Veiculo ${veiculo.placa}", usuario)
+        registrarMudanca("vehicles", veiculo.id, "insert", "Veículo ${veiculo.placa}", usuario)
     }
 
     suspend fun atualizarStatusAtendimento(

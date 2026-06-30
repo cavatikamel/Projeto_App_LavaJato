@@ -18,7 +18,7 @@ data class SyncUiState(
     val pendingCount: Int = 0,
     val backendConfigured: Boolean = false,
     val lastAttemptAt: Long? = null,
-    val lastMessage: String = "Aguardando primeira sincronizacao.",
+    val lastMessage: String = "Aguardando primeira sincronização.",
     val policyLabel: String = LastWriteWinsPolicy.description,
     val auditTrail: List<AuditLogEntity> = emptyList()
 )

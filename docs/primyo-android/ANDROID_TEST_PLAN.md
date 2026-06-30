@@ -23,6 +23,12 @@ Consolidar o baseline minimo de validacao Android apos `LP-ANDROID-001`, `LP-AND
 - APK debug observado em `%LOCALAPPDATA%\\LavaPrimeAndroidBuild\\LavaPrimeAndroid\\app\\outputs\\apk\\debug\\app-debug.apk`;
 - conclusao: o baseline atual do app agora possui validacao de build local bem-sucedida.
 
+## Complemento de `LP-ANDROID-004`
+
+- a fase de paridade visual recompilou o app com sucesso apos refino de tipografia, componentes e telas;
+- o ambiente atual nao possuia `adb` disponivel, entao nao houve instalacao em aparelho ou emulador nesta execucao;
+- por isso, a validacao visual real segue pendente mesmo com `assembleDebug` aprovado.
+
 ## Smoke manual esperado
 
 | Pergunta | Estado |

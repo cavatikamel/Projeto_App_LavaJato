@@ -13,9 +13,11 @@ private val LavaPrimeLight = lightColorScheme(
     tertiary = Mint,
     background = PageBg,
     surface = Color.White,
+    surfaceVariant = SurfaceMuted,
     onBackground = TextPrimary,
     onSurface = TextPrimary,
     outline = SoftLine,
+    outlineVariant = SoftLineStrong,
     error = Color(0xFFB3261E)
 )
 
@@ -34,6 +36,7 @@ private val LavaPrimeDark = darkColorScheme(
 fun LavaPrimeTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = if (isSystemInDarkTheme()) LavaPrimeDark else LavaPrimeLight,
+        typography = LavaPrimeTypography,
         content = content
     )
 }

@@ -1,8 +1,6 @@
 package br.com.primyo.lavaprime.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,20 +12,28 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AlternateEmail
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,28 +47,49 @@ import androidx.compose.ui.unit.dp
 import br.com.primyo.lavaprime.data.model.PerfilUsuario
 import br.com.primyo.lavaprime.ui.components.BrandLogo
 import br.com.primyo.lavaprime.ui.components.LandingBadge
+import br.com.primyo.lavaprime.ui.components.LavaPrimeActionButton
+import br.com.primyo.lavaprime.ui.components.LavaPrimeActionStyle
+import br.com.primyo.lavaprime.ui.components.LavaPrimeCard
+import br.com.primyo.lavaprime.ui.components.LavaPrimeSegmentedProfileSelector
+import br.com.primyo.lavaprime.ui.components.LavaPrimeTextField
+import br.com.primyo.lavaprime.ui.components.LavaPrimeVersionFooter
 import br.com.primyo.lavaprime.ui.components.perfilLabel
 import br.com.primyo.lavaprime.ui.theme.Aqua
-import br.com.primyo.lavaprime.ui.theme.Mint
 import br.com.primyo.lavaprime.ui.theme.PageBg
 import br.com.primyo.lavaprime.ui.theme.PrimeBlue
-import br.com.primyo.lavaprime.ui.theme.TextPrimary
+import br.com.primyo.lavaprime.ui.theme.PrimeBlueDeep
+import br.com.primyo.lavaprime.ui.theme.TextSecondary
 import br.com.primyo.lavaprime.ui.theme.WaterBlue
-import br.com.primyo.lavaprime.ui.theme.MobileVersionName
 
 @Composable
 fun SplashLavaPrime() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(PrimeBlue, WaterBlue, PageBg))),
+            .background(Brush.verticalGradient(listOf(PrimeBlueDeep, PrimeBlue, WaterBlue))),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            BrandLogo(modifier = Modifier.size(104.dp), compact = true)
-            Spacer(Modifier.height(18.dp))
-            Text("LavaPrime", style = MaterialTheme.typography.headlineLarge, color = Color.White, fontWeight = FontWeight.Black)
-            Text("Gestao inteligente para sua operacao de lavagem.", color = Color.White.copy(alpha = 0.86f))
+        Column(
+            modifier = Modifier
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            BrandLogo(modifier = Modifier.size(110.dp), compact = true, showTagline = false)
+            Text(
+                "LavaPrime",
+                style = MaterialTheme.typography.headlineLarge,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Gestão inteligente para sua operação de lavagem.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White.copy(alpha = 0.88f),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -78,46 +105,48 @@ fun InitialScreen(onAccess: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(310.dp)
-                .background(Brush.verticalGradient(listOf(PrimeBlue, WaterBlue, Aqua)))
+                .height(260.dp)
+                .background(Brush.verticalGradient(listOf(PrimeBlueDeep, PrimeBlue, Aqua)))
         )
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(20.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding(),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Spacer(Modifier.height(18.dp))
-                Surface(color = Color.White, shape = RoundedCornerShape(28.dp), shadowElevation = 8.dp) {
-                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        BrandLogo()
+                LavaPrimeCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(22.dp)
+                ) {
+                    BrandLogo(showTagline = false)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            "Sua operacao no patio, no celular e no tablet.",
+                            "Sua operação do pátio no celular, com identidade LavaPrime.",
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.Bold,
                             color = PrimeBlue
                         )
                         Text(
-                            "Visual inspirado na ferramenta web do LavaPrime, com cards, paineis, menu lateral e rotinas adaptadas para toque.",
+                            "Uma experiência nativa, limpa e profissional para a rotina mobile do lava jato.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF365A64)
+                            color = TextSecondary
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            LandingBadge("Offline-first")
-                            LandingBadge("Supabase-ready")
-                            LandingBadge("Mobile")
-                        }
-                        Button(
-                            onClick = onAccess,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(54.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Mint, contentColor = TextPrimary),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Text("Acessar LavaPrime")
-                        }
                     }
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        LandingBadge("Offline-first")
+                        LandingBadge("Supabase-ready")
+                        LandingBadge("Mobile native")
+                    }
+                    LavaPrimeActionButton(
+                        text = "Acessar LavaPrime",
+                        onClick = onAccess
+                    )
                 }
             }
             item {
@@ -125,21 +154,16 @@ fun InitialScreen(onAccess: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    WebLikeFeature("Patio", "Cards de veiculos e status", "PA")
-                    WebLikeFeature("Gestao", "Indicadores e caixa", "GE")
-                    WebLikeFeature("Alertas", "Restricoes de produto", "AL")
-                    WebLikeFeature("Sync", "Base local + Supabase", "SY")
+                    WebLikeFeature("Pátio", "Cards operacionais e status claros", Icons.Filled.DirectionsCar)
+                    WebLikeFeature("Gestão", "Indicadores compactos e legíveis", Icons.Filled.AttachMoney)
+                    WebLikeFeature("Alertas", "Sinais visuais para risco e atenção", Icons.Filled.WarningAmber)
+                    WebLikeFeature("Sync", "Operação local com base pronta para integração", Icons.Filled.Sync)
                 }
             }
+            item {
+                LavaPrimeVersionFooter(modifier = Modifier.fillMaxWidth())
+            }
         }
-        Text(
-            MobileVersionName,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(10.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = WaterBlue
-        )
     }
 }
 
@@ -163,169 +187,135 @@ fun LoginScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(270.dp)
-                .background(Brush.verticalGradient(listOf(PrimeBlue, WaterBlue)))
+                .height(230.dp)
+                .background(Brush.verticalGradient(listOf(PrimeBlueDeep, PrimeBlue, WaterBlue)))
         )
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(20.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding(),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
-                Spacer(Modifier.height(8.dp))
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = onBack) { Text("< Voltar", color = Color.White) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    LavaPrimeActionButton(
+                        text = "Voltar",
+                        onClick = onBack,
+                        icon = Icons.Filled.ArrowBack,
+                        style = LavaPrimeActionStyle.Ghost,
+                        modifier = Modifier.width(120.dp)
+                    )
                     Spacer(Modifier.weight(1f))
-                    Text("Ambiente seguro", color = Color.White.copy(alpha = 0.85f), style = MaterialTheme.typography.labelMedium)
+                    Text(
+                        "Acesso local seguro",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.White.copy(alpha = 0.88f)
+                    )
                 }
             }
             item {
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(28.dp),
-                    colors = androidx.compose.material3.CardDefaults.elevatedCardColors(containerColor = Color.White)
+                    colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 22.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        BrandLogo()
-                        Text("Entrar no sistema", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = PrimeBlue)
-                        Text(
-                            "Escolha o perfil exatamente como na rotina web para carregar os modulos corretos.",
-                            textAlign = TextAlign.Center,
-                            color = Color(0xFF4F6870)
+                        BrandLogo(showTagline = false)
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                "Entrar no sistema",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimeBlue
+                            )
+                            Text(
+                                "Escolha o perfil e continue na rotina do lava jato.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextSecondary
+                            )
+                        }
+
+                        LavaPrimeSegmentedProfileSelector(
+                            selected = perfil,
+                            onSelect = onSelectPerfil
                         )
 
-                        ProfileSelector(selected = perfil, onSelect = onSelectPerfil)
-
-                        OutlinedTextField(
+                        LavaPrimeTextField(
                             value = email,
                             onValueChange = onEmailChange,
-                            label = { Text("Email") },
+                            label = "E-mail",
                             singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp)
+                            placeholder = "admin@lavaprime.local",
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Email)
                         )
-                        OutlinedTextField(
+                        LavaPrimeTextField(
                             value = senha,
                             onValueChange = onSenhaChange,
-                            label = { Text("Senha") },
+                            label = "Senha",
                             singleLine = true,
+                            placeholder = "Digite sua senha",
                             visualTransformation = PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp)
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Password)
                         )
-                        if (erro != null) {
-                            Text(erro, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        erro?.let {
+                            LavaPrimeCard(tonal = true, contentPadding = PaddingValues(14.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Icon(Icons.Filled.WarningAmber, contentDescription = null, tint = Color(0xFFB45309))
+                                    Text(it, style = MaterialTheme.typography.bodySmall, color = PrimeBlue)
+                                }
+                            }
                         }
-                        Button(
+                        LavaPrimeActionButton(
+                            text = "Entrar como ${perfilLabel(perfil)}",
                             onClick = onLogin,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(54.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Mint, contentColor = TextPrimary),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Text("Entrar como ${perfilLabel(perfil)}")
-                        }
+                            icon = if (perfil == PerfilUsuario.ADMINISTRADOR) Icons.Filled.Security else Icons.Filled.DirectionsCar
+                        )
                         Text(
-                            "Protótipo local: Administrador ve todos os modulos; Operador ve Patio, Agendamentos, Clientes e Veiculos.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF6A7C82),
-                            textAlign = TextAlign.Center
+                            "Perfil Administrador: visão gerencial. Perfil Operador: foco em pátio, clientes e veículos.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
             }
-        }
-        Text(
-            MobileVersionName,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(10.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = WaterBlue
-        )
-    }
-}
-
-@Composable
-private fun ProfileSelector(selected: PerfilUsuario, onSelect: (PerfilUsuario) -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFFEAF7FA),
-        shape = RoundedCornerShape(18.dp),
-        border = BorderStroke(1.dp, Color(0xFFE3F2F5))
-    ) {
-        Row(Modifier.padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            ProfileOption(
-                title = "Administrador",
-                subtitle = "Visao completa",
-                symbol = "AD",
-                active = selected == PerfilUsuario.ADMINISTRADOR,
-                modifier = Modifier.weight(1f)
-            ) { onSelect(PerfilUsuario.ADMINISTRADOR) }
-            ProfileOption(
-                title = "Operador",
-                subtitle = "Patio e rotina",
-                symbol = "OP",
-                active = selected == PerfilUsuario.OPERADOR,
-                modifier = Modifier.weight(1f)
-            ) { onSelect(PerfilUsuario.OPERADOR) }
+            item {
+                LavaPrimeVersionFooter(modifier = Modifier.fillMaxWidth())
+            }
         }
     }
 }
 
 @Composable
-private fun ProfileOption(
+private fun WebLikeFeature(
     title: String,
     subtitle: String,
-    symbol: String,
-    active: Boolean,
-    modifier: Modifier,
-    onClick: () -> Unit
+    icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
-    Surface(
-        modifier = modifier.clickable(onClick = onClick),
-        color = if (active) PrimeBlue else Color.Transparent,
-        shape = RoundedCornerShape(14.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(symbol)
-            Text(
-                title,
-                fontWeight = FontWeight.Black,
-                color = if (active) Color.White else PrimeBlue,
-                style = MaterialTheme.typography.labelLarge
-            )
-            Text(
-                subtitle,
-                color = if (active) Color.White.copy(alpha = 0.82f) else Color(0xFF5B737B),
-                style = MaterialTheme.typography.labelSmall
-            )
-        }
-    }
-}
-
-@Composable
-private fun WebLikeFeature(title: String, subtitle: String, symbol: String) {
-    ElevatedCard(
+    LavaPrimeCard(
         modifier = Modifier
-            .width(158.dp)
-            .height(118.dp),
-        colors = androidx.compose.material3.CardDefaults.elevatedCardColors(containerColor = Color.White)
+            .width(168.dp)
+            .height(144.dp),
+        tonal = true,
+        contentPadding = PaddingValues(16.dp)
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(symbol, style = MaterialTheme.typography.titleLarge)
-            Text(title, fontWeight = FontWeight.Black, color = PrimeBlue)
-            Text(subtitle, style = MaterialTheme.typography.labelSmall, color = Color(0xFF57727B))
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .background(Color.White, RoundedCornerShape(14.dp))
+                .padding(10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = WaterBlue)
         }
+        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = PrimeBlue)
+        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
     }
 }

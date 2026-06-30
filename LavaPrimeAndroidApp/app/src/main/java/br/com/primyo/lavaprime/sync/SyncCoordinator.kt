@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 data class SyncRuntimeState(
     val backendConfigured: Boolean = false,
     val lastAttemptAt: Long? = null,
-    val lastMessage: String = "Aguardando primeira sincronizacao.",
+    val lastMessage: String = "Aguardando primeira sincronização.",
     val policyLabel: String = LastWriteWinsPolicy.description
 )
 
@@ -32,8 +32,8 @@ class SyncCoordinator(
             connectivityMonitor.isCurrentlyOnline() &&
             config.isConfigured()
         val message = when {
-            pendencias.isEmpty() -> "Sem alteracoes locais pendentes."
-            !connectivityMonitor.isCurrentlyOnline() -> "Sem internet. As alteracoes continuam no aparelho."
+            pendencias.isEmpty() -> "Sem alterações locais pendentes."
+            !connectivityMonitor.isCurrentlyOnline() -> "Sem internet. As alterações continuam no aparelho."
             !config.isConfigured() -> "Configure SUPABASE_URL e SUPABASE_ANON_KEY para sincronizar com a mesma base do web."
             else -> "Conector remoto preparado para Supabase. Politica ativa: ultima alteracao vence por updatedAt. Ultima tentativa: $reason."
         }

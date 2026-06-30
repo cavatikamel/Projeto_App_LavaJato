@@ -1,23 +1,19 @@
 package br.com.primyo.lavaprime.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -33,11 +28,10 @@ import androidx.compose.ui.unit.dp
 import br.com.primyo.lavaprime.data.model.UsuarioEntity
 import br.com.primyo.lavaprime.ui.components.EmptyState
 import br.com.primyo.lavaprime.ui.components.HeroPanel
+import br.com.primyo.lavaprime.ui.components.LavaPrimeActionButton
+import br.com.primyo.lavaprime.ui.components.LavaPrimeCard
+import br.com.primyo.lavaprime.ui.components.LavaPrimeTextField
 import br.com.primyo.lavaprime.ui.components.SectionTitle
-import br.com.primyo.lavaprime.ui.theme.Mint
-import br.com.primyo.lavaprime.ui.theme.PrimeBlue
-import br.com.primyo.lavaprime.ui.theme.SoftLine
-import br.com.primyo.lavaprime.ui.theme.TextPrimary
 import br.com.primyo.lavaprime.ui.viewmodel.CadastroUiState
 
 @Composable
@@ -50,56 +44,66 @@ fun CadastrosScreen(
     var showDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(bottom = 90.dp)
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 90.dp)
     ) {
         item {
             HeroPanel(
-                title = "Clientes e veiculos",
-                description = "Cadastro em formato vertical, com busca rapida e historico adaptado para celular.",
-                icon = "CV"
+                title = "Clientes e veículos",
+                description = "Cadastro rápido com leitura simples, busca útil e cards prontos para rotina mobile.",
+                icon = Icons.Filled.Group
             )
         }
         item {
-            OutlinedTextField(
+            LavaPrimeTextField(
                 value = state.busca,
                 onValueChange = onSearchChange,
-                label = { Text("Buscar por nome, telefone, placa ou modelo") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                label = "Buscar por nome, telefone, placa ou modelo",
+                singleLine = true
             )
         }
         item {
-            Button(
-                onClick = { showDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = Mint, contentColor = TextPrimary),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Novo cadastro")
-            }
+            LavaPrimeActionButton(
+                text = "Novo cadastro",
+                onClick = { showDialog = true }
+            )
         }
-        item { SectionTitle("Clientes") }
+        item { SectionTitle("Clientes", "Consulta rápida da base local") }
         if (state.clientesFiltrados.isEmpty()) {
-            item { EmptyState("Nenhum cliente", "Cadastre um cliente para iniciar o historico mobile.") }
+            item {
+                EmptyState(
+                    title = "Nenhum cliente cadastrado",
+                    description = "Cadastre um cliente para iniciar o histórico mobile.",
+                    icon = Icons.Filled.Person
+                )
+            }
         } else {
             items(state.clientesFiltrados, key = { it.id }) { cliente ->
                 CadastroCard(
                     title = cliente.nome,
-                    subtitle = cliente.telefone ?: "Telefone nao informado",
-                    extra = cliente.documento ?: (cliente.observacoes ?: "Sem observacoes")
+                    subtitle = cliente.telefone ?: "Telefone não informado",
+                    extra = cliente.documento ?: (cliente.observacoes ?: "Sem observações"),
+                    icon = Icons.Filled.Person
                 )
             }
         }
-        item { SectionTitle("Veiculos") }
+        item { SectionTitle("Veículos", "Itens vinculados a clientes já cadastrados") }
         if (state.veiculosFiltrados.isEmpty()) {
-            item { EmptyState("Nenhum veiculo", "Os veiculos cadastrados aparecerao aqui.") }
+            item {
+                EmptyState(
+                    title = "Nenhum veículo cadastrado",
+                    description = "Os veículos vinculados aparecerão aqui.",
+                    icon = Icons.Filled.DirectionsCar
+                )
+            }
         } else {
             items(state.veiculosFiltrados, key = { it.id }) { veiculo ->
                 CadastroCard(
                     title = veiculo.placa,
-                    subtitle = veiculo.modelo ?: "Modelo nao informado",
-                    extra = veiculo.alertaEspecial ?: (veiculo.cor ?: "Sem alerta")
+                    subtitle = veiculo.modelo ?: "Modelo não informado",
+                    extra = veiculo.alertaEspecial ?: (veiculo.cor ?: "Sem alerta"),
+                    icon = Icons.Filled.DirectionsCar
                 )
             }
         }
@@ -117,21 +121,35 @@ fun CadastrosScreen(
 }
 
 @Composable
-private fun CadastroCard(title: String, subtitle: String, extra: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(1.dp, SoftLine)
-    ) {
-        androidx.compose.foundation.layout.Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+private fun CadastroCard(
+    title: String,
+    subtitle: String,
+    extra: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    LavaPrimeCard {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(title, fontWeight = FontWeight.Black, color = PrimeBlue)
-            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF455F67))
-            Surface(color = Color(0xFFEAF7FA), shape = RoundedCornerShape(12.dp)) {
-                Text(extra, modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = Color(0xFF4F6870))
+            androidx.compose.material3.Surface(
+                color = Color(0xFFE8F7FE),
+                contentColor = Color(0xFF0B5876),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(10.dp)
+                ) {
+                    androidx.compose.material3.Icon(icon, contentDescription = null)
+                }
+            }
+            androidx.compose.foundation.layout.Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(title, fontWeight = FontWeight.Bold, color = Color(0xFF0B3348))
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF4E6470))
+                Text(extra, style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
             }
         }
     }
@@ -154,28 +172,32 @@ private fun NovoCadastroDialog(
     AlertDialog(
         onDismissRequest = onClose,
         confirmButton = {
-            Button(
-                onClick = { onSave(clienteNome, telefone, documento, observacoes, placa, marcaModelo, cor, alerta) },
-                colors = ButtonDefaults.buttonColors(containerColor = Mint, contentColor = TextPrimary)
-            ) {
-                Text("Salvar cadastro")
+            LavaPrimeActionButton(
+                text = "Salvar cadastro",
+                onClick = { onSave(clienteNome, telefone, documento, observacoes, placa, marcaModelo, cor, alerta) }
+            )
+        },
+        dismissButton = {
+            TextButton(onClick = onClose) {
+                Text("Cancelar")
             }
         },
-        dismissButton = { TextButton(onClick = onClose) { Text("Cancelar") } },
-        title = { Text("Novo cadastro", color = PrimeBlue, fontWeight = FontWeight.Black) },
+        title = {
+            Text("Novo cadastro", color = Color(0xFF0B3348), fontWeight = FontWeight.Bold)
+        },
         text = {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                item { OutlinedTextField(clienteNome, { clienteNome = it }, label = { Text("Nome do cliente") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) }
-                item { OutlinedTextField(telefone, { telefone = it }, label = { Text("Telefone") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) }
-                item { OutlinedTextField(documento, { documento = it }, label = { Text("Documento") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) }
-                item { OutlinedTextField(observacoes, { observacoes = it }, label = { Text("Observacoes") }, modifier = Modifier.fillMaxWidth(), minLines = 2, shape = RoundedCornerShape(14.dp)) }
-                item { OutlinedTextField(placa, { placa = it.uppercase().take(8) }, label = { Text("Placa") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) }
-                item { OutlinedTextField(marcaModelo, { marcaModelo = it }, label = { Text("Marca / modelo") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) }
-                item { OutlinedTextField(cor, { cor = it }, label = { Text("Cor") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) }
-                item { OutlinedTextField(alerta, { alerta = it }, label = { Text("Alerta especial") }, modifier = Modifier.fillMaxWidth(), minLines = 2, shape = RoundedCornerShape(14.dp)) }
+                item { LavaPrimeTextField(clienteNome, { clienteNome = it }, label = "Nome do cliente") }
+                item { LavaPrimeTextField(telefone, { telefone = it }, label = "Telefone") }
+                item { LavaPrimeTextField(documento, { documento = it }, label = "Documento") }
+                item { LavaPrimeTextField(observacoes, { observacoes = it }, label = "Observações", minLines = 2) }
+                item { LavaPrimeTextField(placa, { placa = it.uppercase().take(8) }, label = "Placa") }
+                item { LavaPrimeTextField(marcaModelo, { marcaModelo = it }, label = "Marca / modelo") }
+                item { LavaPrimeTextField(cor, { cor = it }, label = "Cor") }
+                item { LavaPrimeTextField(alerta, { alerta = it }, label = "Alerta especial", minLines = 2) }
             }
         },
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
         containerColor = Color.White
     )
 }

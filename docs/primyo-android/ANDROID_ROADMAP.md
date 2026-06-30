@@ -8,6 +8,7 @@ Definir a sequencia recomendada para a trilha Android apos `LP-ANDROID-002`.
 
 - `LP-ANDROID-001` fechou a baseline do app nativo;
 - `LP-ANDROID-002` fechou a leitura de estrategia de dados, ownership, lacunas contratuais e paridade Android x Web;
+- `LP-ANDROID-004` fechou a correcao de paridade visual mobile com melhoria de tipografia, componentes e shell;
 - o objetivo antes descrito no backlog como `LP-AND-001` passa a estar documentado e absorvido por esta fase.
 
 ## Proxima fase recomendada

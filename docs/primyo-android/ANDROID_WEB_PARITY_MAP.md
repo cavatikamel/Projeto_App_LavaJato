@@ -35,6 +35,13 @@ No nivel de dados, a referencia oficial desta comparacao passa a ser `docs/primy
 - foco mobile/tablet em vez de WebView;
 - patio tratado como experiencia central do operador.
 
+## Ajuste absorvido em `LP-ANDROID-004`
+
+- tipografia sans-serif consolidada para reduzir o aspecto provisório;
+- dashboard, drawer e login deixaram de depender de iniciais genéricas e ganharam ícones reais;
+- rótulos principais em português foram revisados com acentuação visível;
+- a shell mobile ficou visualmente mais próxima do web sem copiar layout literal nem introduzir WebView.
+
 ## Desalinhamentos principais com o web
 
 - o Android ainda usa seed e modelo local proprio;
