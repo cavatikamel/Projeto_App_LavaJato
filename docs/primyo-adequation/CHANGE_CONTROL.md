@@ -423,3 +423,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a reavaliacao do trial protegido registrou comparacao explicita entre o estado pre-hardening e o estado atual, e as `5` superficies antes inseguras deixaram de bloquear o diagnostico protegido do `CLEAN_BOOTSTRAP`.
 - Observacao de risco: a promocao de `CLEAN_BOOTSTRAP` para modo padrao continua bloqueada por falta de volume limpo, relacionamentos persistidos e observabilidade suficiente no browser; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-009`.
+
+### LP-WEB-DATA-CLEANUP-009
+
+- Change record: `docs/primyo-changes/LP-WEB-DATA-CLEANUP-009.md`
+- Closure: `pendente`
+- Resultado: `Implementado`
+- Observacao principal: a observabilidade tecnica do trial protegido passou a ter leitura oficial via `window.__lavaprimeGetCleanBootstrapDiagnostics?.()` e `window.__lavaprimeDiagnostics?.cleanBootstrap`, com espelho somente leitura no DOM para automacao e inspecoes mais confiaveis.
+- Observacao de risco: a promocao de `CLEAN_BOOTSTRAP` continua bloqueada por falta de volume limpo, relacionamentos persistidos e readiness operacional; a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-010`.

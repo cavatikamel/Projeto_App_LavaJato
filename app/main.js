@@ -197,19 +197,28 @@ const cleanBootstrapTrialExecution = {
   legacySourceActive: true,
   defaultMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
 };
+const LAVAPRIME_DIAGNOSTICS_SCRIPT_ID = "lavaprime-clean-bootstrap-diagnostics";
+const lavaprimeDiagnosticsHost = typeof window !== "undefined" ? window : globalThis;
 
-window.__lavaprimeSessionBoundary = sessionBoundary;
+lavaprimeDiagnosticsHost.__lavaprimeSessionBoundary = sessionBoundary;
+if (typeof window !== "undefined") {
+  window.__lavaprimeSessionBoundary = sessionBoundary;
+}
 
-window.__lavaprimeAccessBoundary = accessBoundary;
-window.__lavaprimeCustomerShadowReadDiagnostics = customerShadowReadDiagnostics;
-window.__lavaprimeCustomerLegacyDataValidation = customerLegacyDataValidation;
-window.__lavaprimeCleanBootstrapReadiness = cleanBootstrapReadiness;
-window.__lavaprimeCleanBootstrapTrialReadiness = cleanBootstrapTrialReadiness;
-window.__lavaprimeCleanBootstrapTrialExecution = cleanBootstrapTrialExecution;
-window.__lavaprimeBootstrapMode = {
+lavaprimeDiagnosticsHost.__lavaprimeAccessBoundary = accessBoundary;
+if (typeof window !== "undefined") {
+  window.__lavaprimeAccessBoundary = accessBoundary;
+}
+lavaprimeDiagnosticsHost.__lavaprimeCustomerShadowReadDiagnostics = customerShadowReadDiagnostics;
+lavaprimeDiagnosticsHost.__lavaprimeCustomerLegacyDataValidation = customerLegacyDataValidation;
+lavaprimeDiagnosticsHost.__lavaprimeCleanBootstrapReadiness = cleanBootstrapReadiness;
+lavaprimeDiagnosticsHost.__lavaprimeCleanBootstrapTrialReadiness = cleanBootstrapTrialReadiness;
+lavaprimeDiagnosticsHost.__lavaprimeCleanBootstrapTrialExecution = cleanBootstrapTrialExecution;
+lavaprimeDiagnosticsHost.__lavaprimeBootstrapMode = {
   ...lavaprimeBootstrapModeState,
   activeMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
 };
+publishCleanBootstrapDiagnostics();
 const vehicleOwnerTransferSearchModes = [
   { value: "name", label: "Nome / Razao social", placeholder: "Digite o nome ou a razao social" },
   { value: "document", label: "Documento", placeholder: "Digite o CPF ou CNPJ" },
@@ -10174,6 +10183,7 @@ function recordCleanBootstrapReadinessReport(report) {
   cleanBootstrapReadiness.protectedFallback = true;
   cleanBootstrapReadiness.legacySourceActive = true;
   cleanBootstrapReadiness.defaultMode = ACTIVE_LAVAPRIME_BOOTSTRAP_MODE;
+  publishCleanBootstrapDiagnostics();
 }
 
 function createCleanBootstrapTrialReadinessReport(analyzedAt) {
@@ -10294,6 +10304,7 @@ function recordCleanBootstrapTrialReadinessReport(report) {
   cleanBootstrapTrialReadiness.protectedTrialOnly = true;
   cleanBootstrapTrialReadiness.legacySourceActive = true;
   cleanBootstrapTrialReadiness.defaultMode = ACTIVE_LAVAPRIME_BOOTSTRAP_MODE;
+  publishCleanBootstrapDiagnostics();
 }
 
 function cloneCleanBootstrapTrialReadinessReport(report) {
@@ -10402,6 +10413,7 @@ function recordCleanBootstrapTrialExecutionReport(report) {
   cleanBootstrapTrialExecution.protectedTrialOnly = true;
   cleanBootstrapTrialExecution.legacySourceActive = true;
   cleanBootstrapTrialExecution.defaultMode = ACTIVE_LAVAPRIME_BOOTSTRAP_MODE;
+  publishCleanBootstrapDiagnostics();
 }
 
 function cloneCleanBootstrapTrialExecutionReport(report) {
@@ -10419,6 +10431,68 @@ function cloneCleanBootstrapTrialExecutionReport(report) {
       : [],
     trialReadinessReference: report?.trialReadinessReference ? { ...report.trialReadinessReference } : {}
   };
+}
+
+function getCleanBootstrapDiagnosticsSnapshot() {
+  return {
+    analyzedAt: new Date().toISOString(),
+    activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+    defaultBootstrapMode: lavaprimeBootstrapModeState.defaultMode,
+    demoBootstrapIsDefault: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE === "DEMO_BOOTSTRAP",
+    cleanBootstrapActivatedAsDefault: false,
+    cleanBootstrapProtected: lavaprimeBootstrapModeState.cleanBootstrapProtected,
+    cleanBootstrapAvailable: lavaprimeBootstrapModeState.cleanBootstrapAvailable,
+    cleanBootstrapEvaluatedOnly: true,
+    supabaseRuntimeOpened: false,
+    diagnosticsAvailable: {
+      readiness: Boolean(cleanBootstrapReadiness),
+      trialReadiness: Boolean(cleanBootstrapTrialReadiness),
+      trialExecution: Boolean(cleanBootstrapTrialExecution)
+    },
+    readinessLatest: cleanBootstrapReadiness.latest
+      ? cloneCleanBootstrapReadinessReport(cleanBootstrapReadiness.latest)
+      : null,
+    trialReadinessLatest: cleanBootstrapTrialReadiness.latest
+      ? cloneCleanBootstrapTrialReadinessReport(cleanBootstrapTrialReadiness.latest)
+      : null,
+    trialExecutionLatest: cleanBootstrapTrialExecution.latest
+      ? cloneCleanBootstrapTrialExecutionReport(cleanBootstrapTrialExecution.latest)
+      : null
+  };
+}
+
+function publishCleanBootstrapDiagnostics() {
+  const snapshot = getCleanBootstrapDiagnosticsSnapshot();
+  lavaprimeDiagnosticsHost.__lavaprimeDiagnostics = Object.freeze({
+    cleanBootstrap: snapshot
+  });
+  lavaprimeDiagnosticsHost.__lavaprimeGetCleanBootstrapDiagnostics = () => getCleanBootstrapDiagnosticsSnapshot();
+
+  const diagnosticsDocument = lavaprimeDiagnosticsHost.document;
+  if (!diagnosticsDocument?.documentElement?.dataset) return;
+
+  diagnosticsDocument.documentElement.dataset.lavaprimeDiagnosticsAvailable = "true";
+  diagnosticsDocument.documentElement.dataset.lavaprimeCleanBootstrapMode = snapshot.activeBootstrapMode;
+  diagnosticsDocument.documentElement.dataset.lavaprimeCleanBootstrapDefaultMode = snapshot.defaultBootstrapMode;
+  diagnosticsDocument.documentElement.dataset.lavaprimeCleanBootstrapTrialStatus = snapshot.cleanBootstrapEvaluatedOnly
+    ? "diagnostic-only"
+    : "inactive";
+  diagnosticsDocument.documentElement.dataset.lavaprimeCleanBootstrapUnsafeSurfaceCount = String(
+    snapshot.trialReadinessLatest?.currentUnsafeSurfaceCount ?? snapshot.trialExecutionLatest?.unsafeSurfaceCount ?? -1
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeCleanBootstrapImprovedSurfaceCount = String(
+    snapshot.trialExecutionLatest?.improvedSurfaceCount ?? snapshot.trialReadinessLatest?.improvedSurfaceCount ?? 0
+  );
+
+  let diagnosticsNode = diagnosticsDocument.getElementById(LAVAPRIME_DIAGNOSTICS_SCRIPT_ID);
+  if (!diagnosticsNode) {
+    diagnosticsNode = diagnosticsDocument.createElement("script");
+    diagnosticsNode.id = LAVAPRIME_DIAGNOSTICS_SCRIPT_ID;
+    diagnosticsNode.type = "application/json";
+    diagnosticsNode.setAttribute("data-lavaprime-diagnostics", "clean-bootstrap");
+    diagnosticsDocument.body?.appendChild(diagnosticsNode);
+  }
+  diagnosticsNode.textContent = JSON.stringify(snapshot, null, 2);
 }
 
 function createCustomerLegacyCleanupImpact() {

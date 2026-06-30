@@ -291,6 +291,16 @@ Estado oficial apos `LP-WEB-DATA-CLEANUP-008`:
 - a proxima etapa segura deixa de ser novo hardening imediato e passa a ser melhoria de observabilidade do trial protegido;
 - nenhuma seed demo pode ser removida e nenhuma integracao com Supabase pode ser iniciada nesta etapa.
 
+Estado oficial apos `LP-WEB-DATA-CLEANUP-009`:
+
+- `app/main.js` passa a publicar leitura oficial de diagnostico por `window.__lavaprimeGetCleanBootstrapDiagnostics?.()` e `window.__lavaprimeDiagnostics?.cleanBootstrap`;
+- o runtime passa a publicar espelho tecnico somente leitura no DOM via `dataset` e `script[type=\"application/json\"]`;
+- a automacao deixa de depender exclusivamente da visibilidade de globais tecnicos no contexto de inspecao e passa a ter um ponto mais confiavel de consulta;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a default nesta etapa;
+- qualquer mudanca adicional nessa trilha deve reexecutar `node --check app/main.js`, `node --check app/demo/lavaprimeDemoData.js`, `node --check app/demo/lavaprimeBootstrapMode.js`, `node --check app/demo/lavaprimeCleanBootstrap.js`, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke com consulta tecnica no browser;
+- nenhuma seed demo pode ser removida e nenhuma integracao com Supabase pode ser iniciada nesta etapa.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

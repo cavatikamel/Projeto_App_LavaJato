@@ -1505,3 +1505,38 @@
   - o modo limpo continua semanticamente pobre sem base limpa/persistida suficiente;
   - a observabilidade tecnica do trial no browser continua limitada;
   - Supabase continua fora de escopo.
+
+### LP-WEB-DATA-CLEANUP-009
+
+- Status: `Implementado`
+- Data: `2026-06-30`
+- Arquivos alterados:
+  - `app/main.js`
+  - `docs/primyo-changes/LP-WEB-DATA-CLEANUP-009.md`
+  - `docs/primyo-web-integration/CLEAN_BOOTSTRAP_OBSERVABILITY_REVIEW.md`
+  - `docs/primyo-web-integration/DEMO_DATA_CLEANUP_PLAN.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `node --check app/main.js` -> previsto nesta fase e reexecutado ao final;
+  - `node --check app/demo/lavaprimeDemoData.js` -> previsto nesta fase e reexecutado ao final;
+  - `node --check app/demo/lavaprimeBootstrapMode.js` -> previsto nesta fase e reexecutado ao final;
+  - `node --check app/demo/lavaprimeCleanBootstrap.js` -> previsto nesta fase e reexecutado ao final;
+  - `node scripts/primyo-adapter-gate.mjs` -> previsto nesta fase e reexecutado ao final;
+  - `npm.cmd run primyo:gate` -> previsto nesta fase e reexecutado ao final;
+  - `npm.cmd run build` -> previsto nesta fase e reexecutado ao final;
+  - `npm.cmd run verify:build` -> previsto nesta fase e reexecutado ao final;
+  - smoke manual com dashboard, clientes, patio, financeiro, relatorios/documentos, logout admin, patio operador e consulta tecnica de diagnosticos no browser.
+- Observacoes:
+  - a fase nao altera modo padrao nem remove seed demo;
+  - a observabilidade passa a ter estrategia dupla: leitura manual em `window` e espelho tecnico somente leitura no DOM;
+  - a causa da baixa observabilidade anterior fica documentada como bootstrap assincrono do legado combinado com baixa confiabilidade da inspecao automatizada sobre globais do runtime;
+  - `DEMO_BOOTSTRAP` continua ativo por padrao;
+  - `CLEAN_BOOTSTRAP` continua protegido e nao ativo.
+- Riscos remanescentes:
+  - a promocao de `CLEAN_BOOTSTRAP` continua bloqueada por falta de volume limpo, relacionamentos persistidos e readiness operacional;
+  - a leitura dos globais tecnicos ainda pode variar conforme o contexto de inspecao automatizada;
+  - Supabase continua fora de escopo.

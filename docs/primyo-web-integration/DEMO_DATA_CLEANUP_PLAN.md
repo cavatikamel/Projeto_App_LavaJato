@@ -253,13 +253,22 @@ Objetivo:
 - o bloqueio remanescente deixa de ser fallback semantico imediato e passa a ser falta de volume limpo, relacionamentos persistidos e observabilidade suficiente;
 - nenhuma seed demo foi removida.
 
+## Estado apos LP-WEB-DATA-CLEANUP-009
+
+- os diagnosticos tecnicos do trial passam a ter metodo oficial de consulta manual via `window.__lavaprimeGetCleanBootstrapDiagnostics?.()` e `window.__lavaprimeDiagnostics?.cleanBootstrap`;
+- a automacao passa a contar tambem com espelho tecnico somente leitura no DOM por `dataset` e por `script[type=\"application/json\"]`;
+- a causa da baixa observabilidade anterior fica documentada como combinacao de bootstrap assincrono do legado com baixa confiabilidade da inspecao automatizada sobre globais do runtime;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao ativo como default;
+- nenhuma seed demo foi removida.
+
 ## Proxima microfase recomendada
 
-`LP-WEB-DATA-CLEANUP-009 - Protected clean bootstrap trial observability review`
+`LP-WEB-DATA-CLEANUP-010 - Observable clean bootstrap diagnostics confirmation`
 
 Objetivo:
 
-- melhorar a evidencia pratica dos diagnosticos internos no browser/runtime;
+- confirmar repetibilidade do metodo novo de leitura tecnica no browser/runtime;
 - manter `DEMO_BOOTSTRAP` como default;
 - continuar sem Supabase e sem remocao da seed demo.
 
