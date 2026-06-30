@@ -262,13 +262,24 @@ Objetivo:
 - `CLEAN_BOOTSTRAP` continua protegido e nao ativo como default;
 - nenhuma seed demo foi removida.
 
+## Estado apos LP-WEB-DATA-CLEANUP-010
+
+- a confirmacao operacional mostrou que `window.__lavaprimeGetCleanBootstrapDiagnostics?.()` e `window.__lavaprimeDiagnostics?.cleanBootstrap` ficaram disponiveis de forma repetivel no contexto de avaliacao direta da pagina;
+- o espelho tecnico no DOM continuou disponivel e consistente por `dataset` e por `#lavaprime-clean-bootstrap-diagnostics`;
+- o estado pre-login continuou mostrando snapshot parcial (`unsafeSurfaceCount=-1`, `improvedSurfaceCount=0`), enquanto os estados admin e operador passaram a refletir os valores operacionais esperados (`unsafeSurfaceCount=0`, `improvedSurfaceCount=5`);
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao ativo como default;
+- nenhuma seed demo foi removida;
+- Supabase continua fechado.
+
 ## Proxima microfase recomendada
 
-`LP-WEB-DATA-CLEANUP-010 - Observable clean bootstrap diagnostics confirmation`
+`LP-WEB-DATA-CLEANUP-011 - Clean bootstrap default blockers consolidation`
 
 Objetivo:
 
-- confirmar repetibilidade do metodo novo de leitura tecnica no browser/runtime;
+- consolidar bloqueios remanescentes para promocao de `CLEAN_BOOTSTRAP` a default;
+- separar bloqueios de observabilidade ja resolvidos dos bloqueios de volume limpo, relacionamentos persistidos e readiness operacional;
 - manter `DEMO_BOOTSTRAP` como default;
 - continuar sem Supabase e sem remocao da seed demo.
 

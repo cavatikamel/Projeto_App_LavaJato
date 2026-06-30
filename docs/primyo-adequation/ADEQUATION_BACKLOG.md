@@ -1543,6 +1543,43 @@
   - a leitura dos globais tecnicos ainda pode variar conforme o contexto de inspecao automatizada;
   - Supabase continua fora de escopo.
 
+### LP-WEB-DATA-CLEANUP-010
+
+- Status: `Implementado`
+- Data: `2026-06-30`
+- Arquivos alterados:
+  - `docs/primyo-changes/LP-WEB-DATA-CLEANUP-010.md`
+  - `docs/primyo-web-integration/CLEAN_BOOTSTRAP_DIAGNOSTICS_CONFIRMATION.md`
+  - `docs/primyo-web-integration/DEMO_DATA_CLEANUP_PLAN.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - `git status --short` -> executado;
+  - `git diff --name-only` -> executado;
+  - `node --check app/main.js` -> executado;
+  - `node --check app/demo/lavaprimeDemoData.js` -> executado;
+  - `node --check app/demo/lavaprimeBootstrapMode.js` -> executado;
+  - `node --check app/demo/lavaprimeCleanBootstrap.js` -> executado;
+  - `node scripts/primyo-adapter-gate.mjs` -> executado;
+  - `npm.cmd run primyo:gate` -> executado;
+  - `npm.cmd run build` -> executado;
+  - `npm.cmd run verify:build` -> executado;
+  - smoke manual com dashboard, clientes, patio, financeiro, relatorios/documentos, logout admin, patio operador e nova consulta dos diagnosticos no browser.
+- Observacoes:
+  - a fase confirmou que os globais de `window` ficaram repetiveis no contexto de avaliacao direta da pagina;
+  - o espelho tecnico no DOM continuou como evidencia estavel e legivel para automacao;
+  - o estado pre-login ainda expoe snapshot parcial e nao deve ser confundido com o estado operacional final;
+  - `DEMO_BOOTSTRAP` continua ativo por padrao;
+  - `CLEAN_BOOTSTRAP` continua protegido e nao ativo;
+  - nenhuma seed demo foi removida.
+- Riscos remanescentes:
+  - a promocao de `CLEAN_BOOTSTRAP` continua bloqueada por falta de volume limpo e relacionamentos persistidos;
+  - a leitura por `window` pode continuar variando fora do contexto de avaliacao direta da pagina;
+  - Supabase continua fora de escopo.
+
 ### LP-ANDROID-001
 
 - Status: `Concluido`

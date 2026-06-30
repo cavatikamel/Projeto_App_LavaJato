@@ -264,6 +264,18 @@ Regra aplicada em `LP-WEB-DATA-CLEANUP-009`:
 - o console do browser deve permanecer sem erro bloqueante;
 - a proxima fatia deve confirmar repetibilidade do metodo novo antes de qualquer conversa sobre promocao do modo limpo.
 
+Regra aplicada em `LP-WEB-DATA-CLEANUP-010`:
+
+- `DEMO_BOOTSTRAP` deve continuar como modo padrao oficial;
+- `CLEAN_BOOTSTRAP` nao pode ser ativado como default;
+- a confirmacao precisa revalidar tanto `window.__lavaprimeGetCleanBootstrapDiagnostics?.()` quanto `window.__lavaprimeDiagnostics?.cleanBootstrap`;
+- o espelho tecnico no DOM deve continuar legivel por `dataset` e por `#lavaprime-clean-bootstrap-diagnostics`;
+- o estado pre-login pode exibir snapshot parcial, mas o estado operacional final precisa convergir para `unsafeSurfaceCount=0` e `improvedSurfaceCount=5`;
+- nenhuma seed demo pode ser removida;
+- o smoke manual minimo deve revalidar dashboard, `Cadastros > Clientes`, patio, financeiro, relatorios/documentos, logout e patio operador;
+- o console do browser deve permanecer sem erro bloqueante;
+- a proxima fatia deve consolidar os bloqueios remanescentes para promocao de `CLEAN_BOOTSTRAP` a default.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;
