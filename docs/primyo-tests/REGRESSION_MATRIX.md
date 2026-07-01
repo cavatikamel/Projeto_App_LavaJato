@@ -287,6 +287,17 @@ Regra aplicada em `LP-WEB-DATA-CLEANUP-011`:
 - o console do browser deve permanecer sem erro bloqueante;
 - a proxima fatia deve transformar os bloqueios consolidados em prerequisitos formais de ativacao gradual.
 
+Regra aplicada em `LP-WEB-DATA-CLEANUP-012`:
+
+- `DEMO_BOOTSTRAP` deve continuar como modo padrao oficial;
+- `CLEAN_BOOTSTRAP` nao pode ser ativado como default;
+- os pre-requisitos de ativacao futura devem ficar agrupados por dados, relacionamentos, smoke, dashboards, documentos, seed demo, governance e rollback;
+- a fase deve deixar claros os criterios de aceite e de bloqueio antes de qualquer ativacao futura;
+- nenhuma seed demo pode ser removida;
+- o smoke reduzido deve confirmar abertura do app, login admin, dashboard, patio, documentos/relatorios, logout e patio operador;
+- o console do browser deve permanecer sem erro bloqueante;
+- a proxima fatia deve definir a estrategia da base limpa futura sem abrir Supabase e sem trocar o bootstrap padrao.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

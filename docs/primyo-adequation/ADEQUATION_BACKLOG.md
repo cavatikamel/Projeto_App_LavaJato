@@ -1617,6 +1617,43 @@
   - a dependencia comercial da seed demo continua ativa;
   - Supabase continua fora de escopo.
 
+### LP-WEB-DATA-CLEANUP-012
+
+- Status: `Implementado`
+- Data: `2026-06-30`
+- Arquivos alterados:
+  - `docs/primyo-changes/LP-WEB-DATA-CLEANUP-012.md`
+  - `docs/primyo-web-integration/CLEAN_BOOTSTRAP_ACTIVATION_PREREQUISITES.md`
+  - `docs/primyo-web-integration/DEMO_DATA_CLEANUP_PLAN.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+- Evidencias:
+  - leitura consolidada da fase 011 e dos documentos de trial, observabilidade e cleanup;
+  - `git status --short` -> executado;
+  - `git diff --name-only` -> executado;
+  - `node --check app/main.js` -> executado;
+  - `node --check app/demo/lavaprimeDemoData.js` -> executado;
+  - `node --check app/demo/lavaprimeBootstrapMode.js` -> executado;
+  - `node --check app/demo/lavaprimeCleanBootstrap.js` -> executado;
+  - `node scripts/primyo-adapter-gate.mjs` -> executado;
+  - `npm.cmd run primyo:gate` -> executado;
+  - `npm.cmd run build` -> executado;
+  - `npm.cmd run verify:build` -> executado;
+  - smoke reduzido com abertura do app, login admin, dashboard, patio, documentos/relatorios, logout e patio operador.
+- Observacoes:
+  - a fase foi totalmente documental;
+  - a trilha passou a ter pre-requisitos formais de ativacao, e nao apenas bloqueios;
+  - `DEMO_BOOTSTRAP` continua ativo por padrao;
+  - `CLEAN_BOOTSTRAP` continua protegido e nao ativo;
+  - nenhuma seed demo foi removida.
+- Riscos remanescentes:
+  - a futura ativacao continua dependente de estrategia de base limpa ainda nao definida;
+  - a dependencia comercial da seed demo continua ativa;
+  - Supabase continua fora de escopo.
+
 ### LP-ANDROID-001
 
 - Status: `Concluido`

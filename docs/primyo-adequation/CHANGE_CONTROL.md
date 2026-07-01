@@ -448,6 +448,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: a fase consolidou em documento unico os bloqueios remanescentes para promocao de `CLEAN_BOOTSTRAP` a default, separando gargalos ja mitigados de observabilidade e hardening dos gargalos ainda abertos de dados limpos, relacionamentos persistidos e readiness operacional.
 - Observacao de risco: a promocao do modo limpo continua bloqueada e a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-012`, focada em prerequisitos formais de ativacao gradual.
 
+### LP-WEB-DATA-CLEANUP-012
+
+- Change record: `docs/primyo-changes/LP-WEB-DATA-CLEANUP-012.md`
+- Closure: `fase absorvida no proprio change record e em CLEAN_BOOTSTRAP_ACTIVATION_PREREQUISITES.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase transformou os bloqueios consolidados em pre-requisitos formais, com criterios de aceite, criterios de bloqueio, sequencia futura e rollback antes de qualquer conversa sobre ativacao de `CLEAN_BOOTSTRAP`.
+- Observacao de risco: a definicao da base limpa futura continua em aberto e a prioridade recomendada passa a ser `LP-WEB-DATA-CLEANUP-013`, focada na estrategia da base institucional/controlada que sustentara essa ativacao.
+
 ### LP-ANDROID-001
 
 - Change record: `docs/primyo-changes/LP-ANDROID-001.md`

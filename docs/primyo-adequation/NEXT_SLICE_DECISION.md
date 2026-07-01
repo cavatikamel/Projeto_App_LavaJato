@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Registrar a decisao oficial apos `LP-WEB-DATA-CLEANUP-011`.
+Registrar a decisao oficial apos `LP-WEB-DATA-CLEANUP-012`.
 
 ## Estado atual consolidado
 
@@ -22,6 +22,7 @@ Registrar a decisao oficial apos `LP-WEB-DATA-CLEANUP-011`.
 - o espelho DOM continua sendo a evidencia mais estavel para automacao e aceite repetivel;
 - o estado pre-login ainda expoe snapshot parcial e nao deve ser usado como referencia final de readiness operacional;
 - os bloqueios restantes para promocao de `CLEAN_BOOTSTRAP` a default passam a ficar consolidados em documento unico;
+- os bloqueios consolidados passam a ser transformados em pre-requisitos formais de ativacao;
 - o modo limpo continua sem base suficiente para virar default, apesar da observabilidade tecnica confirmada;
 - `customerAdapter` continua em `shadow read`;
 - `idResolver` continua fora do runtime;
@@ -29,19 +30,19 @@ Registrar a decisao oficial apos `LP-WEB-DATA-CLEANUP-011`.
 
 ## Decisao oficial
 
-Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-012 - Clean bootstrap activation prerequisites plan`
+Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-013 - Institutional clean dataset strategy`
 
 ## Justificativa
 
-`LP-WEB-DATA-CLEANUP-012` passa a ser a melhor proxima fatia porque:
+`LP-WEB-DATA-CLEANUP-013` passa a ser a melhor proxima fatia porque:
 
 1. a segregacao inicial entre bootstrap demo e bootstrap limpo ja existe;
 2. a revisao de dependencias residuais e o trial protegido ja foram executados;
 3. o hardening semantico reduziu o risco de quebra nas superficies criticas do trial;
 4. a reavaliacao confirmou que o trial protegido ficou mais viavel e nao manteve superficies semanticamente inseguras imediatas;
 5. a observabilidade tecnica agora foi confirmada em `window` e no espelho do DOM;
-6. os bloqueios remanescentes ja foram consolidados e deixam claro que o gargalo principal e readiness de dados e ativacao gradual;
-7. o proximo passo seguro e transformar esses bloqueios em prerequisitos formais antes de qualquer conversa sobre ativacao do modo limpo.
+6. os pre-requisitos formais ja foram definidos e deixam claro que o gargalo principal agora e a definicao da base limpa futura;
+7. o proximo passo seguro e detalhar a estrategia da seed institucional ou da base minima real antes de qualquer conversa sobre ativacao do modo limpo.
 
 ## Fatias rejeitadas por enquanto
 
@@ -58,10 +59,10 @@ Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-012 - Clean bootstrap activation
 
 ## Direcao recomendada
 
-`LP-WEB-DATA-CLEANUP-012` deve:
+`LP-WEB-DATA-CLEANUP-013` deve:
 
-1. transformar os bloqueios consolidados em prerequisitos formais de ativacao gradual;
-2. definir criterios de entrada e saida para um futuro trial de ativacao controlada;
+1. definir se a futura base limpa usara seed institucional controlada, dados reais minimos ou estrategia hibrida;
+2. documentar a composicao minima dessa base para dashboard, patio, financeiro, relatorios e documentos;
 3. manter `DEMO_BOOTSTRAP` como padrao oficial;
 4. continuar sem abrir Supabase runtime;
 5. continuar sem remover a seed demo.
@@ -71,7 +72,7 @@ Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-012 - Clean bootstrap activation
 - bootstrap demo e bootstrap limpo seguem segregados;
 - a dependencia residual da seed demo segue mapeada por diagnosticos protegidos;
 - as superficies criticas do trial agora contam com fallback semantico adicional;
-- a reavaliacao, a confirmacao operacional e a consolidacao dos bloqueios nao autorizaram promocao do modo limpo;
+- a reavaliacao, a confirmacao operacional, a consolidacao dos bloqueios e o plano de pre-requisitos nao autorizaram promocao do modo limpo;
 - nenhuma seed foi removida;
 - nenhuma tela foi quebrada;
 - o modo demo continuou padrao.

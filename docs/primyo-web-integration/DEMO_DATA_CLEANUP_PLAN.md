@@ -281,14 +281,23 @@ Objetivo:
 - nenhuma seed demo foi removida;
 - Supabase continua fechado.
 
+## Estado apos LP-WEB-DATA-CLEANUP-012
+
+- os bloqueios consolidados passam a ser convertidos em pre-requisitos formais de ativacao;
+- a trilha passa a ter criterios explicitos de aceite, bloqueio, sequencia futura e rollback antes de qualquer conversa sobre promocao de `CLEAN_BOOTSTRAP`;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao ativo como default;
+- nenhuma seed demo foi removida;
+- Supabase continua fechado.
+
 ## Proxima microfase recomendada
 
-`LP-WEB-DATA-CLEANUP-012 - Clean bootstrap activation prerequisites plan`
+`LP-WEB-DATA-CLEANUP-013 - Institutional clean dataset strategy`
 
 Objetivo:
 
-- transformar os bloqueios consolidados em prerequisitos formais de ativacao gradual;
-- definir criterios de entrada e saida para futuro trial de ativacao;
+- definir se a futura base limpa usara seed institucional controlada, dados reais minimos ou estrategia hibrida;
+- documentar a composicao minima dessa base para dashboards, patio, financeiro e documentos;
 - manter `DEMO_BOOTSTRAP` como default;
 - continuar sem Supabase e sem remocao da seed demo.
 
