@@ -1797,3 +1797,38 @@
 - Observacoes:
   - o objetivo previsto como `LP-AND-001` foi formalmente executado na mudanca `LP-ANDROID-002`;
   - o principal risco remanescente migra para `LP-AND-002`, focado em preservacao de dados e saida de `fallbackToDestructiveMigration()`.
+
+### LP-APK-000
+
+- Status: `Concluido`
+- Data: `2026-07-01`
+- Arquivos alterados:
+  - `docs/primyo-apk/LP_APK_PROGRAM_CHARTER.md`
+  - `docs/primyo-apk/LP_APK_PHASES.md`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-apk/LP_APK_ENGINEERING_RULES.md`
+  - `docs/primyo-apk/LP_APK_SCREEN_BY_SCREEN_PLAN.md`
+  - `docs/primyo-apk/LP_APK_VISUAL_PARITY_RULES.md`
+  - `docs/primyo-apk/LP_APK_QA_POLICY.md`
+  - `docs/primyo-apk/LP_APK_REQUIREMENTS.md`
+  - `docs/primyo-apk/LP_APK_REQUIREMENTS_MATRIX.md`
+  - `docs/primyo-apk/LPFR.md`
+  - `docs/primyo-apk/LPFR_STATUS_MATRIX.md`
+  - `docs/primyo-changes/LP-APK-000.md`
+  - `docs/primyo-changes/LP-APK-000-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - leitura cruzada da governanca Primyo, baseline Android, contracts e referencias Web/visual;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`.
+- Observacoes:
+  - a fase foi totalmente documental;
+  - o checkpoint Android atual foi reclassificado como parcial e insuficiente para representar produto final;
+  - requisitos obrigatorios do APK foram separados formalmente de `LPFR`.
+- Riscos remanescentes:
+  - o programa APK ainda depende de baseline funcional Web dedicada;
+  - o Android continua com riscos tecnicos conhecidos, especialmente `fallbackToDestructiveMigration()`;
+  - nenhuma validacao manual em dispositivo era escopo desta fase.

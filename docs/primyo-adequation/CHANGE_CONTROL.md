@@ -487,3 +487,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Aceito com observacoes`
 - Observacao principal: a estrategia de dados Android foi revisada contra o dominio do Web e os contratos oficiais, com matriz documental de equivalencias, ausencias, conflitos, IDs, offline e sync registrada em `docs/primyo-android/ANDROID_DATA_PARITY_MATRIX.md`.
 - Observacao de risco: o Android continua sem dominios locais de pagamento, financeiro, documentos e empresa, e a prioridade recomendada passa a ser `LP-AND-002` para sair de `fallbackToDestructiveMigration()` antes de qualquer sync real ou expansao funcional.
+
+### LP-APK-000
+
+- Change record: `docs/primyo-changes/LP-APK-000.md`
+- Closure: `docs/primyo-changes/LP-APK-000-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: o `Programa LavaPrime APK` passa a ter governanca oficial propria em `docs/primyo-apk/`, com charter, fases, progresso, requisitos obrigatorios, politica de QA, plano tela por tela e registro formal de `LPFR`.
+- Observacao de risco: a fase nao altera Android nem Web; a prioridade recomendada passa a ser `LP-APK-001` para mapear a baseline funcional do Web antes de qualquer nova ampliacao de paridade no app nativo.
