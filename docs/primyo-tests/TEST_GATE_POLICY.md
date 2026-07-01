@@ -329,6 +329,17 @@ Estado oficial apos `LP-WEB-DATA-CLEANUP-012`:
 - qualquer mudanca adicional nessa trilha deve reexecutar `node --check app/main.js`, `node --check app/demo/lavaprimeDemoData.js`, `node --check app/demo/lavaprimeBootstrapMode.js`, `node --check app/demo/lavaprimeCleanBootstrap.js`, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke reduzido;
 - nenhuma seed demo pode ser removida e nenhuma integracao com Supabase pode ser iniciada nesta etapa.
 
+Estado oficial apos `LP-DOC-FINAL-001`:
+
+- o encerramento documental do Primyo Transformation Program no LavaPrime Web fica consolidado;
+- o pacote oficial de validacao permanece `node --check` dos modulos criticos, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke reduzido;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a `default` nesta etapa;
+- nenhuma seed demo pode ser removida;
+- nenhuma integracao com Supabase pode ser iniciada nesta etapa;
+- `LP-WEB-DATA-CLEANUP-013` fica registrada como trilha futura independente e nao como bloqueio do encerramento atual;
+- qualquer nova trilha deve abrir escopo proprio e manter Android, CSS e `.gitignore` fora dos commits Primyo Web quando nao houver autorizacao explicita.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

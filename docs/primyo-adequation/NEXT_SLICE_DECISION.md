@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Registrar a decisao oficial apos `LP-WEB-DATA-CLEANUP-012`.
+Registrar a transicao oficial apos `LP-DOC-FINAL-001`.
 
 ## Estado atual consolidado
 
@@ -21,20 +21,29 @@ Registrar a decisao oficial apos `LP-WEB-DATA-CLEANUP-012`.
 - a confirmacao operacional mostrou que os globais de `window` ficam repetiveis no contexto de avaliacao direta da pagina;
 - o espelho DOM continua sendo a evidencia mais estavel para automacao e aceite repetivel;
 - o estado pre-login ainda expoe snapshot parcial e nao deve ser usado como referencia final de readiness operacional;
-- os bloqueios restantes para promocao de `CLEAN_BOOTSTRAP` a default passam a ficar consolidados em documento unico;
-- os bloqueios consolidados passam a ser transformados em pre-requisitos formais de ativacao;
+- os bloqueios restantes para promocao de `CLEAN_BOOTSTRAP` a default passaram a ficar consolidados em documento unico;
+- os bloqueios consolidados passaram a ser transformados em pre-requisitos formais de ativacao;
 - o modo limpo continua sem base suficiente para virar default, apesar da observabilidade tecnica confirmada;
 - `customerAdapter` continua em `shadow read`;
 - `idResolver` continua fora do runtime;
 - Supabase continua fechado.
+- o encerramento documental do Primyo Transformation Program no Web fica consolidado;
+- `LP-WEB-DATA-CLEANUP-013` passa a ser trilha futura independente e nao bloqueio do encerramento atual.
 
 ## Decisao oficial
 
-Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-013 - Institutional clean dataset strategy`
+- encerramento documental do programa: `consolidado`
+- proxima trilha Web recomendada: `LP-WEB-DATA-CLEANUP-013 - Institutional clean dataset strategy`
+- demais trilhas futuras independentes:
+  - `LavaPrime Android nativo oficial`
+  - `Supabase/backend real`
+  - `producao controlada Web`
+  - `ativacao futura do CLEAN_BOOTSTRAP`
+  - `funcionalidades futuras LPFR`
 
 ## Justificativa
 
-`LP-WEB-DATA-CLEANUP-013` passa a ser a melhor proxima fatia porque:
+`LP-WEB-DATA-CLEANUP-013` continua como melhor proxima trilha Web porque:
 
 1. a segregacao inicial entre bootstrap demo e bootstrap limpo ja existe;
 2. a revisao de dependencias residuais e o trial protegido ja foram executados;
@@ -43,6 +52,7 @@ Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-013 - Institutional clean datase
 5. a observabilidade tecnica agora foi confirmada em `window` e no espelho do DOM;
 6. os pre-requisitos formais ja foram definidos e deixam claro que o gargalo principal agora e a definicao da base limpa futura;
 7. o proximo passo seguro e detalhar a estrategia da seed institucional ou da base minima real antes de qualquer conversa sobre ativacao do modo limpo.
+8. essa definicao futura nao bloqueia mais o encerramento documental do programa atual.
 
 ## Fatias rejeitadas por enquanto
 
@@ -56,10 +66,12 @@ Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-013 - Institutional clean datase
   - rejeitada enquanto a trilha de cleanup nao estabilizar melhor a diferenca entre ambiente demo e ambiente limpo;
 - qualquer integracao de `idResolver` ao runtime:
   - continua cedo demais.
+- qualquer tentativa de tratar `LP-WEB-DATA-CLEANUP-013` como obrigacao imediata para fechar o programa:
+  - rejeitada, porque o encerramento documental ja esta consolidado.
 
 ## Direcao recomendada
 
-`LP-WEB-DATA-CLEANUP-013` deve:
+Para a proxima trilha Web, `LP-WEB-DATA-CLEANUP-013` deve:
 
 1. definir se a futura base limpa usara seed institucional controlada, dados reais minimos ou estrategia hibrida;
 2. documentar a composicao minima dessa base para dashboard, patio, financeiro, relatorios e documentos;
@@ -67,12 +79,26 @@ Proxima fatia recomendada: `LP-WEB-DATA-CLEANUP-013 - Institutional clean datase
 4. continuar sem abrir Supabase runtime;
 5. continuar sem remover a seed demo.
 
+Para as demais trilhas:
+
+- Android:
+  - abrir chat proprio e manter `LavaPrimeAndroidApp/**` fora dos commits Web;
+- Supabase/backend:
+  - abrir trilha propria e manter claro se a fase sera documental, de persistencia ou de runtime real;
+- producao controlada Web:
+  - so iniciar depois de criterio operacional proprio;
+- ativacao futura de `CLEAN_BOOTSTRAP`:
+  - somente apos todos os pre-requisitos formais;
+- funcionalidades `LPFR`:
+  - tratar como backlog funcional independente.
+
 ## Resultado desta fase
 
 - bootstrap demo e bootstrap limpo seguem segregados;
 - a dependencia residual da seed demo segue mapeada por diagnosticos protegidos;
 - as superficies criticas do trial agora contam com fallback semantico adicional;
 - a reavaliacao, a confirmacao operacional, a consolidacao dos bloqueios e o plano de pre-requisitos nao autorizaram promocao do modo limpo;
+- o encerramento documental final do programa foi consolidado em handoff proprio;
 - nenhuma seed foi removida;
 - nenhuma tela foi quebrada;
 - o modo demo continuou padrao.

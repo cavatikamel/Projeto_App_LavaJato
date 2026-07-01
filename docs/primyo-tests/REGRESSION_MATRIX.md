@@ -298,6 +298,18 @@ Regra aplicada em `LP-WEB-DATA-CLEANUP-012`:
 - o console do browser deve permanecer sem erro bloqueante;
 - a proxima fatia deve definir a estrategia da base limpa futura sem abrir Supabase e sem trocar o bootstrap padrao.
 
+Regra aplicada em `LP-DOC-FINAL-001`:
+
+- a fase deve permanecer somente documental;
+- `DEMO_BOOTSTRAP` deve continuar como modo padrao oficial;
+- `CLEAN_BOOTSTRAP` nao pode virar `default`;
+- nenhuma seed demo pode ser removida;
+- Supabase deve continuar fechado;
+- o handoff final precisa registrar working tree fora de escopo, status tecnico, trilhas futuras independentes e rollback geral;
+- o pacote oficial `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build` continua obrigatorio;
+- o smoke reduzido deve confirmar app, dashboard, patio, documentos/relatorios, logout e patio operador;
+- `LP-WEB-DATA-CLEANUP-013` deve permanecer registrada como trilha futura, nao como bloqueio de encerramento.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;
