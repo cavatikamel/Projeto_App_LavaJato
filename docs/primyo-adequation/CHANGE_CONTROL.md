@@ -464,6 +464,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: a fase consolida o encerramento documental do Primyo Transformation Program no LavaPrime Web, atualiza o handoff final e separa oficialmente as proximas trilhas independentes.
 - Observacao de risco: `LP-WEB-DATA-CLEANUP-013` continua recomendada como trilha futura, mas deixa de ser bloqueio para o encerramento documental do programa.
 
+### LP-DEPLOY-GOV-001
+
+- Change record: `docs/primyo-changes/LP-DEPLOY-GOV-001.md`
+- Closure: `docs/primyo-changes/LP-DEPLOY-GOV-001-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase define a governanca de repositório, homologacao, producao, Netlify e ambientes Supabase sem executar push, deploy ou alteracao de runtime.
+- Observacao de risco: a publicacao oficial continua bloqueada ate existir fase propria de staging, com isolamento dos arquivos fora de escopo e aprovacao formal do usuario.
+
 ### LP-ANDROID-001
 
 - Change record: `docs/primyo-changes/LP-ANDROID-001.md`

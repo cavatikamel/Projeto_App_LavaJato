@@ -340,6 +340,16 @@ Estado oficial apos `LP-DOC-FINAL-001`:
 - `LP-WEB-DATA-CLEANUP-013` fica registrada como trilha futura independente e nao como bloqueio do encerramento atual;
 - qualquer nova trilha deve abrir escopo proprio e manter Android, CSS e `.gitignore` fora dos commits Primyo Web quando nao houver autorizacao explicita.
 
+Estado oficial apos `LP-DEPLOY-GOV-001`:
+
+- a governanca de homologacao e producao passa a exigir branch, checklist e rollback definidos antes de qualquer push ou deploy;
+- o pacote oficial de validacao permanece `node --check` dos modulos criticos, Adapter Gate, `npm.cmd run primyo:gate`, `build`, `verify:build` e smoke reduzido;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a `default` nesta etapa;
+- nenhuma integracao runtime com Supabase pode ser iniciada nesta etapa;
+- nenhuma publicacao para `app.lavaprime.com.br` pode ocorrer sem staging aprovado e autorizacao formal do usuario;
+- arquivos fora de escopo no working tree devem ser tratados como bloqueio de push ou deploy sem isolamento seletivo.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

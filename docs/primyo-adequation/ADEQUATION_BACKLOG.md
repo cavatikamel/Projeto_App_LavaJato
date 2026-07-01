@@ -1692,6 +1692,51 @@
   - a dependencia comercial da seed demo continua ativa;
   - Supabase continua fora de escopo.
 
+### LP-DEPLOY-GOV-001
+
+- Status: `Implementado`
+- Data: `2026-07-01`
+- Arquivos alterados:
+  - `docs/primyo-changes/LP-DEPLOY-GOV-001.md`
+  - `docs/primyo-changes/LP-DEPLOY-GOV-001-CLOSURE.md`
+  - `docs/primyo-deploy/DEPLOYMENT_GOVERNANCE.md`
+  - `docs/primyo-deploy/NETLIFY_ENVIRONMENT_STRATEGY.md`
+  - `docs/primyo-deploy/SUPABASE_ENVIRONMENT_STRATEGY.md`
+  - `docs/primyo-deploy/BRANCHING_AND_RELEASE_FLOW.md`
+  - `docs/primyo-deploy/PRODUCTION_RELEASE_CHECKLIST.md`
+  - `docs/primyo-deploy/STAGING_VALIDATION_CHECKLIST.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+- Evidencias:
+  - `git status --short` -> executado;
+  - `git branch --show-current` -> executado;
+  - `git log -1 --oneline` -> executado;
+  - `git remote -v` -> executado;
+  - `git diff --name-only` -> executado;
+  - `dir netlify.toml` e `dir package.json` -> executados;
+  - auditoria de `netlify.toml`, `vite.config.js` e `.env.example` -> executada;
+  - `node --check app/main.js` -> executado;
+  - `node --check app/demo/lavaprimeDemoData.js` -> executado;
+  - `node --check app/demo/lavaprimeBootstrapMode.js` -> executado;
+  - `node --check app/demo/lavaprimeCleanBootstrap.js` -> executado;
+  - `node scripts/primyo-adapter-gate.mjs` -> executado;
+  - `npm.cmd run primyo:gate` -> executado;
+  - `npm.cmd run build` -> executado;
+  - `npm.cmd run verify:build` -> executado;
+  - smoke reduzido com abertura do app, login admin, dashboard, patio, documentos/relatorios, logout e patio operador.
+- Observacoes:
+  - a fase foi prioritariamente documental e de auditoria;
+  - nenhum push, deploy, alteracao de DNS ou abertura de Supabase foi executado;
+  - `primyo/onboarding` foi mantida como branch candidata, nao como branch de producao;
+  - o working tree atual contem tambem `app/assets/data/fipe-veiculos.js` e `app/assets/data/fipe-veiculos.json` fora do escopo da fase.
+- Riscos remanescentes:
+  - a publicacao continua bloqueada ate existir staging validado;
+  - arquivos fora de escopo ainda podem contaminar push ou PR se o staging nao for seletivo;
+  - Supabase continua fora de escopo operacional.
+
 ### LP-ANDROID-001
 
 - Status: `Concluido`

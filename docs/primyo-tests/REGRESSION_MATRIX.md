@@ -310,6 +310,17 @@ Regra aplicada em `LP-DOC-FINAL-001`:
 - o smoke reduzido deve confirmar app, dashboard, patio, documentos/relatorios, logout e patio operador;
 - `LP-WEB-DATA-CLEANUP-013` deve permanecer registrada como trilha futura, nao como bloqueio de encerramento.
 
+Regra aplicada em `LP-DEPLOY-GOV-001`:
+
+- a fase deve permanecer documental e de auditoria;
+- nenhuma alteracao de runtime, Netlify, DNS, Supabase ou producao pode ocorrer;
+- `DEMO_BOOTSTRAP` deve continuar como modo padrao oficial;
+- `CLEAN_BOOTSTRAP` nao pode virar `default`;
+- a governanca de branches deve distinguir `main`, `staging` e `primyo/onboarding`;
+- a validacao local continua exigindo `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- o smoke reduzido continua obrigatorio antes de qualquer fase futura de publish;
+- arquivos fora de escopo no working tree devem bloquear push ou deploy sem isolamento seletivo.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

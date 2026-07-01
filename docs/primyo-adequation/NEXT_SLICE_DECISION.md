@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Registrar a transicao oficial apos `LP-DOC-FINAL-001`.
+Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-001`.
 
 ## Estado atual consolidado
 
@@ -29,12 +29,21 @@ Registrar a transicao oficial apos `LP-DOC-FINAL-001`.
 - Supabase continua fechado.
 - o encerramento documental do Primyo Transformation Program no Web fica consolidado;
 - `LP-WEB-DATA-CLEANUP-013` passa a ser trilha futura independente e nao bloqueio do encerramento atual.
+- a governanca de deploy, homologacao e producao para `app.lavaprime.com.br` passa a estar documentada;
+- `netlify.toml`, `vite.config.js`, `.env.example` e o remote `origin` foram auditados sem alteracao;
+- o working tree continua com arquivos fora de escopo que devem bloquear push ou deploy sem isolamento:
+  - `.gitignore`
+  - `app/styles.css`
+  - `LavaPrimeAndroidApp/**`
+  - `app/assets/data/fipe-veiculos.js`
+  - `app/assets/data/fipe-veiculos.json`
 
 ## Decisao oficial
 
 - encerramento documental do programa: `consolidado`
-- proxima trilha Web recomendada: `LP-WEB-DATA-CLEANUP-013 - Institutional clean dataset strategy`
+- proxima trilha recomendada: `LP-DEPLOY-GOV-002 - Prepare Netlify staging deployment`
 - demais trilhas futuras independentes:
+  - `LP-WEB-DATA-CLEANUP-013 - Institutional clean dataset strategy`
   - `LavaPrime Android nativo oficial`
   - `Supabase/backend real`
   - `producao controlada Web`
@@ -43,16 +52,14 @@ Registrar a transicao oficial apos `LP-DOC-FINAL-001`.
 
 ## Justificativa
 
-`LP-WEB-DATA-CLEANUP-013` continua como melhor proxima trilha Web porque:
+`LP-DEPLOY-GOV-002` passa a ser a melhor proxima fase porque:
 
-1. a segregacao inicial entre bootstrap demo e bootstrap limpo ja existe;
-2. a revisao de dependencias residuais e o trial protegido ja foram executados;
-3. o hardening semantico reduziu o risco de quebra nas superficies criticas do trial;
-4. a reavaliacao confirmou que o trial protegido ficou mais viavel e nao manteve superficies semanticamente inseguras imediatas;
-5. a observabilidade tecnica agora foi confirmada em `window` e no espelho do DOM;
-6. os pre-requisitos formais ja foram definidos e deixam claro que o gargalo principal agora e a definicao da base limpa futura;
-7. o proximo passo seguro e detalhar a estrategia da seed institucional ou da base minima real antes de qualquer conversa sobre ativacao do modo limpo.
-8. essa definicao futura nao bloqueia mais o encerramento documental do programa atual.
+1. a governanca de branch, Netlify e Supabase ja foi documentada;
+2. o dominio oficial `app.lavaprime.com.br` agora tem esteira de promocao definida, mas ainda nao executada;
+3. o passo seguro seguinte e preparar homologacao sem tocar em producao;
+4. a branch atual `primyo/onboarding` nao deve publicar producao diretamente;
+5. os arquivos fora de escopo no working tree exigem fase propria e isolamento antes de qualquer push;
+6. `LP-WEB-DATA-CLEANUP-013` continua importante, mas como trilha paralela de dados limpos e nao como passo obrigatorio previo ao staging.
 
 ## Fatias rejeitadas por enquanto
 
@@ -68,19 +75,24 @@ Registrar a transicao oficial apos `LP-DOC-FINAL-001`.
   - continua cedo demais.
 - qualquer tentativa de tratar `LP-WEB-DATA-CLEANUP-013` como obrigacao imediata para fechar o programa:
   - rejeitada, porque o encerramento documental ja esta consolidado.
+- qualquer tentativa de publicar `app.lavaprime.com.br` direto de `primyo/onboarding`:
+  - rejeitada, porque a estrategia aprovada exige homologacao e aprovacao previa.
 
 ## Direcao recomendada
 
-Para a proxima trilha Web, `LP-WEB-DATA-CLEANUP-013` deve:
+Para a proxima fase, `LP-DEPLOY-GOV-002` deve:
 
-1. definir se a futura base limpa usara seed institucional controlada, dados reais minimos ou estrategia hibrida;
-2. documentar a composicao minima dessa base para dashboard, patio, financeiro, relatorios e documentos;
-3. manter `DEMO_BOOTSTRAP` como padrao oficial;
-4. continuar sem abrir Supabase runtime;
-5. continuar sem remover a seed demo.
+1. preparar a branch de homologacao recomendada (`staging`) ou o branch deploy equivalente;
+2. definir o alvo de staging no Netlify sem tocar producao;
+3. validar se o fluxo de push autorizado, PR e build remoto esta coerente;
+4. repetir gate, build, verify e smoke no ambiente publicado de homologacao;
+5. manter `DEMO_BOOTSTRAP` como padrao oficial;
+6. continuar sem abrir Supabase runtime e sem remover a seed demo.
 
 Para as demais trilhas:
 
+- clean dataset institucional:
+  - seguir como trilha propria para definir a futura base limpa;
 - Android:
   - abrir chat proprio e manter `LavaPrimeAndroidApp/**` fora dos commits Web;
 - Supabase/backend:
@@ -99,6 +111,7 @@ Para as demais trilhas:
 - as superficies criticas do trial agora contam com fallback semantico adicional;
 - a reavaliacao, a confirmacao operacional, a consolidacao dos bloqueios e o plano de pre-requisitos nao autorizaram promocao do modo limpo;
 - o encerramento documental final do programa foi consolidado em handoff proprio;
+- a esteira de homologacao e producao para `app.lavaprime.com.br` passa a estar definida documentalmente;
 - nenhuma seed foi removida;
 - nenhuma tela foi quebrada;
 - o modo demo continuou padrao.
