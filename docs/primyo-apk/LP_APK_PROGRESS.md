@@ -38,6 +38,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 
 - progresso oficial antes de `LP-APK-000`: `0%`
 - progresso oficial apos concluir `LP-APK-000`: `3%`
+- progresso oficial antes de `LP-APK-001`: `3%`
+- progresso oficial apos concluir `LP-APK-001`: `10%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -53,8 +55,13 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - LPFRs nao contam percentual oficial enquanto nao forem convertidos em fase aprovada;
 - progresso deve ser atualizado sempre no fechamento da fase correspondente.
 
+## Estado oficial atual
+
+- baseline funcional Web do programa APK: `concluida`
+- progresso oficial consolidado nesta data: `10%`
+- proxima etapa recomendada: `LP-APK-002 - Android Current State Reuse Decision`
+
 ## Regra de checkpoint
 
 - checkpoint parcial: registra estado tecnico, nao progresso final;
 - release candidate: exige pacote de QA antes do ultimo percentual.
-

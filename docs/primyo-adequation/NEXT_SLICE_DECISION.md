@@ -127,11 +127,12 @@ Para as demais trilhas:
 
 - trilha Android nativa passa a operar sob governanca propria do `Programa LavaPrime APK`;
 - a abertura oficial desta governanca foi registrada em `LP-APK-000`;
-- a proxima fase recomendada da trilha APK passa a ser `LP-APK-001 - Web Functional Baseline`.
+- a baseline funcional real do Web foi consolidada em `LP-APK-001`;
+- a proxima fase recomendada da trilha APK passa a ser `LP-APK-002 - Android Current State Reuse Decision`.
 
 Justificativa:
 
 1. o Android atual foi formalizado como checkpoint tecnico parcial, nao como produto final;
-2. os requisitos obrigatorios do APK agora existem, mas ainda dependem de baseline funcional Web dedicada;
-3. mapear primeiro o Web reduz drift funcional e evita implementar paridade por inferencia;
+2. os requisitos obrigatorios do APK agora passam a apontar para rotinas Web mapeadas, reduzindo drift funcional;
+3. o proximo risco principal nao e mais falta de baseline do Web, mas sim a ausencia de decisao formal sobre o que reaproveitar da base Android atual;
 4. a trilha APK continua separada da trilha Web principal e nao autoriza alterar `app/main.js`, `app/styles.css` ou contratos runtime.

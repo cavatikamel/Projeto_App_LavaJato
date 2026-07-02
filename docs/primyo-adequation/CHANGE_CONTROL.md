@@ -496,6 +496,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: o `Programa LavaPrime APK` passa a ter governanca oficial propria em `docs/primyo-apk/`, com charter, fases, progresso, requisitos obrigatorios, politica de QA, plano tela por tela e registro formal de `LPFR`.
 - Observacao de risco: a fase nao altera Android nem Web; a prioridade recomendada passa a ser `LP-APK-001` para mapear a baseline funcional do Web antes de qualquer nova ampliacao de paridade no app nativo.
 
+### LP-APK-001
+
+- Change record: `docs/primyo-changes/LP-APK-001.md`
+- Closure: `docs/primyo-changes/LP-APK-001-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a baseline funcional real do LavaPrime Web foi consolidada em documentos especificos do programa APK, com mapa de modulos, matriz de rotinas, alvos de paridade Android e requisitos reclassificados a partir do Web observado.
+- Observacao de risco: a fase nao altera Android nem Web; a prioridade recomendada passa a ser `LP-APK-002` para decidir o reuso controlado da base Android atual antes de qualquer implementacao adicional.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`

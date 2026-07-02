@@ -1832,3 +1832,36 @@
   - o programa APK ainda depende de baseline funcional Web dedicada;
   - o Android continua com riscos tecnicos conhecidos, especialmente `fallbackToDestructiveMigration()`;
   - nenhuma validacao manual em dispositivo era escopo desta fase.
+
+### LP-APK-001
+
+- Status: `Concluido`
+- Data: `2026-07-02`
+- Arquivos alterados:
+  - `docs/primyo-apk/LP_APK_WEB_FUNCTIONAL_BASELINE.md`
+  - `docs/primyo-apk/LP_APK_WEB_MODULES_MAP.md`
+  - `docs/primyo-apk/LP_APK_WEB_ROUTINES_MATRIX.md`
+  - `docs/primyo-apk/LP_APK_ANDROID_PARITY_TARGETS.md`
+  - `docs/primyo-apk/LP_APK_REQUIREMENTS.md`
+  - `docs/primyo-apk/LP_APK_REQUIREMENTS_MATRIX.md`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-001.md`
+  - `docs/primyo-changes/LP-APK-001-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - leitura cruzada da governanca Primyo e da governanca APK;
+  - auditoria funcional de `app/main.js`, `app/demo/**`, `app/adapters/**`, `app/styles.css` e `scripts/**` em modo leitura;
+  - leitura de `docs/primyo-data/contracts/**`;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`.
+- Observacoes:
+  - a fase confirmou que o Web possui rotinas reais de patio, atendimento, orcamento, catalogos, caixa, pagamentos em aberto, faturas, documentos, negocio, usuarios e mensagens;
+  - os requisitos do APK deixam de depender de inferencia e passam a referenciar rotinas Web observadas;
+  - a fase foi totalmente documental.
+- Riscos remanescentes:
+  - o Android atual continua apenas parcial em relacao a varias rotinas mapeadas;
+  - ainda falta decidir formalmente o que da base Android atual deve ser `keep`, `refactor`, `replace` ou `archive`;
+  - sync real, auth real e impressao termica continuam fora do baseline atual do Web e exigem fase propria.
