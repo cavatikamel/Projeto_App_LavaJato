@@ -1865,3 +1865,33 @@
   - o Android atual continua apenas parcial em relacao a varias rotinas mapeadas;
   - ainda falta decidir formalmente o que da base Android atual deve ser `keep`, `refactor`, `replace` ou `archive`;
   - sync real, auth real e impressao termica continuam fora do baseline atual do Web e exigem fase propria.
+
+### LP-APK-002
+
+- Status: `Concluido`
+- Data: `2026-07-02`
+- Arquivos alterados:
+  - `docs/primyo-apk/LP_APK_ANDROID_REUSE_DECISION.md`
+  - `docs/primyo-apk/LP_APK_ANDROID_REUSE_MATRIX.md`
+  - `docs/primyo-apk/LP_APK_ANDROID_REBUILD_STRATEGY.md`
+  - `docs/primyo-apk/LP_APK_REQUIREMENTS_MATRIX.md`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-002.md`
+  - `docs/primyo-changes/LP-APK-002-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - leitura cruzada da governanca Primyo, governanca APK, baseline funcional Web e documentacao Android existente;
+  - auditoria estrutural de `LavaPrimeAndroidApp/**`, incluindo Gradle, manifest, schema Room, componentes, telas, sync e `Material_Visual/**`;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`.
+- Observacoes:
+  - a fase foi totalmente documental;
+  - a decisao principal registrada passa a ser `clean-foundation-inside-current-project`;
+  - o app atual foi mantido como checkpoint tecnico parcial, com reuso seletivo e sem autorizacao para expandir a fundacao demo atual.
+- Riscos remanescentes:
+  - `fallbackToDestructiveMigration()` continua como risco estrutural central;
+  - auth demo, seed demo e repositorio monolitico seguem inadequados para evolucao sem substituicao;
+  - a baseline visual oficial do Android ainda precisa ser fechada antes da fundacao final de design system e telas.

@@ -40,6 +40,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 - progresso oficial apos concluir `LP-APK-000`: `3%`
 - progresso oficial antes de `LP-APK-001`: `3%`
 - progresso oficial apos concluir `LP-APK-001`: `10%`
+- progresso oficial antes de `LP-APK-002`: `10%`
+- progresso oficial apos concluir `LP-APK-002`: `15%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -58,8 +60,9 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 ## Estado oficial atual
 
 - baseline funcional Web do programa APK: `concluida`
-- progresso oficial consolidado nesta data: `10%`
-- proxima etapa recomendada: `LP-APK-002 - Android Current State Reuse Decision`
+- decisao oficial de reuse do Android atual: `concluida`
+- progresso oficial consolidado nesta data: `15%`
+- proxima etapa recomendada: `LP-APK-003 - Mobile Visual Reference Baseline`
 
 ## Regra de checkpoint
 
