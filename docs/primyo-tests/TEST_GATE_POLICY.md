@@ -350,6 +350,19 @@ Estado oficial apos `LP-DEPLOY-GOV-001`:
 - nenhuma publicacao para `app.lavaprime.com.br` pode ocorrer sem staging aprovado e autorizacao formal do usuario;
 - arquivos fora de escopo no working tree devem ser tratados como bloqueio de push ou deploy sem isolamento seletivo.
 
+Estado oficial apos `LP-DEPLOY-GOV-002`:
+
+- a preparacao de staging Netlify continua apenas documental e tecnica;
+- a branch `staging` segue ausente local e remotamente na auditoria atual;
+- a criacao futura de `staging` deve partir de baseline Web revisada e nao do `HEAD` atual de forma cega;
+- o `HEAD` atual `87975a5` em `primyo/onboarding` inclui governanca APK e exige revisao antes de qualquer branch deploy Web;
+- `build = npm run build` e `publish = dist` seguem confirmados para o Netlify;
+- nenhuma publicacao para `app.lavaprime.com.br` pode ocorrer sem `staging` criada, `push` autorizado, deploy de homologacao validado e aprovacao formal do usuario;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a `default` nesta etapa;
+- Supabase continua fechado para runtime;
+- arquivos fora de escopo no working tree continuam sendo bloqueio de push ou deploy sem isolamento seletivo.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

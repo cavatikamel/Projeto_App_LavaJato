@@ -495,3 +495,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: o `Programa LavaPrime APK` passa a ter governanca oficial propria em `docs/primyo-apk/`, com charter, fases, progresso, requisitos obrigatorios, politica de QA, plano tela por tela e registro formal de `LPFR`.
 - Observacao de risco: a fase nao altera Android nem Web; a prioridade recomendada passa a ser `LP-APK-001` para mapear a baseline funcional do Web antes de qualquer nova ampliacao de paridade no app nativo.
+
+### LP-DEPLOY-GOV-002
+
+- Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`
+- Closure: `docs/primyo-changes/LP-DEPLOY-GOV-002-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase preparou a homologacao Netlify de forma documental e tecnica, confirmando `build = npm run build`, `publish = dist`, ausencia atual da branch `staging` e necessidade de revisar a baseline Web antes de qualquer criacao remota.
+- Observacao de risco: a publicacao continua bloqueada porque `primyo/onboarding` esta em `87975a5` com governanca APK no `HEAD`, a `staging` ainda nao existe local/remotamente e o working tree segue misturado com arquivos fora de escopo.

@@ -7,8 +7,10 @@ Definir a governanca oficial de repositorio, homologacao, publicacao e rollback 
 ## Estado atual auditado
 
 - branch atual: `primyo/onboarding`
-- ultimo commit auditado nesta fase: `094a5b7`
+- ultimo commit auditado nesta fase: `87975a5`
 - remote principal configurado: `origin -> https://github.com/cavatikamel/Projeto_App_LavaJato.git`
+- branch `staging` local: `ausente`
+- branch `origin/staging`: `ausente`
 - build oficial atual: `vite build`
 - gate oficial atual:
   - `node scripts/primyo-adapter-gate.mjs`
@@ -18,6 +20,7 @@ Definir a governanca oficial de repositorio, homologacao, publicacao e rollback 
 - `CLEAN_BOOTSTRAP` continua protegido e nao `default`
 - Supabase continua fechado para runtime
 - Android continua em trilha propria
+- `primyo/onboarding` contem tambem governanca APK no `HEAD` atual e nao deve ser promovida cegamente para homologacao Web
 
 ## Objetivo de publicacao
 
@@ -60,6 +63,8 @@ Qualquer tentativa de push, PR, merge ou deploy deve ser bloqueada quando:
 - `primyo:gate`, `build` ou `verify:build` falharem
 - o smoke local ou publicado falhar
 - o alvo de branch/Netlify nao estiver confirmado
+- a branch `staging` nao existir local/remotamente
+- a baseline Web exata para criar `staging` nao estiver revisada
 
 ## Ambientes oficiais
 
@@ -74,6 +79,7 @@ Qualquer tentativa de push, PR, merge ou deploy deve ser bloqueada quando:
 - branch candidata atual:
   - `primyo/onboarding`
   - status: candidata ao fluxo de homologacao, nunca a producao direta
+  - observacao: o `HEAD` atual `87975a5` inclui governanca APK e exige revisao de baseline antes de derivar a futura `staging`
 
 ## Regras de validacao
 
@@ -102,4 +108,12 @@ Cada promocao futura deve prever:
 
 ## Recomendacao objetiva
 
-A proxima fase nao deve publicar producao. O proximo passo seguro e preparar o ambiente de homologacao Netlify com branch e checklist proprios.
+A proxima fase nao deve publicar producao. O proximo passo seguro e criar a futura `staging` apenas a partir de uma baseline Web revisada, mantendo branch, checklist e rollback proprios.
+
+## Baseline recomendada para futura branch staging
+
+- nao criar `staging` cegamente a partir do `HEAD` atual sem revisar o escopo Web
+- revisar pelo menos:
+  - `c8b312c` como ultimo commit estritamente alinhado a governanca de deploy Web
+  - `87975a5` apenas se a governanca APK for aceita no historico da homologacao Web
+- documentar a baseline escolhida antes de qualquer `push` ou branch deploy

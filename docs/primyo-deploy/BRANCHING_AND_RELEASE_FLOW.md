@@ -11,6 +11,8 @@
 - `primyo/onboarding`
   - branch candidata atual do programa de transformacao
   - nao deve publicar producao diretamente
+  - `HEAD` auditado: `87975a5`
+  - observacao: o `HEAD` atual inclui governanca APK e exige revisao antes de virar baseline de homologacao Web
 - branches de fase
   - exemplos: `lp-deploy-gov-002`, `fix/...`, `hotfix/...`
   - devem nascer da branch alvo correta
@@ -25,6 +27,7 @@
 
 ### staging
 
+- deve nascer de baseline Web revisada antes de qualquer push remoto
 - recebe o candidato homologado vindo de `primyo/onboarding` ou de fase posterior aprovada
 - usada para validacao publicada
 - nao deve receber alteracoes fora do escopo aprovado
@@ -34,6 +37,13 @@
 - branch candidata atual
 - usada para consolidar o resultado do programa
 - precisa passar por homologacao antes de qualquer merge rumo a `main`
+- nao deve ser usada como origem cega da futura `staging` sem revisar se a baseline desejada inclui ou exclui a governanca APK atual
+
+## Situacao atual da branch staging
+
+- `staging` local: inexistente na auditoria desta fase
+- `origin/staging`: inexistente na auditoria desta fase
+- conclusao: a homologacao Netlify continua bloqueada ate a branch ser criada a partir de baseline Web confirmada
 
 ## Fluxo recomendado
 
@@ -48,6 +58,19 @@
 9. obter aprovacao do usuario
 10. promover `staging` para `main`
 11. validar producao
+
+## Comandos futuros recomendados
+
+Somente para fase futura autorizada, sem execucao nesta fase:
+
+- se a baseline aprovada for `c8b312c`:
+  - `git switch --detach c8b312c`
+  - `git switch -c staging`
+- se a baseline aprovada for o `HEAD` atual:
+  - `git switch primyo/onboarding`
+  - `git switch -c staging`
+- somente apos aprovacao formal:
+  - `git push -u origin staging`
 
 ## Push, PR e merge
 

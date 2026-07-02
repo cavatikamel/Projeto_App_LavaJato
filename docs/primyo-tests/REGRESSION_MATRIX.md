@@ -321,6 +321,18 @@ Regra aplicada em `LP-DEPLOY-GOV-001`:
 - o smoke reduzido continua obrigatorio antes de qualquer fase futura de publish;
 - arquivos fora de escopo no working tree devem bloquear push ou deploy sem isolamento seletivo.
 
+Regra aplicada em `LP-DEPLOY-GOV-002`:
+
+- a fase deve permanecer documental e de auditoria;
+- a ausencia atual de `staging` local e remota deve ser tratada como bloqueio de homologacao pronta;
+- a baseline Web para futura `staging` deve ser revisada antes de qualquer `push` ou branch deploy;
+- nenhuma alteracao de runtime, Netlify, DNS, Supabase ou producao pode ocorrer;
+- `DEMO_BOOTSTRAP` deve continuar como modo padrao oficial;
+- `CLEAN_BOOTSTRAP` nao pode virar `default`;
+- o pacote oficial de validacao permanece `git`, `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- o smoke reduzido continua obrigatorio antes de qualquer fase futura de publicacao em homologacao;
+- arquivos fora de escopo no working tree devem continuar bloqueando push ou deploy sem isolamento seletivo.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

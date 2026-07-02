@@ -3,6 +3,8 @@
 ## Pre-requisitos
 
 - branch alvo confirmada como `staging`
+- baseline Web confirmada antes de criar ou atualizar `staging`
+- estado de `staging` local/remota auditado
 - push autorizado
 - PR ou branch deploy documentado
 - build remoto concluido com sucesso
@@ -11,6 +13,10 @@
 
 - `git status --short`
 - `git branch --show-current`
+- `git branch --list staging`
+- `git branch -r`
+- `git log -1 --oneline`
+- `git remote -v`
 - `git diff --cached --name-only`
 - `node scripts/primyo-adapter-gate.mjs`
 - `npm.cmd run primyo:gate`
@@ -32,6 +38,8 @@
 ## Bloqueios de homologacao
 
 - branch errada
+- baseline Web nao confirmada
+- `staging` ausente ou apontando para baseline errada
 - arquivos fora de escopo misturados
 - gate falhando
 - build falhando
@@ -43,3 +51,11 @@
 - aprovacao do usuario
 - decisao formal de promocao
 - rollback disponivel
+
+## Comandos futuros recomendados
+
+Somente para fase futura autorizada:
+
+- `git switch --detach <baseline-web-aprovada>`
+- `git switch -c staging`
+- `git push -u origin staging`
