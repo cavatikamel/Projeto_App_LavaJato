@@ -129,12 +129,14 @@ Para as demais trilhas:
 - a abertura oficial desta governanca foi registrada em `LP-APK-000`;
 - a baseline funcional real do Web foi consolidada em `LP-APK-001`;
 - a decisao formal de reuse da base Android atual foi consolidada em `LP-APK-002`;
-- a proxima fase recomendada da trilha APK passa a ser `LP-APK-003 - Mobile Visual Reference Baseline`.
+- a baseline visual mobile oficial foi consolidada em `LP-APK-003`;
+- a proxima fase recomendada da trilha APK passa a ser `LP-APK-004 - APK Requirements Finalization`.
 
 Justificativa:
 
 1. o Android atual foi formalizado como checkpoint tecnico parcial, nao como produto final;
 2. os requisitos obrigatorios do APK agora passam a apontar para rotinas Web mapeadas, reduzindo drift funcional;
 3. a base atual do Android agora ja tem classificacao oficial de `keep`, `refactor`, `replace` e `archive`, com recomendacao de rebuild controlado dentro do projeto atual;
-4. o proximo risco principal deixa de ser reuse indefinido e passa a ser ausencia de baseline visual oficial unica para marca, iconografia e mobile parity;
-5. a trilha APK continua separada da trilha Web principal e nao autoriza alterar `app/main.js`, `app/styles.css` ou contratos runtime.
+4. a identidade visual oficial do APK agora tambem ja tem baseline formal, com separacao explicita entre linguagem do Web e marca oficial de `Material_Visual`;
+5. o proximo risco principal deixa de ser ambiguidade de referencia visual e passa a ser ausencia de fechamento final dos requisitos obrigatorios antes da implementacao;
+6. a trilha APK continua separada da trilha Web principal e nao autoriza alterar `app/main.js`, `app/styles.css` ou contratos runtime.

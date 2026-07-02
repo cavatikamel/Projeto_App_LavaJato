@@ -1895,3 +1895,34 @@
   - `fallbackToDestructiveMigration()` continua como risco estrutural central;
   - auth demo, seed demo e repositorio monolitico seguem inadequados para evolucao sem substituicao;
   - a baseline visual oficial do Android ainda precisa ser fechada antes da fundacao final de design system e telas.
+
+### LP-APK-003
+
+- Status: `Concluido`
+- Data: `2026-07-02`
+- Arquivos alterados:
+  - `docs/primyo-apk/LP_APK_MOBILE_VISUAL_BASELINE.md`
+  - `docs/primyo-apk/LP_APK_VISUAL_TOKEN_MAP.md`
+  - `docs/primyo-apk/LP_APK_ANDROID_SCREEN_VISUAL_TARGETS.md`
+  - `docs/primyo-apk/LP_APK_ANDROID_VISUAL_GAP_MATRIX.md`
+  - `docs/primyo-apk/LP_APK_VISUAL_PARITY_RULES.md`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-003.md`
+  - `docs/primyo-changes/LP-APK-003-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - leitura cruzada da governanca Primyo, governanca APK, baseline funcional Web e decisao de reuse Android;
+  - auditoria visual de `app/styles.css`, `app/main.js`, `LavaPrimeAndroidApp/**`, `Material_Visual/**` e `app/assets/brand/**` em modo leitura;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`.
+- Observacoes:
+  - a fase foi totalmente documental;
+  - a marca oficial nova de `Material_Visual` foi separada dos assets legados ainda visiveis no Web;
+  - a baseline visual agora passa a ser objetiva e rastreavel antes de qualquer ajuste Compose.
+- Riscos remanescentes:
+  - o Android atual continua com login, dashboard, drawer e modulos de cadastro/catalogo abaixo do alvo final;
+  - a tipografia oficial ainda nao esta aplicada no runtime Android;
+  - ainda falta congelar os requisitos finais do APK antes de iniciar a fase de design system/implementacao visual.

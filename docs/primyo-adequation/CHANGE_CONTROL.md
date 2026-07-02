@@ -512,6 +512,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: a base atual de `LavaPrimeAndroidApp` foi reclassificada formalmente por area em `keep`, `refactor`, `replace` e `archive`, com recomendacao oficial de `clean-foundation-inside-current-project`.
 - Observacao de risco: a fase nao altera Android nem Web; a prioridade recomendada passa a ser `LP-APK-003` para fechar a baseline visual mobile oficial antes da fundacao de design system e da reconstrucao funcional.
 
+### LP-APK-003
+
+- Change record: `docs/primyo-changes/LP-APK-003.md`
+- Closure: `docs/primyo-changes/LP-APK-003-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a baseline visual oficial do APK foi formalizada com separacao clara entre linguagem/hierarquia do Web e marca oficial de `Material_Visual`, incluindo tokens, alvos por tela e matriz de gaps do Android atual.
+- Observacao de risco: a fase nao altera Android nem Web; a prioridade recomendada passa a ser `LP-APK-004` para fechar requisitos finais antes da fase de design system e implementacao visual.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`
