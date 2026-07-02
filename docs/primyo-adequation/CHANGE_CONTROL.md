@@ -520,6 +520,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: a baseline visual oficial do APK foi formalizada com separacao clara entre linguagem/hierarquia do Web e marca oficial de `Material_Visual`, incluindo tokens, alvos por tela e matriz de gaps do Android atual.
 - Observacao de risco: a fase nao altera Android nem Web; a prioridade recomendada passa a ser `LP-APK-004` para fechar requisitos finais antes da fase de design system e implementacao visual.
 
+### LP-APK-004
+
+- Change record: `docs/primyo-changes/LP-APK-004.md`
+- Closure: `docs/primyo-changes/LP-APK-004-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: os requisitos oficiais do APK foram finalizados com dependencia por requisito, aceite por tela, mapa de dados e separacao explicita entre baseline obrigatoria e `LPFR`.
+- Observacao de risco: a fase nao altera Android nem Web; a prioridade recomendada passa a ser `LP-APK-005` para iniciar a fundacao de design system e shell visual sobre requisitos ja congelados.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`

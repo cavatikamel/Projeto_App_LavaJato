@@ -11,3 +11,6 @@ Controlar o estado atual dos `LavaPrime Future Requirements`.
 | `LPFR-003` | Geracao de posts para Instagram | `needs-analysis` | `P4` | `Medio` | `Medio/Alto` | `Android, Web, todos` | conteudo, aprovacao, auth | fase futura de marketing | manter separado da trilha APK core |
 | `LPFR-004` | Organizacao avancada de cuidados especiais do veiculo | `accepted-future` | `P3` | `Medio` | `Medio` | `Android, Web, Backend` | veiculos, atendimentos, auditoria | extensao futura de dominio operacional | priorizar so apos base de veiculos/atendimentos |
 
+## Observacao apos LP-APK-004
+
+- `LPFR-001` passa a absorver explicitamente o item descartado `APK-FIN-003`.

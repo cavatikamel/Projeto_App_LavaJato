@@ -39,3 +39,8 @@ Um `LPFR` representa ideia, melhoria, funcionalidade ou necessidade futura que:
 | `LPFR-003` | Geracao de posts para Instagram | apoiar marketing automatizado | gerar conteudo promocional a partir da operacao do lava jato | ideia futura ja conhecida | Medio | Medio/Alto | Medio | `P4` | auth, assets, conteudo, aprovacoes | somente apos produto operacional estavel | Android, Web, todos | `needs-analysis` | fase de marketing separada | totalmente fora da trilha APK base | `needs-analysis` |
 | `LPFR-004` | Organizacao avancada de cuidados especiais do veiculo | aprofundar controle de cuidados e alertas especiais | manter regras detalhadas, historico e classificacao de sensitividade do veiculo | necessidade funcional futura observada no dominio | Medio/Alto | Medio | Medio | `P3` | veiculos, atendimentos, auditoria | apos estabilizar `Customers`, `Vehicles` e `Attendance` | Android, Web, Backend | `accepted-future` | fase futura de dominio operacional | pode virar extensao de veiculos/atendimentos | `accepted-future` |
 
+## Observacao apos LP-APK-004
+
+- `APK-FIN-003 - Caixa` nao entrou nos requisitos obrigatorios do APK inicial;
+- a fase `LP-APK-004` confirmou que o baseline obrigatorio do mobile cobre `resumo financeiro` e `pagamentos em aberto`;
+- qualquer abertura/fechamento diario de caixa continua absorvido por `LPFR-001`.

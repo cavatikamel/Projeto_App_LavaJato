@@ -1926,3 +1926,36 @@
   - o Android atual continua com login, dashboard, drawer e modulos de cadastro/catalogo abaixo do alvo final;
   - a tipografia oficial ainda nao esta aplicada no runtime Android;
   - ainda falta congelar os requisitos finais do APK antes de iniciar a fase de design system/implementacao visual.
+
+### LP-APK-004
+
+- Status: `Concluido`
+- Data: `2026-07-02`
+- Arquivos alterados:
+  - `docs/primyo-apk/LP_APK_REQUIREMENTS.md`
+  - `docs/primyo-apk/LP_APK_REQUIREMENTS_MATRIX.md`
+  - `docs/primyo-apk/LP_APK_REQUIREMENTS_DEPENDENCY_MAP.md`
+  - `docs/primyo-apk/LP_APK_SCREEN_ACCEPTANCE_CRITERIA.md`
+  - `docs/primyo-apk/LP_APK_DATA_REQUIREMENTS_MAP.md`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-apk/LPFR.md`
+  - `docs/primyo-apk/LPFR_STATUS_MATRIX.md`
+  - `docs/primyo-changes/LP-APK-004.md`
+  - `docs/primyo-changes/LP-APK-004-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+- Evidencias:
+  - leitura cruzada da governanca Primyo, governanca APK, baseline funcional Web, baseline visual mobile, decisao de reuse e contratos de dados;
+  - auditoria complementar de `app/main.js`, `app/styles.css`, `app/adapters/**`, `app/demo/**`, `LavaPrimeAndroidApp/**` e `Material_Visual/**` em modo leitura;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`.
+- Observacoes:
+  - a fase foi totalmente documental e decisoria;
+  - os requisitos do APK deixaram de estar distribuidos entre baseline, roadmap e inferencia implicita;
+  - `APK-FIN-003` foi mantido fora da baseline obrigatoria e absorvido por `LPFR-001`.
+- Riscos remanescentes:
+  - a fundacao de design system e shell Android ainda precisa materializar os requisitos ja congelados;
+  - atendimento, pagamento, documento e sync continuam dependentes de uma base de dados local mais robusta que o checkpoint atual;
+  - `fallbackToDestructiveMigration()` continua risco aberto para fases futuras de dados.
