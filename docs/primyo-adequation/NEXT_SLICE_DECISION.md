@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-002`.
+Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-003`.
 
 ## Estado atual consolidado
 
@@ -32,7 +32,9 @@ Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-002`.
 - a governanca de deploy, homologacao e producao para `app.lavaprime.com.br` passa a estar documentada;
 - `netlify.toml`, `vite.config.js`, `.env.example` e o remote `origin` foram auditados sem alteracao;
 - a branch `staging` continua ausente local e remotamente;
-- o `HEAD` atual de `primyo/onboarding` esta em `87975a5` e inclui governanca APK, exigindo revisao de baseline antes de criar homologacao Web;
+- o `HEAD` atual de `primyo/onboarding` passou a ser `ef0bc0e`;
+- a revisao da baseline concluiu que os deltas apos `094a5b7` sao documentais e nao alteram o runtime Web;
+- o historico da branch continua incluindo commits Android/APK, mas esse risco ficou classificado como risco de governance da branch, nao de snapshot Web atual;
 - a preparacao documental da homologacao Netlify foi concluida sem `push`, sem deploy e sem alteracao de runtime;
 - o working tree continua com arquivos fora de escopo que devem bloquear push ou deploy sem isolamento:
   - `.gitignore`
@@ -44,9 +46,9 @@ Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-002`.
 ## Decisao oficial
 
 - encerramento documental do programa: `consolidado`
-- proxima trilha recomendada: `LP-DEPLOY-GOV-003 - Create and push staging branch candidate`
+- proxima trilha recomendada: `LP-DEPLOY-GOV-004 - Isolate working tree and create staging branch candidate`
 - demais trilhas futuras independentes:
-  - `LP-DEPLOY-GOV-004 - Validate Netlify staging deployment`
+  - `LP-DEPLOY-GOV-005 - Validate Netlify staging deployment`
   - `LP-WEB-DATA-CLEANUP-013 - Institutional clean dataset strategy`
   - `LavaPrime Android nativo oficial`
   - `Supabase/backend real`
@@ -56,13 +58,13 @@ Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-002`.
 
 ## Justificativa
 
-`LP-DEPLOY-GOV-003` passa a ser a melhor proxima fase porque:
+`LP-DEPLOY-GOV-004` passa a ser a melhor proxima fase porque:
 
-1. a governanca de branch, Netlify e Supabase ja foi documentada;
-2. a estrategia de staging agora inclui o alerta de que a branch ainda nao existe local/remotamente;
-3. o proximo passo seguro e criar a candidata de homologacao a partir de baseline Web revisada, sem publicar producao;
-4. a branch atual `primyo/onboarding` nao deve virar `staging` cegamente porque o `HEAD` inclui governanca APK;
-5. os arquivos fora de escopo no working tree exigem fase propria e isolamento antes de qualquer push;
+1. a baseline Web candidata ja foi revisada;
+2. o `HEAD` atual `ef0bc0e` foi aceito como snapshot candidato de homologacao;
+3. o bloqueio restante deixou de ser a baseline e passou a ser o working tree misturado;
+4. o proximo passo seguro e isolar os arquivos fora de escopo antes de criar ou pushar `staging`;
+5. a branch atual ainda nao deve ser publicada enquanto existirem sujeiras Web/Android/FIPE fora do escopo;
 6. `LP-WEB-DATA-CLEANUP-013` continua importante, mas como trilha paralela de dados limpos e nao como passo obrigatorio previo ao staging.
 
 ## Fatias rejeitadas por enquanto
@@ -81,15 +83,15 @@ Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-002`.
   - rejeitada, porque o encerramento documental ja esta consolidado.
 - qualquer tentativa de publicar `app.lavaprime.com.br` direto de `primyo/onboarding`:
   - rejeitada, porque a estrategia aprovada exige homologacao e aprovacao previa.
-- qualquer tentativa de criar `staging` diretamente do `HEAD` atual sem revisar a baseline Web:
-  - rejeitada, porque `87975a5` inclui governanca APK e pode contaminar a homologacao Web com historico nao revisado.
+- qualquer tentativa de criar ou pushar `staging` com o working tree atual:
+  - rejeitada, porque os itens fora de escopo continuam misturados e podem contaminar a homologacao.
 
 ## Direcao recomendada
 
-Para a proxima fase, `LP-DEPLOY-GOV-003` deve:
+Para a proxima fase, `LP-DEPLOY-GOV-004` deve:
 
-1. escolher e registrar a baseline Web exata para derivar `staging`;
-2. criar localmente a branch de homologacao recomendada (`staging`) sem misturar arquivos fora de escopo;
+1. isolar ou limpar os itens fora de escopo do working tree;
+2. criar localmente a branch de homologacao recomendada (`staging`) a partir de `ef0bc0e`;
 3. pedir autorizacao antes de qualquer `push` remoto;
 4. manter `main` e `app.lavaprime.com.br` protegidos de publicacao direta;
 5. manter `DEMO_BOOTSTRAP` como padrao oficial;
@@ -119,6 +121,7 @@ Para as demais trilhas:
 - o encerramento documental final do programa foi consolidado em handoff proprio;
 - a esteira de homologacao e producao para `app.lavaprime.com.br` passa a estar definida documentalmente;
 - a homologacao Netlify passa a ter plano de preparacao documentado, mas continua sem branch `staging` criada;
+- a revisao da baseline candidata confirmou que o snapshot Web atual continua seguro do ponto de vista de runtime;
 - nenhuma seed foi removida;
 - nenhuma tela foi quebrada;
 - o modo demo continuou padrao.

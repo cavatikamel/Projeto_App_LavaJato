@@ -363,6 +363,17 @@ Estado oficial apos `LP-DEPLOY-GOV-002`:
 - Supabase continua fechado para runtime;
 - arquivos fora de escopo no working tree continuam sendo bloqueio de push ou deploy sem isolamento seletivo.
 
+Estado oficial apos `LP-DEPLOY-GOV-003`:
+
+- a baseline Web candidata passa a ser o `HEAD` atual `ef0bc0e`;
+- `094a5b7` continua registrado como ultimo fechamento formal do programa Web;
+- os deltas entre `094a5b7` e `ef0bc0e` ficam classificados como documentais, sem alteracao de runtime Web;
+- o historico da branch continua misturado com commits Android/APK, mas esse risco passa a ser classificado como risco de governance da branch e do merge futuro, nao de snapshot Web atual;
+- a criacao ou push da futura `staging` continua bloqueada enquanto o working tree contiver arquivos fora de escopo misturados;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a `default`;
+- Supabase continua fechado para runtime.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

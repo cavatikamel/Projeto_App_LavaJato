@@ -527,3 +527,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a fase preparou a homologacao Netlify de forma documental e tecnica, confirmando `build = npm run build`, `publish = dist`, ausencia atual da branch `staging` e necessidade de revisar a baseline Web antes de qualquer criacao remota.
 - Observacao de risco: a publicacao continua bloqueada porque `primyo/onboarding` esta em `87975a5` com governanca APK no `HEAD`, a `staging` ainda nao existe local/remotamente e o working tree segue misturado com arquivos fora de escopo.
+
+### LP-DEPLOY-GOV-003
+
+- Change record: `docs/primyo-changes/LP-DEPLOY-GOV-003.md`
+- Closure: `docs/primyo-changes/LP-DEPLOY-GOV-003-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase revisou a baseline Web candidata e concluiu que o `HEAD` atual `ef0bc0e` pode seguir como candidato de homologacao, porque os deltas apos `094a5b7` sao documentais e nao alteram runtime Web.
+- Observacao de risco: o historico da branch continua misturado com commits Android/APK e o working tree ainda bloqueia criacao ou push seguro de `staging` enquanto `.gitignore`, `app/styles.css`, `LavaPrimeAndroidApp/**` e `app/assets/data/fipe-veiculos.*` nao forem isolados.

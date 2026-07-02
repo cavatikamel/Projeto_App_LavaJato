@@ -333,6 +333,16 @@ Regra aplicada em `LP-DEPLOY-GOV-002`:
 - o smoke reduzido continua obrigatorio antes de qualquer fase futura de publicacao em homologacao;
 - arquivos fora de escopo no working tree devem continuar bloqueando push ou deploy sem isolamento seletivo.
 
+Regra aplicada em `LP-DEPLOY-GOV-003`:
+
+- a fase deve permanecer documental e de auditoria;
+- a revisao da baseline deve distinguir risco de historico Android/APK de risco do snapshot Web atual;
+- o `HEAD` atual pode ser aceito como candidato apenas se os deltas apos o ultimo fechamento Web forem documentais;
+- nenhuma criacao de branch, `checkout`, `push` ou deploy pode ocorrer;
+- o pacote oficial de validacao permanece `git`, `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- o smoke reduzido continua obrigatorio quando o ambiente de browser estiver disponivel;
+- working tree com `.gitignore`, `app/styles.css`, `LavaPrimeAndroidApp/**` ou `app/assets/data/fipe-veiculos.*` continua bloqueando criacao/push seguro da futura `staging`.
+
 Observacao para `LP-TEST-AUTO-003`:
 
 - por ser uma fase de gate e documentacao, os fluxos funcionais ficam `Opcional` na matriz;

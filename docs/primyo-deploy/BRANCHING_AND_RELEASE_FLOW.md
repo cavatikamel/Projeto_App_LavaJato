@@ -11,8 +11,8 @@
 - `primyo/onboarding`
   - branch candidata atual do programa de transformacao
   - nao deve publicar producao diretamente
-  - `HEAD` auditado: `87975a5`
-  - observacao: o `HEAD` atual inclui governanca APK e exige revisao antes de virar baseline de homologacao Web
+  - `HEAD` auditado em `LP-DEPLOY-GOV-003`: `ef0bc0e`
+  - observacao: o historico da branch inclui commits Android/APK, mas o snapshot Web atual segue estavel e documentalmente preparado para homologacao
 - branches de fase
   - exemplos: `lp-deploy-gov-002`, `fix/...`, `hotfix/...`
   - devem nascer da branch alvo correta
@@ -43,7 +43,7 @@
 
 - `staging` local: inexistente na auditoria desta fase
 - `origin/staging`: inexistente na auditoria desta fase
-- conclusao: a homologacao Netlify continua bloqueada ate a branch ser criada a partir de baseline Web confirmada
+- conclusao: a homologacao Netlify continua bloqueada ate a branch ser criada a partir de baseline Web confirmada e com working tree isolado
 
 ## Fluxo recomendado
 
@@ -63,12 +63,13 @@
 
 Somente para fase futura autorizada, sem execucao nesta fase:
 
-- se a baseline aprovada for `c8b312c`:
-  - `git switch --detach c8b312c`
-  - `git switch -c staging`
-- se a baseline aprovada for o `HEAD` atual:
+- se a baseline aprovada for o `HEAD` atual recomendado:
   - `git switch primyo/onboarding`
+  - `git rev-parse --short HEAD`
   - `git switch -c staging`
+- se for necessario revalidar apenas o ultimo fechamento Web:
+  - `git switch --detach 094a5b7`
+  - `git switch -c staging-from-web-closure`
 - somente apos aprovacao formal:
   - `git push -u origin staging`
 
