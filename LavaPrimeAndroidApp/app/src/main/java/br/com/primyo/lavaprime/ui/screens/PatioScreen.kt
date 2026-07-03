@@ -13,9 +13,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
@@ -146,7 +144,11 @@ fun AtendimentoCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(item.servicoNomeSnapshot, style = MaterialTheme.typography.bodySmall, color = Color(0xFF4E6470))
+                Text(
+                    text = item.servicoNomeSnapshot,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF4E6470)
+                )
             }
             LavaPrimeStatusChip(
                 text = statusLabel(item.status),
@@ -173,7 +175,7 @@ fun AtendimentoCard(
                         tint = Color(0xFFB45309)
                     )
                     Text(
-                        "Atenção: ${item.observacoes}",
+                        text = "Atenção: ${item.observacoes}",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF7E5600)
                     )
@@ -318,7 +320,7 @@ fun NovoAtendimentoDialog(
                                     tint = Color(0xFFB45309)
                                 )
                                 Text(
-                                    "Atenção: o veículo possui alerta e o serviço selecionado pode usar produto ácido, alcalino ou pH fora da faixa neutra.",
+                                    text = "Atenção: o veículo possui alerta e o serviço selecionado pode usar produto ácido, alcalino ou pH fora da faixa neutra.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color(0xFF7E5600)
                                 )

@@ -2,6 +2,7 @@ package br.com.primyo.lavaprime.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,7 +48,7 @@ fun SecuritySyncScreen(
         item {
             LavaPrimeCard(modifier = Modifier.fillMaxWidth()) {
                 Text("Estado atual", fontWeight = FontWeight.Bold, color = Color(0xFF0B3348))
-                androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     LavaPrimeStatusChip(
                         text = if (state.online) "Online" else "Offline",
                         tone = if (state.online) LavaPrimeStatusTone.Success else LavaPrimeStatusTone.Warning,
@@ -60,12 +61,24 @@ fun SecuritySyncScreen(
                     )
                 }
                 LavaPrimeStatusChip(
-                    text = if (state.pendingCount > 0) "${state.pendingCount} alterações na fila" else "Fila sem pendências",
+                    text = if (state.pendingCount > 0) {
+                        "${state.pendingCount} alterações na fila"
+                    } else {
+                        "Fila sem pendências"
+                    },
                     tone = if (state.pendingCount > 0) LavaPrimeStatusTone.Warning else LavaPrimeStatusTone.Success
                 )
                 Text(state.lastMessage, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF4F6870))
-                Text("Última tentativa: ${formatTimestamp(state.lastAttemptAt)}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
-                Text("Política de conflito: ${state.policyLabel}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
+                Text(
+                    text = "Última tentativa: ${formatTimestamp(state.lastAttemptAt)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF64748B)
+                )
+                Text(
+                    text = "Política de conflito: ${state.policyLabel}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF64748B)
+                )
                 LavaPrimeActionButton(
                     text = "Tentar sincronizar agora",
                     onClick = onManualSync,

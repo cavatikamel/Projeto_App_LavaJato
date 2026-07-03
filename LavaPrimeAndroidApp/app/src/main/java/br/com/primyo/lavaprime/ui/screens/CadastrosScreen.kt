@@ -9,9 +9,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -128,18 +128,13 @@ private fun CadastroCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     LavaPrimeCard {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             androidx.compose.material3.Surface(
                 color = Color(0xFFE8F7FE),
                 contentColor = Color(0xFF0B5876),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .padding(10.dp)
-                ) {
+                Box(modifier = Modifier.padding(10.dp)) {
                     androidx.compose.material3.Icon(icon, contentDescription = null)
                 }
             }

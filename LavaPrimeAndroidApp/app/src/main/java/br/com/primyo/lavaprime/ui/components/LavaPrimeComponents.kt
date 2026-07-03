@@ -10,64 +10,57 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Assessment
-import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
-import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -77,6 +70,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import br.com.primyo.lavaprime.BuildConfig
 import br.com.primyo.lavaprime.R
 import br.com.primyo.lavaprime.data.model.AtendimentoStatus
 import br.com.primyo.lavaprime.data.model.PerfilUsuario
@@ -87,8 +81,10 @@ import br.com.primyo.lavaprime.ui.theme.DangerBg
 import br.com.primyo.lavaprime.ui.theme.DangerText
 import br.com.primyo.lavaprime.ui.theme.InfoBg
 import br.com.primyo.lavaprime.ui.theme.InfoText
+import br.com.primyo.lavaprime.ui.theme.LavaPrimeElevation
+import br.com.primyo.lavaprime.ui.theme.LavaPrimeRadii
+import br.com.primyo.lavaprime.ui.theme.LavaPrimeSpacing
 import br.com.primyo.lavaprime.ui.theme.Mint
-import br.com.primyo.lavaprime.ui.theme.MobileVersionName
 import br.com.primyo.lavaprime.ui.theme.PageBg
 import br.com.primyo.lavaprime.ui.theme.PageBgAlt
 import br.com.primyo.lavaprime.ui.theme.PositiveBg
@@ -97,6 +93,7 @@ import br.com.primyo.lavaprime.ui.theme.PrimeBlue
 import br.com.primyo.lavaprime.ui.theme.PrimeBlueDeep
 import br.com.primyo.lavaprime.ui.theme.SoftLine
 import br.com.primyo.lavaprime.ui.theme.SurfaceMuted
+import br.com.primyo.lavaprime.ui.theme.TextMuted
 import br.com.primyo.lavaprime.ui.theme.TextPrimary
 import br.com.primyo.lavaprime.ui.theme.TextSecondary
 import br.com.primyo.lavaprime.ui.theme.WarningBg
@@ -126,34 +123,34 @@ fun BrandLogo(
     compact: Boolean = false,
     showTagline: Boolean = true
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    if (compact) {
         Image(
-            painter = painterResource(R.drawable.ic_lavaprime_logo),
+            painter = painterResource(R.drawable.lavaprime_app_icon),
             contentDescription = "Logo LavaPrime",
-            modifier = modifier.then(
-                if (compact) {
-                    Modifier.size(72.dp)
-                } else {
-                    Modifier.size(width = 220.dp, height = 68.dp)
-                }
-            ),
+            modifier = modifier.size(74.dp),
             contentScale = ContentScale.Fit
         )
-        if (!compact && showTagline) {
-            Spacer(Modifier.width(12.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    "LavaPrime",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimeBlue
-                )
-                Text(
-                    "Gestão inteligente para sua operação de lavagem.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
-                )
-            }
+        return
+    }
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.xs)
+    ) {
+        Image(
+            painter = painterResource(R.drawable.lavaprime_logo_primary),
+            contentDescription = "Logo LavaPrime",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp),
+            contentScale = ContentScale.Fit
+        )
+        if (showTagline) {
+            Text(
+                text = "Gestão inteligente para sua operação de lavagem.",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
         }
     }
 }
@@ -161,10 +158,10 @@ fun BrandLogo(
 @Composable
 fun LavaPrimeVersionFooter(modifier: Modifier = Modifier) {
     Text(
-        text = MobileVersionName,
+        text = BuildConfig.VERSION_NAME,
         modifier = modifier,
         style = MaterialTheme.typography.labelSmall,
-        color = TextSecondary,
+        color = TextMuted,
         textAlign = TextAlign.Center
     )
 }
@@ -173,19 +170,19 @@ fun LavaPrimeVersionFooter(modifier: Modifier = Modifier) {
 fun LavaPrimeCard(
     modifier: Modifier = Modifier,
     tonal: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(18.dp),
+    contentPadding: PaddingValues = PaddingValues(LavaPrimeSpacing.lg),
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = if (tonal) SurfaceMuted else Color.White),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(LavaPrimeRadii.large),
         border = BorderStroke(1.dp, SoftLine),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = LavaPrimeElevation.soft)
     ) {
         Column(
             modifier = Modifier.padding(contentPadding),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.sm),
             content = content
         )
     }
@@ -200,28 +197,40 @@ fun LavaPrimeMetricCard(
     support: String? = null,
     tone: LavaPrimeStatusTone = LavaPrimeStatusTone.Info
 ) {
-    LavaPrimeCard(modifier = modifier.widthIn(min = 160.dp), tonal = true) {
+    LavaPrimeCard(
+        modifier = modifier.widthIn(min = 168.dp),
+        tonal = true,
+        contentPadding = PaddingValues(LavaPrimeSpacing.md)
+    ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
                 color = toneContainerColor(tone),
                 contentColor = toneContentColor(tone),
-                shape = RoundedCornerShape(18.dp)
+                shape = RoundedCornerShape(LavaPrimeRadii.medium)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(44.dp)
                         .padding(10.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(icon, contentDescription = null)
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
                 Text(label, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
-                Text(value, style = MaterialTheme.typography.titleLarge, color = TextPrimary, fontWeight = FontWeight.Bold)
+                Text(
+                    value,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
         support?.let {
@@ -241,18 +250,22 @@ fun LavaPrimeStatusChip(
         modifier = modifier,
         color = toneContainerColor(tone),
         contentColor = toneContentColor(tone),
-        shape = RoundedCornerShape(999.dp),
-        border = BorderStroke(1.dp, toneContainerColor(tone))
+        shape = RoundedCornerShape(LavaPrimeRadii.pill),
+        border = BorderStroke(1.dp, toneBorderColor(tone))
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             icon?.let {
                 Icon(it, contentDescription = null, modifier = Modifier.size(15.dp))
             }
-            Text(text, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }
@@ -266,45 +279,76 @@ fun LavaPrimeActionButton(
     enabled: Boolean = true,
     style: LavaPrimeActionStyle = LavaPrimeActionStyle.Primary
 ) {
-    val containerColor = when (style) {
-        LavaPrimeActionStyle.Primary -> Mint
-        LavaPrimeActionStyle.Dark -> PrimeBlue
-        LavaPrimeActionStyle.Outline, LavaPrimeActionStyle.Ghost -> Color.White
-    }
-    val contentColor = when (style) {
-        LavaPrimeActionStyle.Primary -> TextPrimary
-        LavaPrimeActionStyle.Dark -> Color.White
-        LavaPrimeActionStyle.Outline -> PrimeBlue
-        LavaPrimeActionStyle.Ghost -> TextSecondary
-    }
-    val border = when (style) {
-        LavaPrimeActionStyle.Primary, LavaPrimeActionStyle.Dark -> null
-        LavaPrimeActionStyle.Outline -> BorderStroke(1.dp, WaterBlue)
-        LavaPrimeActionStyle.Ghost -> BorderStroke(1.dp, SoftLine)
+    val content: @Composable () -> Unit = {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.xs)
+        ) {
+            icon?.let { Icon(it, contentDescription = null, modifier = Modifier.size(18.dp)) }
+            Text(text = text, fontWeight = FontWeight.SemiBold)
+        }
     }
 
-    Surface(
-        modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
-            .clickable(enabled = enabled, onClick = onClick),
-        color = if (enabled) containerColor else SoftLine,
-        contentColor = if (enabled) contentColor else TextSecondary,
-        shape = RoundedCornerShape(18.dp),
-        border = border
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp)
-                .padding(horizontal = 18.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            icon?.let {
-                Icon(it, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-            }
-            Text(text, fontWeight = FontWeight.SemiBold)
+    when (style) {
+        LavaPrimeActionStyle.Primary -> {
+            Button(
+                onClick = onClick,
+                modifier = modifier.height(54.dp),
+                enabled = enabled,
+                shape = RoundedCornerShape(LavaPrimeRadii.medium),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Mint,
+                    contentColor = TextPrimary,
+                    disabledContainerColor = SoftLine,
+                    disabledContentColor = TextMuted
+                ),
+                contentPadding = PaddingValues(horizontal = LavaPrimeSpacing.lg)
+            ) { content() }
+        }
+
+        LavaPrimeActionStyle.Dark -> {
+            Button(
+                onClick = onClick,
+                modifier = modifier.height(54.dp),
+                enabled = enabled,
+                shape = RoundedCornerShape(LavaPrimeRadii.medium),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimeBlue,
+                    contentColor = Color.White,
+                    disabledContainerColor = SoftLine,
+                    disabledContentColor = TextMuted
+                ),
+                contentPadding = PaddingValues(horizontal = LavaPrimeSpacing.lg)
+            ) { content() }
+        }
+
+        LavaPrimeActionStyle.Outline -> {
+            OutlinedButton(
+                onClick = onClick,
+                modifier = modifier.height(54.dp),
+                enabled = enabled,
+                shape = RoundedCornerShape(LavaPrimeRadii.medium),
+                border = BorderStroke(1.dp, SoftLine),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = PrimeBlue,
+                    disabledContentColor = TextMuted
+                ),
+                contentPadding = PaddingValues(horizontal = LavaPrimeSpacing.lg)
+            ) { content() }
+        }
+
+        LavaPrimeActionStyle.Ghost -> {
+            TextButton(
+                onClick = onClick,
+                modifier = modifier.height(48.dp),
+                enabled = enabled,
+                shape = RoundedCornerShape(LavaPrimeRadii.medium),
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = PrimeBlue,
+                    disabledContentColor = TextMuted
+                ),
+                contentPadding = PaddingValues(horizontal = LavaPrimeSpacing.md)
+            ) { content() }
         }
     }
 }
@@ -325,23 +369,27 @@ fun LavaPrimeTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label) },
-        placeholder = placeholder?.let { { Text(it, color = TextSecondary.copy(alpha = 0.75f)) } },
         modifier = modifier.fillMaxWidth(),
+        label = { Text(label) },
+        placeholder = placeholder?.let { { Text(it, color = TextMuted) } },
         singleLine = singleLine,
         minLines = minLines,
         enabled = enabled,
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(LavaPrimeRadii.medium),
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedContainerColor = Color.White,
             focusedContainerColor = Color.White,
+            disabledContainerColor = SurfaceMuted,
             unfocusedBorderColor = SoftLine,
             focusedBorderColor = WaterBlue,
-            focusedLabelColor = PrimeBlueDeep,
+            disabledBorderColor = SoftLine,
+            focusedLabelColor = PrimeBlue,
             unfocusedLabelColor = TextSecondary,
-            cursorColor = PrimeBlueDeep
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            cursorColor = WaterBlue
         )
     )
 }
@@ -351,8 +399,8 @@ fun LavaPrimeSegmentedProfileSelector(
     selected: PerfilUsuario,
     onSelect: (PerfilUsuario) -> Unit
 ) {
-    LavaPrimeCard(tonal = true, contentPadding = PaddingValues(8.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    LavaPrimeCard(tonal = true, contentPadding = PaddingValues(LavaPrimeSpacing.xs)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.xs)) {
             LavaPrimeProfileOption(
                 title = "Administrador",
                 subtitle = "Visão completa",
@@ -360,6 +408,7 @@ fun LavaPrimeSegmentedProfileSelector(
                 active = selected == PerfilUsuario.ADMINISTRADOR,
                 modifier = Modifier.weight(1f)
             ) { onSelect(PerfilUsuario.ADMINISTRADOR) }
+
             LavaPrimeProfileOption(
                 title = "Operador",
                 subtitle = "Pátio e rotina",
@@ -382,23 +431,27 @@ private fun LavaPrimeProfileOption(
 ) {
     Surface(
         modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(LavaPrimeRadii.medium))
             .clickable(onClick = onClick),
-        color = if (active) PrimeBlue else Color.Transparent,
+        color = if (active) PrimeBlue else Color.White,
         contentColor = if (active) Color.White else PrimeBlue,
-        shape = RoundedCornerShape(18.dp)
+        shape = RoundedCornerShape(LavaPrimeRadii.medium),
+        border = BorderStroke(1.dp, if (active) PrimeBlue else SoftLine)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-            horizontalAlignment = Alignment.Start
+            modifier = Modifier.padding(horizontal = LavaPrimeSpacing.md, vertical = LavaPrimeSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.xs)
         ) {
-            Icon(icon, contentDescription = null, tint = if (active) WaterBlue else PrimeBlue)
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = if (active) WaterBlue else PrimeBlue
+            )
             Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (active) Color.White.copy(alpha = 0.82f) else TextSecondary
+                color = if (active) Color.White.copy(alpha = 0.84f) else TextSecondary
             )
         }
     }
@@ -410,16 +463,25 @@ fun LandingBadge(text: String) {
 }
 
 @Composable
-fun HeroPanel(title: String, description: String, icon: ImageVector) {
-    LavaPrimeCard(tonal = true) {
+fun HeroPanel(
+    title: String,
+    description: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    LavaPrimeCard(
+        modifier = modifier.fillMaxWidth(),
+        tonal = true,
+        contentPadding = PaddingValues(LavaPrimeSpacing.lg)
+    ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
                 color = PrimeBlue,
                 contentColor = Color.White,
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(LavaPrimeRadii.large)
             ) {
                 Box(
                     modifier = Modifier
@@ -430,9 +492,21 @@ fun HeroPanel(title: String, description: String, icon: ImageVector) {
                     Icon(icon, contentDescription = null)
                 }
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(title, style = MaterialTheme.typography.titleLarge, color = PrimeBlue, fontWeight = FontWeight.Bold)
-                Text(description, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
+                )
             }
         }
     }
@@ -441,22 +515,41 @@ fun HeroPanel(title: String, description: String, icon: ImageVector) {
 @Composable
 fun SectionTitle(text: String, support: String? = null) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = PrimeBlue)
-        support?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = TextSecondary) }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            color = PrimeBlue,
+            fontWeight = FontWeight.Bold
+        )
+        support?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+        }
     }
 }
 
 @Composable
 fun ChecklistCard(title: String, items: List<String>) {
     LavaPrimeCard {
-        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = PrimeBlue)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = PrimeBlue,
+            fontWeight = FontWeight.SemiBold
+        )
         items.forEach { item ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.xs),
+                verticalAlignment = Alignment.Top
+            ) {
                 Icon(
                     Icons.Filled.CheckCircle,
                     contentDescription = null,
-                    tint = PositiveText,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(16.dp),
+                    tint = PositiveText
                 )
                 Text(item, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
             }
@@ -465,9 +558,17 @@ fun ChecklistCard(title: String, items: List<String>) {
 }
 
 @Composable
-fun EmptyState(title: String, description: String, icon: ImageVector = Icons.Filled.Info) {
+fun EmptyState(
+    title: String,
+    description: String,
+    icon: ImageVector = Icons.Filled.Info
+) {
     LavaPrimeCard(tonal = true) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.sm)
+        ) {
             Surface(
                 color = InfoBg,
                 contentColor = InfoText,
@@ -482,8 +583,19 @@ fun EmptyState(title: String, description: String, icon: ImageVector = Icons.Fil
                     Icon(icon, contentDescription = null)
                 }
             }
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = PrimeBlue)
-            Text(description, style = MaterialTheme.typography.bodySmall, color = TextSecondary, textAlign = TextAlign.Center)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                color = PrimeBlue,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -494,19 +606,23 @@ fun ModuleScreen(title: String, description: String, icon: ImageVector) {
         modifier = Modifier
             .fillMaxSize()
             .background(PageBg)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(LavaPrimeSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.md)
     ) {
-        HeroPanel(title, description, icon)
+        HeroPanel(title = title, description = description, icon = icon)
         ChecklistCard(
-            title = "Paridade mobile planejada",
+            title = "Base pronta para evolução",
             items = listOf(
-                "Campos verticais, legíveis e confortáveis para toque",
-                "Cards no lugar de tabelas extensas",
-                "Atalhos principais ao alcance do polegar",
-                "Visual alinhado ao LavaPrime Web sem usar WebView",
-                "Fundação pronta para receber módulo real na próxima fatia"
+                "Tema e componentes oficiais do LavaPrime aplicados",
+                "Leitura mobile-first com cards e listas",
+                "Textos e estados visuais alinhados ao Web",
+                "Área preparada para receber fluxo real nas próximas fases"
             )
+        )
+        EmptyState(
+            title = "Módulo em fundação controlada",
+            description = "A identidade visual desta área já faz parte do app. A regra de negócio entra na fase funcional correspondente.",
+            icon = icon
         )
     }
 }
@@ -514,7 +630,12 @@ fun ModuleScreen(title: String, description: String, icon: ImageVector) {
 @Composable
 fun FormPreview(title: String, fields: List<String>) {
     LavaPrimeCard {
-        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = PrimeBlue)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = PrimeBlue,
+            fontWeight = FontWeight.SemiBold
+        )
         fields.forEach { field ->
             LavaPrimeTextField(
                 value = "",
@@ -537,8 +658,18 @@ fun LavaPrimeTopBar(
     TopAppBar(
         title = {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold, color = PrimeBlue)
-                Text(subtitle, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                Text(
+                    text = title,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimeBlue
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextSecondary
+                )
             }
         },
         navigationIcon = {
@@ -571,7 +702,14 @@ fun LavaPrimeScaffold(
 ) {
     Scaffold(
         containerColor = PageBg,
-        topBar = { LavaPrimeTopBar(title = title, subtitle = subtitle, online = online, onMenuClick = onMenuClick) },
+        topBar = {
+            LavaPrimeTopBar(
+                title = title,
+                subtitle = subtitle,
+                online = online,
+                onMenuClick = onMenuClick
+            )
+        },
         floatingActionButton = floatingActionButton,
         content = content
     )
@@ -586,37 +724,49 @@ fun LavaPrimeMenuItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(LavaPrimeRadii.medium))
             .background(if (selected) InfoBg else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = LavaPrimeSpacing.md, vertical = LavaPrimeSpacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
             color = if (selected) PrimeBlue else PageBgAlt,
             contentColor = if (selected) Color.White else PrimeBlue,
-            shape = RoundedCornerShape(14.dp)
+            shape = RoundedCornerShape(LavaPrimeRadii.medium)
         ) {
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .size(40.dp)
                     .padding(9.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(routeIcon(route), contentDescription = null)
             }
         }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(route.title, style = MaterialTheme.typography.titleSmall, fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold, color = PrimeBlue)
-            Text(route.hint, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(1.dp)
+        ) {
+            Text(
+                text = route.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = TextPrimary,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold
+            )
+            Text(
+                text = route.hint,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
         }
     }
 }
 
 @Composable
 fun LavaPrimeDrawer(
-    drawerState: androidx.compose.material3.DrawerState,
+    drawerState: DrawerState,
     scope: CoroutineScope,
     usuario: UsuarioEntity,
     selected: MobileRoute,
@@ -624,37 +774,55 @@ fun LavaPrimeDrawer(
     onLogout: () -> Unit
 ) {
     val routes = MobileRoute.entries.filter { usuario.perfil == PerfilUsuario.ADMINISTRADOR || !it.adminOnly }
+
     ModalDrawerSheet(
         modifier = Modifier
             .fillMaxWidth(0.84f)
-            .widthIn(max = 320.dp),
+            .widthIn(max = 324.dp),
         drawerContainerColor = Color.White
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(LavaPrimeSpacing.sm),
+            verticalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.sm)
         ) {
-            LavaPrimeCard(
-                tonal = true,
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            LavaPrimeCard(tonal = true, contentPadding = PaddingValues(LavaPrimeSpacing.md)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.sm),
+                    verticalAlignment = Alignment.Top
+                ) {
                     BrandLogo(compact = true, showTagline = false)
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Menu operacional", style = MaterialTheme.typography.titleMedium, color = PrimeBlue, fontWeight = FontWeight.Bold)
-                        Text("Navegação nativa com foco em rotina mobile.", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Menu operacional",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = PrimeBlue,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Navegação nativa com foco em rotina mobile.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary
+                        )
                     }
                     IconButton(onClick = { scope.launch { drawerState.close() } }) {
                         Icon(Icons.Filled.Close, contentDescription = "Fechar menu", tint = TextSecondary)
                     }
                 }
-                Surface(color = Color.White, shape = RoundedCornerShape(18.dp), border = BorderStroke(1.dp, SoftLine)) {
+
+                Surface(
+                    color = Color.White,
+                    border = BorderStroke(1.dp, SoftLine),
+                    shape = RoundedCornerShape(LavaPrimeRadii.large)
+                ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        modifier = Modifier.padding(LavaPrimeSpacing.sm),
+                        horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.sm),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
                             color = if (usuario.perfil == PerfilUsuario.ADMINISTRADOR) PrimeBlue else WaterBlue,
@@ -668,14 +836,27 @@ fun LavaPrimeDrawer(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    if (usuario.perfil == PerfilUsuario.ADMINISTRADOR) Icons.Filled.Security else Icons.Filled.Person,
+                                    imageVector = if (usuario.perfil == PerfilUsuario.ADMINISTRADOR) {
+                                        Icons.Filled.Security
+                                    } else {
+                                        Icons.Filled.Person
+                                    },
                                     contentDescription = null
                                 )
                             }
                         }
                         Column(Modifier.weight(1f)) {
-                            Text(usuario.nome, style = MaterialTheme.typography.titleSmall, color = TextPrimary, fontWeight = FontWeight.SemiBold)
-                            Text(perfilLabel(usuario.perfil), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                            Text(
+                                text = usuario.nome,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = perfilLabel(usuario.perfil),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary
+                            )
                         }
                     }
                 }
@@ -755,7 +936,8 @@ fun money(cents: Long): String {
 
 fun formatTimestamp(value: Long?): String {
     if (value == null) return "Ainda não sincronizado"
-    return java.text.SimpleDateFormat("dd/MM HH:mm", java.util.Locale("pt", "BR")).format(java.util.Date(value))
+    return java.text.SimpleDateFormat("dd/MM HH:mm", java.util.Locale("pt", "BR"))
+        .format(java.util.Date(value))
 }
 
 private fun toneContainerColor(tone: LavaPrimeStatusTone): Color = when (tone) {
@@ -772,4 +954,12 @@ private fun toneContentColor(tone: LavaPrimeStatusTone): Color = when (tone) {
     LavaPrimeStatusTone.Success -> PositiveText
     LavaPrimeStatusTone.Warning -> WarningText
     LavaPrimeStatusTone.Danger -> DangerText
+}
+
+private fun toneBorderColor(tone: LavaPrimeStatusTone): Color = when (tone) {
+    LavaPrimeStatusTone.Neutral -> SoftLine
+    LavaPrimeStatusTone.Info -> WaterBlue.copy(alpha = 0.24f)
+    LavaPrimeStatusTone.Success -> PositiveText.copy(alpha = 0.16f)
+    LavaPrimeStatusTone.Warning -> WarningText.copy(alpha = 0.18f)
+    LavaPrimeStatusTone.Danger -> DangerText.copy(alpha = 0.18f)
 }

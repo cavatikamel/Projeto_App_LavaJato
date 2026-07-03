@@ -46,6 +46,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 - progresso oficial apos concluir `LP-APK-003`: `19%`
 - progresso oficial antes de `LP-APK-004`: `19%`
 - progresso oficial apos concluir `LP-APK-004`: `22%`
+- progresso oficial antes de `LP-APK-005`: `22%`
+- progresso oficial apos concluir `LP-APK-005`: `28%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -67,8 +69,9 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - decisao oficial de reuse do Android atual: `concluida`
 - baseline visual mobile oficial: `concluida`
 - requisitos oficiais do APK finalizados para implementacao: `concluida`
-- progresso oficial consolidado nesta data: `22%`
-- proxima etapa recomendada: `LP-APK-005 - Android Design System Foundation`
+- design system Android oficial: `concluido`
+- progresso oficial consolidado nesta data: `28%`
+- proxima etapa recomendada: `LP-APK-006 - Splash And App Initialization`
 
 ## Regra especifica da LP-APK-003
 
@@ -81,6 +84,13 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - esta fase nao implementa o app;
 - esta fase fecha os requisitos, dependencias, criterios de aceite e mapa de dados antes do codigo;
 - o ganho de progresso desta fase vem da prontidao documental para iniciar `LP-APK-005`, nao de qualquer entrega funcional no Android.
+
+## Regra especifica da LP-APK-005
+
+- esta fase implementa a fundacao visual oficial do Android;
+- o ganho de progresso desta fase vem do tema Compose, tipografia oficial, componentes reutilizaveis, iconografia e shell mobile buildado;
+- a fase nao fecha negocio, dados, pagamentos ou sync real;
+- a proxima fase deve consolidar splash e inicializacao usando a base visual agora estabilizada.
 
 ## Regra de checkpoint
 

@@ -528,6 +528,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: os requisitos oficiais do APK foram finalizados com dependencia por requisito, aceite por tela, mapa de dados e separacao explicita entre baseline obrigatoria e `LPFR`.
 - Observacao de risco: a fase nao altera Android nem Web; a prioridade recomendada passa a ser `LP-APK-005` para iniciar a fundacao de design system e shell visual sobre requisitos ja congelados.
 
+### LP-APK-005
+
+- Change record: `docs/primyo-changes/LP-APK-005.md`
+- Closure: `docs/primyo-changes/LP-APK-005-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase fundou o design system oficial do `LavaPrime` Android com paleta oficial, tipografia `Inter`, iconografia oficial, adaptive icon, componentes Compose reutilizaveis e shell visual consolidado nas telas base.
+- Observacao de risco: a fase ainda nao fecha splash/inicializacao funcional, login definitivo, dados, sync real ou smoke em dispositivo; a prioridade recomendada passa a ser `LP-APK-006` para consolidar splash e inicializacao sobre a base visual agora buildada.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`

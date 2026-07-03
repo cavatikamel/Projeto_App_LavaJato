@@ -1959,3 +1959,52 @@
   - a fundacao de design system e shell Android ainda precisa materializar os requisitos ja congelados;
   - atendimento, pagamento, documento e sync continuam dependentes de uma base de dados local mais robusta que o checkpoint atual;
   - `fallbackToDestructiveMigration()` continua risco aberto para fases futuras de dados.
+
+### LP-APK-005
+
+- Status: `Concluido`
+- Data: `2026-07-02`
+- Arquivos alterados:
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/theme/BrandPalette.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/theme/LavaPrimeTokens.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/theme/Typography.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/theme/Theme.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/components/LavaPrimeComponents.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/navigation/AppNavigationModels.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/AuthScreens.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/DashboardScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/PatioScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/CadastrosScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/ProductsScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/SecuritySyncScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/LavaPrimeRoot.kt`
+  - `LavaPrimeAndroidApp/app/src/main/res/drawable-nodpi/lavaprime_logo_primary.png`
+  - `LavaPrimeAndroidApp/app/src/main/res/drawable-nodpi/lavaprime_app_icon.png`
+  - `LavaPrimeAndroidApp/app/src/main/res/drawable/ic_launcher_foreground.xml`
+  - `LavaPrimeAndroidApp/app/src/main/res/font/inter_variable.ttf`
+  - `LavaPrimeAndroidApp/app/src/main/res/font/inter_italic_variable.ttf`
+  - `LavaPrimeAndroidApp/app/src/main/res/mipmap-anydpi/ic_launcher.xml`
+  - `LavaPrimeAndroidApp/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml`
+  - `LavaPrimeAndroidApp/app/src/main/res/values/colors.xml`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-005.md`
+  - `docs/primyo-changes/LP-APK-005-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+- Evidencias:
+  - leitura de `Material_Visual/**`, `LP_APK_PHASES.md`, `LP_APK_PROGRESS.md`, baseline visual e telas Android atuais;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`;
+  - `.\gradlew.bat tasks --no-daemon --console=plain`;
+  - `.\gradlew.bat assembleDebug --no-daemon --console=plain`;
+  - APK debug localizado em `%LOCALAPPDATA%\\LavaPrimeAndroidBuild\\LavaPrimeAndroid\\app\\outputs\\apk\\debug\\app-debug.apk`.
+- Observacoes:
+  - a fase aplicou a identidade oficial do `Material_Visual` ao runtime Android;
+  - a tipografia oficial passou para `Inter`;
+  - o shell principal, login, dashboard, patio, cadastros, produtos e sync foram alinhados ao design system reutilizavel;
+  - o build Android foi bem-sucedido usando o diretorio local externo de build ja adotado no projeto.
+- Riscos remanescentes:
+  - splash e inicializacao ainda precisam consolidacao funcional dedicada;
+  - nao houve smoke manual em aparelho ou emulador nesta fase;
+  - regras de negocio, dados, sync real e pagamentos continuam para fases posteriores.

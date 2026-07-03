@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,6 +27,7 @@ import br.com.primyo.lavaprime.ui.components.LavaPrimeStatusTone
 @Composable
 fun ProductsScreen(repository: LavaPrimeRepository) {
     val produtos by repository.produtos.collectAsStateWithLifecycle(initialValue = emptyList())
+
     LazyColumn(
         modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -46,9 +48,7 @@ fun ProductsScreen(repository: LavaPrimeRepository) {
 @Composable
 private fun ProdutoCard(produto: ProdutoEntity) {
     LavaPrimeCard(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             LavaPrimeStatusChip(
                 text = produto.tipo,
                 tone = LavaPrimeStatusTone.Info,
@@ -58,11 +58,15 @@ private fun ProdutoCard(produto: ProdutoEntity) {
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                androidx.compose.material3.Text(produto.nome, fontWeight = FontWeight.Bold, color = androidx.compose.ui.graphics.Color(0xFF0B3348))
                 androidx.compose.material3.Text(
-                    "${produto.estoqueAtual} ${produto.unidade} • mínimo ${produto.estoqueMinimo}",
+                    text = produto.nome,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0B3348)
+                )
+                androidx.compose.material3.Text(
+                    text = "${produto.estoqueAtual} ${produto.unidade} • mínimo ${produto.estoqueMinimo}",
                     style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                    color = androidx.compose.ui.graphics.Color(0xFF64748B)
+                    color = Color(0xFF64748B)
                 )
             }
             if (produto.estoqueAtual <= produto.estoqueMinimo) {

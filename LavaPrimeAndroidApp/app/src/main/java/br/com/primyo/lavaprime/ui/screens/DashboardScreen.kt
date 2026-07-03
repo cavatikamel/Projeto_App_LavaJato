@@ -98,7 +98,11 @@ fun DashboardScreen(
                     tone = if (syncState.online) LavaPrimeStatusTone.Success else LavaPrimeStatusTone.Warning
                 )
                 LavaPrimeStatusChip(
-                    text = if (syncState.pendingCount > 0) "${syncState.pendingCount} pendências de sync" else "Sem pendências de sync",
+                    text = if (syncState.pendingCount > 0) {
+                        "${syncState.pendingCount} pendências de sync"
+                    } else {
+                        "Sem pendências de sync"
+                    },
                     tone = if (syncState.pendingCount > 0) LavaPrimeStatusTone.Warning else LavaPrimeStatusTone.Info
                 )
             }

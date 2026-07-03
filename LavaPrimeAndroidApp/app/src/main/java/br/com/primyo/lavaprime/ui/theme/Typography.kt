@@ -2,42 +2,51 @@ package br.com.primyo.lavaprime.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import br.com.primyo.lavaprime.R
 
-private val LavaPrimeFontFamily = FontFamily.SansSerif
+private val LavaPrimeFontFamily = FontFamily(
+    Font(R.font.inter_variable, weight = FontWeight.Normal),
+    Font(R.font.inter_variable, weight = FontWeight.Medium),
+    Font(R.font.inter_variable, weight = FontWeight.SemiBold),
+    Font(R.font.inter_variable, weight = FontWeight.Bold),
+    Font(R.font.inter_italic_variable, weight = FontWeight.Normal, style = FontStyle.Italic)
+)
 
 val LavaPrimeTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = LavaPrimeFontFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 40.sp,
-        lineHeight = 46.sp
+        fontSize = 42.sp,
+        lineHeight = 48.sp
     ),
     displayMedium = TextStyle(
         fontFamily = LavaPrimeFontFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 34.sp,
-        lineHeight = 40.sp
+        fontSize = 36.sp,
+        lineHeight = 42.sp
     ),
     headlineLarge = TextStyle(
         fontFamily = LavaPrimeFontFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 30.sp,
-        lineHeight = 36.sp
+        fontSize = 32.sp,
+        lineHeight = 38.sp
     ),
     headlineMedium = TextStyle(
         fontFamily = LavaPrimeFontFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 26.sp,
-        lineHeight = 32.sp
+        fontSize = 28.sp,
+        lineHeight = 34.sp
     ),
     headlineSmall = TextStyle(
         fontFamily = LavaPrimeFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 22.sp,
-        lineHeight = 28.sp
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 24.sp,
+        lineHeight = 30.sp
     ),
     titleLarge = TextStyle(
         fontFamily = LavaPrimeFontFamily,
@@ -48,7 +57,7 @@ val LavaPrimeTypography = Typography(
     titleMedium = TextStyle(
         fontFamily = LavaPrimeFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 17.sp,
+        fontSize = 18.sp,
         lineHeight = 24.sp
     ),
     titleSmall = TextStyle(
