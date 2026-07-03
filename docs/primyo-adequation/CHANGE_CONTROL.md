@@ -543,3 +543,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a fase revisou a baseline Web candidata e concluiu que o `HEAD` atual `ef0bc0e` pode seguir como candidato de homologacao, porque os deltas apos `094a5b7` sao documentais e nao alteram runtime Web.
 - Observacao de risco: o historico da branch continua misturado com commits Android/APK e o working tree ainda bloqueia criacao ou push seguro de `staging` enquanto `.gitignore`, `app/styles.css`, `LavaPrimeAndroidApp/**` e `app/assets/data/fipe-veiculos.*` nao forem isolados.
+
+### LP-DEPLOY-GOV-004
+
+- Change record: `docs/primyo-changes/LP-DEPLOY-GOV-004.md`
+- Closure: `docs/primyo-changes/LP-DEPLOY-GOV-004-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase auditou o working tree, classificou `.gitignore`, `app/styles.css`, `LavaPrimeAndroidApp/**` e `app/assets/data/fipe-veiculos.*` por trilha propria e formalizou `WORKING_TREE_ISOLATION_PLAN.md` antes de qualquer `staging`.
+- Observacao de risco: o `HEAD` atual `79ae86e` ja inclui documentacao APK apos a ultima revisao Web, entao a criacao futura de `staging` continua bloqueada ate isolamento do working tree e escolha explicita da baseline, preferencialmente `9205f09`.

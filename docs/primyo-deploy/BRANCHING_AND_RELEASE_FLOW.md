@@ -11,10 +11,11 @@
 - `primyo/onboarding`
   - branch candidata atual do programa de transformacao
   - nao deve publicar producao diretamente
-  - `HEAD` auditado em `LP-DEPLOY-GOV-003`: `ef0bc0e`
-  - observacao: o historico da branch inclui commits Android/APK, mas o snapshot Web atual segue estavel e documentalmente preparado para homologacao
+  - baseline Web revisada em `LP-DEPLOY-GOV-003`: `9205f09`
+  - `HEAD` atual auditado em `LP-DEPLOY-GOV-004`: `79ae86e`
+  - observacao: o historico da branch inclui commits Android/APK, e o `HEAD` atual ja carrega documentacao APK apos a ultima revisao Web
 - branches de fase
-  - exemplos: `lp-deploy-gov-002`, `fix/...`, `hotfix/...`
+  - exemplos: `lp-deploy-gov-004`, `fix/...`, `hotfix/...`
   - devem nascer da branch alvo correta
 
 ## Regra de uso por branch
@@ -37,7 +38,7 @@
 - branch candidata atual
 - usada para consolidar o resultado do programa
 - precisa passar por homologacao antes de qualquer merge rumo a `main`
-- nao deve ser usada como origem cega da futura `staging` sem revisar se a baseline desejada inclui ou exclui a governanca APK atual
+- nao deve ser usada como origem cega da futura `staging` sem revisar se a baseline desejada inclui ou exclui o delta APK atual
 
 ## Situacao atual da branch staging
 
@@ -63,13 +64,13 @@
 
 Somente para fase futura autorizada, sem execucao nesta fase:
 
-- se a baseline aprovada for o `HEAD` atual recomendado:
+- se a baseline aprovada for a revisao Web conservadora:
+  - `git switch --detach 9205f09`
+  - `git switch -c staging`
+- se uma fase futura aceitar explicitamente o `HEAD` atual com docs APK:
   - `git switch primyo/onboarding`
   - `git rev-parse --short HEAD`
   - `git switch -c staging`
-- se for necessario revalidar apenas o ultimo fechamento Web:
-  - `git switch --detach 094a5b7`
-  - `git switch -c staging-from-web-closure`
 - somente apos aprovacao formal:
   - `git push -u origin staging`
 
@@ -108,3 +109,4 @@ Se eles aparecerem no working tree:
 2. fazer staging seletivo por caminho
 3. revisar `git diff --cached --name-only`
 4. cancelar push ou PR se houver mistura de trilhas
+5. cancelar criacao da `staging` se a baseline Web escolhida nao estiver separada do delta APK atual

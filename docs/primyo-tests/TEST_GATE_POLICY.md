@@ -374,6 +374,17 @@ Estado oficial apos `LP-DEPLOY-GOV-003`:
 - `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a `default`;
 - Supabase continua fechado para runtime.
 
+Estado oficial apos `LP-DEPLOY-GOV-004`:
+
+- a trilha passa a exigir plano formal de isolamento do working tree antes de qualquer criacao/push de `staging`;
+- `.gitignore`, `app/styles.css`, `LavaPrimeAndroidApp/**` e `app/assets/data/fipe-veiculos.*` passam a ter classificacao oficial por trilha propria;
+- a baseline Web recomendada para futura `staging` deixa de acompanhar automaticamente o `HEAD` quando a branch receber commits documentais de APK apos a ultima revisao Web;
+- `9205f09` passa a ser a referencia conservadora atual para futura derivacao de `staging`, salvo nova revisao explicita;
+- o pacote oficial de validacao continua exigindo `node --check`, Adapter Gate, `npm.cmd run primyo:gate`, `build` e `verify:build`;
+- o smoke reduzido pode herdar a ultima evidencia valida quando a fase for documental, o browser nao estiver disponivel e nao houver mudanca de runtime;
+- nenhuma limpeza destrutiva, criacao de branch, `push` ou deploy pode ocorrer nesta etapa;
+- Supabase continua fechado e `DEMO_BOOTSTRAP` continua o unico modo padrao seguro.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;
