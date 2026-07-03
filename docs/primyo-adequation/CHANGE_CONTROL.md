@@ -536,6 +536,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: a fase fundou o design system oficial do `LavaPrime` Android com paleta oficial, tipografia `Inter`, iconografia oficial, adaptive icon, componentes Compose reutilizaveis e shell visual consolidado nas telas base.
 - Observacao de risco: a fase ainda nao fecha splash/inicializacao funcional, login definitivo, dados, sync real ou smoke em dispositivo; a prioridade recomendada passa a ser `LP-APK-006` para consolidar splash e inicializacao sobre a base visual agora buildada.
 
+### LP-APK-006
+
+- Change record: `docs/primyo-changes/LP-APK-006.md`
+- Closure: `docs/primyo-changes/LP-APK-006-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase consolidou o preload inicial do `LavaPrime` Android com validacao de banco local, restauracao de sessao local em aparelho, splash com estado de abertura e roteamento correto para login ou home.
+- Observacao de risco: a fase ainda nao fecha login evolutivo completo em smoke de dispositivo nem auth remota; a prioridade recomendada passa a ser `LP-APK-007` para consolidar login e selecao de perfil sobre a abertura ja estabilizada.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`

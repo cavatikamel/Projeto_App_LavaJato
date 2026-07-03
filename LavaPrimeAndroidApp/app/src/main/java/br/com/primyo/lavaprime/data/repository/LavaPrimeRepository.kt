@@ -16,6 +16,11 @@ import br.com.primyo.lavaprime.data.model.VeiculoEntity
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
+data class LocalBootstrapSnapshot(
+    val localDbReady: Boolean,
+    val seedApplied: Boolean
+)
+
 class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
     val patio: Flow<List<AtendimentoEntity>> = db.atendimentoDao().patio()
     val servicosAtivos: Flow<List<ServicoEntity>> = db.servicoDao().listarAtivos()
@@ -49,6 +54,38 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
 
             else -> null
         }?.also { db.usuarioDao().salvar(it) }
+    }
+
+    suspend fun prepararBancoLocal(): LocalBootstrapSnapshot {
+        val baseJaExistia = db.servicoDao().obter("srv-lavagem-simples") != null
+        if (!baseJaExistia) {
+            seedInicial()
+        }
+        val pronto = db.servicoDao().obter("srv-lavagem-simples") != null
+        return LocalBootstrapSnapshot(
+            localDbReady = pronto,
+            seedApplied = !baseJaExistia && pronto
+        )
+    }
+
+    suspend fun restaurarUsuarioSessao(userId: String?, email: String?): UsuarioEntity? {
+        val existente = userId
+            ?.takeIf { it.isNotBlank() }
+            ?.let { db.usuarioDao().porId(it) }
+            ?: email
+                ?.trim()
+                ?.lowercase()
+                ?.takeIf { it.isNotBlank() }
+                ?.let { db.usuarioDao().porEmail(it) }
+
+        if (existente == null) return null
+
+        val atualizado = existente.copy(
+            ultimoLoginLocal = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+        db.usuarioDao().salvar(atualizado)
+        return atualizado
     }
 
     suspend fun seedInicial() {

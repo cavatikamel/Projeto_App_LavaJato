@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Security
@@ -47,6 +47,8 @@ import br.com.primyo.lavaprime.ui.components.LavaPrimeActionButton
 import br.com.primyo.lavaprime.ui.components.LavaPrimeActionStyle
 import br.com.primyo.lavaprime.ui.components.LavaPrimeCard
 import br.com.primyo.lavaprime.ui.components.LavaPrimeSegmentedProfileSelector
+import br.com.primyo.lavaprime.ui.components.LavaPrimeStatusChip
+import br.com.primyo.lavaprime.ui.components.LavaPrimeStatusTone
 import br.com.primyo.lavaprime.ui.components.LavaPrimeTextField
 import br.com.primyo.lavaprime.ui.components.LavaPrimeVersionFooter
 import br.com.primyo.lavaprime.ui.components.perfilLabel
@@ -58,9 +60,19 @@ import br.com.primyo.lavaprime.ui.theme.PrimeBlue
 import br.com.primyo.lavaprime.ui.theme.PrimeBlueDeep
 import br.com.primyo.lavaprime.ui.theme.TextSecondary
 import br.com.primyo.lavaprime.ui.theme.WaterBlue
+import br.com.primyo.lavaprime.ui.viewmodel.BootstrapStepState
 
 @Composable
-fun SplashLavaPrime() {
+fun SplashLavaPrime(
+    title: String,
+    message: String,
+    localDbState: BootstrapStepState,
+    localDbMessage: String,
+    sessionState: BootstrapStepState,
+    sessionMessage: String,
+    routeState: BootstrapStepState,
+    routeMessage: String
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -76,18 +88,46 @@ fun SplashLavaPrime() {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Gestão inteligente para sua operação de lavagem.",
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = message,
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.9f),
                 textAlign = TextAlign.Center
             )
+
+            LavaPrimeCard(
+                tonal = true,
+                contentPadding = PaddingValues(LavaPrimeSpacing.lg)
+            ) {
+                Text(
+                    text = "Preload inicial",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = PrimeBlue,
+                    fontWeight = FontWeight.Bold
+                )
+                StatusLine("Banco local", localDbMessage, localDbState)
+                StatusLine("Sessão local", sessionMessage, sessionState)
+                StatusLine("Entrada inicial", routeMessage, routeState)
+            }
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun InitialScreen(onAccess: () -> Unit) {
+fun InitialScreen(
+    onAccess: () -> Unit,
+    bootstrapSummary: String?,
+    localDbReady: Boolean,
+    sessionRestored: Boolean,
+    bootstrapError: String?,
+    onRetry: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -123,7 +163,7 @@ fun InitialScreen(onAccess: () -> Unit) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Uma base nativa, clara e profissional para a rotina mobile do LavaPrime.",
+                        text = bootstrapSummary ?: "Base nativa pronta para a rotina mobile do LavaPrime.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )
@@ -131,14 +171,35 @@ fun InitialScreen(onAccess: () -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        LandingBadge("Offline-first")
-                        LandingBadge("Supabase-ready")
+                        LandingBadge(if (localDbReady) "Banco local pronto" else "Banco local pendente")
+                        LandingBadge(if (sessionRestored) "Sessão restaurável" else "Novo login")
                         LandingBadge("Mobile native")
                     }
+
+                    bootstrapError?.let {
+                        LavaPrimeCard(
+                            tonal = true,
+                            contentPadding = PaddingValues(LavaPrimeSpacing.md)
+                        ) {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = PrimeBlue
+                            )
+                        }
+                    }
+
                     LavaPrimeActionButton(
-                        text = "Acessar LavaPrime",
+                        text = "Ir para o login",
                         onClick = onAccess
                     )
+                    if (bootstrapError != null) {
+                        LavaPrimeActionButton(
+                            text = "Tentar novamente",
+                            onClick = onRetry,
+                            style = LavaPrimeActionStyle.Outline
+                        )
+                    }
                 }
             }
 
@@ -204,7 +265,7 @@ fun LoginScreen(
                     LavaPrimeActionButton(
                         text = "Voltar",
                         onClick = onBack,
-                        icon = Icons.Filled.ArrowBack,
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
                         style = LavaPrimeActionStyle.Ghost
                     )
                 }
@@ -290,6 +351,33 @@ fun LoginScreen(
                 LavaPrimeVersionFooter(modifier = Modifier.fillMaxWidth())
             }
         }
+    }
+}
+
+@Composable
+private fun StatusLine(
+    label: String,
+    description: String,
+    state: BootstrapStepState
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        LavaPrimeStatusChip(
+            text = label,
+            tone = when (state) {
+                BootstrapStepState.PENDING -> LavaPrimeStatusTone.Info
+                BootstrapStepState.READY -> LavaPrimeStatusTone.Success
+                BootstrapStepState.MISSING -> LavaPrimeStatusTone.Warning
+                BootstrapStepState.FAILED -> LavaPrimeStatusTone.Danger
+            }
+        )
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodySmall,
+            color = TextSecondary
+        )
     }
 }
 

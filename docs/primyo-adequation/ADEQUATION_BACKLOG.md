@@ -2008,3 +2008,40 @@
   - splash e inicializacao ainda precisam consolidacao funcional dedicada;
   - nao houve smoke manual em aparelho ou emulador nesta fase;
   - regras de negocio, dados, sync real e pagamentos continuam para fases posteriores.
+
+### LP-APK-006
+
+- Status: `Concluido`
+- Data: `2026-07-02`
+- Arquivos alterados:
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/LavaPrimeApp.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/local/Daos.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/local/LocalSessionStore.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/repository/LavaPrimeRepository.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/AuthScreens.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/LavaPrimeRoot.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/viewmodel/AuthViewModel.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/viewmodel/LavaPrimeViewModelFactory.kt`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-006.md`
+  - `docs/primyo-changes/LP-APK-006-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+- Evidencias:
+  - leitura da governanca Primyo/APK e do fechamento `LP-APK-005`;
+  - leitura de `AuthViewModel`, `LavaPrimeRoot`, `LavaPrimeApp`, `LavaPrimeRepository`, `LavaPrimeDatabase`, `Daos`, `Models` e `Material_Visual`;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`;
+  - `.\gradlew.bat tasks --no-daemon --console=plain`;
+  - `.\gradlew.bat assembleDebug --no-daemon --console=plain`;
+  - APK debug localizado em `%LOCALAPPDATA%\\LavaPrimeAndroidBuild\\LavaPrimeAndroid\\app\\outputs\\apk\\debug\\app-debug.apk`.
+- Observacoes:
+  - a fase criou uma sessao local leve em aparelho via `SharedPreferences`;
+  - o preload passou a validar banco local, restaurar sessao local e decidir entrada entre login e home;
+  - a splash ganhou estado visivel de abertura, sem abrir auth remota nem sync real.
+- Riscos remanescentes:
+  - smoke manual em aparelho/emulador continua pendente;
+  - o login ainda e local/demo e precisa de consolidacao de UX na proxima fase;
+  - dados, sync real e auth remota continuam fora desta etapa.
+

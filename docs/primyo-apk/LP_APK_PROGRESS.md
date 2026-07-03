@@ -48,6 +48,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 - progresso oficial apos concluir `LP-APK-004`: `22%`
 - progresso oficial antes de `LP-APK-005`: `22%`
 - progresso oficial apos concluir `LP-APK-005`: `28%`
+- progresso oficial antes de `LP-APK-006`: `28%`
+- progresso oficial apos concluir `LP-APK-006`: `31%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -70,8 +72,9 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - baseline visual mobile oficial: `concluida`
 - requisitos oficiais do APK finalizados para implementacao: `concluida`
 - design system Android oficial: `concluido`
-- progresso oficial consolidado nesta data: `28%`
-- proxima etapa recomendada: `LP-APK-006 - Splash And App Initialization`
+- splash e inicializacao Android: `concluidos`
+- progresso oficial consolidado nesta data: `31%`
+- proxima etapa recomendada: `LP-APK-007 - Login And Profile Selection`
 
 ## Regra especifica da LP-APK-003
 
@@ -91,6 +94,13 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - o ganho de progresso desta fase vem do tema Compose, tipografia oficial, componentes reutilizaveis, iconografia e shell mobile buildado;
 - a fase nao fecha negocio, dados, pagamentos ou sync real;
 - a proxima fase deve consolidar splash e inicializacao usando a base visual agora estabilizada.
+
+## Regra especifica da LP-APK-006
+
+- esta fase consolida a abertura nativa do app com preload, banco local, sessao local e roteamento inicial;
+- o ganho de progresso desta fase vem do fluxo de entrada buildado e rastreavel;
+- a fase nao implementa auth remota, sync remoto ou regras novas de negocio;
+- a proxima fase deve aprofundar login e selecao de perfil sobre a inicializacao ja estabilizada.
 
 ## Regra de checkpoint
 

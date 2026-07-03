@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface UsuarioDao {
     @Query("SELECT * FROM usuarios WHERE ativo = 1 ORDER BY perfil, nome") fun listarAtivos(): Flow<List<UsuarioEntity>>
+    @Query("SELECT * FROM usuarios WHERE id = :id LIMIT 1") suspend fun porId(id: String): UsuarioEntity?
     @Query("SELECT * FROM usuarios WHERE email = :email LIMIT 1") suspend fun porEmail(email: String): UsuarioEntity?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun salvar(item: UsuarioEntity)
 }

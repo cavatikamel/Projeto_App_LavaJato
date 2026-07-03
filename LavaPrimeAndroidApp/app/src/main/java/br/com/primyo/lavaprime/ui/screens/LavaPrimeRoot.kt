@@ -51,8 +51,9 @@ fun LavaPrimeRoot(
     connectivityMonitor: ConnectivityMonitor,
     syncCoordinator: SyncCoordinator
 ) {
-    val factory = remember(repository, connectivityMonitor, syncCoordinator) {
-        LavaPrimeViewModelFactory(repository, connectivityMonitor, syncCoordinator)
+    val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as br.com.primyo.lavaprime.LavaPrimeApp
+    val factory = remember(repository, connectivityMonitor, syncCoordinator, app.localSessionStore) {
+        LavaPrimeViewModelFactory(repository, app.localSessionStore, connectivityMonitor, syncCoordinator)
     }
     val authViewModel: AuthViewModel = viewModel(factory = factory)
     val patioViewModel: PatioViewModel = viewModel(factory = factory)
@@ -65,8 +66,24 @@ fun LavaPrimeRoot(
     val syncState by syncViewModel.state.collectAsStateWithLifecycle()
 
     when (authState.stage) {
-        AppStage.SPLASH -> SplashLavaPrime()
-        AppStage.INICIAL -> InitialScreen(onAccess = authViewModel::abrirLogin)
+        AppStage.SPLASH -> SplashLavaPrime(
+            title = authState.splashTitle,
+            message = authState.splashMessage,
+            localDbState = authState.localDbState,
+            localDbMessage = authState.localDbMessage,
+            sessionState = authState.sessionState,
+            sessionMessage = authState.sessionMessage,
+            routeState = authState.routeState,
+            routeMessage = authState.routeMessage
+        )
+        AppStage.INICIAL -> InitialScreen(
+            onAccess = authViewModel::abrirLogin,
+            bootstrapSummary = authState.bootstrapSummary,
+            localDbReady = authState.localDbState == br.com.primyo.lavaprime.ui.viewmodel.BootstrapStepState.READY,
+            sessionRestored = authState.sessionState == br.com.primyo.lavaprime.ui.viewmodel.BootstrapStepState.READY,
+            bootstrapError = authState.bootstrapError,
+            onRetry = authViewModel::iniciarBootstrap
+        )
         AppStage.LOGIN -> LoginScreen(
             perfil = authState.perfilSelecionado,
             email = authState.email,
