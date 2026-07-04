@@ -2077,3 +2077,32 @@
   - smoke manual em aparelho/emulador continua pendente;
   - a proxima prioridade passa a ser `LP-APK-009` para aprofundar o `Dashboard` e reduzir lacunas operacionais no espelho mobile do Web.
 
+### LP-APK-009
+
+- Status: `Concluido`
+- Data: `2026-07-04`
+- Arquivos alterados:
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/repository/LavaPrimeRepository.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/DashboardScreen.kt`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-009.md`
+  - `docs/primyo-changes/LP-APK-009-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+- Evidencias:
+  - leitura cruzada da governanca Primyo/APK, do `Dashboard` Web em `app/main.js` e dos estilos em `app/styles.css`;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`;
+  - `.\gradlew.bat tasks --no-daemon --console=plain`;
+  - `.\gradlew.bat assembleDebug --no-daemon --console=plain`;
+  - APK debug localizado em `%LOCALAPPDATA%\\LavaPrimeAndroidBuild\\LavaPrimeAndroid\\app\\outputs\\apk\\debug\\app-debug.apk`.
+- Observacoes:
+  - a fase alinhou os blocos centrais do Dashboard Android ao Web sem alterar o Web;
+  - metricas sem base local suficiente continuaram visiveis, mas reservadas com leitura honesta;
+  - o app continua nativo e a tela foi adaptada para leitura mobile sem texto estourado.
+- Riscos remanescentes:
+  - patio ainda precisa de paridade funcional/visual propria;
+  - parte das metricas do Dashboard depende de futuras fases de vendas, pagamentos, faturamento e manutencao;
+  - smoke manual em aparelho/emulador continua pendente.
+

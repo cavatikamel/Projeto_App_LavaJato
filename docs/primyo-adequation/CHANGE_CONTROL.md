@@ -552,6 +552,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: a fase consolidou o shell de navegacao mobile com grupos e submenus, adicionou as superficies Android faltantes para espelhar a estrutura do Web e preservou as telas ja existentes sem remocao.
 - Observacao de risco: varias telas novas ainda sao espelhos estruturais e nao fluxo funcional completo; a prioridade recomendada passa a ser `LP-APK-009` para aprofundar a paridade operacional do dashboard sobre o shell agora estabilizado.
 
+### LP-APK-009
+
+- Change record: `docs/primyo-changes/LP-APK-009.md`
+- Closure: `docs/primyo-changes/LP-APK-009-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: o Dashboard Android passou a refletir os blocos centrais do Dashboard Web com metricas, fluxo operacional, alertas e manutencao em leitura mobile nativa, preservando contraste e hierarquia visual.
+- Observacao de risco: parte das metricas do Web ainda depende de modulos Android nao implementados e permaneceu visivel como leitura reservada, sem regra artificial; a prioridade recomendada passa a ser `LP-APK-010` para fechar a paridade operacional do patio.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`

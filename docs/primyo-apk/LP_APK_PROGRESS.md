@@ -52,6 +52,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 - progresso oficial apos concluir `LP-APK-006`: `31%`
 - progresso oficial antes de `LP-APK-008`: `31%`
 - progresso oficial apos concluir `LP-APK-008`: `34%`
+- progresso oficial antes de `LP-APK-009`: `34%`
+- progresso oficial apos concluir `LP-APK-009`: `39%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -76,8 +78,9 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - design system Android oficial: `concluido`
 - splash e inicializacao Android: `concluidos`
 - shell de navegacao mobile com paridade estrutural do Web: `concluido`
-- progresso oficial consolidado nesta data: `34%`
-- proxima etapa recomendada: `LP-APK-009 - Dashboard Mobile Parity`
+- dashboard mobile com paridade operacional base do Web: `concluido`
+- progresso oficial consolidado nesta data: `39%`
+- proxima etapa recomendada: `LP-APK-010 - Patio Mobile Parity`
 
 ## Regra especifica da LP-APK-003
 
@@ -111,6 +114,13 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - o ganho de progresso desta fase vem da navegacao agrupada, das rotas espelho adicionadas e do build Android validado;
 - a fase nao fecha paridade funcional completa de cada modulo nem substitui as fases especificas de dashboard, patio, atendimento, cadastros ou financeiro;
 - a proxima fase deve aprofundar a paridade operacional do `Dashboard` sobre o shell agora estabilizado.
+
+## Regra especifica da LP-APK-009
+
+- esta fase consolida os blocos centrais do Dashboard Web no Android;
+- o ganho de progresso desta fase vem da leitura mobile do dashboard, dos indicadores operacionais e do build Android validado;
+- a fase nao fecha vendas, cobrancas, manutencoes nem todas as metricas financeiras do Web;
+- a proxima fase deve aprofundar a paridade operacional do `Patio`.
 
 ## Regra de checkpoint
 
