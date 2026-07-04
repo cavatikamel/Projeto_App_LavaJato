@@ -149,7 +149,12 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             placa = "ABC1D23",
             marca = "Toyota",
             modelo = "Corolla",
+            ano = "2024",
             cor = "Prata",
+            tipo = "Carro",
+            categoria = "Sedan",
+            combustivel = "Flex",
+            observacoes = "Cliente prefere checklist visual antes da entrega.",
             alertaEspecial = "Veículo vitrificado: usar produto neutro. Evitar ácidos e alcalinos fortes.",
             restringirProdutosAcidos = true,
             restringirProdutosAlcalinos = true,
@@ -196,6 +201,10 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             clienteId = cliente.id,
             placa = placa.uppercase().ifBlank { "SEMPLACA" },
             modelo = veiculoResumo.ifBlank { null },
+            tipo = "Carro",
+            categoria = "Hatch",
+            combustivel = "Flex",
+            observacoes = alerta.ifBlank { null },
             alertaEspecial = alerta.ifBlank { null },
             restringirProdutosAcidos = alerta.contains("vitr", ignoreCase = true) || alerta.contains("acid", ignoreCase = true),
             restringirProdutosAlcalinos = alerta.contains("vitr", ignoreCase = true) || alerta.contains("alcal", ignoreCase = true),
@@ -256,6 +265,10 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             placa = placa.uppercase().ifBlank { "SEMPLACA" },
             modelo = marcaModelo.ifBlank { null },
             cor = cor.ifBlank { null },
+            tipo = "Carro",
+            categoria = "Hatch",
+            combustivel = "Flex",
+            observacoes = alertaEspecial.ifBlank { null },
             alertaEspecial = alertaEspecial.ifBlank { null },
             restringirProdutosAcidos = alertaEspecial.contains("vitr", ignoreCase = true) || alertaEspecial.contains("acid", ignoreCase = true),
             restringirProdutosAlcalinos = alertaEspecial.contains("vitr", ignoreCase = true) || alertaEspecial.contains("alcal", ignoreCase = true),
@@ -336,6 +349,9 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
                     id = UUID.randomUUID().toString(),
                     clienteId = normalizedClientId,
                     placa = placa,
+                    tipo = "Carro",
+                    categoria = "Hatch",
+                    combustivel = "Flex",
                     syncStatus = SyncStatus.PENDING_SYNC,
                     updatedAt = agora
                 )
@@ -374,6 +390,60 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             entidadeId = cliente.id,
             operacao = if (persisted == null) "insert" else "upsert",
             payloadResumo = "Cliente ${cliente.nome}",
+            usuario = usuario
+        )
+    }
+
+    suspend fun salvarVeiculoCompleto(
+        veiculoId: String?,
+        placa: String,
+        marca: String,
+        modelo: String,
+        ano: String,
+        cor: String,
+        tipo: String,
+        categoria: String,
+        combustivel: String,
+        clienteId: String,
+        observacoes: String,
+        usuario: UsuarioEntity
+    ) {
+        val agora = System.currentTimeMillis()
+        val normalizedPlate = placa.uppercase().trim()
+        val duplicate = db.veiculoDao().porPlaca(normalizedPlate)
+        val persisted = veiculoId?.let { db.veiculoDao().obter(it) }
+        val base = when {
+            persisted != null -> persisted
+            duplicate != null -> duplicate
+            else -> null
+        }
+        val vehicle = VeiculoEntity(
+            id = base?.id ?: UUID.randomUUID().toString(),
+            empresaId = base?.empresaId ?: usuario.empresaId,
+            clienteId = clienteId.ifBlank { "sem-cliente" },
+            placa = normalizedPlate,
+            marca = marca.trim().ifBlank { null },
+            modelo = modelo.trim(),
+            ano = ano.trim().ifBlank { null },
+            cor = cor.trim().ifBlank { null },
+            tipo = tipo,
+            categoria = if (tipo.equals("Moto", ignoreCase = true)) null else categoria.trim().ifBlank { null },
+            combustivel = combustivel.trim().ifBlank { null },
+            observacoes = observacoes.trim().ifBlank { null },
+            alertaEspecial = base?.alertaEspecial,
+            restringirProdutosAcidos = base?.restringirProdutosAcidos ?: false,
+            restringirProdutosAlcalinos = base?.restringirProdutosAlcalinos ?: false,
+            phMinimoRecomendado = base?.phMinimoRecomendado,
+            phMaximoRecomendado = base?.phMaximoRecomendado,
+            syncStatus = SyncStatus.PENDING_SYNC,
+            updatedAt = agora
+        )
+        db.veiculoDao().salvar(vehicle)
+        registrarMudanca(
+            entidade = "vehicles",
+            entidadeId = vehicle.id,
+            operacao = if (base == null) "insert" else "upsert",
+            payloadResumo = "Veículo ${vehicle.placa}",
             usuario = usuario
         )
     }

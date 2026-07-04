@@ -27,7 +27,7 @@ import br.com.primyo.lavaprime.data.model.VeiculoEntity
         AuditLogEntity::class,
         SyncQueueEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -57,10 +57,20 @@ abstract class LavaPrimeDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE veiculos ADD COLUMN ano TEXT")
+                db.execSQL("ALTER TABLE veiculos ADD COLUMN tipo TEXT NOT NULL DEFAULT 'Carro'")
+                db.execSQL("ALTER TABLE veiculos ADD COLUMN categoria TEXT")
+                db.execSQL("ALTER TABLE veiculos ADD COLUMN combustivel TEXT")
+                db.execSQL("ALTER TABLE veiculos ADD COLUMN observacoes TEXT")
+            }
+        }
+
         @Volatile private var INSTANCE: LavaPrimeDatabase? = null
         fun getDatabase(context: Context): LavaPrimeDatabase = INSTANCE ?: synchronized(this) {
             Room.databaseBuilder(context.applicationContext, LavaPrimeDatabase::class.java, "lavaprime.db")
-                .addMigrations(MIGRATION_2_3)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                 .fallbackToDestructiveMigration()
                 .build()
                 .also { INSTANCE = it }

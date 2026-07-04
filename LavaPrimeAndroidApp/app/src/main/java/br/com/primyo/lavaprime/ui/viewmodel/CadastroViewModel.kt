@@ -122,4 +122,36 @@ class CadastroViewModel(private val repository: LavaPrimeRepository) : ViewModel
             )
         }
     }
+
+    fun salvarVeiculoCompleto(
+        veiculoId: String?,
+        placa: String,
+        marca: String,
+        modelo: String,
+        ano: String,
+        cor: String,
+        tipo: String,
+        categoria: String,
+        combustivel: String,
+        clienteId: String,
+        observacoes: String,
+        usuario: UsuarioEntity
+    ) {
+        viewModelScope.launch {
+            repository.salvarVeiculoCompleto(
+                veiculoId = veiculoId,
+                placa = placa,
+                marca = marca,
+                modelo = modelo,
+                ano = ano,
+                cor = cor,
+                tipo = tipo,
+                categoria = categoria,
+                combustivel = combustivel,
+                clienteId = clienteId,
+                observacoes = observacoes,
+                usuario = usuario
+            )
+        }
+    }
 }

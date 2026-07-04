@@ -576,6 +576,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: a area `Clientes` Android passou a refletir o fluxo central do Web com busca, filtros, cadastro/edicao, regras de `PF/PJ`, faturamento, aprovacao e placas vinculadas, enquanto o inicio do app foi limpo para manter apenas `Splash -> Login` sem textos explicativos.
 - Observacao de risco: a paridade de `Veiculos` ainda precisa de fase propria para aprofundar transferencia de placa, dados completos do veiculo e relacionamento cruzado com clientes; a prioridade recomendada passa a ser `LP-APK-015`.
 
+### LP-APK-015
+
+- Change record: `docs/primyo-changes/LP-APK-015.md`
+- Closure: `docs/primyo-changes/LP-APK-015-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a area `Veiculos` Android passou a refletir o fluxo base do Web com busca, filtros, cadastro/edicao, vinculo com cliente, metricas, historico base e modelo local ampliado para ano, tipo, categoria, combustivel e observacoes.
+- Observacao de risco: o Web ainda possui transferencia dedicada de cliente associado, check-list PDF e historico mais profundo; a prioridade recomendada passa a ser `LP-APK-016`.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`

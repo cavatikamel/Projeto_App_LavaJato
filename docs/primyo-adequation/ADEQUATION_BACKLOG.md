@@ -2177,3 +2177,37 @@
   - smoke manual em aparelho/emulador continua pendente;
   - a autenticacao continua local/demo e ainda nao foi ligada a backend real.
 
+### LP-APK-015
+
+- Status: `Concluido`
+- Data: `2026-07-04`
+- Arquivos alterados:
+  - `LavaPrimeAndroidApp/app/schemas/br.com.primyo.lavaprime.data.local.LavaPrimeDatabase/4.json`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/local/LavaPrimeDatabase.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/model/Models.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/repository/LavaPrimeRepository.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/LavaPrimeRoot.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/VehiclesScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/viewmodel/CadastroViewModel.kt`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-015.md`
+  - `docs/primyo-changes/LP-APK-015-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+- Evidencias:
+  - leitura cruzada da governanca Primyo/APK, do fluxo `Veiculos` em `app/main.js` e dos estilos em `app/styles.css`;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`;
+  - `.\gradlew.bat tasks --no-daemon --console=plain`;
+  - `.\gradlew.bat assembleDebug --no-daemon --console=plain`;
+  - APK debug localizado em `%LOCALAPPDATA%\\LavaPrimeAndroidBuild\\LavaPrimeAndroid\\app\\outputs\\apk\\debug\\app-debug.apk`.
+- Observacoes:
+  - a fase substituiu o espelho de `Veiculos` por um fluxo mobile real com busca, filtros, cadastro, edicao e historico base;
+  - a base Room ganhou migration `3 -> 4` para suportar os novos campos do dominio de veiculos;
+  - o app continua nativo e sem alteracao estrutural no Web.
+- Riscos remanescentes:
+  - transferencia dedicada de cliente associado ainda precisa de aprofundamento proprio;
+  - historico avancado e check-list PDF continuam pendentes para fases futuras;
+  - smoke manual em aparelho/emulador continua pendente.
+

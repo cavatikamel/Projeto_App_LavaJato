@@ -191,7 +191,13 @@ private fun LavaPrimeShell(
                         onSearchChange = cadastroViewModel::atualizarBusca,
                         onSaveCliente = cadastroViewModel::salvarClienteCompleto
                     )
-                    MobileRoute.VEICULOS -> VehiclesMirrorScreen(repository)
+                    MobileRoute.VEICULOS -> VehiclesScreen(
+                        repository = repository,
+                        state = cadastroState,
+                        usuario = usuario,
+                        onSearchChange = cadastroViewModel::atualizarBusca,
+                        onSaveVeiculo = cadastroViewModel::salvarVeiculoCompleto
+                    )
                     MobileRoute.OPERADORES -> OperatorsMirrorScreen(repository)
                     MobileRoute.SERVICOS -> ServicesMirrorScreen(repository)
                     MobileRoute.PRODUTOS -> ProductsScreen(repository)

@@ -58,6 +58,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 - progresso oficial apos concluir `LP-APK-010`: `44%`
 - progresso oficial antes de `LP-APK-014`: `44%`
 - progresso oficial apos concluir `LP-APK-014`: `46.5%`
+- progresso oficial antes de `LP-APK-015`: `46.5%`
+- progresso oficial apos concluir `LP-APK-015`: `49%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -85,8 +87,9 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - dashboard mobile com paridade operacional base do Web: `concluido`
 - patio mobile com paridade operacional base do Web: `concluido`
 - clientes mobile com paridade funcional base do Web: `concluido`
-- progresso oficial consolidado nesta data: `46.5%`
-- proxima etapa recomendada: `LP-APK-015 - Vehicles Flow`
+- veiculos mobile com paridade funcional base do Web: `concluido`
+- progresso oficial consolidado nesta data: `49%`
+- proxima etapa recomendada: `LP-APK-016 - Services Flow`
 
 ## Regra especifica da LP-APK-003
 
@@ -141,6 +144,13 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - o ganho de progresso desta fase vem da paridade funcional base com o Web, do ajuste de inicio `Splash -> Login` e do build Android validado;
 - a fase nao fecha ainda o fluxo dedicado de `Veiculos`, a transferencia avancada de proprietario nem o atendimento completo sobre todos os cadastros;
 - a proxima fase segura passa a ser `LP-APK-015 - Vehicles Flow`.
+
+## Regra especifica da LP-APK-015
+
+- esta fase consolida o fluxo de `Veiculos` com busca, filtros, cadastro, edicao, vinculo atual com cliente e leitura de historico/patio;
+- o ganho de progresso desta fase vem da paridade funcional base com o Web, da migration `3 -> 4` para o modelo de veiculo e do build Android validado;
+- a fase nao fecha ainda transferencia avancada de proprietario, check-list PDF, cuidados especiais completos nem o catalogo de `Servicos`;
+- a proxima fase segura passa a ser `LP-APK-016 - Services Flow`.
 
 ## Regra de checkpoint
 
