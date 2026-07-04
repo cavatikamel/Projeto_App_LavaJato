@@ -568,6 +568,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: o `Patio` Android passou a refletir o quadro operacional do Web com grupos por status, resumo, filtros, fila de aguardando e acoes mais claras, enquanto a abertura do app foi simplificada para `Splash -> Login` com a arte oficial enviada pelo usuario.
 - Observacao de risco: a etapa `Prontos` ainda nao existe como status de dados local e ficou espelhada apenas no plano visual/estrutural; a prioridade recomendada passa a ser `LP-APK-014` para consolidar `Clientes` antes do fluxo completo de atendimento.
 
+### LP-APK-014
+
+- Change record: `docs/primyo-changes/LP-APK-014.md`
+- Closure: `docs/primyo-changes/LP-APK-014-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a area `Clientes` Android passou a refletir o fluxo central do Web com busca, filtros, cadastro/edicao, regras de `PF/PJ`, faturamento, aprovacao e placas vinculadas, enquanto o inicio do app foi limpo para manter apenas `Splash -> Login` sem textos explicativos.
+- Observacao de risco: a paridade de `Veiculos` ainda precisa de fase propria para aprofundar transferencia de placa, dados completos do veiculo e relacionamento cruzado com clientes; a prioridade recomendada passa a ser `LP-APK-015`.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`

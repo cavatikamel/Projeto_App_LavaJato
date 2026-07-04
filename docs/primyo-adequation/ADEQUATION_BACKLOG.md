@@ -2139,3 +2139,41 @@
   - a etapa `Prontos` continua sem status proprio no Room atual;
   - smoke manual em aparelho/emulador continua pendente.
 
+### LP-APK-014
+
+- Status: `Concluido`
+- Data: `2026-07-04`
+- Arquivos alterados:
+  - `LavaPrimeAndroidApp/app/schemas/br.com.primyo.lavaprime.data.local.LavaPrimeDatabase/3.json`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/local/Daos.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/local/LavaPrimeDatabase.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/model/Models.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/repository/LavaPrimeRepository.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/components/LavaPrimeComponents.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/AuthScreens.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/ClientsScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/LavaPrimeRoot.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/viewmodel/AuthViewModel.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/viewmodel/CadastroViewModel.kt`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-014.md`
+  - `docs/primyo-changes/LP-APK-014-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+- Evidencias:
+  - leitura cruzada da governanca Primyo/APK, do fluxo `Clientes` em `app/main.js` e dos estilos em `app/styles.css`;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`;
+  - `.\gradlew.bat tasks --no-daemon --console=plain`;
+  - `.\gradlew.bat assembleDebug --no-daemon --console=plain`;
+  - APK debug localizado em `%LOCALAPPDATA%\\LavaPrimeAndroidBuild\\LavaPrimeAndroid\\app\\outputs\\apk\\debug\\app-debug.apk`.
+- Observacoes:
+  - a fase limpou a abertura do app para manter apenas `Splash -> Login` com leitura objetiva;
+  - o fluxo Android de `Clientes` deixou de ser somente espelho e passou a ter busca, filtros, cadastro, edicao, faturamento e placas vinculadas;
+  - a base Room ganhou migration `2 -> 3` para sustentar os novos campos de cliente.
+- Riscos remanescentes:
+  - `Veiculos` ainda precisa de fase propria para aprofundar modelo, cadastro e transferencia de placa;
+  - smoke manual em aparelho/emulador continua pendente;
+  - a autenticacao continua local/demo e ainda nao foi ligada a backend real.
+

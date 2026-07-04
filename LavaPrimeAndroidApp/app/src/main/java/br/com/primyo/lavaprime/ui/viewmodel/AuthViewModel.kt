@@ -30,7 +30,7 @@ data class AuthUiState(
     val senha: String = "1234",
     val erro: String? = null,
     val splashTitle: String = "Abrindo LavaPrime",
-    val splashMessage: String = "Carregando identidade visual, banco local e sessão deste aparelho.",
+    val splashMessage: String = "Carregando sistema...",
     val localDbState: BootstrapStepState = BootstrapStepState.PENDING,
     val localDbMessage: String = "Banco local em validação",
     val sessionState: BootstrapStepState = BootstrapStepState.PENDING,
@@ -57,90 +57,75 @@ class AuthViewModel(
     fun iniciarBootstrap() {
         bootstrapJob?.cancel()
         bootstrapJob = viewModelScope.launch {
-            val inicio = System.currentTimeMillis()
+            val start = System.currentTimeMillis()
             _state.value = AuthUiState()
 
             try {
                 _state.update {
                     it.copy(
-                        splashTitle = "Abrindo LavaPrime",
-                        splashMessage = "Validando a estrutura local antes de exibir a autenticação.",
+                        splashMessage = "Carregando sistema...",
                         localDbState = BootstrapStepState.PENDING,
-                        localDbMessage = "Banco local em validação",
                         sessionState = BootstrapStepState.PENDING,
-                        sessionMessage = "Sessão local em espera",
                         routeState = BootstrapStepState.PENDING,
-                        routeMessage = "Entrada inicial em definição",
                         bootstrapError = null,
                         bootstrapSummary = null
                     )
                 }
 
                 val dbSnapshot = repository.prepararBancoLocal()
-                _state.update {
-                    it.copy(
-                        splashTitle = "Abrindo LavaPrime",
-                        splashMessage = "Banco local pronto. Agora vamos verificar a sessão salva neste aparelho.",
-                        localDbState = if (dbSnapshot.localDbReady) BootstrapStepState.READY else BootstrapStepState.FAILED,
-                        localDbMessage = if (dbSnapshot.localDbReady) {
-                            if (dbSnapshot.seedApplied) "Banco local preparado para o primeiro uso"
-                            else "Banco local validado com sucesso"
-                        } else {
-                            "Banco local indisponível"
-                        }
-                    )
-                }
-
                 if (!dbSnapshot.localDbReady) {
                     throw IllegalStateException("Não foi possível validar o banco local do app.")
                 }
 
-                val sessaoSalva = localSessionStore.readSession()
-                val usuarioRestaurado = sessaoSalva?.let {
-                    repository.restaurarUsuarioSessao(it.userId, it.email)
+                _state.update {
+                    it.copy(
+                        splashMessage = "Carregando sistema...",
+                        localDbState = BootstrapStepState.READY,
+                        localDbMessage = if (dbSnapshot.seedApplied) {
+                            "Banco local preparado para o primeiro uso"
+                        } else {
+                            "Banco local validado com sucesso"
+                        }
+                    )
                 }
 
-                if (sessaoSalva != null && usuarioRestaurado == null) {
+                val savedSession = localSessionStore.readSession()
+                val restoredUser = savedSession?.let {
+                    repository.restaurarUsuarioSessao(it.userId, it.email)
+                }
+                if (savedSession != null && restoredUser == null) {
                     localSessionStore.clear()
                 }
 
                 _state.update {
                     it.copy(
-                        splashTitle = "Abrindo LavaPrime",
-                        splashMessage = "Sessão local verificada. Preparando a tela de autenticação.",
+                        splashMessage = "Carregando sistema...",
                         sessionState = when {
-                            usuarioRestaurado != null -> BootstrapStepState.READY
-                            sessaoSalva != null -> BootstrapStepState.FAILED
+                            restoredUser != null -> BootstrapStepState.READY
+                            savedSession != null -> BootstrapStepState.FAILED
                             else -> BootstrapStepState.MISSING
                         },
                         sessionMessage = when {
-                            usuarioRestaurado != null -> "Sessão local restaurada para ${usuarioRestaurado.nome}"
-                            sessaoSalva != null -> "Sessão local inválida. Novo login necessário"
-                            else -> "Nenhuma sessão salva neste aparelho"
+                            restoredUser != null -> "Sessão local restaurada"
+                            savedSession != null -> "Sessão local inválida"
+                            else -> "Nenhuma sessão salva"
                         },
-                        routeState = BootstrapStepState.PENDING,
-                        routeMessage = "Calculando destino inicial"
+                        routeState = BootstrapStepState.PENDING
                     )
                 }
 
-                val restante = MIN_SPLASH_MS - (System.currentTimeMillis() - inicio)
-                if (restante > 0) {
-                    delay(restante)
-                }
+                val remaining = MIN_SPLASH_MS - (System.currentTimeMillis() - start)
+                if (remaining > 0) delay(remaining)
 
                 _state.update {
                     it.copy(
                         usuario = null,
-                        perfilSelecionado = usuarioRestaurado?.perfil ?: it.perfilSelecionado,
-                        email = usuarioRestaurado?.email ?: it.email,
+                        perfilSelecionado = restoredUser?.perfil ?: it.perfilSelecionado,
+                        email = restoredUser?.email ?: it.email,
                         stage = AppStage.LOGIN,
                         routeState = BootstrapStepState.READY,
                         routeMessage = "Autenticação definida como entrada inicial",
-                        bootstrapSummary = when {
-                            usuarioRestaurado != null -> "Sessão local encontrada para ${usuarioRestaurado.nome}. Confirme o acesso para continuar."
-                            dbSnapshot.seedApplied -> "Banco local preparado e pronto para autenticação."
-                            else -> "Banco local validado. Faça login para continuar."
-                        },
+                        bootstrapSummary = null,
                         bootstrapError = null,
                         erro = null
                     )
@@ -149,15 +134,14 @@ class AuthViewModel(
                 _state.update {
                     it.copy(
                         stage = AppStage.LOGIN,
-                        splashTitle = "Falha ao iniciar",
-                        splashMessage = "Não foi possível preparar a abertura do app.",
+                        splashMessage = "Carregando sistema...",
                         localDbState = BootstrapStepState.FAILED,
                         localDbMessage = "Banco local não validado",
                         sessionState = BootstrapStepState.FAILED,
                         sessionMessage = "Sessão local não validada",
                         routeState = BootstrapStepState.READY,
                         routeMessage = "Autenticação exibida com alerta técnico",
-                        bootstrapSummary = "A autenticação foi aberta, mas a inicialização precisa de nova tentativa.",
+                        bootstrapSummary = null,
                         bootstrapError = error.message ?: "Erro interno ao iniciar o app."
                     )
                 }
@@ -208,10 +192,10 @@ class AuthViewModel(
                         stage = AppStage.APP,
                         erro = null,
                         sessionState = BootstrapStepState.READY,
-                        sessionMessage = "Sessão local salva neste aparelho",
+                        sessionMessage = "Sessão local salva",
                         routeState = BootstrapStepState.READY,
                         routeMessage = "Home liberada após login local",
-                        bootstrapSummary = "Sessão local ativa para as próximas aberturas."
+                        bootstrapSummary = null
                     )
                 }
             } else {
@@ -229,14 +213,15 @@ class AuthViewModel(
                 erro = null,
                 senha = "1234",
                 sessionState = BootstrapStepState.MISSING,
-                sessionMessage = "Sessão encerrada neste aparelho",
+                sessionMessage = "Sessão encerrada",
                 routeState = BootstrapStepState.READY,
-                routeMessage = "Retorno ao login"
+                routeMessage = "Retorno ao login",
+                bootstrapSummary = null
             )
         }
     }
 
     companion object {
-        private const val MIN_SPLASH_MS = 1200L
+        private const val MIN_SPLASH_MS = 3000L
     }
 }

@@ -82,4 +82,44 @@ class CadastroViewModel(private val repository: LavaPrimeRepository) : ViewModel
             )
         }
     }
+
+    fun salvarClienteCompleto(
+        clienteId: String?,
+        personType: String,
+        billing: Boolean,
+        nome: String,
+        legalName: String,
+        telefone: String,
+        documento: String,
+        address: String,
+        email: String,
+        responsible: String,
+        billingApproved: Boolean,
+        billingCycle: String,
+        allowMultipleOpenInvoices: Boolean,
+        observacoes: String,
+        placas: List<String>,
+        usuario: UsuarioEntity
+    ) {
+        viewModelScope.launch {
+            repository.salvarClienteCompleto(
+                clienteId = clienteId,
+                personType = personType,
+                billing = billing,
+                nome = nome,
+                legalName = legalName,
+                telefone = telefone,
+                documento = documento,
+                address = address,
+                email = email,
+                responsible = responsible,
+                billingApproved = billingApproved,
+                billingCycle = billingCycle,
+                allowMultipleOpenInvoices = allowMultipleOpenInvoices,
+                observacoes = observacoes,
+                placas = placas,
+                usuario = usuario
+            )
+        }
+    }
 }

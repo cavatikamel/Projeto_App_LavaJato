@@ -420,7 +420,6 @@ fun LavaPrimeSegmentedProfileSelector(
         Row(horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.xs)) {
             LavaPrimeProfileOption(
                 title = "Administrador",
-                subtitle = "Visão completa",
                 icon = Icons.Filled.Security,
                 active = selected == PerfilUsuario.ADMINISTRADOR,
                 modifier = Modifier.weight(1f)
@@ -428,7 +427,6 @@ fun LavaPrimeSegmentedProfileSelector(
 
             LavaPrimeProfileOption(
                 title = "Operador",
-                subtitle = "Pátio e rotina",
                 icon = Icons.Filled.DirectionsCar,
                 active = selected == PerfilUsuario.OPERADOR,
                 modifier = Modifier.weight(1f)
@@ -440,7 +438,6 @@ fun LavaPrimeSegmentedProfileSelector(
 @Composable
 private fun LavaPrimeProfileOption(
     title: String,
-    subtitle: String,
     icon: ImageVector,
     active: Boolean,
     modifier: Modifier = Modifier,
@@ -465,11 +462,6 @@ private fun LavaPrimeProfileOption(
                 tint = if (active) WaterBlue else PrimeBlue
             )
             Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (active) Color.White.copy(alpha = 0.84f) else TextSecondary
-            )
         }
     }
 }

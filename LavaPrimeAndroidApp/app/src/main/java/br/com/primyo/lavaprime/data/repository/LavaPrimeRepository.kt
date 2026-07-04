@@ -270,6 +270,114 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
         registrarMudanca("vehicles", veiculo.id, "insert", "Veículo ${veiculo.placa}", usuario)
     }
 
+    suspend fun salvarClienteCompleto(
+        clienteId: String?,
+        personType: String,
+        billing: Boolean,
+        nome: String,
+        legalName: String,
+        telefone: String,
+        documento: String,
+        address: String,
+        email: String,
+        responsible: String,
+        billingApproved: Boolean,
+        billingCycle: String,
+        allowMultipleOpenInvoices: Boolean,
+        observacoes: String,
+        placas: List<String>,
+        usuario: UsuarioEntity
+    ) {
+        val agora = System.currentTimeMillis()
+        val normalizedClientId = clienteId ?: UUID.randomUUID().toString()
+        val normalizedPersonType = if (personType == "PJ") "PJ" else "PF"
+        val normalizedBillingApproved = billing && billingApproved
+        val persisted = db.clienteDao().obter(normalizedClientId)
+        val effectiveName = if (normalizedPersonType == "PJ") {
+            legalName.ifBlank { nome.ifBlank { "Cliente sem nome" } }
+        } else {
+            nome.ifBlank { "Cliente sem nome" }
+        }
+        val cliente = ClienteEntity(
+            id = normalizedClientId,
+            empresaId = persisted?.empresaId ?: "local-demo",
+            personType = normalizedPersonType,
+            billing = billing,
+            nome = effectiveName,
+            legalName = legalName.trim().ifBlank { null },
+            telefone = telefone.trim().ifBlank { null },
+            documento = documento.trim().ifBlank { null },
+            address = if (billing) address.trim().ifBlank { null } else null,
+            email = if (billing) email.trim().ifBlank { null } else null,
+            responsible = if (billing) responsible.trim().ifBlank { null } else null,
+            approver = if (normalizedBillingApproved) usuario.nome else null,
+            billingApproved = normalizedBillingApproved,
+            billingCycle = if (normalizedBillingApproved) billingCycle.trim().ifBlank { null } else null,
+            allowMultipleOpenInvoices = normalizedBillingApproved && allowMultipleOpenInvoices,
+            observacoes = observacoes.trim().ifBlank { null },
+            syncStatus = SyncStatus.PENDING_SYNC,
+            updatedAt = agora
+        )
+        db.clienteDao().salvar(cliente)
+
+        val veiculosAtuais = db.veiculoDao().listarPorClienteSnapshot(normalizedClientId)
+        val normalizedPlates = placas.map { it.uppercase().trim() }.filter { it.isNotBlank() }.distinct()
+        normalizedPlates.forEach { placa ->
+            val existente = db.veiculoDao().porPlaca(placa)
+            val veiculo = if (existente != null) {
+                existente.copy(
+                    clienteId = normalizedClientId,
+                    placa = placa,
+                    syncStatus = SyncStatus.PENDING_SYNC,
+                    updatedAt = agora
+                )
+            } else {
+                VeiculoEntity(
+                    id = UUID.randomUUID().toString(),
+                    clienteId = normalizedClientId,
+                    placa = placa,
+                    syncStatus = SyncStatus.PENDING_SYNC,
+                    updatedAt = agora
+                )
+            }
+            db.veiculoDao().salvar(veiculo)
+            registrarMudanca(
+                entidade = "vehicles",
+                entidadeId = veiculo.id,
+                operacao = if (existente == null) "insert" else "upsert",
+                payloadResumo = "VeÃ­culo ${veiculo.placa}",
+                usuario = usuario
+            )
+        }
+
+        veiculosAtuais
+            .filter { atual -> atual.placa.uppercase() !in normalizedPlates }
+            .forEach { veiculo ->
+                db.veiculoDao().salvar(
+                    veiculo.copy(
+                        clienteId = "sem-cliente",
+                        syncStatus = SyncStatus.PENDING_SYNC,
+                        updatedAt = agora
+                    )
+                )
+                registrarMudanca(
+                    entidade = "vehicles",
+                    entidadeId = veiculo.id,
+                    operacao = "unlink",
+                    payloadResumo = "VeÃ­culo ${veiculo.placa}",
+                    usuario = usuario
+                )
+            }
+
+        registrarMudanca(
+            entidade = "clients",
+            entidadeId = cliente.id,
+            operacao = if (persisted == null) "insert" else "upsert",
+            payloadResumo = "Cliente ${cliente.nome}",
+            usuario = usuario
+        )
+    }
+
     suspend fun atualizarStatusAtendimento(
         atendimentoId: String,
         novoStatus: AtendimentoStatus,

@@ -75,15 +75,7 @@ fun LavaPrimeRoot(
             routeMessage = authState.routeMessage
         )
 
-        AppStage.INICIAL -> InitialScreen(
-            onAccess = authViewModel::abrirLogin,
-            bootstrapSummary = authState.bootstrapSummary,
-            localDbReady = authState.localDbState == br.com.primyo.lavaprime.ui.viewmodel.BootstrapStepState.READY,
-            sessionRestored = authState.sessionState == br.com.primyo.lavaprime.ui.viewmodel.BootstrapStepState.READY,
-            bootstrapError = authState.bootstrapError,
-            onRetry = authViewModel::iniciarBootstrap
-        )
-
+        AppStage.INICIAL,
         AppStage.LOGIN -> LoginScreen(
             perfil = authState.perfilSelecionado,
             email = authState.email,
@@ -193,7 +185,12 @@ private fun LavaPrimeShell(
                         onSaveCadastro = cadastroViewModel::cadastrar
                     )
 
-                    MobileRoute.CLIENTES -> ClientsMirrorScreen(repository)
+                    MobileRoute.CLIENTES -> ClientsScreen(
+                        state = cadastroState,
+                        usuario = usuario,
+                        onSearchChange = cadastroViewModel::atualizarBusca,
+                        onSaveCliente = cadastroViewModel::salvarClienteCompleto
+                    )
                     MobileRoute.VEICULOS -> VehiclesMirrorScreen(repository)
                     MobileRoute.OPERADORES -> OperatorsMirrorScreen(repository)
                     MobileRoute.SERVICOS -> ServicesMirrorScreen(repository)

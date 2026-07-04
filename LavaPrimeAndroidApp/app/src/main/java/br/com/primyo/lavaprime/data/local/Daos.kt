@@ -26,6 +26,7 @@ interface UsuarioDao {
 interface ClienteDao {
     @Query("SELECT * FROM clientes ORDER BY nome") fun listar(): Flow<List<ClienteEntity>>
     @Query("SELECT * FROM clientes WHERE nome LIKE '%' || :busca || '%' OR telefone LIKE '%' || :busca || '%' ORDER BY nome LIMIT 20") fun buscar(busca: String): Flow<List<ClienteEntity>>
+    @Query("SELECT * FROM clientes WHERE id = :id LIMIT 1") suspend fun obter(id: String): ClienteEntity?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun salvar(item: ClienteEntity)
 }
 
@@ -34,6 +35,8 @@ interface VeiculoDao {
     @Query("SELECT * FROM veiculos ORDER BY updatedAt DESC LIMIT 100") fun listarRecentes(): Flow<List<VeiculoEntity>>
     @Query("SELECT * FROM veiculos WHERE placa LIKE '%' || :busca || '%' OR modelo LIKE '%' || :busca || '%' ORDER BY updatedAt DESC LIMIT 20") fun buscar(busca: String): Flow<List<VeiculoEntity>>
     @Query("SELECT * FROM veiculos WHERE id = :id LIMIT 1") suspend fun obter(id: String): VeiculoEntity?
+    @Query("SELECT * FROM veiculos WHERE placa = :placa LIMIT 1") suspend fun porPlaca(placa: String): VeiculoEntity?
+    @Query("SELECT * FROM veiculos WHERE clienteId = :clienteId ORDER BY updatedAt DESC") suspend fun listarPorClienteSnapshot(clienteId: String): List<VeiculoEntity>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun salvar(item: VeiculoEntity)
 }
 

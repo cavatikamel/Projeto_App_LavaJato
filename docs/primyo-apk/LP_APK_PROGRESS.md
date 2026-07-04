@@ -56,6 +56,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 - progresso oficial apos concluir `LP-APK-009`: `39%`
 - progresso oficial antes de `LP-APK-010`: `39%`
 - progresso oficial apos concluir `LP-APK-010`: `44%`
+- progresso oficial antes de `LP-APK-014`: `44%`
+- progresso oficial apos concluir `LP-APK-014`: `46.5%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -82,8 +84,9 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - shell de navegacao mobile com paridade estrutural do Web: `concluido`
 - dashboard mobile com paridade operacional base do Web: `concluido`
 - patio mobile com paridade operacional base do Web: `concluido`
-- progresso oficial consolidado nesta data: `44%`
-- proxima etapa recomendada: `LP-APK-014 - Customers Flow`
+- clientes mobile com paridade funcional base do Web: `concluido`
+- progresso oficial consolidado nesta data: `46.5%`
+- proxima etapa recomendada: `LP-APK-015 - Vehicles Flow`
 
 ## Regra especifica da LP-APK-003
 
@@ -131,6 +134,13 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - o ganho de progresso desta fase vem da leitura mobile do patio, da fila por status e do build Android validado;
 - a fase nao fecha o status `Prontos` como estado de dados proprio nem implementa pagamento completo do patio;
 - a proxima fase segura passa a ser a base de `Clientes`, necessaria para o fluxo completo de atendimento oficial.
+
+## Regra especifica da LP-APK-014
+
+- esta fase consolida o fluxo de `Clientes` com busca, filtros, cadastro, edicao, tipo `PF/PJ`, faturamento e placas vinculadas;
+- o ganho de progresso desta fase vem da paridade funcional base com o Web, do ajuste de inicio `Splash -> Login` e do build Android validado;
+- a fase nao fecha ainda o fluxo dedicado de `Veiculos`, a transferencia avancada de proprietario nem o atendimento completo sobre todos os cadastros;
+- a proxima fase segura passa a ser `LP-APK-015 - Vehicles Flow`.
 
 ## Regra de checkpoint
 
