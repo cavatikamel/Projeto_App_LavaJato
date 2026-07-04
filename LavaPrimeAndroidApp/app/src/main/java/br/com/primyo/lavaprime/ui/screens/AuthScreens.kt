@@ -1,5 +1,6 @@
 package br.com.primyo.lavaprime.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,11 +36,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import br.com.primyo.lavaprime.R
 import br.com.primyo.lavaprime.data.model.PerfilUsuario
 import br.com.primyo.lavaprime.ui.components.BrandLogo
 import br.com.primyo.lavaprime.ui.components.LandingBadge
@@ -58,6 +62,7 @@ import br.com.primyo.lavaprime.ui.theme.LavaPrimeSpacing
 import br.com.primyo.lavaprime.ui.theme.PageBg
 import br.com.primyo.lavaprime.ui.theme.PrimeBlue
 import br.com.primyo.lavaprime.ui.theme.PrimeBlueDeep
+import br.com.primyo.lavaprime.ui.theme.TextMuted
 import br.com.primyo.lavaprime.ui.theme.TextSecondary
 import br.com.primyo.lavaprime.ui.theme.WaterBlue
 import br.com.primyo.lavaprime.ui.viewmodel.BootstrapStepState
@@ -76,43 +81,51 @@ fun SplashLavaPrime(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(PrimeBlueDeep, PrimeBlue, Aqua))),
-        contentAlignment = Alignment.Center
     ) {
-        ColumnCenterBlock {
-            BrandLogo(compact = true, showTagline = false, modifier = Modifier.size(108.dp))
-            Text(
-                text = "LavaPrime",
-                style = MaterialTheme.typography.headlineLarge,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
+        Image(
+            painter = painterResource(R.drawable.lavaprime_startup_splash),
+            contentDescription = "Splash LavaPrime",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.Transparent,
+                            PrimeBlueDeep.copy(alpha = 0.10f),
+                            PrimeBlueDeep.copy(alpha = 0.42f)
+                        )
+                    )
+                )
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.sm)
+        ) {
+            LavaPrimeStatusChip(
                 text = title,
-                style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
-                textAlign = TextAlign.Center
+                tone = LavaPrimeStatusTone.Info
             )
             Text(
                 text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.White.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
                 textAlign = TextAlign.Center
             )
-
-            LavaPrimeCard(
-                tonal = true,
-                contentPadding = PaddingValues(LavaPrimeSpacing.lg)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "Preload inicial",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = PrimeBlue,
-                    fontWeight = FontWeight.Bold
-                )
-                StatusLine("Banco local", localDbMessage, localDbState)
-                StatusLine("Sessão local", sessionMessage, sessionState)
-                StatusLine("Entrada inicial", routeMessage, routeState)
+                TinySplashStatus("Banco local", localDbState)
+                TinySplashStatus("Sessão", sessionState)
+                TinySplashStatus("Entrada", routeState)
             }
         }
     }
@@ -222,13 +235,17 @@ fun InitialScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LoginScreen(
     perfil: PerfilUsuario,
     email: String,
     senha: String,
     erro: String?,
-    onBack: () -> Unit,
+    bootstrapSummary: String?,
+    localDbReady: Boolean,
+    bootstrapError: String?,
+    onRetryBootstrap: () -> Unit,
     onSelectPerfil: (PerfilUsuario) -> Unit,
     onEmailChange: (String) -> Unit,
     onSenhaChange: (String) -> Unit,
@@ -261,30 +278,38 @@ fun LoginScreen(
             verticalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.md)
         ) {
             item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    LavaPrimeActionButton(
-                        text = "Voltar",
-                        onClick = onBack,
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        style = LavaPrimeActionStyle.Ghost
-                    )
-                }
-            }
-
-            item {
                 LavaPrimeCard(contentPadding = PaddingValues(LavaPrimeSpacing.xl)) {
                     BrandLogo(showTagline = false)
                     Text(
-                        text = "Entrar no sistema",
+                        text = "Autenticação",
                         style = MaterialTheme.typography.headlineSmall,
                         color = PrimeBlue,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Escolha o perfil e continue na rotina do lava jato.",
+                        text = "Digite usuário e senha, escolha o perfil e continue na rotina do LavaPrime.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        LandingBadge(if (localDbReady) "Banco local pronto" else "Banco local pendente")
+                        LandingBadge("Autenticação")
+                        if (bootstrapSummary != null && bootstrapError == null) {
+                            LandingBadge("Sessão local lida")
+                        }
+                    }
+
+                    bootstrapSummary?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary
+                        )
+                    }
 
                     LavaPrimeSegmentedProfileSelector(
                         selected = perfil,
@@ -294,7 +319,7 @@ fun LoginScreen(
                     LavaPrimeTextField(
                         value = email,
                         onValueChange = onEmailChange,
-                        label = "E-mail",
+                        label = "Usuário",
                         singleLine = true,
                         placeholder = "admin@lavaprime.local",
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -314,7 +339,8 @@ fun LoginScreen(
                         )
                     )
 
-                    erro?.let {
+                    val startupMessage = bootstrapError ?: erro
+                    startupMessage?.let {
                         LavaPrimeCard(
                             tonal = true,
                             contentPadding = PaddingValues(LavaPrimeSpacing.md)
@@ -330,6 +356,7 @@ fun LoginScreen(
                     LavaPrimeActionButton(
                         text = "Entrar como ${perfilLabel(perfil)}",
                         onClick = onLogin,
+                        enabled = localDbReady,
                         icon = if (perfil == PerfilUsuario.ADMINISTRADOR) {
                             Icons.Filled.Security
                         } else {
@@ -337,10 +364,18 @@ fun LoginScreen(
                         }
                     )
 
+                    if (!localDbReady || bootstrapError != null) {
+                        LavaPrimeActionButton(
+                            text = "Tentar novamente",
+                            onClick = onRetryBootstrap,
+                            style = LavaPrimeActionStyle.Outline
+                        )
+                    }
+
                     Text(
                         text = "Administrador: visão gerencial. Operador: foco em pátio, clientes e veículos.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        color = TextMuted,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -352,6 +387,22 @@ fun LoginScreen(
             }
         }
     }
+}
+
+@Composable
+private fun TinySplashStatus(
+    label: String,
+    state: BootstrapStepState
+) {
+    LavaPrimeStatusChip(
+        text = label,
+        tone = when (state) {
+            BootstrapStepState.PENDING -> LavaPrimeStatusTone.Info
+            BootstrapStepState.READY -> LavaPrimeStatusTone.Success
+            BootstrapStepState.MISSING -> LavaPrimeStatusTone.Warning
+            BootstrapStepState.FAILED -> LavaPrimeStatusTone.Danger
+        }
+    )
 }
 
 @Composable

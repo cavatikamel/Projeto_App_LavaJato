@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 
 data class PatioUiState(
     val atendimentos: List<AtendimentoEntity> = emptyList(),
+    val historicoRecente: List<AtendimentoEntity> = emptyList(),
     val servicos: List<ServicoEntity> = emptyList(),
     val filtroStatus: AtendimentoStatus? = null,
     val somenteAlertas: Boolean = false
@@ -33,12 +34,14 @@ class PatioViewModel(private val repository: LavaPrimeRepository) : ViewModel() 
 
     val state: StateFlow<PatioUiState> = combine(
         repository.patio,
+        repository.atendimentosRecentes,
         repository.servicosAtivos,
         filtroStatus,
         somenteAlertas
-    ) { atendimentos, servicos, filtro, alertas ->
+    ) { atendimentos, historicoRecente, servicos, filtro, alertas ->
         PatioUiState(
             atendimentos = atendimentos,
+            historicoRecente = historicoRecente,
             servicos = servicos,
             filtroStatus = filtro,
             somenteAlertas = alertas

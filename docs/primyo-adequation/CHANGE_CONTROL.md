@@ -560,6 +560,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: o Dashboard Android passou a refletir os blocos centrais do Dashboard Web com metricas, fluxo operacional, alertas e manutencao em leitura mobile nativa, preservando contraste e hierarquia visual.
 - Observacao de risco: parte das metricas do Web ainda depende de modulos Android nao implementados e permaneceu visivel como leitura reservada, sem regra artificial; a prioridade recomendada passa a ser `LP-APK-010` para fechar a paridade operacional do patio.
 
+### LP-APK-010
+
+- Change record: `docs/primyo-changes/LP-APK-010.md`
+- Closure: `docs/primyo-changes/LP-APK-010-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: o `Patio` Android passou a refletir o quadro operacional do Web com grupos por status, resumo, filtros, fila de aguardando e acoes mais claras, enquanto a abertura do app foi simplificada para `Splash -> Login` com a arte oficial enviada pelo usuario.
+- Observacao de risco: a etapa `Prontos` ainda nao existe como status de dados local e ficou espelhada apenas no plano visual/estrutural; a prioridade recomendada passa a ser `LP-APK-014` para consolidar `Clientes` antes do fluxo completo de atendimento.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`

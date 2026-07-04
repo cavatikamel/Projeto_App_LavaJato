@@ -2106,3 +2106,36 @@
   - parte das metricas do Dashboard depende de futuras fases de vendas, pagamentos, faturamento e manutencao;
   - smoke manual em aparelho/emulador continua pendente.
 
+### LP-APK-010
+
+- Status: `Concluido`
+- Data: `2026-07-04`
+- Arquivos alterados:
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/AuthScreens.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/LavaPrimeRoot.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/PatioScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/viewmodel/AuthViewModel.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/viewmodel/PatioViewModel.kt`
+  - `LavaPrimeAndroidApp/app/src/main/res/drawable-nodpi/lavaprime_startup_splash.png`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-010.md`
+  - `docs/primyo-changes/LP-APK-010-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+- Evidencias:
+  - leitura cruzada da governanca Primyo/APK, do `Patio` Web em `app/main.js` e dos estilos em `app/styles.css`;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`;
+  - `.\gradlew.bat tasks --no-daemon --console=plain`;
+  - `.\gradlew.bat assembleDebug --no-daemon --console=plain`;
+  - APK debug localizado em `%LOCALAPPDATA%\\LavaPrimeAndroidBuild\\LavaPrimeAndroid\\app\\outputs\\apk\\debug\\app-debug.apk`.
+- Observacoes:
+  - a fase alinhou o quadro do `Patio` Android ao `Patio` do Web sem alterar o Web;
+  - o fluxo de abertura passou a ser `Splash -> Login`, usando a arte oficial enviada pelo usuario;
+  - a leitura de `Prontos` ficou visivel como espelho estrutural, sem regra artificial no dado local.
+- Riscos remanescentes:
+  - `Clientes`, `Veiculos` e `Servicos` ainda precisam de fase funcional propria para liberar o fluxo oficial completo de atendimento;
+  - a etapa `Prontos` continua sem status proprio no Room atual;
+  - smoke manual em aparelho/emulador continua pendente.
+

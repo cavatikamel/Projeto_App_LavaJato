@@ -54,6 +54,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 - progresso oficial apos concluir `LP-APK-008`: `34%`
 - progresso oficial antes de `LP-APK-009`: `34%`
 - progresso oficial apos concluir `LP-APK-009`: `39%`
+- progresso oficial antes de `LP-APK-010`: `39%`
+- progresso oficial apos concluir `LP-APK-010`: `44%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -79,8 +81,9 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - splash e inicializacao Android: `concluidos`
 - shell de navegacao mobile com paridade estrutural do Web: `concluido`
 - dashboard mobile com paridade operacional base do Web: `concluido`
-- progresso oficial consolidado nesta data: `39%`
-- proxima etapa recomendada: `LP-APK-010 - Patio Mobile Parity`
+- patio mobile com paridade operacional base do Web: `concluido`
+- progresso oficial consolidado nesta data: `44%`
+- proxima etapa recomendada: `LP-APK-014 - Customers Flow`
 
 ## Regra especifica da LP-APK-003
 
@@ -121,6 +124,13 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - o ganho de progresso desta fase vem da leitura mobile do dashboard, dos indicadores operacionais e do build Android validado;
 - a fase nao fecha vendas, cobrancas, manutencoes nem todas as metricas financeiras do Web;
 - a proxima fase deve aprofundar a paridade operacional do `Patio`.
+
+## Regra especifica da LP-APK-010
+
+- esta fase consolida o quadro do `Patio` Web no Android e simplifica a abertura para `Splash -> Login`;
+- o ganho de progresso desta fase vem da leitura mobile do patio, da fila por status e do build Android validado;
+- a fase nao fecha o status `Prontos` como estado de dados proprio nem implementa pagamento completo do patio;
+- a proxima fase segura passa a ser a base de `Clientes`, necessaria para o fluxo completo de atendimento oficial.
 
 ## Regra de checkpoint
 
