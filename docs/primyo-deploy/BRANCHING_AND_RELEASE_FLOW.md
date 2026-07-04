@@ -42,9 +42,10 @@
 
 ## Situacao atual da branch staging
 
-- `staging` local: inexistente na auditoria desta fase
-- `origin/staging`: inexistente na auditoria desta fase
-- conclusao: a homologacao Netlify continua bloqueada ate a branch ser criada a partir de baseline Web confirmada e com working tree isolado
+- `staging` local: criada em `LP-DEPLOY-GOV-005`
+- `origin/staging`: criada em `LP-DEPLOY-GOV-005`
+- baseline usada: `9205f09`
+- conclusao: a homologacao deixa de ficar bloqueada por ausencia de branch e passa a depender da validacao do ambiente publicado
 
 ## Fluxo recomendado
 

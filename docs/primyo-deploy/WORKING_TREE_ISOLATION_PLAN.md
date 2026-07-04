@@ -110,6 +110,13 @@ Todos os itens abaixo permanecem com a mesma classificacao `trilha Android propr
 - confirmar baseline escolhida
 - executar a fase futura autorizada de criacao/push de `staging`
 
+## Resultado da fase de branch
+
+- a branch `staging` foi criada e publicada em `LP-DEPLOY-GOV-005`
+- a operacao usou a baseline conservadora `9205f09`
+- a branch de trabalho `primyo/onboarding` permaneceu com o working tree misturado
+- a sujeira local continuou fora da branch `staging`
+
 ## Comandos futuros documentados
 
 Somente referencia para fase futura. Nao executados nesta fase.

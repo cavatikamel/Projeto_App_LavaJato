@@ -385,6 +385,17 @@ Estado oficial apos `LP-DEPLOY-GOV-004`:
 - nenhuma limpeza destrutiva, criacao de branch, `push` ou deploy pode ocorrer nesta etapa;
 - Supabase continua fechado e `DEMO_BOOTSTRAP` continua o unico modo padrao seguro.
 
+Estado oficial apos `LP-DEPLOY-GOV-005`:
+
+- a branch `staging` passa a existir localmente e em `origin/staging`;
+- a baseline oficial usada para essa branch passa a ser `9205f09`;
+- o unico push autorizado desta fase foi `git push -u origin staging`;
+- `main` permanece intocada e `primyo/onboarding` nao foi publicada;
+- a existencia da branch de homologacao nao substitui a necessidade de validar o ambiente publicado;
+- o pacote oficial de validacao continua exigindo `node --check`, Adapter Gate, `npm.cmd run primyo:gate`, `build` e `verify:build`;
+- o smoke reduzido pode herdar a ultima evidencia valida quando a fase nao tocar runtime e o browser nao estiver disponivel;
+- nenhuma alteracao manual de Netlify, DNS ou Supabase pode ocorrer nesta etapa.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

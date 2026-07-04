@@ -10,8 +10,8 @@ Preparar a publicacao futura do LavaPrime Web em homologacao Netlify sem tocar p
 - `HEAD` auditado originalmente em `LP-DEPLOY-GOV-002`: `87975a5`
 - baseline Web revisada em `LP-DEPLOY-GOV-003`: `9205f09`
 - `HEAD` atual de trabalho em `LP-DEPLOY-GOV-004`: `79ae86e`
-- `staging` local: ausente
-- `origin/staging`: ausente
+- `staging` local: criada em `LP-DEPLOY-GOV-005`
+- `origin/staging`: criada em `LP-DEPLOY-GOV-005`
 - `netlify.toml`: presente
 - comando de build confirmado: `npm run build`
 - pasta de publicacao confirmada: `dist`
@@ -92,15 +92,11 @@ Nesta fase, nenhuma variavel foi criada, alterada ou exposta.
 10. smoke em homologacao aprovado
 11. rollback documentado
 
-## Bloqueio operacional atual
+## Estado operacional atual
 
-- `staging` continua bloqueada enquanto:
-  - `.gitignore`
-  - `app/styles.css`
-  - `app/assets/data/fipe-veiculos.js`
-  - `app/assets/data/fipe-veiculos.json`
-  - `LavaPrimeAndroidApp/**`
-  permanecerem misturados no working tree
+- `origin/staging` foi publicada com sucesso a partir de `9205f09`
+- a branch de homologacao foi criada sem carregar a sujeira atual de `.gitignore`, `app/styles.css`, `app/assets/data/fipe-veiculos.*` ou `LavaPrimeAndroidApp/**`
+- a proxima fase deixa de ser criacao de branch e passa a ser validacao da homologacao publicada
 
 ## Rollback futuro
 

@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-004`.
+Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-005`.
 
 ## Estado atual consolidado
 
@@ -13,8 +13,8 @@ Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-004`.
 - `idResolver` continua fora do runtime
 - Supabase continua fechado
 - a governanca de deploy, homologacao e producao para `app.lavaprime.com.br` continua documentada
-- `staging` continua ausente local e remotamente
-- a baseline Web revisada especificamente para homologacao permanece `9205f09`
+- `staging` foi criada localmente e publicada em `origin/staging`
+- a baseline Web usada para `staging` foi `9205f09`
 - o `HEAD` atual de `primyo/onboarding` passou a ser `79ae86e`
 - os commits acima da baseline Web revisada passaram a incluir documentacao APK, sem alterar runtime Web, mas reabrindo risco de mistura de trilhas no ramo futuro de homologacao
 - o working tree continua com arquivos fora de escopo que bloqueiam push ou deploy sem isolamento:
@@ -25,13 +25,15 @@ Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-004`.
   - `app/assets/data/fipe-veiculos.json`
 - `docs/primyo-apk/LP_APK_REQUIREMENTS.md` nao apareceu mais como item sujo nesta auditoria
 - o plano de isolamento do working tree foi criado
+- `main` permaneceu intocada
+- nenhum deploy manual foi executado
 
 ## Decisao oficial
 
 - encerramento documental do programa: `consolidado`
-- proxima trilha recomendada: `LP-DEPLOY-GOV-005 - Execute authorized working tree isolation and prepare clean staging source`
+- proxima trilha recomendada: `LP-DEPLOY-GOV-006 - Validate Netlify staging deployment`
 - demais trilhas futuras independentes:
-  - `LP-DEPLOY-GOV-006 - Validate Netlify staging deployment`
+  - `LP-DEPLOY-GOV-007 - Production release decision after staging approval`
   - `LP-WEB-DATA-CLEANUP-013 - Institutional clean dataset strategy`
   - `LavaPrime Android nativo oficial`
   - `Supabase/backend real`
@@ -41,21 +43,21 @@ Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-004`.
 
 ## Justificativa
 
-`LP-DEPLOY-GOV-005` passa a ser a melhor proxima fase porque:
+`LP-DEPLOY-GOV-006` passa a ser a melhor proxima fase porque:
 
-1. a baseline Web candidata ja foi revisada;
-2. o plano de isolamento agora classifica cada item fora de escopo por trilha propria;
-3. o bloqueio restante deixou de ser descobrir o problema e passou a ser executar a limpeza/isolation autorizada;
-4. o `HEAD` atual `79ae86e` reintroduziu delta documental APK acima da baseline Web revisada `9205f09`;
-5. o proximo passo seguro e isolar os arquivos fora de escopo e preparar uma origem limpa para `staging`, sem criar a branch ainda;
-6. `LP-WEB-DATA-CLEANUP-013` continua importante, mas como trilha paralela de dados limpos e nao como passo obrigatorio previo ao staging.
+1. a branch `staging` ja existe localmente e remotamente;
+2. a baseline conservadora `9205f09` ja foi usada com sucesso;
+3. o proximo bloqueio deixou de ser Git e passou a ser a validacao do ambiente publicado;
+4. a producao continua protegida em `main` e em `app.lavaprime.com.br`;
+5. a proxima acao segura e confirmar a homologacao Netlify, nao abrir deploy manual;
+6. `LP-WEB-DATA-CLEANUP-013` continua importante, mas segue paralela ao fluxo de staging.
 
 ## Fatias rejeitadas por enquanto
 
-- qualquer tentativa de criar ou pushar `staging` com o working tree atual:
-  - rejeitada, porque os itens fora de escopo continuam misturados e podem contaminar a homologacao;
-- qualquer tentativa de usar automaticamente o `HEAD` atual `79ae86e` como origem de `staging`:
-  - rejeitada, porque a linha acima da baseline Web revisada ja inclui documentacao APK que nao foi reavaliada como baseline de homologacao Web;
+- qualquer tentativa de publicar producao sem validar `origin/staging`:
+  - rejeitada, porque a homologacao agora precisa ser observada e aprovada antes de qualquer promocao;
+- qualquer tentativa de repushar `staging` a partir do `HEAD` atual `79ae86e` sem nova revisao:
+  - rejeitada, porque a branch homologada oficial ja foi fixada em `9205f09`;
 - qualquer tentativa de publicar `app.lavaprime.com.br` direto de `primyo/onboarding`:
   - rejeitada, porque a estrategia aprovada exige homologacao e aprovacao previa;
 - qualquer etapa de Supabase:
@@ -67,22 +69,21 @@ Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-004`.
 
 ## Direcao recomendada
 
-Para a proxima fase, `LP-DEPLOY-GOV-005` deve:
+Para a proxima fase, `LP-DEPLOY-GOV-006` deve:
 
-1. executar a isolation autorizada de `.gitignore`, `app/styles.css`, `LavaPrimeAndroidApp/**` e `app/assets/data/fipe-veiculos.*` sem misturar trilhas;
-2. confirmar se a futura `staging` nascera de `9205f09` ou de outra baseline Web reavaliada explicitamente;
-3. manter `main` e `app.lavaprime.com.br` protegidos de publicacao direta;
-4. pedir autorizacao antes de qualquer `push` remoto;
-5. manter `DEMO_BOOTSTRAP` como padrao oficial;
-6. continuar sem abrir Supabase runtime e sem remover a seed demo.
+1. validar se a publicacao automatica de `origin/staging` ocorreu corretamente, se aplicavel;
+2. confirmar que o ambiente publicado preserva `DEMO_BOOTSTRAP` como padrao;
+3. revalidar smoke reduzido em homologacao;
+4. manter `main` e `app.lavaprime.com.br` protegidos de publicacao direta;
+5. continuar sem abrir Supabase runtime e sem remover a seed demo;
+6. preparar a decisao de promocao somente apos aprovacao explicita do usuario.
 
 ## Resultado desta fase
 
-- o working tree passou a ter plano de isolamento formal antes de qualquer branch de homologacao
-- a baseline Web revisada `9205f09` continua segura do ponto de vista de runtime
-- o `HEAD` atual `79ae86e` foi reclassificado como delta documental APK acima da baseline Web revisada
+- a branch `staging` passou a existir em `origin` a partir de `9205f09`
+- a baseline Web revisada `9205f09` foi promovida com sucesso para homologacao Git
+- o `HEAD` atual `72b2e8d` da branch de trabalho continuou separado da branch homologada
 - nenhuma seed foi removida
 - nenhuma tela foi quebrada
 - o modo demo continuou padrao
-- nenhuma branch foi criada
-- nenhum push ou deploy foi executado
+- nenhum deploy manual foi executado

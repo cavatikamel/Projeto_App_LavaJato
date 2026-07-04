@@ -567,3 +567,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a fase auditou o working tree, classificou `.gitignore`, `app/styles.css`, `LavaPrimeAndroidApp/**` e `app/assets/data/fipe-veiculos.*` por trilha propria e formalizou `WORKING_TREE_ISOLATION_PLAN.md` antes de qualquer `staging`.
 - Observacao de risco: o `HEAD` atual `79ae86e` ja inclui documentacao APK apos a ultima revisao Web, entao a criacao futura de `staging` continua bloqueada ate isolamento do working tree e escolha explicita da baseline, preferencialmente `9205f09`.
+
+### LP-DEPLOY-GOV-005
+
+- Change record: `docs/primyo-changes/LP-DEPLOY-GOV-005.md`
+- Closure: `docs/primyo-changes/LP-DEPLOY-GOV-005-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase criou `staging` local e `origin/staging` exatamente a partir de `9205f09`, sem alterar `main`, sem publicar `primyo/onboarding` e sem levar a sujeira local para a branch de homologacao.
+- Observacao de risco: a branch de homologacao agora existe, mas a proxima decisao segura passa a ser validar o ambiente publicado e nao mexer manualmente em Netlify, DNS ou producao.
