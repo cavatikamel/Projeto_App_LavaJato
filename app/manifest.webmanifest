@@ -8,7 +8,7 @@
   "icons": [
     {
       "src": "./assets/brand/lavaprime-icon.png",
-      "sizes": "265x265",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
