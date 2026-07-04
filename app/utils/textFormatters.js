@@ -1,9 +1,65 @@
+function countMojibakeSignals(value) {
+  return (String(value).match(/[ÃÂâ]/g) || []).length;
+}
+
+const legacyBrokenFragmentReplacements = [
+  ["Vitrifica��o", "Vitrificação"],
+  ["coating cer�mico", "coating cerâmico"],
+  ["prote��o cer�mica", "proteção cerâmica"],
+  ["prefer�ncia", "preferência"],
+  ["sens�vel", "sensível"],
+  ["c�mera", "câmera"],
+  ["Servi�o", "Serviço"],
+  ["servi�o", "serviço"],
+  ["Ve�culo", "Veículo"],
+  ["ve�culo", "veículo"],
+  ["Produ��o", "Produção"],
+  ["Comiss�o", "Comissão"],
+  ["Frequ�ncia", "Frequência"],
+  ["Confirma��o", "Confirmação"],
+  ["p�tio", "pátio"],
+  ["est�", "está"],
+  ["Ol�", "Olá"]
+];
+
+export function repairMojibakeText(value) {
+  const source = String(value ?? "");
+  if (!source) return source;
+
+  let current = source;
+
+  if (/[ÃÂâ]/.test(current)) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const latin1Bytes = Uint8Array.from(current, (char) => char.charCodeAt(0));
+        const repaired = new TextDecoder("utf-8").decode(latin1Bytes);
+
+        if (!repaired || repaired === current) break;
+        if (countMojibakeSignals(repaired) > countMojibakeSignals(current)) break;
+
+        current = repaired;
+        if (!/[ÃÂâ]/.test(current)) break;
+      } catch {
+        break;
+      }
+    }
+  }
+
+  for (const [brokenFragment, repairedFragment] of legacyBrokenFragmentReplacements) {
+    if (!current.includes(brokenFragment)) continue;
+    current = current.replaceAll(brokenFragment, repairedFragment);
+  }
+
+  return current;
+}
+
 export function capitalize(value) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
+  const text = repairMojibakeText(value);
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 export function escapeHtml(value) {
-  return String(value)
+  return repairMojibakeText(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -17,7 +73,7 @@ export function cssEscape(value) {
 }
 
 export function normalizeText(value) {
-  return String(value)
+  return repairMojibakeText(value)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()

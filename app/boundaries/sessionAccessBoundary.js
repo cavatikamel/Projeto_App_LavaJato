@@ -64,6 +64,7 @@ export function createSessionBoundary({ syncLegacySessionState } = {}) {
 export function createAccessBoundary(sessionManager) {
   const adminViewPolicies = {
     dashboard: "canAccessAdminArea",
+    schedule: "canAccessAdminArea",
     patio: "canAccessYard",
     quotes: "canManageQuotes",
     clients: "canManageClientRegistrations",

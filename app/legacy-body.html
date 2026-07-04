@@ -1,5 +1,5 @@
 <div class="splash-screen" id="splashScreen" aria-label="Carregando LavaPrime">
-      <img class="splash-logo" src="./assets/brand/lavaprime-lockup.png" alt="LavaPrime" />
+      <img class="splash-logo" src="./assets/brand/lavaprime-lockup-transparent.png" alt="LavaPrime" />
     </div>
 
     <main class="login-screen" aria-labelledby="loginTitle">
@@ -103,6 +103,10 @@
             <button class="admin-nav-button is-active" type="button" data-admin-view="dashboard">
               <span data-icon="dashboard"></span>
               <span>Visão Geral</span>
+            </button>
+            <button class="admin-nav-button" type="button" data-admin-view="schedule">
+              <span data-icon="hourglass"></span>
+              <span>Agendamentos</span>
             </button>
             <button class="admin-nav-button" type="button" data-admin-view="patio">
               <span data-icon="carFront"></span>
@@ -251,6 +255,22 @@
               <div class="admin-maintenance-list" id="adminMaintenanceDue"></div>
             </article>
           </section>
+
+          <section class="admin-trend-grid" id="adminTrendGrid" aria-label="Evolução operacional"></section>
+        </section>
+
+        <section class="admin-view admin-sketch-view" id="adminScheduleView" aria-labelledby="adminScheduleTitle" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="eyebrow">Início</p>
+              <h1 id="adminScheduleTitle">Agendamentos</h1>
+            </div>
+            <button class="new-vehicle-button" id="openAdminScheduleButton" type="button">
+              <span data-icon="plus"></span>
+              <span>Novo agendamento</span>
+            </button>
+          </header>
+          <div class="admin-screen-content" id="adminScheduleContent"></div>
         </section>
 
         <section class="admin-view" id="adminPatioView" aria-labelledby="adminPatioTitle" hidden>

@@ -29,8 +29,44 @@ import {
   formatPhone,
   formatPlate,
   normalizeText,
+  repairMojibakeText,
   onlyDigits
 } from "./utils/textFormatters.js";
+
+function repairMojibakeCollectionInPlace(value) {
+  if (Array.isArray(value)) {
+    for (let index = 0; index < value.length; index += 1) {
+      value[index] = repairMojibakeCollectionInPlace(value[index]);
+    }
+    return value;
+  }
+
+  if (value && typeof value === "object") {
+    if (Object.isFrozen(value)) return value;
+    Object.keys(value).forEach((key) => {
+      value[key] = repairMojibakeCollectionInPlace(value[key]);
+    });
+    return value;
+  }
+
+  if (typeof value === "string") return repairMojibakeText(value);
+  return value;
+}
+
+repairMojibakeCollectionInPlace(clientRegistry);
+repairMojibakeCollectionInPlace(vehicleRegistry);
+repairMojibakeCollectionInPlace(patioVehicles);
+repairMojibakeCollectionInPlace(billingClients);
+repairMojibakeCollectionInPlace(billingInvoices);
+repairMojibakeCollectionInPlace(invoiceLineItems);
+repairMojibakeCollectionInPlace(invoiceAmounts);
+repairMojibakeCollectionInPlace(openPayments);
+repairMojibakeCollectionInPlace(lavaprimeDemoDataCleanupMap);
+repairMojibakeCollectionInPlace(lavaprimeBootstrapModeState);
+repairMojibakeCollectionInPlace(lavaprimeCleanBootstrapMap);
+repairMojibakeCollectionInPlace(lavaprimeCleanBootstrapReadinessBaseline);
+repairMojibakeCollectionInPlace(lavaprimeCleanBootstrapTrialBaseline);
+repairMojibakeCollectionInPlace(lavaprimeCleanBootstrapTrialExecutionBaseline);
 
 const icons = {
   shield: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.7-2.8 8.6-7 10-4.2-1.4-7-5.3-7-10V6l7-3z"/><path d="M9 12l2 2 4-5"/></svg>',
@@ -98,6 +134,8 @@ let selectedEntryVehicleId = null;
 let entryRegistryEditContext = null;
 let clientVehicleRegistrationContext = null;
 let selectedScheduleVehicleId = null;
+let adminScheduleMonthOffset = 0;
+let adminScheduleSelectedDate = "";
 let quoteDialogStep = "vehicle";
 let selectedQuoteVehicleId = null;
 let pendingQuotePatioEntry = null;
@@ -291,6 +329,50 @@ const vehicleSpecialCareRecommendedLabelMap = vehicleSpecialCareRecommendedOptio
   return accumulator;
 }, {});
 const vehicleSpecialCareCombinedRestrictionOptions = [...vehicleSpecialCareRestrictionOptions, ...vehicleSpecialCareRecommendedOptions];
+const vehicleSpecialCareOptionGroups = [
+  {
+    title: "Películas e proteção",
+    description: "Ajustes ligados a vidro, PPF e superfícies com sensibilidade de contato.",
+    options: [
+      "avoid_film_contact",
+      "avoid_high_pressure_close",
+      "avoid_abrasive_brush",
+      "prefer_soft_touch"
+    ]
+  },
+  {
+    title: "Química e acabamento",
+    description: "Restrições químicas para orientar o produto correto antes de iniciar o serviço.",
+    options: [
+      "avoid_acid",
+      "avoid_strong_alkaline",
+      "use_ph_neutral",
+      "avoid_degreaser",
+      "avoid_solvent",
+      "avoid_silicone",
+      "prefer_ph_neutral",
+      "prefer_low_aggression"
+    ]
+  },
+  {
+    title: "Polimento e toque",
+    description: "Itens ligados a atrito, polimento e revisão manual de acabamento sensível.",
+    options: [
+      "avoid_heavy_polishing",
+      "avoid_abrasive_product",
+      "protect_sensitive_area",
+      "manual_review",
+    ]
+  },
+  {
+    title: "Motor e áreas técnicas",
+    description: "Alertas operacionais que costumam exigir validação antes da lavagem.",
+    options: [
+      "avoid_engine_wash",
+      "custom"
+    ]
+  }
+];
 const supplyRiskTagOptions = [
   { tag: "acid_product", label: "Produto ácido" },
   { tag: "strong_alkaline_product", label: "Alcalino forte" },
@@ -383,23 +465,47 @@ const businessSocialReportTargets = [
   { key: "operatorAttendance", label: "Frequência do operador" }
 ];
 const businessProfileReportFieldKeys = ["cnpj", "legalName", "tradeName", "phone", "email", "address"];
-let businessProfile = normalizeBusinessProfile(loadBusinessStorageItem(businessStorageKeys.profile, getDefaultBusinessProfile()));
-let businessBankAccounts = loadBusinessStorageItem(businessStorageKeys.bankAccounts, []);
-let businessPixInfo = loadBusinessStorageItem(businessStorageKeys.pix, getDefaultBusinessPixInfo());
-let businessPaymentMethods = normalizeBusinessPaymentMethods(loadBusinessStorageItem(businessStorageKeys.paymentMethods, getDefaultBusinessPaymentMethods()));
-let businessFinanceSettings = normalizeBusinessFinanceSettings(
-  loadBusinessStorageItem(businessStorageKeys.financeSettings, getDefaultBusinessFinanceSettings())
+let businessProfile = normalizeBusinessProfile(
+  repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.profile, getDefaultBusinessProfile()))
 );
-let businessSocialLinks = normalizeBusinessSocialLinks(loadBusinessStorageItem(businessStorageKeys.social, getDefaultBusinessSocialLinks()));
-let businessMessageTemplates = loadBusinessStorageItem(businessStorageKeys.messages, getDefaultMessageTemplates());
-let productCatalog = normalizeProductCatalog(loadBusinessStorageItem(businessStorageKeys.products, getDefaultProductCatalog()));
-let supplyCatalog = normalizeSupplyCatalog(loadBusinessStorageItem(businessStorageKeys.supplies, getDefaultSupplyCatalog()));
-let productSales = normalizeProductSales(loadBusinessStorageItem(businessStorageKeys.productSales, []));
-let inventoryMovements = normalizeInventoryMovements(loadBusinessStorageItem(businessStorageKeys.inventoryMovements, []));
-let serviceSupplyProfiles = normalizeServiceSupplyProfiles(loadBusinessStorageItem(businessStorageKeys.serviceSupplies, getDefaultServiceSupplyProfiles()));
-let documentHistory = normalizeDocumentHistory(loadBusinessStorageItem(businessStorageKeys.documentHistory, []));
-let cashEntries = normalizeCashEntries(loadBusinessStorageItem(businessStorageKeys.cashEntries, getDefaultCashEntries()));
-let vehicleSpecialCareRecords = normalizeVehicleSpecialCareRecords(loadBusinessStorageItem(businessStorageKeys.vehicleSpecialCare, getDefaultVehicleSpecialCareRecords()));
+let businessBankAccounts = repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.bankAccounts, []));
+let businessPixInfo = repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.pix, getDefaultBusinessPixInfo()));
+let businessPaymentMethods = normalizeBusinessPaymentMethods(
+  repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.paymentMethods, getDefaultBusinessPaymentMethods()))
+);
+let businessFinanceSettings = normalizeBusinessFinanceSettings(
+  repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.financeSettings, getDefaultBusinessFinanceSettings()))
+);
+let businessSocialLinks = normalizeBusinessSocialLinks(
+  repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.social, getDefaultBusinessSocialLinks()))
+);
+let businessMessageTemplates = repairMojibakeCollectionInPlace(
+  loadBusinessStorageItem(businessStorageKeys.messages, getDefaultMessageTemplates())
+);
+let productCatalog = normalizeProductCatalog(
+  repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.products, getDefaultProductCatalog()))
+);
+let supplyCatalog = normalizeSupplyCatalog(
+  repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.supplies, getDefaultSupplyCatalog()))
+);
+let productSales = normalizeProductSales(repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.productSales, [])));
+let inventoryMovements = normalizeInventoryMovements(
+  repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.inventoryMovements, []))
+);
+let serviceSupplyProfiles = normalizeServiceSupplyProfiles(
+  repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.serviceSupplies, getDefaultServiceSupplyProfiles()))
+);
+let documentHistory = normalizeDocumentHistory(
+  repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.documentHistory, []))
+);
+let cashEntries = normalizeCashEntries(
+  repairMojibakeCollectionInPlace(loadBusinessStorageItem(businessStorageKeys.cashEntries, getDefaultCashEntries()))
+);
+let vehicleSpecialCareRecords = normalizeVehicleSpecialCareRecords(
+  repairMojibakeCollectionInPlace(
+    loadBusinessStorageItem(businessStorageKeys.vehicleSpecialCare, getDefaultVehicleSpecialCareRecords())
+  )
+);
 
 function getDefaultMessageTemplates() {
   return [
@@ -1130,6 +1236,7 @@ function bindEvents() {
     if (!showAdminView("productSales")) return;
     window.setTimeout(() => openInventoryDialog({ mode: "sale" }), 0);
   });
+  $("#openAdminScheduleButton")?.addEventListener("click", openScheduleDialog);
   $$("[data-admin-view]").forEach((button) => {
     button.addEventListener("click", () => showAdminView(button.dataset.adminView));
   });
@@ -1137,6 +1244,11 @@ function bindEvents() {
     const button = event.target.closest("[data-send-maintenance-whatsapp]");
     if (!button) return;
     sendMaintenanceWhatsapp(button.dataset.sendMaintenanceWhatsapp);
+  });
+  $("#adminAlerts")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-admin-alert-view]");
+    if (!button) return;
+    handleAdminAlertNavigation(button.dataset.adminAlertView, button.dataset.adminAlertFocus || "");
   });
   $$(".admin-action-button").forEach((button) => {
     button.addEventListener("click", () => showToast("Ação pronta para detalhamento na próxima etapa."));
@@ -3205,6 +3317,32 @@ function getVehicleSpecialCareFormState() {
   };
 }
 
+function renderVehicleSpecialCareGroupedChoices(prefix, selectedTags) {
+  return `
+    <div class="vehicle-special-care-choice-groups">
+      ${vehicleSpecialCareOptionGroups
+        .map((group) => {
+          const options = group.options
+            .map((tag) => vehicleSpecialCareCombinedRestrictionOptions.find((option) => (option.tag || option.value || option.label) === tag))
+            .filter(Boolean);
+          return `
+            <article class="vehicle-special-care-choice-group">
+              <div>
+                <h3>${escapeHtml(group.title)}</h3>
+                <p>${escapeHtml(group.description)}</p>
+              </div>
+              ${renderChoiceChipGroup(options, selectedTags, {
+                name: prefix,
+                twoColumns: true
+              })}
+            </article>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
 function renderVehicleSpecialCareFields(prefix, state, options = {}) {
   const compact = Boolean(options.compact);
   const selectedTags = [...(state.restrictionTags || []), ...(state.recommendedTags || [])];
@@ -3219,11 +3357,8 @@ function renderVehicleSpecialCareFields(prefix, state, options = {}) {
         </label>
       </div>
       <div class="vehicle-special-care-choice-block">
-        <span>Restrições</span>
-        ${renderChoiceChipGroup(vehicleSpecialCareCombinedRestrictionOptions, selectedTags, {
-          name: `${prefix}Restriction`,
-          twoColumns: true
-        })}
+        <span>Restrições e cuidados de execução</span>
+        ${renderVehicleSpecialCareGroupedChoices(`${prefix}Restriction`, selectedTags)}
       </div>
       <label class="login-field inventory-notes-field vehicle-special-care-description-field" for="${escapeHtml(prefix)}Description">
         <span>Observações</span>
@@ -7103,11 +7238,297 @@ function sendMaintenanceWhatsapp(index) {
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank", "noreferrer");
 }
 
+function getOperationalTimelineRecords() {
+  const serviceRecords = patioVehicles
+    .filter((vehicle) => vehicle.status !== "cancelado")
+    .map((vehicle) => ({
+      date: vehicle.finishedDate || vehicle.scheduledDate || vehicle.date || getTodayISO(),
+      revenue: isFinalizedStatus(vehicle.status) ? toFiniteNumber(getVehiclePaymentTotal(vehicle)) : 0,
+      operations: 1,
+      services: 1,
+      sales: 0
+    }));
+
+  const salesRecords = productSales.map((sale) => ({
+    date: sale.date || getTodayISO(),
+    revenue: toFiniteNumber(sale.total),
+    operations: 1,
+    services: 0,
+    sales: 1
+  }));
+
+  return [...serviceRecords, ...salesRecords].filter((record) => /^\d{4}-\d{2}-\d{2}$/.test(record.date));
+}
+
+function getMonthStartFromOffset(offset = 0) {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + Number(offset || 0), 1);
+}
+
+function getStartOfWeek(date) {
+  const reference = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const currentDay = reference.getDay();
+  const diff = currentDay === 0 ? -6 : 1 - currentDay;
+  reference.setDate(reference.getDate() + diff);
+  reference.setHours(0, 0, 0, 0);
+  return reference;
+}
+
+function buildOperationalTrendEntries(period) {
+  const records = getOperationalTimelineRecords();
+  const compactWeekFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" });
+  const dayFormatter = new Intl.DateTimeFormat("pt-BR", { weekday: "short" });
+  const monthFormatter = new Intl.DateTimeFormat("pt-BR", { month: "short" });
+  const bucketCount = period === "daily" ? 7 : 6;
+  const keys = [];
+  const labels = [];
+
+  if (period === "daily") {
+    for (let index = bucketCount - 1; index >= 0; index -= 1) {
+      const date = new Date();
+      date.setDate(date.getDate() - index);
+      keys.push(formatLocalDateISO(date));
+      labels.push(dayFormatter.format(date).replace(".", ""));
+    }
+  } else if (period === "weekly") {
+    const currentWeek = getStartOfWeek(new Date());
+    for (let index = bucketCount - 1; index >= 0; index -= 1) {
+      const weekStart = new Date(currentWeek);
+      weekStart.setDate(weekStart.getDate() - index * 7);
+      const key = formatLocalDateISO(weekStart);
+      keys.push(key);
+      labels.push(compactWeekFormatter.format(weekStart));
+    }
+  } else {
+    const currentMonth = new Date();
+    for (let index = bucketCount - 1; index >= 0; index -= 1) {
+      const monthDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - index, 1);
+      const key = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`;
+      keys.push(key);
+      labels.push(monthFormatter.format(monthDate).replace(".", ""));
+    }
+  }
+
+  const buckets = new Map(
+    keys.map((key, index) => [
+      key,
+      { key, label: labels[index], revenue: 0, operations: 0, services: 0, sales: 0 }
+    ])
+  );
+
+  records.forEach((record) => {
+    let bucketKey = record.date;
+    if (period === "weekly") {
+      const [year, month, day] = record.date.split("-").map(Number);
+      bucketKey = formatLocalDateISO(getStartOfWeek(new Date(year, (month || 1) - 1, day || 1)));
+    }
+    if (period === "monthly") bucketKey = record.date.slice(0, 7);
+    const bucket = buckets.get(bucketKey);
+    if (!bucket) return;
+    bucket.revenue += toFiniteNumber(record.revenue);
+    bucket.operations += Number(record.operations || 0);
+    bucket.services += Number(record.services || 0);
+    bucket.sales += Number(record.sales || 0);
+  });
+
+  return Array.from(buckets.values());
+}
+
+function formatCompactCurrency(value) {
+  const amount = toFiniteNumber(value);
+  if (Math.abs(amount) < 1000) return formatCurrency(amount);
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    notation: "compact",
+    maximumFractionDigits: 1
+  }).format(amount);
+}
+
+function renderTrendCard({ title, subtitle, entries, footLabel }) {
+  const bars = entries.length ? entries : [{ key: "empty", label: "-", revenue: 0, operations: 0, services: 0, sales: 0 }];
+  const maxRevenue = Math.max(...bars.map((entry) => entry.revenue), 1);
+  const current = bars[bars.length - 1];
+  const previous = bars[bars.length - 2] || { revenue: 0 };
+  const delta = current.revenue - previous.revenue;
+  const totalRevenue = bars.reduce((sum, entry) => sum + entry.revenue, 0);
+  const totalOperations = bars.reduce((sum, entry) => sum + entry.operations, 0);
+
+  return `
+    <article class="admin-panel trend-card">
+      <div class="trend-card-head">
+        <div>
+          <p class="eyebrow">${escapeHtml(subtitle)}</p>
+          <h2>${escapeHtml(title)}</h2>
+        </div>
+      </div>
+      <div class="trend-card-meta">
+        <p>${escapeHtml(footLabel)}</p>
+        <strong>${delta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(delta))}</strong>
+      </div>
+      <div class="trend-chart" style="--bar-count: ${bars.length};">
+        ${bars
+          .map((entry) => {
+            const barHeight = Math.max(18, Math.round((entry.revenue / maxRevenue) * 100));
+            return `
+              <div class="trend-bar">
+                <span class="trend-bar-value">${escapeHtml(formatCompactCurrency(entry.revenue))}</span>
+                <span class="trend-bar-shape" style="height: ${barHeight}%;"></span>
+                <span class="trend-bar-count">${entry.operations} rotina(s)</span>
+                <span class="trend-bar-label">${escapeHtml(entry.label)}</span>
+              </div>
+            `;
+          })
+          .join("")}
+      </div>
+      <div class="trend-card-foot">
+        <p>${totalOperations} registro(s) acompanhados</p>
+        <strong>${formatCurrency(totalRevenue)}</strong>
+      </div>
+    </article>
+  `;
+}
+
+function renderAdminTrendGrid() {
+  return [
+    {
+      title: "Rotina diária",
+      subtitle: "Últimos 7 dias",
+      entries: buildOperationalTrendEntries("daily"),
+      footLabel: "Comparação com o dia anterior"
+    },
+    {
+      title: "Ritmo semanal",
+      subtitle: "Últimas 6 semanas",
+      entries: buildOperationalTrendEntries("weekly"),
+      footLabel: "Comparação com a semana anterior"
+    },
+    {
+      title: "Evolução mensal",
+      subtitle: "Últimos 6 meses",
+      entries: buildOperationalTrendEntries("monthly"),
+      footLabel: "Comparação com o mês anterior"
+    }
+  ]
+    .map(renderTrendCard)
+    .join("");
+}
+
+function getAdminAlertItems(billedOpen) {
+  const scheduledCashDue = getCashflowScheduledDueToday();
+  const lowStockProducts = getLowStockProducts();
+  const lowStockSupplies = getLowStockSupplies();
+  const servicesWithoutProfile = getServicesWithoutSupplyProfile().length;
+  const patioCareCount = patioVehicles.filter((vehicle) => !isFinalizedStatus(vehicle.status) && hasVehicleSpecialCare(vehicle)).length;
+  const acknowledgedCareWarnings = patioVehicles.filter((vehicle) =>
+    (vehicle.specialCareWarningLog || []).some((entry) => entry.acknowledged)
+  ).length;
+  const openPaymentsCount = getActiveOpenPayments().length;
+  const maintenanceCount = getUpcomingServiceMaintenances().length;
+
+  return [
+    countByStatus("agendado")
+      ? {
+          text: `${countByStatus("agendado")} agendamento(s) aguardam confirmação de entrada.`,
+          view: "schedule",
+          targetLabel: "Abrir Agendamentos"
+        }
+      : null,
+    scheduledCashDue.length
+      ? {
+          text: `${scheduledCashDue.length} lançamento(s) de caixa agendado(s) para hoje aguardam confirmação.`,
+          view: "cashflow",
+          targetLabel: "Abrir Fluxo de caixa"
+        }
+      : null,
+    countByStatus("pronto")
+      ? {
+          text: `${countByStatus("pronto")} veículo(s) pronto(s) para entrega.`,
+          view: "patio",
+          targetLabel: "Abrir Pátio"
+        }
+      : null,
+    countByStatus("lavando")
+      ? {
+          text: `${countByStatus("lavando")} serviço(s) estão em execução agora.`,
+          view: "patio",
+          targetLabel: "Acompanhar Pátio"
+        }
+      : null,
+    billedOpen
+      ? {
+          text: `${formatCurrency(billedOpen)} seguem em faturamento aberto.`,
+          view: "invoices",
+          targetLabel: "Abrir Faturas"
+        }
+      : null,
+    patioCareCount
+      ? {
+          text: `${patioCareCount} veículo(s) no pátio exigem cuidado especial.`,
+          view: "patio",
+          targetLabel: "Tratar no Pátio"
+        }
+      : null,
+    acknowledgedCareWarnings
+      ? {
+          text: `${acknowledgedCareWarnings} alerta(s) técnicos já foram confirmados e pedem acompanhamento.`,
+          view: "patio",
+          targetLabel: "Revisar alertas"
+        }
+      : null,
+    openPaymentsCount
+      ? {
+          text: `${openPaymentsCount} pagamento(s) em aberto exigem ação do gestor.`,
+          view: "openPayments",
+          targetLabel: "Abrir Recebimentos"
+        }
+      : null,
+    lowStockProducts.length
+      ? {
+          text: `${lowStockProducts.length} produto(s) em estoque mínimo pedem reposição.`,
+          view: "inventory",
+          targetLabel: "Abrir Inventário"
+        }
+      : null,
+    lowStockSupplies.length
+      ? {
+          text: `${lowStockSupplies.length} insumo(s) em estoque mínimo podem travar a operação.`,
+          view: "inventory",
+          targetLabel: "Abrir Inventário"
+        }
+      : null,
+    servicesWithoutProfile
+      ? {
+          text: `${servicesWithoutProfile} serviço(s) ainda estão sem ficha técnica de insumos.`,
+          view: "services",
+          targetLabel: "Abrir Serviços"
+        }
+      : null,
+    maintenanceCount
+      ? {
+          text: `${maintenanceCount} manutenção(ões) entram no radar dos próximos 30 dias.`,
+          view: "dashboard",
+          focus: "maintenance",
+          targetLabel: "Ver Manutenções"
+        }
+      : null
+  ].filter(Boolean);
+}
+
+function handleAdminAlertNavigation(view, focus = "") {
+  if (!view || !showAdminView(view)) return;
+  window.setTimeout(() => {
+    if (focus === "maintenance") $("#adminMaintenanceDue")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (focus === "trends") $("#adminTrendGrid")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 120);
+}
+
 function renderAdminDashboard() {
   const metricsContainer = $("#adminMetrics");
   const flowContainer = $("#adminStatusFlow");
   const alertsContainer = $("#adminAlerts");
   const maintenanceContainer = $("#adminMaintenanceDue");
+  const trendContainer = $("#adminTrendGrid");
   if (!metricsContainer || !flowContainer || !alertsContainer) return;
 
   const activeVehicles = patioVehicles.filter((vehicle) =>
@@ -7182,38 +7603,11 @@ function renderAdminDashboard() {
 
   alertsContainer.innerHTML = renderAdminAlerts(billedOpen);
   if (maintenanceContainer) maintenanceContainer.innerHTML = renderMaintenanceDashboardPanel();
+  if (trendContainer) trendContainer.innerHTML = renderAdminTrendGrid();
 }
 
 function renderAdminAlerts(billedOpen) {
-  const scheduledCashDue = getCashflowScheduledDueToday();
-  const lowStockProducts = getLowStockProducts();
-  const lowStockSupplies = getLowStockSupplies();
-  const patioCareCount = patioVehicles.filter((vehicle) => !isFinalizedStatus(vehicle.status) && hasVehicleSpecialCare(vehicle)).length;
-  const acknowledgedCareWarnings = patioVehicles.filter((vehicle) =>
-    (vehicle.specialCareWarningLog || []).some((entry) => entry.acknowledged)
-  ).length;
-  const alerts = [
-    countByStatus("agendado")
-      ? `${countByStatus("agendado")} agendamento(s) aguardando confirmação de entrada.`
-      : "",
-    scheduledCashDue.length
-      ? `${scheduledCashDue.length} lançamento(s) de caixa agendado(s) para hoje aguardam confirmação.`
-      : "",
-    countByStatus("pronto") ? `${countByStatus("pronto")} veículo(s) pronto(s) para entrega.` : "",
-    countByStatus("lavando") ? `${countByStatus("lavando")} serviço(s) em execução agora.` : "",
-    billedOpen ? `${formatCurrency(billedOpen)} em lançamentos faturados abertos.` : "",
-    patioCareCount ? `${patioCareCount} veículo(s) no pátio exigem cuidado especial.` : "",
-    acknowledgedCareWarnings ? `${acknowledgedCareWarnings} atendimento(s) já tiveram alerta técnico confirmado.` : "",
-    getActiveOpenPayments().length
-      ? `${getActiveOpenPayments().length} pagamento(s) em aberto exigem lembrete diário ao gestor.`
-      : "",
-    countByStatus("finalizado") ? `${countByStatus("finalizado")} atendimento(s) em Finalizados.` : "",
-    lowStockProducts.length ? `${lowStockProducts.length} produto(s) em estoque mínimo pedem reposição.` : "",
-    lowStockSupplies.length ? `${lowStockSupplies.length} insumo(s) em estoque mínimo podem travar a operação.` : "",
-    getServicesWithoutSupplyProfile().length
-      ? `${getServicesWithoutSupplyProfile().length} serviço(s) ainda estão sem ficha técnica de insumos.`
-      : ""
-  ].filter(Boolean);
+  const alerts = getAdminAlertItems(billedOpen);
 
   if (!alerts.length) {
     return '<p class="empty-alert">Operação sem prioridades abertas.</p>';
@@ -7222,10 +7616,13 @@ function renderAdminAlerts(billedOpen) {
   return alerts
     .map(
       (alert) => `
-        <article class="admin-alert">
+        <button class="admin-alert is-actionable" type="button" data-admin-alert-view="${escapeHtml(alert.view)}" data-admin-alert-focus="${escapeHtml(alert.focus || "")}">
           <span class="metric-icon alert-icon">${icons.alert}</span>
-          <p>${alert}</p>
-        </article>
+          <span class="admin-alert-copy">
+            <p>${escapeHtml(alert.text)}</p>
+            <span class="admin-alert-target">${escapeHtml(alert.targetLabel || "Abrir área relacionada")}</span>
+          </span>
+        </button>
       `
     )
     .join("");
@@ -7245,6 +7642,11 @@ function renderAdminScreen(view) {
 
   if (view === "clients") {
     renderClientsScreen(container);
+    return;
+  }
+
+  if (view === "schedule") {
+    renderAdminScheduleScreen(container);
     return;
   }
 
@@ -7380,6 +7782,167 @@ function bindAdminScreenControls(container) {
   $$(".screen-filters button", container).forEach((button) => {
     button.addEventListener("click", () => {
       $$(".screen-filters button", container).forEach((item) => item.classList.toggle("is-active", item === button));
+    });
+  });
+}
+
+function getScheduledVehiclesChronological() {
+  return patioVehicles
+    .filter((vehicle) => vehicle.scheduledDate)
+    .sort((left, right) => {
+      const leftKey = `${left.scheduledDate || ""} ${left.scheduledTime || ""}`;
+      const rightKey = `${right.scheduledDate || ""} ${right.scheduledTime || ""}`;
+      return leftKey.localeCompare(rightKey);
+    });
+}
+
+function ensureAdminScheduleSelectedDate(referenceMonth, scheduledVehicles) {
+  const monthKey = formatLocalDateISO(referenceMonth).slice(0, 7);
+  if (adminScheduleSelectedDate && adminScheduleSelectedDate.startsWith(monthKey)) return adminScheduleSelectedDate;
+  const today = getTodayISO();
+  if (today.startsWith(monthKey)) return today;
+  const firstScheduled = scheduledVehicles.find((vehicle) => (vehicle.scheduledDate || "").startsWith(monthKey));
+  if (firstScheduled?.scheduledDate) return firstScheduled.scheduledDate;
+  return formatLocalDateISO(referenceMonth);
+}
+
+function renderAdminScheduleScreen(container) {
+  const scheduledVehicles = getScheduledVehiclesChronological();
+  const referenceMonth = getMonthStartFromOffset(adminScheduleMonthOffset);
+  const monthKey = formatLocalDateISO(referenceMonth).slice(0, 7);
+  const monthLabel = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(referenceMonth);
+  adminScheduleSelectedDate = ensureAdminScheduleSelectedDate(referenceMonth, scheduledVehicles);
+
+  const monthVehicles = scheduledVehicles.filter((vehicle) => (vehicle.scheduledDate || "").startsWith(monthKey));
+  const upcoming = scheduledVehicles.filter((vehicle) => `${vehicle.scheduledDate}T${vehicle.scheduledTime || "00:00"}` >= `${getTodayISO()}T00:00`);
+  const selectedDayVehicles = scheduledVehicles.filter((vehicle) => vehicle.scheduledDate === adminScheduleSelectedDate);
+
+  container.innerHTML = `
+    <section class="screen-metrics" aria-label="Resumo dos agendamentos">
+      ${[
+        { label: "No mês", value: monthVehicles.length, icon: "hourglass" },
+        { label: "Futuros", value: upcoming.length, icon: "clock" },
+        { label: "Hoje", value: scheduledVehicles.filter((vehicle) => vehicle.scheduledDate === getTodayISO()).length, icon: "dashboard" },
+        { label: "Passados", value: scheduledVehicles.filter((vehicle) => vehicle.scheduledDate < getTodayISO()).length, icon: "clipboard" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+    <section class="admin-schedule-layout">
+      <article class="admin-panel schedule-calendar-panel">
+        <div class="schedule-calendar-toolbar">
+          <div>
+            <p class="eyebrow">Agenda mensal</p>
+            <h2>${escapeHtml(capitalize(monthLabel))}</h2>
+          </div>
+          <div class="schedule-calendar-actions">
+            <button class="ghost-action" type="button" data-schedule-shift="-1">Mês anterior</button>
+            <button class="ghost-action" type="button" data-schedule-shift="0">Mês atual</button>
+            <button class="ghost-action" type="button" data-schedule-shift="1">Próximo mês</button>
+          </div>
+        </div>
+        ${renderScheduleCalendarGrid(referenceMonth, scheduledVehicles)}
+      </article>
+      <article class="admin-panel schedule-agenda-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Rotina do dia</p>
+            <h2>${escapeHtml(formatDateBR(adminScheduleSelectedDate))}</h2>
+          </div>
+        </div>
+        <div class="schedule-agenda-list">
+          ${
+            selectedDayVehicles.length
+              ? selectedDayVehicles
+                  .map(
+                    (vehicle) => `
+                      <button class="schedule-agenda-item" type="button" data-open-schedule-vehicle="${vehicle.id}">
+                        <strong>${escapeHtml(vehicle.scheduledTime || "--:--")} · ${escapeHtml(vehicle.plate)}</strong>
+                        <p>${escapeHtml(vehicle.owner)} · ${escapeHtml(vehicle.service || "Serviço a confirmar")}</p>
+                        <small>${escapeHtml(vehicle.payment || "Pagamento a definir")} · ${escapeHtml(statusMeta[vehicle.status]?.label || vehicle.status)}</small>
+                      </button>
+                    `
+                  )
+                  .join("")
+              : '<p class="empty-alert">Nenhum agendamento para o dia selecionado.</p>'
+          }
+        </div>
+      </article>
+    </section>
+  `;
+  initIcons();
+  bindAdminScheduleScreenControls(container);
+}
+
+function renderScheduleCalendarGrid(referenceMonth, scheduledVehicles) {
+  const weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  const firstDay = new Date(referenceMonth.getFullYear(), referenceMonth.getMonth(), 1);
+  const startDay = getStartOfWeek(firstDay);
+  const cells = [];
+
+  for (let index = 0; index < 42; index += 1) {
+    const cellDate = new Date(startDay);
+    cellDate.setDate(startDay.getDate() + index);
+    const dateKey = formatLocalDateISO(cellDate);
+    const items = scheduledVehicles.filter((vehicle) => vehicle.scheduledDate === dateKey);
+    const isOutsideMonth = cellDate.getMonth() !== referenceMonth.getMonth();
+    const isToday = dateKey === getTodayISO();
+    const isSelected = dateKey === adminScheduleSelectedDate;
+    cells.push(`
+      <button class="schedule-calendar-day${isOutsideMonth ? " is-outside-month" : ""}${isToday ? " is-today" : ""}${isSelected ? " is-selected" : ""}" type="button" data-schedule-date="${dateKey}">
+        <span class="schedule-calendar-day-head">
+          <span class="schedule-calendar-day-number">${cellDate.getDate()}</span>
+          ${items.length ? `<span class="schedule-calendar-day-count">${items.length}</span>` : ""}
+        </span>
+        <span class="schedule-calendar-day-list">
+          ${items
+            .slice(0, 2)
+            .map(
+              (vehicle) => `
+                <span class="schedule-calendar-day-item">
+                  <strong>${escapeHtml(vehicle.scheduledTime || "--:--")} · ${escapeHtml(vehicle.plate)}</strong>
+                  <p>${escapeHtml(vehicle.owner)}</p>
+                </span>
+              `
+            )
+            .join("")}
+          ${items.length > 2 ? `<span class="schedule-calendar-day-more">+${items.length - 2} agendamento(s)</span>` : ""}
+        </span>
+      </button>
+    `);
+  }
+
+  return `
+    <div class="schedule-calendar-grid" aria-label="Calendário mensal de agendamentos">
+      ${weekdays.map((day) => `<span class="schedule-calendar-weekday">${day}</span>`).join("")}
+      ${cells.join("")}
+    </div>
+  `;
+}
+
+function bindAdminScheduleScreenControls(container) {
+  $$("[data-schedule-shift]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      const shift = Number(button.dataset.scheduleShift || 0);
+      adminScheduleMonthOffset = shift === 0 ? 0 : adminScheduleMonthOffset + shift;
+      adminScheduleSelectedDate = "";
+      renderAdminScheduleScreen(container);
+    });
+  });
+
+  $$("[data-schedule-date]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      adminScheduleSelectedDate = button.dataset.scheduleDate || getTodayISO();
+      renderAdminScheduleScreen(container);
+    });
+  });
+
+  $$("[data-open-schedule-vehicle]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      const vehicleId = Number(button.dataset.openScheduleVehicle || 0);
+      if (!vehicleId) return;
+      showAdminView("patio");
+      window.setTimeout(() => openStatusDialog(vehicleId), 0);
     });
   });
 }
@@ -19053,7 +19616,7 @@ function renderVehicleCard(vehicle, queuePosition = 0) {
     <button class="vehicle-card ${queuePosition ? "is-queued" : ""} ${queuePosition === 1 ? "is-next" : ""}" type="button" data-vehicle-id="${vehicle.id}" aria-label="${escapeHtml(cardLabel)}">
       ${queuePosition ? `<span class="queue-badge">${queuePosition === 1 ? "Próximo" : `Fila ${queuePosition}`}</span>` : ""}
       <span class="vehicle-visual">
-        <img class="vehicle-car-icon" src="./assets/brand/icone_carro.png" alt="" />
+        <span class="vehicle-car-icon vehicle-car-icon-svg" aria-hidden="true">${icons.carFront}</span>
         <span class="status-corner status-${vehicle.status}" aria-hidden="true">${icons[status.icon]}</span>
       </span>
       <span class="vehicle-info">
