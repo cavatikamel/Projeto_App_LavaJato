@@ -29,9 +29,7 @@ import br.com.primyo.lavaprime.ui.components.LavaPrimeActionButton
 import br.com.primyo.lavaprime.ui.components.LavaPrimeActionStyle
 import br.com.primyo.lavaprime.ui.components.LavaPrimeDrawer
 import br.com.primyo.lavaprime.ui.components.LavaPrimeScaffold
-import br.com.primyo.lavaprime.ui.components.ModuleScreen
 import br.com.primyo.lavaprime.ui.components.perfilLabel
-import br.com.primyo.lavaprime.ui.components.routeIcon
 import br.com.primyo.lavaprime.ui.navigation.AppStage
 import br.com.primyo.lavaprime.ui.navigation.MobileRoute
 import br.com.primyo.lavaprime.ui.theme.PageBg
@@ -76,6 +74,7 @@ fun LavaPrimeRoot(
             routeState = authState.routeState,
             routeMessage = authState.routeMessage
         )
+
         AppStage.INICIAL -> InitialScreen(
             onAccess = authViewModel::abrirLogin,
             bootstrapSummary = authState.bootstrapSummary,
@@ -84,6 +83,7 @@ fun LavaPrimeRoot(
             bootstrapError = authState.bootstrapError,
             onRetry = authViewModel::iniciarBootstrap
         )
+
         AppStage.LOGIN -> LoginScreen(
             perfil = authState.perfilSelecionado,
             email = authState.email,
@@ -95,6 +95,7 @@ fun LavaPrimeRoot(
             onSenhaChange = authViewModel::atualizarSenha,
             onLogin = authViewModel::fazerLogin
         )
+
         AppStage.APP -> {
             val usuario = authState.usuario ?: return
             LavaPrimeShell(
@@ -179,38 +180,35 @@ private fun LavaPrimeShell(
                         onAdvance = patioViewModel::avancarStatus,
                         onBack = patioViewModel::voltarStatus
                     )
-                    MobileRoute.AGENDAMENTOS -> ModuleScreen(
-                        "Agendamentos",
-                        "Agenda, chegada no pátio, faltas e conversão para atendimento.",
-                        routeIcon(MobileRoute.AGENDAMENTOS)
-                    )
-                    MobileRoute.CLIENTES -> CadastrosScreen(
+
+                    MobileRoute.AGENDAMENTOS -> AgendamentosScreen(patioState)
+                    MobileRoute.QUOTES -> QuotesScreen()
+                    MobileRoute.CADASTROS -> CadastrosScreen(
                         state = cadastroState,
                         usuario = usuario,
                         onSearchChange = cadastroViewModel::atualizarBusca,
                         onSaveCadastro = cadastroViewModel::cadastrar
                     )
-                    MobileRoute.SERVICOS -> ModuleScreen(
-                        "Serviços",
-                        "Cadastro de serviços, preço, tempo estimado, consumo de insumos e regras de risco.",
-                        routeIcon(MobileRoute.SERVICOS)
-                    )
+
+                    MobileRoute.CLIENTES -> ClientsMirrorScreen(repository)
+                    MobileRoute.VEICULOS -> VehiclesMirrorScreen(repository)
+                    MobileRoute.OPERADORES -> OperatorsMirrorScreen(repository)
+                    MobileRoute.SERVICOS -> ServicesMirrorScreen(repository)
                     MobileRoute.PRODUTOS -> ProductsScreen(repository)
-                    MobileRoute.FINANCEIRO -> ModuleScreen(
-                        "Financeiro",
-                        "Caixa do dia, contas simples, recebimentos e indicadores para operação mobile.",
-                        routeIcon(MobileRoute.FINANCEIRO)
-                    )
-                    MobileRoute.RELATORIOS -> ModuleScreen(
-                        "Relatórios",
-                        "Indicadores mobile de receita, ocupação, produtividade e estoque crítico.",
-                        routeIcon(MobileRoute.RELATORIOS)
-                    )
-                    MobileRoute.CONFIG -> ModuleScreen(
-                        "Meu negócio",
-                        "Dados da empresa, operadores, formas de pagamento e preferências operacionais.",
-                        routeIcon(MobileRoute.CONFIG)
-                    )
+                    MobileRoute.INSUMOS -> SuppliesMirrorScreen(repository)
+                    MobileRoute.INVENTARIO -> InventoryMirrorScreen(repository)
+                    MobileRoute.VENDAS -> ProductSalesMirrorScreen()
+                    MobileRoute.FINANCEIRO -> FinanceOverviewScreen(repository, patioState, syncState)
+                    MobileRoute.OPEN_PAYMENTS -> OpenPaymentsMirrorScreen()
+                    MobileRoute.CASHFLOW -> CashflowMirrorScreen(patioState)
+                    MobileRoute.PAYABLES -> PayablesMirrorScreen()
+                    MobileRoute.INVOICES -> InvoicesMirrorScreen()
+                    MobileRoute.DOCUMENTOS -> DocumentsMirrorScreen(syncState)
+                    MobileRoute.RELATORIOS -> ReportsMirrorScreen(repository, patioState, syncState)
+                    MobileRoute.BUSINESS -> BusinessOverviewScreen()
+                    MobileRoute.BUSINESS_FINANCE -> BusinessFinanceScreen()
+                    MobileRoute.BUSINESS_SOCIAL -> BusinessSocialScreen()
+                    MobileRoute.BUSINESS_MESSAGES -> BusinessMessagesScreen()
                     MobileRoute.SEGURANCA -> SecuritySyncScreen(syncState, syncViewModel::sincronizarAgora)
                 }
             }

@@ -22,6 +22,7 @@ data class LocalBootstrapSnapshot(
 )
 
 class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
+    val usuariosAtivos: Flow<List<UsuarioEntity>> = db.usuarioDao().listarAtivos()
     val patio: Flow<List<AtendimentoEntity>> = db.atendimentoDao().patio()
     val servicosAtivos: Flow<List<ServicoEntity>> = db.servicoDao().listarAtivos()
     val clientes: Flow<List<ClienteEntity>> = db.clienteDao().listar()

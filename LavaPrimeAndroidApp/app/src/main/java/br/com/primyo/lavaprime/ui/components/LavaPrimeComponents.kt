@@ -24,18 +24,30 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PointOfSale
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Button
@@ -57,7 +69,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,6 +93,7 @@ import br.com.primyo.lavaprime.data.model.PerfilUsuario
 import br.com.primyo.lavaprime.data.model.SyncStatus
 import br.com.primyo.lavaprime.data.model.UsuarioEntity
 import br.com.primyo.lavaprime.ui.navigation.MobileRoute
+import br.com.primyo.lavaprime.ui.navigation.MobileRouteGroup
 import br.com.primyo.lavaprime.ui.theme.DangerBg
 import br.com.primyo.lavaprime.ui.theme.DangerText
 import br.com.primyo.lavaprime.ui.theme.InfoBg
@@ -668,7 +685,9 @@ fun LavaPrimeTopBar(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.labelMedium,
-                    color = TextSecondary
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         },
@@ -753,13 +772,98 @@ fun LavaPrimeMenuItem(
                 text = route.title,
                 style = MaterialTheme.typography.titleSmall,
                 color = TextPrimary,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = route.hint,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = TextSecondary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
+        }
+    }
+}
+
+@Composable
+private fun LavaPrimeDrawerGroup(
+    group: MobileRouteGroup,
+    routes: List<MobileRoute>,
+    selected: MobileRoute,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    onRouteClick: (MobileRoute) -> Unit
+) {
+    LavaPrimeCard(
+        tonal = expanded || selected.group == group,
+        contentPadding = PaddingValues(LavaPrimeSpacing.sm)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(LavaPrimeRadii.medium))
+                .clickable(onClick = onToggle)
+                .padding(horizontal = LavaPrimeSpacing.sm, vertical = LavaPrimeSpacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                color = if (selected.group == group) PrimeBlue else PageBgAlt,
+                contentColor = if (selected.group == group) Color.White else PrimeBlue,
+                shape = RoundedCornerShape(LavaPrimeRadii.medium)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .padding(9.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(groupIcon(group), contentDescription = null)
+                }
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = group.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = group.hint,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Icon(
+                imageVector = if (expanded) Icons.Filled.ExpandMore else Icons.Filled.ChevronRight,
+                contentDescription = if (expanded) "Recolher submenu" else "Expandir submenu",
+                tint = TextSecondary
+            )
+        }
+
+        if (expanded) {
+            Column(
+                modifier = Modifier,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                routes.forEach { route ->
+                    LavaPrimeMenuItem(
+                        route = route,
+                        selected = selected == route
+                    ) {
+                        onRouteClick(route)
+                    }
+                }
+            }
         }
     }
 }
@@ -774,6 +878,20 @@ fun LavaPrimeDrawer(
     onLogout: () -> Unit
 ) {
     val routes = MobileRoute.entries.filter { usuario.perfil == PerfilUsuario.ADMINISTRADOR || !it.adminOnly }
+    val groupedRoutes = routes.groupBy { it.group }
+    val expandedGroups = remember {
+        mutableStateMapOf<MobileRouteGroup, Boolean>().apply {
+            MobileRouteGroup.entries.forEach { put(it, false) }
+        }
+    }
+
+    LaunchedEffect(selected, routes) {
+        groupedRoutes.keys.forEach { group ->
+            if (selected.group == group) {
+                expandedGroups[group] = true
+            }
+        }
+    }
 
     ModalDrawerSheet(
         modifier = Modifier
@@ -866,13 +984,20 @@ fun LavaPrimeDrawer(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                routes.forEach { route ->
-                    LavaPrimeMenuItem(
-                        route = route,
-                        selected = selected == route
-                    ) {
-                        onSelect(route)
-                        scope.launch { drawerState.close() }
+                MobileRouteGroup.entries.forEach { group ->
+                    val groupRoutes = groupedRoutes[group].orEmpty()
+                    if (groupRoutes.isNotEmpty()) {
+                        LavaPrimeDrawerGroup(
+                            group = group,
+                            routes = groupRoutes,
+                            selected = selected,
+                            expanded = expandedGroups[group] == true,
+                            onToggle = { expandedGroups[group] = expandedGroups[group] != true },
+                            onRouteClick = { route ->
+                                onSelect(route)
+                                scope.launch { drawerState.close() }
+                            }
+                        )
                     }
                 }
             }
@@ -919,13 +1044,37 @@ fun routeIcon(route: MobileRoute): ImageVector = when (route) {
     MobileRoute.DASHBOARD -> Icons.Filled.Dashboard
     MobileRoute.PATIO -> Icons.Filled.DirectionsCar
     MobileRoute.AGENDAMENTOS -> Icons.Filled.Event
+    MobileRoute.QUOTES -> Icons.Filled.ReceiptLong
+    MobileRoute.CADASTROS -> Icons.Filled.Category
     MobileRoute.CLIENTES -> Icons.Filled.Group
+    MobileRoute.VEICULOS -> Icons.Filled.DirectionsCar
+    MobileRoute.OPERADORES -> Icons.Filled.ManageAccounts
     MobileRoute.SERVICOS -> Icons.Filled.Build
     MobileRoute.PRODUTOS -> Icons.Filled.Inventory2
+    MobileRoute.INSUMOS -> Icons.Filled.LocalShipping
+    MobileRoute.INVENTARIO -> Icons.Filled.Inventory2
+    MobileRoute.VENDAS -> Icons.Filled.PointOfSale
     MobileRoute.FINANCEIRO -> Icons.Filled.AccountBalanceWallet
+    MobileRoute.OPEN_PAYMENTS -> Icons.Filled.ReceiptLong
+    MobileRoute.CASHFLOW -> Icons.Filled.SwapHoriz
+    MobileRoute.PAYABLES -> Icons.Filled.Description
+    MobileRoute.INVOICES -> Icons.Filled.ReceiptLong
+    MobileRoute.DOCUMENTOS -> Icons.Filled.Description
     MobileRoute.RELATORIOS -> Icons.Filled.Assessment
-    MobileRoute.CONFIG -> Icons.Filled.Business
+    MobileRoute.BUSINESS -> Icons.Filled.Business
+    MobileRoute.BUSINESS_FINANCE -> Icons.Filled.Settings
+    MobileRoute.BUSINESS_SOCIAL -> Icons.Filled.Forum
+    MobileRoute.BUSINESS_MESSAGES -> Icons.Filled.Forum
     MobileRoute.SEGURANCA -> Icons.Filled.Security
+}
+
+private fun groupIcon(group: MobileRouteGroup): ImageVector = when (group) {
+    MobileRouteGroup.OPERACAO -> Icons.Filled.Dashboard
+    MobileRouteGroup.CADASTROS -> Icons.Filled.Category
+    MobileRouteGroup.ESTOQUE -> Icons.Filled.ShoppingCart
+    MobileRouteGroup.FINANCEIRO -> Icons.Filled.AccountBalanceWallet
+    MobileRouteGroup.NEGOCIO -> Icons.Filled.Business
+    MobileRouteGroup.SISTEMA -> Icons.Filled.Security
 }
 
 fun money(cents: Long): String {

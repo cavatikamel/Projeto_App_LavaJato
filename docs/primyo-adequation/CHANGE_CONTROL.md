@@ -544,6 +544,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: a fase consolidou o preload inicial do `LavaPrime` Android com validacao de banco local, restauracao de sessao local em aparelho, splash com estado de abertura e roteamento correto para login ou home.
 - Observacao de risco: a fase ainda nao fecha login evolutivo completo em smoke de dispositivo nem auth remota; a prioridade recomendada passa a ser `LP-APK-007` para consolidar login e selecao de perfil sobre a abertura ja estabilizada.
 
+### LP-APK-008
+
+- Change record: `docs/primyo-changes/LP-APK-008.md`
+- Closure: `docs/primyo-changes/LP-APK-008-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase consolidou o shell de navegacao mobile com grupos e submenus, adicionou as superficies Android faltantes para espelhar a estrutura do Web e preservou as telas ja existentes sem remocao.
+- Observacao de risco: varias telas novas ainda sao espelhos estruturais e nao fluxo funcional completo; a prioridade recomendada passa a ser `LP-APK-009` para aprofundar a paridade operacional do dashboard sobre o shell agora estabilizado.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`

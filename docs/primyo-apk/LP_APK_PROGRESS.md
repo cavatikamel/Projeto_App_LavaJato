@@ -50,6 +50,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 - progresso oficial apos concluir `LP-APK-005`: `28%`
 - progresso oficial antes de `LP-APK-006`: `28%`
 - progresso oficial apos concluir `LP-APK-006`: `31%`
+- progresso oficial antes de `LP-APK-008`: `31%`
+- progresso oficial apos concluir `LP-APK-008`: `34%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -73,8 +75,9 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - requisitos oficiais do APK finalizados para implementacao: `concluida`
 - design system Android oficial: `concluido`
 - splash e inicializacao Android: `concluidos`
-- progresso oficial consolidado nesta data: `31%`
-- proxima etapa recomendada: `LP-APK-007 - Login And Profile Selection`
+- shell de navegacao mobile com paridade estrutural do Web: `concluido`
+- progresso oficial consolidado nesta data: `34%`
+- proxima etapa recomendada: `LP-APK-009 - Dashboard Mobile Parity`
 
 ## Regra especifica da LP-APK-003
 
@@ -101,6 +104,13 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - o ganho de progresso desta fase vem do fluxo de entrada buildado e rastreavel;
 - a fase nao implementa auth remota, sync remoto ou regras novas de negocio;
 - a proxima fase deve aprofundar login e selecao de perfil sobre a inicializacao ja estabilizada.
+
+## Regra especifica da LP-APK-008
+
+- esta fase consolida o shell de navegacao mobile e a paridade estrutural das telas do Web;
+- o ganho de progresso desta fase vem da navegacao agrupada, das rotas espelho adicionadas e do build Android validado;
+- a fase nao fecha paridade funcional completa de cada modulo nem substitui as fases especificas de dashboard, patio, atendimento, cadastros ou financeiro;
+- a proxima fase deve aprofundar a paridade operacional do `Dashboard` sobre o shell agora estabilizado.
 
 ## Regra de checkpoint
 

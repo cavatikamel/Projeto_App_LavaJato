@@ -2045,3 +2045,35 @@
   - o login ainda e local/demo e precisa de consolidacao de UX na proxima fase;
   - dados, sync real e auth remota continuam fora desta etapa.
 
+### LP-APK-008
+
+- Status: `Concluido`
+- Data: `2026-07-04`
+- Arquivos alterados:
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/repository/LavaPrimeRepository.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/components/LavaPrimeComponents.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/navigation/AppNavigationModels.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/LavaPrimeRoot.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/WebParityScreens.kt`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-008.md`
+  - `docs/primyo-changes/LP-APK-008-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+- Evidencias:
+  - leitura cruzada da governanca Primyo/APK, `app/main.js` em modo leitura e shell Android atual;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`;
+  - `.\gradlew.bat tasks --no-daemon --console=plain`;
+  - `.\gradlew.bat assembleDebug --no-daemon --console=plain`;
+  - APK debug localizado em `%LOCALAPPDATA%\\LavaPrimeAndroidBuild\\LavaPrimeAndroid\\app\\outputs\\apk\\debug\\app-debug.apk`.
+- Observacoes:
+  - a fase adicionou grupos e submenus ao drawer Android;
+  - o shell passou a refletir a estrutura principal do Web sem remover telas ja existentes;
+  - foram criadas superficies espelho para modulos que faltavam no Android, ainda em nivel estrutural para varias areas.
+- Riscos remanescentes:
+  - varias telas novas ainda dependem de fases funcionais especificas para fechar a paridade completa;
+  - smoke manual em aparelho/emulador continua pendente;
+  - a proxima prioridade passa a ser `LP-APK-009` para aprofundar o `Dashboard` e reduzir lacunas operacionais no espelho mobile do Web.
+
