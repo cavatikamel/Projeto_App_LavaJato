@@ -42,8 +42,10 @@ interface VeiculoDao {
 
 @Dao
 interface ServicoDao {
+    @Query("SELECT * FROM servicos ORDER BY nome") fun listarTodos(): Flow<List<ServicoEntity>>
     @Query("SELECT * FROM servicos WHERE ativo = 1 ORDER BY categoria, nome") fun listarAtivos(): Flow<List<ServicoEntity>>
     @Query("SELECT * FROM servicos WHERE id = :id LIMIT 1") suspend fun obter(id: String): ServicoEntity?
+    @Query("SELECT * FROM servicos WHERE lower(nome) = lower(:nome) LIMIT 1") suspend fun porNome(nome: String): ServicoEntity?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun salvar(item: ServicoEntity)
 }
 

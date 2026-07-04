@@ -199,7 +199,7 @@ private fun LavaPrimeShell(
                         onSaveVeiculo = cadastroViewModel::salvarVeiculoCompleto
                     )
                     MobileRoute.OPERADORES -> OperatorsMirrorScreen(repository)
-                    MobileRoute.SERVICOS -> ServicesMirrorScreen(repository)
+                    MobileRoute.SERVICOS -> ServicesScreen(repository, usuario)
                     MobileRoute.PRODUTOS -> ProductsScreen(repository)
                     MobileRoute.INSUMOS -> SuppliesMirrorScreen(repository)
                     MobileRoute.INVENTARIO -> InventoryMirrorScreen(repository)

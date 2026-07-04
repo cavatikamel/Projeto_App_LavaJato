@@ -60,6 +60,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 - progresso oficial apos concluir `LP-APK-014`: `46.5%`
 - progresso oficial antes de `LP-APK-015`: `46.5%`
 - progresso oficial apos concluir `LP-APK-015`: `49%`
+- progresso oficial antes de `LP-APK-016`: `49%`
+- progresso oficial apos concluir `LP-APK-016`: `51%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -88,8 +90,9 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - patio mobile com paridade operacional base do Web: `concluido`
 - clientes mobile com paridade funcional base do Web: `concluido`
 - veiculos mobile com paridade funcional base do Web: `concluido`
-- progresso oficial consolidado nesta data: `49%`
-- proxima etapa recomendada: `LP-APK-016 - Services Flow`
+- servicos mobile com paridade funcional base do Web: `concluido`
+- progresso oficial consolidado nesta data: `51%`
+- proxima etapa recomendada: `LP-APK-017 - Products Flow`
 
 ## Regra especifica da LP-APK-003
 
@@ -151,6 +154,13 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - o ganho de progresso desta fase vem da paridade funcional base com o Web, da migration `3 -> 4` para o modelo de veiculo e do build Android validado;
 - a fase nao fecha ainda transferencia avancada de proprietario, check-list PDF, cuidados especiais completos nem o catalogo de `Servicos`;
 - a proxima fase segura passa a ser `LP-APK-016 - Services Flow`.
+
+## Regra especifica da LP-APK-016
+
+- esta fase consolida o fluxo de `Servicos` com catalogo, busca, filtros, cadastro, edicao e leitura tecnica coerente com o Web;
+- o ganho de progresso desta fase vem da paridade funcional base com o Web, da migration `4 -> 5` para o modelo de servico e do build Android validado;
+- a fase nao fecha ainda o CRUD proprio de `Produtos` e `Insumos`, nem o consumo automatico de estoque por ficha tecnica;
+- a proxima fase segura passa a ser `LP-APK-017 - Products Flow`.
 
 ## Regra de checkpoint
 

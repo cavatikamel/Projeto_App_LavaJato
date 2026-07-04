@@ -13,18 +13,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -48,11 +49,9 @@ import br.com.primyo.lavaprime.data.model.AtendimentoStatus
 import br.com.primyo.lavaprime.data.model.ServicoEntity
 import br.com.primyo.lavaprime.data.model.UsuarioEntity
 import br.com.primyo.lavaprime.ui.components.EmptyState
-import br.com.primyo.lavaprime.ui.components.HeroPanel
 import br.com.primyo.lavaprime.ui.components.LavaPrimeActionButton
 import br.com.primyo.lavaprime.ui.components.LavaPrimeActionStyle
 import br.com.primyo.lavaprime.ui.components.LavaPrimeCard
-import br.com.primyo.lavaprime.ui.components.LavaPrimeMetricCard
 import br.com.primyo.lavaprime.ui.components.LavaPrimeStatusChip
 import br.com.primyo.lavaprime.ui.components.LavaPrimeStatusTone
 import br.com.primyo.lavaprime.ui.components.LavaPrimeTextField
@@ -77,14 +76,12 @@ private data class PatioSummaryItem(
     val label: String,
     val value: String,
     val icon: ImageVector,
-    val support: String,
     val tone: LavaPrimeStatusTone = LavaPrimeStatusTone.Info
 )
 
 private data class PatioSection(
     val key: String,
     val title: String,
-    val support: String,
     val icon: ImageVector,
     val items: List<AtendimentoEntity>,
     val emptyMessage: String
@@ -113,50 +110,49 @@ fun PatioScreen(
     val prontos = emptyList<AtendimentoEntity>()
 
     val filtroSelecionado = state.filtroStatus
-    val somarApenasAlertas: (List<AtendimentoEntity>) -> List<AtendimentoEntity> = { entries ->
-        if (state.somenteAlertas) entries.filter { !it.observacoes.isNullOrBlank() || it.alertaConfirmado } else entries
+    val filtrarAlertas: (List<AtendimentoEntity>) -> List<AtendimentoEntity> = { entries ->
+        if (state.somenteAlertas) {
+            entries.filter { !it.observacoes.isNullOrBlank() || it.alertaConfirmado }
+        } else {
+            entries
+        }
     }
 
     val sections = listOf(
         PatioSection(
             key = "agendados",
             title = "Agendados",
-            support = "Entradas aguardando confirmação no pátio.",
-            icon = Icons.Filled.Event,
-            items = somarApenasAlertas(agendados),
-            emptyMessage = "Nenhum agendamento aguardando entrada."
+            icon = Icons.Filled.HourglassTop,
+            items = filtrarAlertas(agendados),
+            emptyMessage = "Nenhum agendamento."
         ),
         PatioSection(
             key = "aguardando",
             title = "Aguardando",
-            support = "Fila de chegada e ordem de entrada no serviço.",
-            icon = Icons.Filled.DirectionsCar,
-            items = somarApenasAlertas(aguardando),
-            emptyMessage = "Nenhum veículo aguardando no pátio."
+            icon = Icons.Filled.Schedule,
+            items = filtrarAlertas(aguardando),
+            emptyMessage = "Nenhum veículo aguardando."
         ),
         PatioSection(
             key = "em-servico",
             title = "Em Serviço",
-            support = "Atendimentos em execução agora.",
-            icon = Icons.Filled.Build,
-            items = somarApenasAlertas(emServico),
-            emptyMessage = "Nenhum atendimento em execução no momento."
+            icon = Icons.Filled.WaterDrop,
+            items = filtrarAlertas(emServico),
+            emptyMessage = "Nenhum atendimento em execução."
         ),
         PatioSection(
             key = "prontos",
             title = "Prontos",
-            support = "Etapa reservada para retirada e pagamento no espelho final do Web.",
-            icon = Icons.Filled.CheckCircle,
+            icon = Icons.Filled.AutoAwesome,
             items = prontos,
-            emptyMessage = "A etapa Prontos ainda não está separada na base local atual."
+            emptyMessage = "Nenhum atendimento em prontos."
         ),
         PatioSection(
             key = "finalizados",
             title = "Finalizados",
-            support = "Histórico recente já concluído no app.",
-            icon = Icons.Filled.History,
-            items = somarApenasAlertas(finalizados),
-            emptyMessage = "Nenhum atendimento finalizado no histórico recente."
+            icon = Icons.Filled.CheckCircle,
+            items = filtrarAlertas(finalizados),
+            emptyMessage = "Nenhum atendimento finalizado."
         )
     ).filter { section ->
         when (filtroSelecionado) {
@@ -170,36 +166,15 @@ fun PatioScreen(
     }
 
     val summaryItems = listOf(
+        PatioSummaryItem("Agendados", agendados.size.toString(), Icons.Filled.HourglassTop, LavaPrimeStatusTone.Warning),
+        PatioSummaryItem("Aguardando", aguardando.size.toString(), Icons.Filled.Schedule),
+        PatioSummaryItem("Em Serviço", emServico.size.toString(), Icons.Filled.WaterDrop),
+        PatioSummaryItem("Prontos", "--", Icons.Filled.AutoAwesome),
         PatioSummaryItem(
-            label = "Agendados",
-            value = agendados.size.toString(),
-            icon = Icons.Filled.Event,
-            support = "Entradas agendadas."
-        ),
-        PatioSummaryItem(
-            label = "Aguardando",
-            value = aguardando.size.toString(),
-            icon = Icons.Filled.DirectionsCar,
-            support = "Fila atual do pátio."
-        ),
-        PatioSummaryItem(
-            label = "Em Serviço",
-            value = emServico.size.toString(),
-            icon = Icons.Filled.Build,
-            support = "Rotina em execução."
-        ),
-        PatioSummaryItem(
-            label = "Prontos",
-            value = "--",
-            icon = Icons.Filled.CheckCircle,
-            support = "Separação prevista para a próxima evolução."
-        ),
-        PatioSummaryItem(
-            label = "Finalizados",
-            value = finalizados.size.toString(),
-            icon = Icons.Filled.History,
-            support = "Histórico recente concluído.",
-            tone = if (finalizados.isNotEmpty()) LavaPrimeStatusTone.Success else LavaPrimeStatusTone.Info
+            "Finalizados",
+            finalizados.size.toString(),
+            Icons.Filled.CheckCircle,
+            if (finalizados.isNotEmpty()) LavaPrimeStatusTone.Success else LavaPrimeStatusTone.Info
         )
     )
 
@@ -209,80 +184,57 @@ fun PatioScreen(
         contentPadding = PaddingValues(top = 16.dp, bottom = 92.dp)
     ) {
         item {
-            HeroPanel(
-                title = "Pátio",
-                description = "Quadro operacional do Web adaptado ao mobile, com grupos por status, filtros e ações rápidas.",
-                icon = Icons.Filled.DirectionsCar
-            )
-        }
-        item {
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                maxItemsInEachRow = 3
             ) {
                 summaryItems.forEach { item ->
-                    LavaPrimeMetricCard(
-                        label = item.label,
-                        value = item.value,
-                        icon = item.icon,
-                        support = item.support,
-                        tone = item.tone
-                    )
+                    PatioCompactSummaryCard(item = item)
                 }
             }
         }
         item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    FilterChip(
-                        selected = filtroSelecionado == null,
-                        onClick = { onSelectFilter(null) },
-                        label = { Text("Todos") }
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = filtroSelecionado == AtendimentoStatus.AGENDADO,
-                        onClick = { onSelectFilter(AtendimentoStatus.AGENDADO) },
-                        label = { Text("Agendados") }
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = filtroSelecionado == AtendimentoStatus.PATIO,
-                        onClick = { onSelectFilter(AtendimentoStatus.PATIO) },
-                        label = { Text("Aguardando") }
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = filtroSelecionado == AtendimentoStatus.EXECUCAO,
-                        onClick = { onSelectFilter(AtendimentoStatus.EXECUCAO) },
-                        label = { Text("Em Serviço") }
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = false,
-                        onClick = {},
-                        enabled = false,
-                        label = { Text("Prontos") }
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = filtroSelecionado == AtendimentoStatus.FINALIZADO,
-                        onClick = { onSelectFilter(AtendimentoStatus.FINALIZADO) },
-                        label = { Text("Finalizados") }
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = state.somenteAlertas,
-                        onClick = onToggleAlerts,
-                        label = { Text("Somente alertas") }
-                    )
-                }
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = filtroSelecionado == null,
+                    onClick = { onSelectFilter(null) },
+                    label = { Text("Todos") }
+                )
+                FilterChip(
+                    selected = filtroSelecionado == AtendimentoStatus.AGENDADO,
+                    onClick = { onSelectFilter(AtendimentoStatus.AGENDADO) },
+                    label = { Text("Agendados") }
+                )
+                FilterChip(
+                    selected = filtroSelecionado == AtendimentoStatus.PATIO,
+                    onClick = { onSelectFilter(AtendimentoStatus.PATIO) },
+                    label = { Text("Aguardando") }
+                )
+                FilterChip(
+                    selected = filtroSelecionado == AtendimentoStatus.EXECUCAO,
+                    onClick = { onSelectFilter(AtendimentoStatus.EXECUCAO) },
+                    label = { Text("Em Serviço") }
+                )
+                FilterChip(
+                    selected = false,
+                    onClick = {},
+                    enabled = false,
+                    label = { Text("Prontos") }
+                )
+                FilterChip(
+                    selected = filtroSelecionado == AtendimentoStatus.FINALIZADO,
+                    onClick = { onSelectFilter(AtendimentoStatus.FINALIZADO) },
+                    label = { Text("Finalizados") }
+                )
+                FilterChip(
+                    selected = state.somenteAlertas,
+                    onClick = onToggleAlerts,
+                    label = { Text("Somente alertas") }
+                )
             }
         }
         items(sections, key = { it.key }) { section ->
@@ -291,6 +243,53 @@ fun PatioScreen(
                 onAdvance = { atendimento -> onAdvance(atendimento, usuario) },
                 onBack = { atendimento -> onBack(atendimento, usuario) }
             )
+        }
+    }
+}
+
+@Composable
+private fun PatioCompactSummaryCard(item: PatioSummaryItem) {
+    LavaPrimeCard(
+        modifier = Modifier.widthIn(min = 104.dp, max = 124.dp),
+        tonal = true,
+        contentPadding = PaddingValues(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(toneColor(item.tone).copy(alpha = 0.12f), RoundedCornerShape(14.dp))
+                    .padding(9.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = item.icon,
+                    contentDescription = null,
+                    tint = toneColor(item.tone),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = item.label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = item.value,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -306,6 +305,7 @@ private fun PatioStatusSection(
         contentPadding = PaddingValues(LavaPrimeSpacing.md)
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -321,22 +321,13 @@ private fun PatioStatusSection(
                     tint = WaterBlue
                 )
             }
-            Column(
+            Text(
+                text = section.title,
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    text = section.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = PrimeBlue,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = section.support,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
-                )
-            }
+                style = MaterialTheme.typography.titleMedium,
+                color = PrimeBlue,
+                fontWeight = FontWeight.Bold
+            )
             LavaPrimeStatusChip(
                 text = section.items.size.toString(),
                 tone = if (section.items.isNotEmpty()) LavaPrimeStatusTone.Info else LavaPrimeStatusTone.Neutral
@@ -372,146 +363,161 @@ private fun PatioVehicleCard(
     onAdvance: (() -> Unit)?,
     onBack: (() -> Unit)?
 ) {
+    val statusIcon = patioCardIcon(item.status)
+
     LavaPrimeCard(
         modifier = Modifier.fillMaxWidth(),
         tonal = true,
         contentPadding = PaddingValues(LavaPrimeSpacing.md)
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Box(
-                modifier = Modifier
-                    .background(PageBgAlt, RoundedCornerShape(LavaPrimeRadii.medium))
-                    .padding(10.dp),
-                contentAlignment = Alignment.Center
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top
             ) {
-                Icon(
-                    imageVector = when (item.status) {
-                        AtendimentoStatus.AGENDADO -> Icons.Filled.Event
-                        AtendimentoStatus.PATIO -> Icons.Filled.DirectionsCar
-                        AtendimentoStatus.EXECUCAO -> Icons.Filled.Build
-                        AtendimentoStatus.FINALIZADO -> Icons.Filled.CheckCircle
-                        AtendimentoStatus.CANCELADO -> Icons.Filled.Info
-                    },
-                    contentDescription = null,
-                    tint = PrimeBlue
-                )
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                if (queuePosition > 0) {
-                    LavaPrimeStatusChip(
-                        text = if (queuePosition == 1) "Próximo" else "Fila $queuePosition",
-                        tone = LavaPrimeStatusTone.Warning
-                    )
-                }
-
-                Text(
-                    text = "${item.placaSnapshot} - ${item.clienteNomeSnapshot}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = item.servicoNomeSnapshot,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                Box(
+                    modifier = Modifier
+                        .background(PageBgAlt, RoundedCornerShape(LavaPrimeRadii.large))
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    LavaPrimeStatusChip(
-                        text = patioStatusLabel(item.status),
-                        tone = patioStatusTone(item.status)
-                    )
-                    LavaPrimeStatusChip(
-                        text = patioTimeLabel(item),
-                        tone = LavaPrimeStatusTone.Neutral
-                    )
-                    LavaPrimeStatusChip(
-                        text = if (item.formaPagamento != null) "Pagamento ${item.formaPagamento.name.lowercase()}" else "Pagamento pendente",
-                        tone = if (item.formaPagamento != null) LavaPrimeStatusTone.Success else LavaPrimeStatusTone.Warning
-                    )
-                    LavaPrimeStatusChip(
-                        text = syncStatusLabel(item.syncStatus),
-                        tone = syncStatusTone(item.syncStatus)
+                    Icon(
+                        imageVector = statusIcon,
+                        contentDescription = null,
+                        tint = PrimeBlue,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
-
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    LavaPrimeStatusChip(
-                        text = money(item.valorCentavos),
-                        tone = LavaPrimeStatusTone.Success
-                    )
-                    item.operadorNomeSnapshot?.takeIf { it.isNotBlank() }?.let {
-                        LavaPrimeStatusChip(
-                            text = it,
-                            tone = LavaPrimeStatusTone.Info
-                        )
-                    }
-                    if (item.alertaConfirmado || !item.observacoes.isNullOrBlank()) {
-                        LavaPrimeStatusChip(
-                            text = "Cuidado especial",
-                            tone = LavaPrimeStatusTone.Warning,
-                            icon = Icons.Filled.WarningAmber
-                        )
-                    }
-                }
-
-                if (!item.observacoes.isNullOrBlank()) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.Top
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.WarningAmber,
-                            contentDescription = null,
-                            tint = WarningText
-                        )
                         Text(
-                            text = item.observacoes,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = WarningText
+                            text = item.placaSnapshot,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (queuePosition > 0) {
+                            LavaPrimeStatusChip(
+                                text = if (queuePosition == 1) "Próximo" else "Fila $queuePosition",
+                                tone = LavaPrimeStatusTone.Warning,
+                                icon = Icons.Filled.Schedule
+                            )
+                        }
+                    }
+                    Text(
+                        text = item.clienteNomeSnapshot,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = item.servicoNomeSnapshot,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = PrimeBlue,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                LavaPrimeStatusChip(
+                    text = patioStatusLabel(item.status),
+                    tone = patioStatusTone(item.status),
+                    icon = statusIcon
+                )
+                LavaPrimeStatusChip(
+                    text = patioTimeLabel(item),
+                    tone = LavaPrimeStatusTone.Neutral,
+                    icon = Icons.Filled.Schedule
+                )
+                LavaPrimeStatusChip(
+                    text = if (item.formaPagamento != null) {
+                        "Pagamento ${item.formaPagamento.name.lowercase()}"
+                    } else {
+                        "Pagamento pendente"
+                    },
+                    tone = if (item.formaPagamento != null) LavaPrimeStatusTone.Success else LavaPrimeStatusTone.Warning
+                )
+                LavaPrimeStatusChip(
+                    text = syncStatusLabel(item.syncStatus),
+                    tone = syncStatusTone(item.syncStatus)
+                )
+            }
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                LavaPrimeStatusChip(
+                    text = money(item.valorCentavos),
+                    tone = LavaPrimeStatusTone.Success
+                )
+                item.operadorNomeSnapshot?.takeIf { it.isNotBlank() }?.let {
+                    LavaPrimeStatusChip(
+                        text = it,
+                        tone = LavaPrimeStatusTone.Info
+                    )
+                }
+                if (item.alertaConfirmado || !item.observacoes.isNullOrBlank()) {
+                    LavaPrimeStatusChip(
+                        text = "Cuidado especial",
+                        tone = LavaPrimeStatusTone.Warning,
+                        icon = Icons.Filled.WarningAmber
+                    )
+                }
+            }
+
+            if (!item.observacoes.isNullOrBlank()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.WarningAmber,
+                        contentDescription = null,
+                        tint = WarningText,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                    Text(
+                        text = item.observacoes,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = WarningText
+                    )
+                }
+            }
+
+            if (onAdvance != null || onBack != null) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (onBack != null) {
+                        LavaPrimeActionButton(
+                            text = patioBackLabel(item.status),
+                            onClick = onBack,
+                            style = LavaPrimeActionStyle.Outline,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                }
-
-                if (onAdvance != null || onBack != null) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        if (onBack != null) {
-                            LavaPrimeActionButton(
-                                text = patioBackLabel(item.status),
-                                onClick = onBack,
-                                style = LavaPrimeActionStyle.Outline,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        if (onAdvance != null) {
-                            LavaPrimeActionButton(
-                                text = patioAdvanceLabel(item.status),
-                                onClick = onAdvance,
-                                style = LavaPrimeActionStyle.Dark,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                    if (onAdvance != null) {
+                        LavaPrimeActionButton(
+                            text = patioAdvanceLabel(item.status),
+                            onClick = onAdvance,
+                            style = LavaPrimeActionStyle.Dark,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-                } else if (item.status == AtendimentoStatus.FINALIZADO) {
-                    Text(
-                        text = "Recibo e confirmação detalhada seguem para a fase própria de documentos.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextMuted
-                    )
                 }
             }
         }
@@ -532,9 +538,17 @@ fun AtendimentoCard(
     )
 }
 
+private fun patioCardIcon(status: AtendimentoStatus): ImageVector = when (status) {
+    AtendimentoStatus.AGENDADO -> Icons.Filled.HourglassTop
+    AtendimentoStatus.PATIO -> Icons.Filled.Schedule
+    AtendimentoStatus.EXECUCAO -> Icons.Filled.WaterDrop
+    AtendimentoStatus.FINALIZADO -> Icons.Filled.CheckCircle
+    AtendimentoStatus.CANCELADO -> Icons.Filled.Info
+}
+
 private fun patioStatusLabel(status: AtendimentoStatus): String = when (status) {
     AtendimentoStatus.AGENDADO -> "Agendado"
-    AtendimentoStatus.PATIO -> "Aguardando"
+    AtendimentoStatus.PATIO -> "Aguardando Serviço"
     AtendimentoStatus.EXECUCAO -> "Em Serviço"
     AtendimentoStatus.FINALIZADO -> "Finalizado"
     AtendimentoStatus.CANCELADO -> "Cancelado"
@@ -569,6 +583,15 @@ private fun patioTimeLabel(item: AtendimentoEntity): String = when (item.status)
     else -> "Entrada ${formatTimestamp(item.criadoEm)}"
 }
 
+private fun toneColor(tone: LavaPrimeStatusTone): Color = when (tone) {
+    LavaPrimeStatusTone.Neutral -> TextMuted
+    LavaPrimeStatusTone.Info -> WaterBlue
+    LavaPrimeStatusTone.Success -> PositiveText
+    LavaPrimeStatusTone.Warning -> WarningText
+    LavaPrimeStatusTone.Danger -> Color(0xFFB42318)
+}
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NovoAtendimentoDialog(
     servicos: List<ServicoEntity>,
@@ -652,8 +675,11 @@ fun NovoAtendimentoDialog(
                 item {
                     Text("Serviço", fontWeight = FontWeight.Bold, color = Color(0xFF0B3348))
                     Spacer(Modifier.height(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(servicos, key = { it.id }) { srv ->
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        servicos.forEach { srv ->
                             FilterChip(
                                 selected = servicoSelecionado?.id == srv.id,
                                 onClick = { servicoSelecionado = srv },
@@ -665,7 +691,10 @@ fun NovoAtendimentoDialog(
                 if (exigeCiencia) {
                     item {
                         LavaPrimeCard(tonal = true, contentPadding = PaddingValues(14.dp)) {
-                            Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 Icon(
                                     Icons.Filled.WarningAmber,
                                     contentDescription = null,

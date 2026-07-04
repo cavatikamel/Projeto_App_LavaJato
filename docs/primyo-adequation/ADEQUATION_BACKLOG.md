@@ -2211,3 +2211,39 @@
   - historico avancado e check-list PDF continuam pendentes para fases futuras;
   - smoke manual em aparelho/emulador continua pendente.
 
+### LP-APK-016
+
+- Status: `Concluido`
+- Data: `2026-07-04`
+- Arquivos alterados:
+  - `LavaPrimeAndroidApp/app/schemas/br.com.primyo.lavaprime.data.local.LavaPrimeDatabase/5.json`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/local/Daos.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/local/LavaPrimeDatabase.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/model/Models.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/repository/LavaPrimeRepository.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/AuthScreens.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/LavaPrimeRoot.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/PatioScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/ServicesScreen.kt`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-016.md`
+  - `docs/primyo-changes/LP-APK-016-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+- Evidencias:
+  - leitura cruzada da governança Primyo/APK, do fluxo `Serviços` em `app/main.js` e das referências visuais do `Pátio`;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`;
+  - `.\gradlew.bat tasks --no-daemon --console=plain`;
+  - `.\gradlew.bat assembleDebug --no-daemon --console=plain`;
+  - APK debug localizado em `%LOCALAPPDATA%\\LavaPrimeAndroidBuild\\LavaPrimeAndroid\\app\\outputs\\apk\\debug\\app-debug.apk`.
+- Observacoes:
+  - a fase substituiu o espelho de `Serviços` por um fluxo mobile real com busca, filtros, cadastro, edição e leitura técnica coerente com o Web;
+  - a base Room ganhou migration `4 -> 5` para suportar os novos campos do domínio de serviços;
+  - a `Splash` foi simplificada e o `Pátio` foi reorganizado com cards mais compactos e operacionais.
+- Riscos remanescentes:
+  - `Produtos` e `Insumos` ainda precisam de fase própria para completar o catálogo comercial e técnico;
+  - a etapa `Prontos` do `Pátio` continua sem status próprio no modelo local;
+  - smoke manual em aparelho/emulador continua pendente.
+

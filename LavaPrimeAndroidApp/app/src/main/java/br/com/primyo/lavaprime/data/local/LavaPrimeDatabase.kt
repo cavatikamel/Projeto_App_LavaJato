@@ -27,7 +27,7 @@ import br.com.primyo.lavaprime.data.model.VeiculoEntity
         AuditLogEntity::class,
         SyncQueueEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -67,10 +67,23 @@ abstract class LavaPrimeDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE servicos ADD COLUMN tipoVeiculo TEXT NOT NULL DEFAULT 'Carro'")
+                db.execSQL("ALTER TABLE servicos ADD COLUMN categoriaVeiculo TEXT DEFAULT 'Hatch'")
+                db.execSQL("ALTER TABLE servicos ADD COLUMN statusCatalogo TEXT NOT NULL DEFAULT 'Ativo'")
+                db.execSQL("ALTER TABLE servicos ADD COLUMN fichaTecnicaAtiva INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE servicos ADD COLUMN custoFichaTecnicaCentavos INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE servicos ADD COLUMN requerManutencao INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE servicos ADD COLUMN intervaloManutencao TEXT")
+                db.execSQL("ALTER TABLE servicos ADD COLUMN dataManutencao TEXT")
+            }
+        }
+
         @Volatile private var INSTANCE: LavaPrimeDatabase? = null
         fun getDatabase(context: Context): LavaPrimeDatabase = INSTANCE ?: synchronized(this) {
             Room.databaseBuilder(context.applicationContext, LavaPrimeDatabase::class.java, "lavaprime.db")
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .fallbackToDestructiveMigration()
                 .build()
                 .also { INSTANCE = it }

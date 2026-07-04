@@ -25,6 +25,7 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
     val usuariosAtivos: Flow<List<UsuarioEntity>> = db.usuarioDao().listarAtivos()
     val patio: Flow<List<AtendimentoEntity>> = db.atendimentoDao().patio()
     val atendimentosRecentes: Flow<List<AtendimentoEntity>> = db.atendimentoDao().ultimos()
+    val servicos: Flow<List<ServicoEntity>> = db.servicoDao().listarTodos()
     val servicosAtivos: Flow<List<ServicoEntity>> = db.servicoDao().listarAtivos()
     val clientes: Flow<List<ClienteEntity>> = db.clienteDao().listar()
     val veiculos: Flow<List<VeiculoEntity>> = db.veiculoDao().listarRecentes()
@@ -97,6 +98,8 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             ServicoEntity(
                 "srv-lavagem-simples",
                 nome = "Lavagem simples",
+                tipoVeiculo = "Carro",
+                categoriaVeiculo = "Hatch",
                 precoBaseCentavos = 3500,
                 tempoEstimadoMin = 30
             )
@@ -105,6 +108,10 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             ServicoEntity(
                 "srv-lavagem-premium",
                 nome = "Lavagem premium",
+                tipoVeiculo = "Carro",
+                categoriaVeiculo = "SUV",
+                fichaTecnicaAtiva = true,
+                custoFichaTecnicaCentavos = 1200,
                 precoBaseCentavos = 6500,
                 tempoEstimadoMin = 55
             )
@@ -114,6 +121,10 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
                 "srv-descontaminacao",
                 nome = "Descontaminação técnica",
                 categoria = "Estética",
+                tipoVeiculo = "Carro",
+                categoriaVeiculo = "Sedan",
+                fichaTecnicaAtiva = true,
+                custoFichaTecnicaCentavos = 2800,
                 precoBaseCentavos = 18000,
                 tempoEstimadoMin = 120,
                 usaProdutoAcido = true,
@@ -444,6 +455,73 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             entidadeId = vehicle.id,
             operacao = if (base == null) "insert" else "upsert",
             payloadResumo = "Veículo ${vehicle.placa}",
+            usuario = usuario
+        )
+    }
+
+    suspend fun salvarServicoCompleto(
+        servicoId: String?,
+        nome: String,
+        tipoVeiculo: String,
+        categoriaVeiculo: String,
+        precoBaseCentavos: Long,
+        tempoEstimadoMin: Int,
+        statusCatalogo: String,
+        fichaTecnicaAtiva: Boolean,
+        custoFichaTecnicaCentavos: Long,
+        usaProdutoAcido: Boolean,
+        usaProdutoAlcalino: Boolean,
+        phEstimado: Double?,
+        requerManutencao: Boolean,
+        intervaloManutencao: String,
+        dataManutencao: String,
+        usuario: UsuarioEntity
+    ) {
+        val agora = System.currentTimeMillis()
+        val normalizedName = nome.trim()
+        val duplicate = db.servicoDao().porNome(normalizedName)
+        val persisted = servicoId?.let { db.servicoDao().obter(it) }
+        val base = when {
+            persisted != null -> persisted
+            duplicate != null -> duplicate
+            else -> null
+        }
+        val normalizedType = tipoVeiculo.ifBlank { "Carro" }
+        val normalizedVehicleCategory = if (normalizedType.equals("Moto", ignoreCase = true)) {
+            null
+        } else {
+            categoriaVeiculo.trim().ifBlank { "Hatch" }
+        }
+        val normalizedStatus = if (statusCatalogo == "Inativo") "Inativo" else "Ativo"
+        val service = ServicoEntity(
+            id = base?.id ?: UUID.randomUUID().toString(),
+            empresaId = base?.empresaId ?: usuario.empresaId,
+            nome = normalizedName,
+            categoria = base?.categoria ?: "Lavagem",
+            descricao = base?.descricao,
+            precoBaseCentavos = precoBaseCentavos,
+            tempoEstimadoMin = tempoEstimadoMin,
+            tipoVeiculo = normalizedType,
+            categoriaVeiculo = normalizedVehicleCategory,
+            statusCatalogo = normalizedStatus,
+            fichaTecnicaAtiva = fichaTecnicaAtiva,
+            custoFichaTecnicaCentavos = if (fichaTecnicaAtiva) custoFichaTecnicaCentavos else 0,
+            requerManutencao = requerManutencao,
+            intervaloManutencao = if (requerManutencao) intervaloManutencao.ifBlank { "monthly" } else null,
+            dataManutencao = if (requerManutencao && intervaloManutencao == "custom") dataManutencao.ifBlank { null } else null,
+            usaProdutoAcido = if (fichaTecnicaAtiva) usaProdutoAcido else false,
+            usaProdutoAlcalino = if (fichaTecnicaAtiva) usaProdutoAlcalino else false,
+            phEstimado = if (fichaTecnicaAtiva) phEstimado else null,
+            ativo = normalizedStatus == "Ativo",
+            syncStatus = SyncStatus.PENDING_SYNC,
+            updatedAt = agora
+        )
+        db.servicoDao().salvar(service)
+        registrarMudanca(
+            entidade = "services",
+            entidadeId = service.id,
+            operacao = if (base == null) "insert" else "upsert",
+            payloadResumo = "Serviço ${service.nome}",
             usuario = usuario
         )
     }

@@ -584,6 +584,14 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Observacao principal: a area `Veiculos` Android passou a refletir o fluxo base do Web com busca, filtros, cadastro/edicao, vinculo com cliente, metricas, historico base e modelo local ampliado para ano, tipo, categoria, combustivel e observacoes.
 - Observacao de risco: o Web ainda possui transferencia dedicada de cliente associado, check-list PDF e historico mais profundo; a prioridade recomendada passa a ser `LP-APK-016`.
 
+### LP-APK-016
+
+- Change record: `docs/primyo-changes/LP-APK-016.md`
+- Closure: `docs/primyo-changes/LP-APK-016-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a area `Serviços` Android passou a refletir o fluxo base do Web com métricas, busca, filtros, cadastro/edição, escopo por veículo e leitura técnica, enquanto `Splash` e `Pátio` receberam o polimento solicitado para reduzir ruído visual e melhorar a organização mobile.
+- Observacao de risco: `Produtos` e `Insumos` ainda precisam de fases próprias para fechar o catálogo comercial e técnico completo; a prioridade recomendada passa a ser `LP-APK-017`.
+
 ### LP-DEPLOY-GOV-002
 
 - Change record: `docs/primyo-changes/LP-DEPLOY-GOV-002.md`

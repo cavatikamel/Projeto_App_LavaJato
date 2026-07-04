@@ -2,6 +2,7 @@ package br.com.primyo.lavaprime.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Security
@@ -43,6 +45,7 @@ import br.com.primyo.lavaprime.ui.theme.LavaPrimeSpacing
 import br.com.primyo.lavaprime.ui.theme.PageBg
 import br.com.primyo.lavaprime.ui.theme.PrimeBlue
 import br.com.primyo.lavaprime.ui.theme.PrimeBlueDeep
+import br.com.primyo.lavaprime.ui.theme.SoftLine
 import br.com.primyo.lavaprime.ui.viewmodel.BootstrapStepState
 
 @Composable
@@ -76,18 +79,23 @@ fun SplashLavaPrime(
                     )
                 )
         )
-        Text(
-            text = "Carregando sistema...",
+        Box(
             modifier = Modifier
-                .align(Alignment.Center)
-                .statusBarsPadding()
+                .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(horizontal = 20.dp),
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.White,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center
-        )
+                .padding(start = 20.dp, end = 20.dp, bottom = 112.dp)
+                .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(22.dp))
+                .border(width = 1.dp, color = SoftLine, shape = RoundedCornerShape(22.dp))
+                .padding(horizontal = 18.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = "Carregando sistema...",
+                style = MaterialTheme.typography.bodyLarge,
+                color = PrimeBlue,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
