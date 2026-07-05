@@ -125,8 +125,16 @@ private fun LavaPrimeShell(
         mutableStateOf(if (usuario.perfil == PerfilUsuario.ADMINISTRADOR) MobileRoute.DASHBOARD else MobileRoute.PATIO)
     }
     var showNewAttendance by remember { mutableStateOf(false) }
+    var attendanceDraft by remember { mutableStateOf(AttendanceEntryDraft()) }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    val currentTitle = if (showNewAttendance) "Novo atendimento" else route.title
+    val currentSubtitle = if (showNewAttendance) {
+        "Entrada no pátio e agendamento"
+    } else {
+        "${perfilLabel(usuario.perfil)} | ${route.hint}"
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -137,18 +145,23 @@ private fun LavaPrimeShell(
                 scope = scope,
                 usuario = usuario,
                 selected = route,
-                onSelect = { route = it },
+                onSelect = {
+                    route = it
+                    showNewAttendance = false
+                },
                 onLogout = onLogout
             )
         }
     ) {
         LavaPrimeScaffold(
-            title = route.title,
-            subtitle = "${perfilLabel(usuario.perfil)} | ${route.hint}",
+            title = currentTitle,
+            subtitle = currentSubtitle,
             online = syncState.online,
+            pendingSyncCount = syncState.pendingCount,
             onMenuClick = { scope.launch { drawerState.open() } },
+            onSyncClick = syncViewModel::sincronizarAgora,
             floatingActionButton = {
-                if (route == MobileRoute.PATIO) {
+                if (route == MobileRoute.PATIO && !showNewAttendance) {
                     LavaPrimeActionButton(
                         text = "Novo atendimento",
                         onClick = { showNewAttendance = true },
@@ -165,70 +178,99 @@ private fun LavaPrimeShell(
                     .fillMaxSize(),
                 color = PageBg
             ) {
-                when (route) {
-                    MobileRoute.DASHBOARD -> DashboardScreen(repository, patioState, syncState)
-                    MobileRoute.PATIO -> PatioScreen(
-                        state = patioState,
-                        usuario = usuario,
-                        onSelectFilter = patioViewModel::selecionarFiltro,
-                        onToggleAlerts = patioViewModel::alternarSomenteAlertas,
-                        onAdvance = patioViewModel::avancarStatus,
-                        onBack = patioViewModel::voltarStatus
+                if (showNewAttendance) {
+                    AttendanceEntryScreen(
+                        draft = attendanceDraft,
+                        servicos = patioState.servicos,
+                        onDraftChange = { attendanceDraft = it },
+                        onClose = { showNewAttendance = false },
+                        onSave = { savedDraft ->
+                            val selectedServices = patioState.servicos.filter { it.id in savedDraft.selectedServiceIds }
+                            patioViewModel.criarAtendimento(
+                                clienteNome = savedDraft.clienteNome,
+                                telefone = savedDraft.telefone,
+                                placa = savedDraft.placa,
+                                veiculoResumo = savedDraft.modelo,
+                                cor = if (savedDraft.cor == "Outra") savedDraft.outraCor else savedDraft.cor,
+                                tipoVeiculo = savedDraft.tipoVeiculo,
+                                categoriaVeiculo = savedDraft.categoriaVeiculo,
+                                alerta = savedDraft.alertaEspecial,
+                                servicos = selectedServices,
+                                formaPagamento = savedDraft.formaPagamento,
+                                pagoNaEntrada = savedDraft.pagoNaEntrada,
+                                modoAgendamento = savedDraft.mode == AttendanceEntryMode.SCHEDULE,
+                                agendadoParaData = savedDraft.agendadoParaData,
+                                agendadoParaHora = savedDraft.agendadoParaHora,
+                                usuario = usuario
+                            )
+                            attendanceDraft = savedDraft
+                            route = MobileRoute.PATIO
+                            showNewAttendance = false
+                        }
                     )
+                } else {
+                    when (route) {
+                        MobileRoute.DASHBOARD -> DashboardScreen(
+                            repository = repository,
+                            patioState = patioState,
+                            syncState = syncState,
+                            onOpenPatio = { route = MobileRoute.PATIO }
+                        )
 
-                    MobileRoute.AGENDAMENTOS -> AgendamentosScreen(patioState)
-                    MobileRoute.QUOTES -> QuotesScreen()
-                    MobileRoute.CADASTROS -> CadastrosScreen(
-                        state = cadastroState,
-                        usuario = usuario,
-                        onSearchChange = cadastroViewModel::atualizarBusca,
-                        onSaveCadastro = cadastroViewModel::cadastrar
-                    )
+                        MobileRoute.PATIO -> PatioScreen(
+                            state = patioState,
+                            usuario = usuario,
+                            onSelectFilter = patioViewModel::selecionarFiltro,
+                            onToggleAlerts = patioViewModel::alternarSomenteAlertas,
+                            onAdvance = patioViewModel::avancarStatus,
+                            onBack = patioViewModel::voltarStatus
+                        )
 
-                    MobileRoute.CLIENTES -> ClientsScreen(
-                        state = cadastroState,
-                        usuario = usuario,
-                        onSearchChange = cadastroViewModel::atualizarBusca,
-                        onSaveCliente = cadastroViewModel::salvarClienteCompleto
-                    )
-                    MobileRoute.VEICULOS -> VehiclesScreen(
-                        repository = repository,
-                        state = cadastroState,
-                        usuario = usuario,
-                        onSearchChange = cadastroViewModel::atualizarBusca,
-                        onSaveVeiculo = cadastroViewModel::salvarVeiculoCompleto
-                    )
-                    MobileRoute.OPERADORES -> OperatorsMirrorScreen(repository)
-                    MobileRoute.SERVICOS -> ServicesScreen(repository, usuario)
-                    MobileRoute.PRODUTOS -> ProductsScreen(repository)
-                    MobileRoute.INSUMOS -> SuppliesMirrorScreen(repository)
-                    MobileRoute.INVENTARIO -> InventoryMirrorScreen(repository)
-                    MobileRoute.VENDAS -> ProductSalesMirrorScreen()
-                    MobileRoute.FINANCEIRO -> FinanceOverviewScreen(repository, patioState, syncState)
-                    MobileRoute.OPEN_PAYMENTS -> OpenPaymentsMirrorScreen()
-                    MobileRoute.CASHFLOW -> CashflowMirrorScreen(patioState)
-                    MobileRoute.PAYABLES -> PayablesMirrorScreen()
-                    MobileRoute.INVOICES -> InvoicesMirrorScreen()
-                    MobileRoute.DOCUMENTOS -> DocumentsMirrorScreen(syncState)
-                    MobileRoute.RELATORIOS -> ReportsMirrorScreen(repository, patioState, syncState)
-                    MobileRoute.BUSINESS -> BusinessOverviewScreen()
-                    MobileRoute.BUSINESS_FINANCE -> BusinessFinanceScreen()
-                    MobileRoute.BUSINESS_SOCIAL -> BusinessSocialScreen()
-                    MobileRoute.BUSINESS_MESSAGES -> BusinessMessagesScreen()
-                    MobileRoute.SEGURANCA -> SecuritySyncScreen(syncState, syncViewModel::sincronizarAgora)
+                        MobileRoute.AGENDAMENTOS -> AgendamentosScreen(patioState)
+                        MobileRoute.QUOTES -> QuotesScreen()
+                        MobileRoute.CADASTROS -> CadastrosScreen(
+                            state = cadastroState,
+                            usuario = usuario,
+                            onSearchChange = cadastroViewModel::atualizarBusca,
+                            onSaveCadastro = cadastroViewModel::cadastrar
+                        )
+
+                        MobileRoute.CLIENTES -> ClientsScreen(
+                            state = cadastroState,
+                            usuario = usuario,
+                            onSearchChange = cadastroViewModel::atualizarBusca,
+                            onSaveCliente = cadastroViewModel::salvarClienteCompleto
+                        )
+
+                        MobileRoute.VEICULOS -> VehiclesScreen(
+                            repository = repository,
+                            state = cadastroState,
+                            usuario = usuario,
+                            onSearchChange = cadastroViewModel::atualizarBusca,
+                            onSaveVeiculo = cadastroViewModel::salvarVeiculoCompleto
+                        )
+
+                        MobileRoute.OPERADORES -> OperatorsMirrorScreen(repository)
+                        MobileRoute.SERVICOS -> ServicesScreen(repository, usuario)
+                        MobileRoute.PRODUTOS -> ProductsScreen(repository, usuario)
+                        MobileRoute.INSUMOS -> SuppliesMirrorScreen(repository)
+                        MobileRoute.INVENTARIO -> InventoryMirrorScreen(repository)
+                        MobileRoute.VENDAS -> ProductSalesMirrorScreen()
+                        MobileRoute.FINANCEIRO -> FinanceOverviewScreen(repository, patioState, syncState)
+                        MobileRoute.OPEN_PAYMENTS -> OpenPaymentsMirrorScreen()
+                        MobileRoute.CASHFLOW -> CashflowMirrorScreen(patioState)
+                        MobileRoute.PAYABLES -> PayablesMirrorScreen()
+                        MobileRoute.INVOICES -> InvoicesMirrorScreen()
+                        MobileRoute.DOCUMENTOS -> DocumentsMirrorScreen(syncState)
+                        MobileRoute.RELATORIOS -> ReportsMirrorScreen(repository, patioState, syncState)
+                        MobileRoute.BUSINESS -> BusinessOverviewScreen()
+                        MobileRoute.BUSINESS_FINANCE -> BusinessFinanceScreen()
+                        MobileRoute.BUSINESS_SOCIAL -> BusinessSocialScreen()
+                        MobileRoute.BUSINESS_MESSAGES -> BusinessMessagesScreen()
+                        MobileRoute.SEGURANCA -> SecuritySyncScreen(syncState, syncViewModel::sincronizarAgora)
+                    }
                 }
             }
         }
-    }
-
-    if (showNewAttendance) {
-        NovoAtendimentoDialog(
-            servicos = patioState.servicos,
-            onClose = { showNewAttendance = false },
-            onSave = { cliente, telefone, placa, veiculo, alerta, servico ->
-                patioViewModel.criarAtendimento(cliente, telefone, placa, veiculo, alerta, servico, usuario)
-                showNewAttendance = false
-            }
-        )
     }
 }

@@ -52,7 +52,10 @@ interface ServicoDao {
 @Dao
 interface ProdutoDao {
     @Query("SELECT * FROM produtos ORDER BY nome") fun listar(): Flow<List<ProdutoEntity>>
+    @Query("SELECT * FROM produtos WHERE ativo = 1 ORDER BY nome") fun listarAtivos(): Flow<List<ProdutoEntity>>
     @Query("SELECT * FROM produtos WHERE estoqueAtual <= estoqueMinimo ORDER BY nome") fun estoqueCritico(): Flow<List<ProdutoEntity>>
+    @Query("SELECT * FROM produtos WHERE id = :id LIMIT 1") suspend fun obter(id: String): ProdutoEntity?
+    @Query("SELECT * FROM produtos WHERE lower(sku) = lower(:sku) LIMIT 1") suspend fun porSku(sku: String): ProdutoEntity?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun salvar(item: ProdutoEntity)
 }
 

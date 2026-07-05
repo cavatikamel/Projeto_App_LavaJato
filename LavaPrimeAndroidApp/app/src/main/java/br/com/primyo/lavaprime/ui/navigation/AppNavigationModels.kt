@@ -25,7 +25,7 @@ enum class MobileRoute(
     val hint: String = "",
     val group: MobileRouteGroup
 ) {
-    DASHBOARD("Dashboard", true, "Visão geral", MobileRouteGroup.OPERACAO),
+    DASHBOARD("Visão Geral", true, "Resumo operacional", MobileRouteGroup.OPERACAO),
     PATIO("Pátio", false, "Operação em tempo real", MobileRouteGroup.OPERACAO),
     AGENDAMENTOS("Agendamentos", false, "Entrada e agenda", MobileRouteGroup.OPERACAO),
     QUOTES("Orçamentos", false, "Propostas e conversão", MobileRouteGroup.OPERACAO),

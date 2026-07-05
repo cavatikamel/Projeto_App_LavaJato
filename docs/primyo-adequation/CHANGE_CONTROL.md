@@ -623,3 +623,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a fase criou `staging` local e `origin/staging` exatamente a partir de `9205f09`, sem alterar `main`, sem publicar `primyo/onboarding` e sem levar a sujeira local para a branch de homologacao.
 - Observacao de risco: a branch de homologacao agora existe, mas a proxima decisao segura passa a ser validar o ambiente publicado e nao mexer manualmente em Netlify, DNS ou producao.
+
+### LP-APK-017
+
+- Change record: `docs/primyo-changes/LP-APK-017.md`
+- Closure: `docs/primyo-changes/LP-APK-017-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a area `Produtos` Android passou a refletir o fluxo base do Web com métricas, busca, filtros, cadastro/edição e ajuste de estoque, enquanto a `Visão Geral` foi enxugada e o `Novo atendimento` do `Pátio` virou tela cheia com rascunho preservado.
+- Observacao de risco: `Insumos` e o faturamento completo dentro do atendimento ainda precisam de fase própria; a prioridade recomendada passa a ser `LP-APK-018`.

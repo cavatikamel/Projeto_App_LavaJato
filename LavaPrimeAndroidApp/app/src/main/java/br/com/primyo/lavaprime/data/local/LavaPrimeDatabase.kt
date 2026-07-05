@@ -27,7 +27,7 @@ import br.com.primyo.lavaprime.data.model.VeiculoEntity
         AuditLogEntity::class,
         SyncQueueEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -80,10 +80,30 @@ abstract class LavaPrimeDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE produtos ADD COLUMN sku TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE produtos ADD COLUMN custoCentavos INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE produtos ADD COLUMN observacoes TEXT")
+                db.execSQL("ALTER TABLE produtos ADD COLUMN ativo INTEGER NOT NULL DEFAULT 1")
+
+                db.execSQL("ALTER TABLE atendimentos ADD COLUMN telefoneSnapshot TEXT")
+                db.execSQL("ALTER TABLE atendimentos ADD COLUMN veiculoResumoSnapshot TEXT")
+                db.execSQL("ALTER TABLE atendimentos ADD COLUMN corSnapshot TEXT")
+                db.execSQL("ALTER TABLE atendimentos ADD COLUMN tipoVeiculoSnapshot TEXT")
+                db.execSQL("ALTER TABLE atendimentos ADD COLUMN categoriaVeiculoSnapshot TEXT")
+                db.execSQL("ALTER TABLE atendimentos ADD COLUMN servicosRelacionadosSnapshot TEXT")
+                db.execSQL("ALTER TABLE atendimentos ADD COLUMN pagoNaEntrada INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE atendimentos ADD COLUMN agendadoParaData TEXT")
+                db.execSQL("ALTER TABLE atendimentos ADD COLUMN agendadoParaHora TEXT")
+            }
+        }
+
         @Volatile private var INSTANCE: LavaPrimeDatabase? = null
+
         fun getDatabase(context: Context): LavaPrimeDatabase = INSTANCE ?: synchronized(this) {
             Room.databaseBuilder(context.applicationContext, LavaPrimeDatabase::class.java, "lavaprime.db")
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .fallbackToDestructiveMigration()
                 .build()
                 .also { INSTANCE = it }

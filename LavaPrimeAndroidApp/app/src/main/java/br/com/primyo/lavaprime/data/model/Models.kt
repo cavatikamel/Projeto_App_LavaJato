@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 enum class PerfilUsuario { ADMINISTRADOR, OPERADOR }
 enum class AtendimentoStatus { AGENDADO, PATIO, EXECUCAO, FINALIZADO, CANCELADO }
 enum class SyncStatus { LOCAL_ONLY, PENDING_SYNC, SYNCED, CONFLICT }
-enum class FormaPagamento { PIX, DINHEIRO, DEBITO, CREDITO, BOLETO, CORTESIA }
+enum class FormaPagamento { PIX, DINHEIRO, DEBITO, CREDITO, BOLETO, Faturado, CORTESIA }
 
 @Entity(tableName = "usuarios")
 data class UsuarioEntity(
@@ -96,11 +96,15 @@ data class ProdutoEntity(
     @PrimaryKey val id: String,
     val empresaId: String = "local-demo",
     val nome: String,
+    val sku: String = "",
     val tipo: String,
     val estoqueAtual: Double = 0.0,
     val estoqueMinimo: Double = 0.0,
     val unidade: String = "un",
+    val custoCentavos: Long = 0,
     val precoVendaCentavos: Long = 0,
+    val observacoes: String? = null,
+    val ativo: Boolean = true,
     val syncStatus: SyncStatus = SyncStatus.PENDING_SYNC,
     val updatedAt: Long = System.currentTimeMillis()
 )
@@ -111,13 +115,22 @@ data class AtendimentoEntity(
     val empresaId: String = "local-demo",
     val clienteId: String,
     val clienteNomeSnapshot: String,
+    val telefoneSnapshot: String? = null,
     val veiculoId: String,
     val placaSnapshot: String,
+    val veiculoResumoSnapshot: String? = null,
+    val corSnapshot: String? = null,
+    val tipoVeiculoSnapshot: String? = null,
+    val categoriaVeiculoSnapshot: String? = null,
     val servicoId: String,
     val servicoNomeSnapshot: String,
+    val servicosRelacionadosSnapshot: String? = null,
     val status: AtendimentoStatus,
     val valorCentavos: Long,
     val formaPagamento: FormaPagamento? = null,
+    val pagoNaEntrada: Boolean = false,
+    val agendadoParaData: String? = null,
+    val agendadoParaHora: String? = null,
     val operadorId: String? = null,
     val operadorNomeSnapshot: String? = null,
     val observacoes: String? = null,

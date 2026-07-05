@@ -2247,3 +2247,43 @@
   - a etapa `Prontos` do `Pátio` continua sem status próprio no modelo local;
   - smoke manual em aparelho/emulador continua pendente.
 
+### LP-APK-017
+
+- Status: `Concluido`
+- Data: `2026-07-05`
+- Arquivos alterados:
+  - `LavaPrimeAndroidApp/app/schemas/br.com.primyo.lavaprime.data.local.LavaPrimeDatabase/6.json`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/local/Daos.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/local/LavaPrimeDatabase.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/model/Models.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/data/repository/LavaPrimeRepository.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/components/LavaPrimeComponents.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/navigation/AppNavigationModels.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/AttendanceEntryScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/DashboardScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/LavaPrimeRoot.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/PatioScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/screens/ProductsScreen.kt`
+  - `LavaPrimeAndroidApp/app/src/main/java/br/com/primyo/lavaprime/ui/viewmodel/PatioViewModel.kt`
+  - `docs/primyo-apk/LP_APK_PROGRESS.md`
+  - `docs/primyo-changes/LP-APK-017.md`
+  - `docs/primyo-changes/LP-APK-017-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+- Evidencias:
+  - leitura cruzada da governança Primyo/APK, do fluxo `Produtos` em `app/main.js` e do fluxo Web de entrada no `Pátio`;
+  - `git status --short`;
+  - `git diff --name-only`;
+  - `npm.cmd run primyo:gate`;
+  - `.\gradlew.bat tasks --no-daemon --console=plain`;
+  - `.\gradlew.bat assembleDebug --no-daemon --console=plain`;
+  - APK debug localizado em `%LOCALAPPDATA%\\LavaPrimeAndroidBuild\\LavaPrimeAndroid\\app\\outputs\\apk\\debug\\app-debug.apk`.
+- Observacoes:
+  - a fase substituiu o fluxo simples de `Produtos` por métricas, filtros, cadastro/edição e ajuste de estoque alinhados ao Web;
+  - a `Visão Geral` foi limpa para leitura operacional direta, com ação de sync no topo e sem blocos redundantes;
+  - o `Novo atendimento` passou a abrir em tela cheia, com rolagem segura e rascunho preservado.
+- Riscos remanescentes:
+  - `Insumos` ainda precisa de fase própria para fechar o catálogo técnico paralelo ao de produtos;
+  - o fluxo completo de faturamento dentro do `Novo atendimento` ainda não foi concluído no Android;
+  - smoke manual em aparelho/emulador continua pendente.
+

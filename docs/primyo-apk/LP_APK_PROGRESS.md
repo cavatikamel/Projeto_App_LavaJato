@@ -62,6 +62,8 @@ Checkpoint tecnico parcial nao sobe percentual sozinho.
 - progresso oficial apos concluir `LP-APK-015`: `49%`
 - progresso oficial antes de `LP-APK-016`: `49%`
 - progresso oficial apos concluir `LP-APK-016`: `51%`
+- progresso oficial antes de `LP-APK-017`: `51%`
+- progresso oficial apos concluir `LP-APK-017`: `52.5%`
 - estimativa do checkpoint Android atual em relacao ao produto final: `8%`
 
 ## Regra de leitura do `8% estimado`
@@ -91,8 +93,9 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - clientes mobile com paridade funcional base do Web: `concluido`
 - veiculos mobile com paridade funcional base do Web: `concluido`
 - servicos mobile com paridade funcional base do Web: `concluido`
-- progresso oficial consolidado nesta data: `51%`
-- proxima etapa recomendada: `LP-APK-017 - Products Flow`
+- produtos mobile com paridade funcional base do Web: `concluido`
+- progresso oficial consolidado nesta data: `52.5%`
+- proxima etapa recomendada: `LP-APK-018 - Supplies Flow`
 
 ## Regra especifica da LP-APK-003
 
@@ -161,6 +164,13 @@ Ele nao substitui o progresso oficial do programa e nao autoriza pular fases de 
 - o ganho de progresso desta fase vem da paridade funcional base com o Web, da migration `4 -> 5` para o modelo de servico e do build Android validado;
 - a fase nao fecha ainda o CRUD proprio de `Produtos` e `Insumos`, nem o consumo automatico de estoque por ficha tecnica;
 - a proxima fase segura passa a ser `LP-APK-017 - Products Flow`.
+
+## Regra especifica da LP-APK-017
+
+- esta fase consolida o fluxo de `Produtos` com metricas, busca, filtros, cadastro, edicao e ajuste de estoque coerentes com o Web;
+- o ganho de progresso desta fase vem da paridade funcional base com o Web, da migration `5 -> 6` para produtos e atendimento e do build Android validado;
+- a fase tambem remove redundancias da `Visao Geral` e troca o `Novo atendimento` por uma tela cheia com rascunho preservado;
+- a proxima fase segura passa a ser `LP-APK-018 - Supplies Flow`.
 
 ## Regra de checkpoint
 

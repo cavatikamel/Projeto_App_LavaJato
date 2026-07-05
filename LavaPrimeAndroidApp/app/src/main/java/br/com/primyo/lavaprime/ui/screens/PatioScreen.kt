@@ -578,7 +578,12 @@ private fun patioBackLabel(status: AtendimentoStatus): String = when (status) {
 }
 
 private fun patioTimeLabel(item: AtendimentoEntity): String = when (item.status) {
-    AtendimentoStatus.AGENDADO -> "Agendado ${formatTimestamp(item.criadoEm)}"
+    AtendimentoStatus.AGENDADO -> listOfNotNull(
+        item.agendadoParaData?.takeIf { it.isNotBlank() },
+        item.agendadoParaHora?.takeIf { it.isNotBlank() }
+    ).joinToString(" ").ifBlank {
+        "Agendado ${formatTimestamp(item.criadoEm)}"
+    }
     AtendimentoStatus.FINALIZADO -> "Finalizado ${formatTimestamp(item.finalizadoEm ?: item.updatedAt)}"
     else -> "Entrada ${formatTimestamp(item.criadoEm)}"
 }

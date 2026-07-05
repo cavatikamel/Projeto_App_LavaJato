@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.primyo.lavaprime.data.model.AtendimentoEntity
 import br.com.primyo.lavaprime.data.model.AtendimentoStatus
+import br.com.primyo.lavaprime.data.model.FormaPagamento
 import br.com.primyo.lavaprime.data.model.ServicoEntity
 import br.com.primyo.lavaprime.data.model.UsuarioEntity
 import br.com.primyo.lavaprime.data.repository.LavaPrimeRepository
@@ -61,8 +62,16 @@ class PatioViewModel(private val repository: LavaPrimeRepository) : ViewModel() 
         telefone: String,
         placa: String,
         veiculoResumo: String,
+        cor: String,
+        tipoVeiculo: String,
+        categoriaVeiculo: String,
         alerta: String,
-        servico: ServicoEntity,
+        servicos: List<ServicoEntity>,
+        formaPagamento: FormaPagamento?,
+        pagoNaEntrada: Boolean,
+        modoAgendamento: Boolean,
+        agendadoParaData: String,
+        agendadoParaHora: String,
         usuario: UsuarioEntity
     ) {
         viewModelScope.launch {
@@ -71,8 +80,16 @@ class PatioViewModel(private val repository: LavaPrimeRepository) : ViewModel() 
                 telefone = telefone,
                 placa = placa,
                 veiculoResumo = veiculoResumo,
+                cor = cor,
+                tipoVeiculo = tipoVeiculo,
+                categoriaVeiculo = categoriaVeiculo,
                 alerta = alerta,
-                servico = servico,
+                servicos = servicos,
+                formaPagamento = formaPagamento,
+                pagoNaEntrada = pagoNaEntrada,
+                modoAgendamento = modoAgendamento,
+                agendadoParaData = agendadoParaData,
+                agendadoParaHora = agendadoParaHora,
                 usuario = usuario
             )
         }

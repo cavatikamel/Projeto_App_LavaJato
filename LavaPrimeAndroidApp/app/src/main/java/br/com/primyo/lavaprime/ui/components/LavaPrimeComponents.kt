@@ -48,6 +48,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Button
@@ -212,10 +213,21 @@ fun LavaPrimeMetricCard(
     icon: ImageVector,
     modifier: Modifier = Modifier,
     support: String? = null,
-    tone: LavaPrimeStatusTone = LavaPrimeStatusTone.Info
+    tone: LavaPrimeStatusTone = LavaPrimeStatusTone.Info,
+    onClick: (() -> Unit)? = null
 ) {
     LavaPrimeCard(
-        modifier = modifier.widthIn(min = 168.dp),
+        modifier = modifier
+            .widthIn(min = 168.dp)
+            .let { base ->
+                if (onClick != null) {
+                    base
+                        .clip(RoundedCornerShape(LavaPrimeRadii.large))
+                        .clickable(onClick = onClick)
+                } else {
+                    base
+                }
+            },
         tonal = true,
         contentPadding = PaddingValues(LavaPrimeSpacing.md)
     ) {
@@ -662,7 +674,9 @@ fun LavaPrimeTopBar(
     title: String,
     subtitle: String,
     online: Boolean,
-    onMenuClick: () -> Unit
+    pendingSyncCount: Int,
+    onMenuClick: () -> Unit,
+    onSyncClick: (() -> Unit)? = null
 ) {
     TopAppBar(
         title = {
@@ -689,11 +703,29 @@ fun LavaPrimeTopBar(
             }
         },
         actions = {
-            LavaPrimeStatusChip(
-                text = if (online) "Online" else "Offline",
-                tone = if (online) LavaPrimeStatusTone.Success else LavaPrimeStatusTone.Warning,
-                icon = if (online) Icons.Filled.Wifi else Icons.Filled.WifiOff
-            )
+            Row(
+                modifier = Modifier.padding(end = LavaPrimeSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(LavaPrimeSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                LavaPrimeStatusChip(
+                    text = if (online) "Online" else "Offline",
+                    tone = if (online) LavaPrimeStatusTone.Success else LavaPrimeStatusTone.Warning,
+                    icon = if (online) Icons.Filled.Wifi else Icons.Filled.WifiOff
+                )
+                LavaPrimeStatusChip(
+                    text = if (pendingSyncCount > 0) "$pendingSyncCount pendência(s)" else "Sync em dia",
+                    tone = if (pendingSyncCount > 0) LavaPrimeStatusTone.Warning else LavaPrimeStatusTone.Info,
+                    icon = Icons.Filled.Sync,
+                    modifier = if (onSyncClick != null) {
+                        Modifier
+                            .clip(RoundedCornerShape(LavaPrimeRadii.pill))
+                            .clickable(onClick = onSyncClick)
+                    } else {
+                        Modifier
+                    }
+                )
+            }
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.White,
@@ -707,7 +739,9 @@ fun LavaPrimeScaffold(
     title: String,
     subtitle: String,
     online: Boolean,
+    pendingSyncCount: Int,
     onMenuClick: () -> Unit,
+    onSyncClick: (() -> Unit)? = null,
     floatingActionButton: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
@@ -718,7 +752,9 @@ fun LavaPrimeScaffold(
                 title = title,
                 subtitle = subtitle,
                 online = online,
-                onMenuClick = onMenuClick
+                pendingSyncCount = pendingSyncCount,
+                onMenuClick = onMenuClick,
+                onSyncClick = onSyncClick
             )
         },
         floatingActionButton = floatingActionButton,

@@ -133,22 +133,30 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
         )
         db.produtoDao().salvar(
             ProdutoEntity(
-                "prd-shampoo-neutro",
+                id = "prd-shampoo-neutro",
                 nome = "Shampoo neutro",
-                tipo = "Insumo",
+                sku = "PRD-001",
+                tipo = "Produto",
                 estoqueAtual = 8.0,
                 estoqueMinimo = 2.0,
-                unidade = "L"
+                unidade = "L",
+                custoCentavos = 1890,
+                precoVendaCentavos = 2990,
+                observacoes = "Produto de balcão."
             )
         )
         db.produtoDao().salvar(
             ProdutoEntity(
-                "prd-limpa-rodas",
+                id = "prd-limpa-rodas",
                 nome = "Limpa rodas ácido",
-                tipo = "Insumo",
+                sku = "PRD-002",
+                tipo = "Produto",
                 estoqueAtual = 1.0,
                 estoqueMinimo = 2.0,
-                unidade = "L"
+                unidade = "L",
+                custoCentavos = 2490,
+                precoVendaCentavos = 3890,
+                observacoes = "Produto de balcão."
             )
         )
 
@@ -178,10 +186,16 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
                 id = "atd-demo",
                 clienteId = cliente.id,
                 clienteNomeSnapshot = cliente.nome,
+                telefoneSnapshot = cliente.telefone,
                 veiculoId = veiculo.id,
                 placaSnapshot = veiculo.placa,
+                veiculoResumoSnapshot = "${veiculo.marca} ${veiculo.modelo}",
+                corSnapshot = veiculo.cor,
+                tipoVeiculoSnapshot = veiculo.tipo,
+                categoriaVeiculoSnapshot = veiculo.categoria,
                 servicoId = "srv-lavagem-premium",
                 servicoNomeSnapshot = "Lavagem premium",
+                servicosRelacionadosSnapshot = "Lavagem premium",
                 status = AtendimentoStatus.EXECUCAO,
                 valorCentavos = 6500,
                 operadorNomeSnapshot = "Operador LavaPrime",
@@ -195,10 +209,19 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
         telefone: String,
         placa: String,
         veiculoResumo: String,
+        cor: String,
+        tipoVeiculo: String,
+        categoriaVeiculo: String,
         alerta: String,
-        servico: ServicoEntity,
+        servicos: List<ServicoEntity>,
+        formaPagamento: FormaPagamento?,
+        pagoNaEntrada: Boolean,
+        modoAgendamento: Boolean,
+        agendadoParaData: String,
+        agendadoParaHora: String,
         usuario: UsuarioEntity
     ) {
+        val servicoPrincipal = servicos.firstOrNull() ?: return
         val agora = System.currentTimeMillis()
         val cliente = ClienteEntity(
             id = UUID.randomUUID().toString(),
@@ -211,9 +234,11 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             id = UUID.randomUUID().toString(),
             clienteId = cliente.id,
             placa = placa.uppercase().ifBlank { "SEMPLACA" },
+            marca = veiculoResumo.substringBefore(' ').takeIf { it.isNotBlank() },
             modelo = veiculoResumo.ifBlank { null },
-            tipo = "Carro",
-            categoria = "Hatch",
+            cor = cor.ifBlank { null },
+            tipo = tipoVeiculo.ifBlank { "Carro" },
+            categoria = categoriaVeiculo.ifBlank { null },
             combustivel = "Flex",
             observacoes = alerta.ifBlank { null },
             alertaEspecial = alerta.ifBlank { null },
@@ -228,12 +253,22 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             id = UUID.randomUUID().toString(),
             clienteId = cliente.id,
             clienteNomeSnapshot = cliente.nome,
+            telefoneSnapshot = cliente.telefone,
             veiculoId = veiculo.id,
             placaSnapshot = veiculo.placa,
-            servicoId = servico.id,
-            servicoNomeSnapshot = servico.nome,
-            status = AtendimentoStatus.PATIO,
-            valorCentavos = servico.precoBaseCentavos,
+            veiculoResumoSnapshot = veiculoResumo.ifBlank { null },
+            corSnapshot = cor.ifBlank { null },
+            tipoVeiculoSnapshot = veiculo.tipo,
+            categoriaVeiculoSnapshot = veiculo.categoria,
+            servicoId = servicoPrincipal.id,
+            servicoNomeSnapshot = servicoPrincipal.nome,
+            servicosRelacionadosSnapshot = servicos.joinToString(", ") { it.nome },
+            status = if (modoAgendamento) AtendimentoStatus.AGENDADO else AtendimentoStatus.PATIO,
+            valorCentavos = servicos.sumOf { it.precoBaseCentavos },
+            formaPagamento = formaPagamento,
+            pagoNaEntrada = pagoNaEntrada,
+            agendadoParaData = agendadoParaData.ifBlank { null },
+            agendadoParaHora = agendadoParaHora.ifBlank { null },
             operadorId = usuario.id,
             operadorNomeSnapshot = usuario.nome,
             observacoes = alerta.takeIf { it.isNotBlank() },
@@ -372,7 +407,7 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
                 entidade = "vehicles",
                 entidadeId = veiculo.id,
                 operacao = if (existente == null) "insert" else "upsert",
-                payloadResumo = "VeÃ­culo ${veiculo.placa}",
+                payloadResumo = "Veículo ${veiculo.placa}",
                 usuario = usuario
             )
         }
@@ -391,7 +426,7 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
                     entidade = "vehicles",
                     entidadeId = veiculo.id,
                     operacao = "unlink",
-                    payloadResumo = "VeÃ­culo ${veiculo.placa}",
+                    payloadResumo = "Veículo ${veiculo.placa}",
                     usuario = usuario
                 )
             }
@@ -522,6 +557,80 @@ class LavaPrimeRepository(private val db: LavaPrimeDatabase) {
             entidadeId = service.id,
             operacao = if (base == null) "insert" else "upsert",
             payloadResumo = "Serviço ${service.nome}",
+            usuario = usuario
+        )
+    }
+
+    suspend fun salvarProdutoCompleto(
+        produtoId: String?,
+        nome: String,
+        sku: String,
+        unidade: String,
+        estoqueAtual: Double,
+        estoqueMinimo: Double,
+        custoCentavos: Long,
+        precoVendaCentavos: Long,
+        observacoes: String,
+        ativo: Boolean,
+        usuario: UsuarioEntity
+    ) {
+        val agora = System.currentTimeMillis()
+        val normalizedName = nome.trim()
+        val normalizedSku = sku.trim()
+        val duplicate = db.produtoDao().porSku(normalizedSku)
+        val persisted = produtoId?.let { db.produtoDao().obter(it) }
+        val base = when {
+            persisted != null -> persisted
+            duplicate != null -> duplicate
+            else -> null
+        }
+        val produto = ProdutoEntity(
+            id = base?.id ?: UUID.randomUUID().toString(),
+            empresaId = base?.empresaId ?: usuario.empresaId,
+            nome = normalizedName,
+            sku = normalizedSku,
+            tipo = base?.tipo ?: "Produto",
+            estoqueAtual = estoqueAtual,
+            estoqueMinimo = estoqueMinimo,
+            unidade = unidade.ifBlank { "un" },
+            custoCentavos = custoCentavos,
+            precoVendaCentavos = precoVendaCentavos,
+            observacoes = observacoes.trim().ifBlank { null },
+            ativo = ativo,
+            syncStatus = SyncStatus.PENDING_SYNC,
+            updatedAt = agora
+        )
+        db.produtoDao().salvar(produto)
+        registrarMudanca(
+            entidade = "products",
+            entidadeId = produto.id,
+            operacao = if (base == null) "insert" else "upsert",
+            payloadResumo = "Produto ${produto.nome}",
+            usuario = usuario
+        )
+    }
+
+    suspend fun ajustarEstoqueProduto(
+        produtoId: String,
+        quantidade: Double,
+        tipoMovimento: String,
+        usuario: UsuarioEntity
+    ) {
+        val produto = db.produtoDao().obter(produtoId) ?: return
+        val sinal = if (tipoMovimento == "Ajuste de saída") -1 else 1
+        val novoEstoque = (produto.estoqueAtual + quantidade * sinal).coerceAtLeast(0.0)
+        db.produtoDao().salvar(
+            produto.copy(
+                estoqueAtual = novoEstoque,
+                syncStatus = SyncStatus.PENDING_SYNC,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+        registrarMudanca(
+            entidade = "products",
+            entidadeId = produto.id,
+            operacao = "stock-adjustment",
+            payloadResumo = "Produto ${produto.nome}: ${produto.estoqueAtual} -> $novoEstoque",
             usuario = usuario
         )
     }
