@@ -1,0 +1,68 @@
+# LP-WEB-DASHBOARD-001 - Closure
+
+- objetivo da fase:
+  - auditar dados reais do LavaPrime, organizar metricas reutilizaveis e implementar graficos gerenciais responsivos na Visao Geral
+- dados mapeados:
+  - clientes, veiculos, patio, faturamento, pagamentos em aberto, caixa, servicos, produtos, insumos, equipe, documentos e configuracoes persistidas
+- metricas implementadas agora:
+  - receita confirmada
+  - ticket medio
+  - atendimentos
+  - patio atual
+  - contas a receber
+  - resultado liquido
+  - receita prevista
+  - faturado aberto
+  - cuidado especial
+  - alertas de estoque e ficha tecnica
+- graficos implementados:
+  - evolucao da receita
+  - entradas x saidas
+  - atendimentos por periodo
+  - status do patio
+  - servicos mais vendidos
+  - formas de pagamento
+- ajustes complementares entregues:
+  - continuidade visual entre splash e login
+  - login sem scroll vertical desnecessario
+  - agenda com calendario dominante, filtros e acoes
+  - icone do carro do patio restaurado
+  - cuidados especiais em lista compacta com selecao multipla
+- arquivos alterados principais:
+  - `app/main.js`
+  - `app/styles.css`
+  - `app/assets/brand/icone_carro.png`
+  - `app/dashboard/dashboardMetrics.js`
+  - `app/dashboard/dashboardMetrics.test.mjs`
+  - `docs/primyo-dashboard/*`
+  - `docs/primyo-adequation/*`
+  - `docs/primyo-tests/*`
+- validacoes:
+  - `node --check app/main.js`
+  - `node --check app/demo/lavaprimeDemoData.js`
+  - `node --check app/demo/lavaprimeBootstrapMode.js`
+  - `node --check app/demo/lavaprimeCleanBootstrap.js`
+  - `node --check app/dashboard/dashboardMetrics.js`
+  - `node --check app/dashboard/dashboardMetrics.test.mjs`
+  - `node --test app/dashboard/dashboardMetrics.test.mjs`
+  - `node scripts/primyo-adapter-gate.mjs`
+  - `npm.cmd run primyo:gate`
+  - `npm.cmd run build`
+  - `npm.cmd run verify:build`
+- smoke:
+  - desktop validado para login admin, Visao Geral, Agenda, Patio, Financeiro e Relatorios
+  - mobile validado nos breakpoints alvo sem overflow horizontal relevante
+- riscos:
+  - warning de chunk acima de `500 kB` permanece nao bloqueante
+  - metricas seguem dependentes de seed demo e memoria local, nao de backend real
+- rollback:
+  - remover import e uso de `app/dashboard/dashboardMetrics.js`
+  - restaurar o bloco anterior da Visao Geral
+  - reverter ajustes de agenda, login e cuidados especiais
+  - rerodar gate, build, verify e smoke
+- aceite tecnico:
+  - dados auditados
+  - metricas reais separadas por maturidade
+  - dashboard responsivo ativo
+  - Android nao alterado
+  - Supabase mantido fechado

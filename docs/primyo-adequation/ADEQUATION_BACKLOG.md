@@ -1926,3 +1926,41 @@
   - o Android atual continua com login, dashboard, drawer e modulos de cadastro/catalogo abaixo do alvo final;
   - a tipografia oficial ainda nao esta aplicada no runtime Android;
   - ainda falta congelar os requisitos finais do APK antes de iniciar a fase de design system/implementacao visual.
+
+### LP-WEB-DASHBOARD-001
+
+- Status: `Implementado`
+- Data: `2026-07-05`
+- Arquivos alterados:
+  - `app/main.js`
+  - `app/styles.css`
+  - `app/assets/brand/icone_carro.png`
+  - `app/dashboard/dashboardMetrics.js`
+  - `app/dashboard/dashboardMetrics.test.mjs`
+  - `docs/primyo-dashboard/DATA_METRICS_CATALOG.md`
+  - `docs/primyo-dashboard/METRICS_DEFINITION.md`
+  - `docs/primyo-dashboard/CHART_SELECTION_MATRIX.md`
+  - `docs/primyo-dashboard/DASHBOARD_INFORMATION_ARCHITECTURE.md`
+  - `docs/primyo-dashboard/MOBILE_DASHBOARD_PARITY.md`
+  - `docs/primyo-changes/LP-WEB-DASHBOARD-001.md`
+  - `docs/primyo-changes/LP-WEB-DASHBOARD-001-CLOSURE.md`
+  - `docs/primyo-adequation/CHANGE_CONTROL.md`
+  - `docs/primyo-adequation/NEXT_SLICE_DECISION.md`
+  - `docs/primyo-adequation/ADEQUATION_BACKLOG.md`
+  - `docs/primyo-tests/REGRESSION_MATRIX.md`
+  - `docs/primyo-tests/TEST_GATE_POLICY.md`
+- Evidencias:
+  - auditoria de dados em `app/main.js`, `app/demo/**`, `scripts/**`, `docs/primyo-data/**`, `docs/primyo-web-contracts/**` e `docs/primyo-web-integration/**`;
+  - `node --test app/dashboard/dashboardMetrics.test.mjs`;
+  - pacote final de `node --check`, adapter gate, `primyo:gate`, build e verify;
+  - smoke desktop para login admin, Visao Geral, Agendamentos, Patio, Financeiro, Relatorios/Documentos e logout;
+  - validacao de viewport para login e dashboard mobile.
+- Observacoes:
+  - as metricas futuras ficaram separadas das metricas disponiveis;
+  - o dashboard usa apenas dados reais existentes no runtime atual, sem Supabase;
+  - `DEMO_BOOTSTRAP` continua padrao;
+  - `CLEAN_BOOTSTRAP` continua protegido.
+- Riscos remanescentes:
+  - a qualidade da base continua `DEMO_ONLY` para clientes, veiculos, faturamento e cobranca;
+  - a publicacao continua dependente de fase propria de staging;
+  - `app/styles.css` passa a conter mudanca visual desta fase e nao deve ser misturado com trilhas externas.

@@ -374,6 +374,18 @@ Estado oficial apos `LP-DEPLOY-GOV-003`:
 - `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a `default`;
 - Supabase continua fechado para runtime.
 
+Estado oficial apos `LP-WEB-DASHBOARD-001`:
+
+- `app/dashboard/dashboardMetrics.js` passa a ser a camada oficial de metricas do dashboard Web;
+- a cobertura minima automatizada passa a incluir `node --test app/dashboard/dashboardMetrics.test.mjs`;
+- os testes de metricas agora precisam cobrir dataset vazio, dataset parcial, dataset completo, valor zero, valor negativo permitido, `NaN`, `undefined`, data invalida, duplicidade, periodo sem dados, uma unica categoria e muitas categorias;
+- a Visao Geral admin passa a exigir smoke com KPIs, graficos, filtros temporais e resize;
+- a validacao mobile da Visao Geral passa a exigir verificacao em `360px`, `390px`, `480px` e `768px`, sem overflow horizontal e sem dois graficos lado a lado em viewport pequeno;
+- os ajustes de login, Agendamentos, Patio e cuidados especiais desta mesma fatia entram no smoke complementar da mudanca;
+- `DEMO_BOOTSTRAP` continua o unico modo padrao seguro;
+- `CLEAN_BOOTSTRAP` continua protegido e nao pode ser promovido a `default`;
+- nenhuma integracao com Supabase foi iniciada nesta etapa.
+
 Limites atuais desta cobertura:
 
 - o gate cobre `customerAdapter`, `vehicleAdapter`, `serviceAdapter`, `productAdapter` e `supplyAdapter`, mas ainda nao cobre dominios operacionais ou financeiros;

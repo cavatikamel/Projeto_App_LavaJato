@@ -535,3 +535,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a fase revisou a baseline Web candidata e concluiu que o `HEAD` atual `ef0bc0e` pode seguir como candidato de homologacao, porque os deltas apos `094a5b7` sao documentais e nao alteram runtime Web.
 - Observacao de risco: o historico da branch continua misturado com commits Android/APK e o working tree ainda bloqueia criacao ou push seguro de `staging` enquanto `.gitignore`, `app/styles.css`, `LavaPrimeAndroidApp/**` e `app/assets/data/fipe-veiculos.*` nao forem isolados.
+
+### LP-WEB-DASHBOARD-001
+
+- Change record: `docs/primyo-changes/LP-WEB-DASHBOARD-001.md`
+- Closure: `docs/primyo-changes/LP-WEB-DASHBOARD-001-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a Visao Geral passa a usar uma camada dedicada de metricas em `app/dashboard/dashboardMetrics.js`, com KPIs e 6 graficos responsivos baseados em `patioVehicles`, `cashEntries` e `openPayments`, sem abrir Supabase e sem mudar o bootstrap padrao.
+- Observacao de risco: a base continua majoritariamente `demo/teste`, entao as metricas ficam limitadas ao que existe no runtime atual; publicacao e deploy continuam dependentes de fase propria de homologacao.

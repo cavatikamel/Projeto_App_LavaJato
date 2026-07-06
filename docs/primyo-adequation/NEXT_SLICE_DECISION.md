@@ -143,3 +143,21 @@ Justificativa:
 4. a identidade visual oficial do APK agora tambem ja tem baseline formal, com separacao explicita entre linguagem do Web e marca oficial de `Material_Visual`;
 5. o proximo risco principal deixa de ser ambiguidade de referencia visual e passa a ser ausencia de fechamento final dos requisitos obrigatorios antes da implementacao;
 6. a trilha APK continua separada da trilha Web principal e nao autoriza alterar `app/main.js`, `app/styles.css` ou contratos runtime.
+
+## Atualizacao LP-WEB-DASHBOARD-001
+
+- dashboard gerencial responsivo implementado no Web com base em dados atuais de `patioVehicles`, `cashEntries` e `openPayments`;
+- login, splash, agenda, patio e cuidados especiais foram ajustados sem abrir Supabase e sem alterar `DEMO_BOOTSTRAP`;
+- a proxima fatia recomendada passa a ser `LP-DEPLOY-STAGING-001 - Publish updated LavaPrime Web to controlled staging`;
+- fatias rejeitadas por enquanto:
+  - publicar direto em producao;
+  - abrir Supabase runtime;
+  - promover `CLEAN_BOOTSTRAP` a default;
+  - remover seed demo.
+
+Justificativa:
+
+1. o runtime Web atual passa a ter identidade visual atualizada e dashboard gerencial pronto para homologacao;
+2. o pacote de metricas ja esta encapsulado e testavel sem depender de backend real;
+3. o proximo passo seguro deixa de ser implementacao funcional local e passa a ser homologacao controlada;
+4. a publicacao continua exigindo push/deploy em fase propria, com rollback e validacao publicados.

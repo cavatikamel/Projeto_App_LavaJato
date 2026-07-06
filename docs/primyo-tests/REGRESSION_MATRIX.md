@@ -366,3 +366,14 @@ Antes de iniciar qualquer mudanca:
 2. localizar a linha correspondente nesta matriz;
 3. transformar os fluxos `Obrigatorio` no checklist da execucao;
 4. registrar resultado no `TEST_EXECUTION_TEMPLATE.md`.
+
+## Regra aplicada em `LP-WEB-DASHBOARD-001`
+
+- o pacote minimo deve revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `FN` e `RL`;
+- a Visao Geral admin precisa manter KPIs e graficos sem `NaN`, `undefined`, `null` ou `Invalid Date`;
+- os filtros `Hoje`, `7 dias`, `30 dias` e `Mes atual` precisam recalcular os 6 graficos implementados;
+- o dashboard mobile deve permanecer sem overflow horizontal em `360px`, `390px`, `480px` e `768px`;
+- o login precisa permanecer sem scroll vertical forçado depois da troca splash -> login;
+- Agendamentos precisa manter calendario dominante, cards em no maximo uma linha no desktop e acoes de `Entrar no patio`, `Alterar / editar` e `Cancelar agendamento`;
+- o Patio precisa manter o icone de carro frontal correto e os cuidados especiais em lista compacta com selecao multipla;
+- o console do browser deve permanecer sem erro bloqueante.

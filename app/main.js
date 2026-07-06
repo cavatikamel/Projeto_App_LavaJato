@@ -19,6 +19,7 @@ import {
   lavaprimeCleanBootstrapTrialBaseline,
   lavaprimeCleanBootstrapTrialExecutionBaseline
 } from "./demo/lavaprimeCleanBootstrap.js";
+import { buildDashboardMetrics, DASHBOARD_PERIOD_PRESETS } from "./dashboard/dashboardMetrics.js";
 import { storageBoundary } from "./storage/storageBoundary.js";
 import {
   capitalize,
@@ -51,6 +52,18 @@ function repairMojibakeCollectionInPlace(value) {
 
   if (typeof value === "string") return repairMojibakeText(value);
   return value;
+}
+
+function syncAppViewportHeight() {
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  if (!viewportHeight) return;
+  document.documentElement.style.setProperty("--app-viewport-height", `${viewportHeight}px`);
+}
+
+function setShellScrollLock(locked) {
+  const overflowValue = locked ? "hidden" : "";
+  document.documentElement.style.overflow = overflowValue;
+  document.body.style.overflow = overflowValue;
 }
 
 repairMojibakeCollectionInPlace(clientRegistry);
@@ -134,8 +147,12 @@ let selectedEntryVehicleId = null;
 let entryRegistryEditContext = null;
 let clientVehicleRegistrationContext = null;
 let selectedScheduleVehicleId = null;
+let selectedScheduledPatioVehicleId = null;
 let adminScheduleMonthOffset = 0;
 let adminScheduleSelectedDate = "";
+let adminScheduleSearchQuery = "";
+let adminScheduleActionVehicleId = null;
+let adminDashboardPeriodKey = "last30Days";
 let quoteDialogStep = "vehicle";
 let selectedQuoteVehicleId = null;
 let pendingQuotePatioEntry = null;
@@ -193,6 +210,17 @@ const CLEAN_BOOTSTRAP_TRIAL_EXECUTION_ROLLBACK_PATH = Object.freeze([
   "remove clean bootstrap trial execution baseline export from app/demo/lavaprimeCleanBootstrap.js",
   "rerun node --check app/main.js, node --check app/demo/lavaprimeCleanBootstrap.js, adapter gate, primyo:gate, build, verify and cleanup smoke"
 ]);
+const TEMPORARY_LOGIN_GATE = Object.freeze({
+  username: "Kamel",
+  normalizedUsername: "kamel",
+  password: "193746",
+  rollbackPath: [
+    "remove TEMPORARY_LOGIN_GATE constant from app/main.js",
+    "remove isTemporaryLoginAuthorized(user, password) helper from app/main.js",
+    "restore confirmLogin() to the previous permissive flow",
+    "rerun node --check app/main.js, primyo:gate, build, verify and login smoke"
+  ]
+});
 const CLEAN_BOOTSTRAP_PRE_HARDENING_UNSAFE_SURFACES = Object.freeze([
   "dashboard",
   "patio",
@@ -1164,6 +1192,12 @@ function selectProfile(button) {
   });
 }
 
+function isTemporaryLoginAuthorized(user, password) {
+  const normalizedUser = typeof user === "string" ? user.trim().toLowerCase() : "";
+  const normalizedPassword = typeof password === "string" ? password.trim() : "";
+  return normalizedUser === TEMPORARY_LOGIN_GATE.normalizedUsername && normalizedPassword === TEMPORARY_LOGIN_GATE.password;
+}
+
 function confirmLogin() {
   const user = $("#loginUser").value.trim();
   const password = $("#loginPassword").value.trim();
@@ -1179,8 +1213,14 @@ function confirmLogin() {
     return null;
   }
 
-  if (activeProfile === "Administrador") showAdmin(user);
-  else showPatio(user);
+  if (!isTemporaryLoginAuthorized(user, password)) {
+    showToast("Acesso temporariamente restrito. Use o login autorizado.");
+    return null;
+  }
+
+  const authorizedUser = TEMPORARY_LOGIN_GATE.username;
+  if (activeProfile === "Administrador") showAdmin(authorizedUser);
+  else showPatio(authorizedUser);
 }
 
 function exitTool() {
@@ -1384,6 +1424,7 @@ function showPatio(user) {
   $(".login-screen").classList.add("is-hidden");
   $("#adminShell").hidden = true;
   $("#patioScreen").hidden = false;
+  setShellScrollLock(false);
   $("#activeOperatorName").textContent = session.currentUser;
   renderPatio();
   showToast(`Bem-vindo, ${session.currentUser}.`);
@@ -1394,6 +1435,7 @@ function showAdmin(user) {
   $(".login-screen").classList.add("is-hidden");
   $("#patioScreen").hidden = true;
   $("#adminShell").hidden = false;
+  setShellScrollLock(false);
   $("#activeAdminName").textContent = session.currentUser;
   showAdminView("dashboard");
   renderPatio();
@@ -1431,6 +1473,7 @@ function returnToLogin() {
   $("#patioScreen").hidden = true;
   $("#adminShell").hidden = true;
   $(".login-screen").classList.remove("is-hidden");
+  setShellScrollLock(true);
   $("#loginPassword").value = "";
   $("#activeOperatorName").textContent = "";
   $("#activeAdminName").textContent = "";
@@ -1464,20 +1507,27 @@ function closeVehicleDialog(options = {}) {
   if (shouldReturnToClient) reopenClientDialogAfterVehicleRegistration(options.completedClientPlate || "");
 }
 
-function openScheduleDialog() {
-  selectedScheduleVehicleId = null;
+function openScheduleDialog(options = {}) {
+  selectedScheduledPatioVehicleId = Number(options.scheduledVehicleId || 0) || null;
+  const scheduledVehicle = getSelectedScheduledPatioVehicle();
+  selectedScheduleVehicleId = scheduledVehicle ? findVehicleByPlate(scheduledVehicle.plate)?.id || null : null;
   const dialog = $("#scheduleDialog");
   dialog.innerHTML = renderScheduleDialog();
   initIcons();
   bindScheduleDialogControls(dialog);
-  renderSchedulePlateResults("");
   setScheduleDateMin("#scheduleLookupDate");
-  renderScheduleLookupTimeOptions();
+  renderScheduleLookupTimeOptions(scheduledVehicle?.scheduledTime || "");
+
+  if (scheduledVehicle) hydrateScheduleDialogForEdit(dialog, scheduledVehicle);
+  else renderSchedulePlateResults("");
 
   if (typeof dialog.showModal === "function" && !dialog.open) dialog.showModal();
   else dialog.setAttribute("open", "");
 
-  $("#schedulePlateLookup").focus();
+  window.setTimeout(() => {
+    const focusTarget = scheduledVehicle ? "#scheduleLookupDate" : "#schedulePlateLookup";
+    $(focusTarget)?.focus();
+  }, 0);
 }
 
 function closeScheduleDialog() {
@@ -1486,15 +1536,18 @@ function closeScheduleDialog() {
   else dialog.removeAttribute("open");
   dialog.innerHTML = "";
   selectedScheduleVehicleId = null;
+  selectedScheduledPatioVehicleId = null;
 }
 
 function renderScheduleDialog() {
+  const scheduledVehicle = getSelectedScheduledPatioVehicle();
+  const isEditing = Boolean(scheduledVehicle);
   return `
     <form class="vehicle-box schedule-box" id="scheduleForm" novalidate>
       <div class="dialog-head">
         <div>
           <p class="eyebrow">Agendamento</p>
-          <h2>Novo agendamento</h2>
+          <h2>${isEditing ? "Editar agendamento" : "Novo agendamento"}</h2>
         </div>
         <button class="icon-button" id="closeScheduleDialog" type="button" aria-label="Fechar">
           <span data-icon="x"></span>
@@ -1503,12 +1556,12 @@ function renderScheduleDialog() {
 
       <label class="login-field" for="schedulePlateLookup">
         <span>Placa</span>
-        <input id="schedulePlateLookup" type="text" placeholder="ABC1D23" maxlength="8" autocomplete="off" required />
+        <input id="schedulePlateLookup" type="text" placeholder="ABC1D23" maxlength="8" autocomplete="off" required value="${escapeHtml(scheduledVehicle?.plate || "")}" ${isEditing ? "readonly" : ""} />
       </label>
 
-      <div class="schedule-result-list" id="schedulePlateResults"></div>
+      <div class="schedule-result-list" id="schedulePlateResults" ${isEditing ? "hidden" : ""}></div>
 
-      <section class="schedule-date-panel" id="scheduleDatePanel" hidden>
+      <section class="schedule-date-panel" id="scheduleDatePanel" ${isEditing ? "" : "hidden"}>
         <div class="schedule-selected-card" id="scheduleSelectedVehicle"></div>
 
         <div class="services-field schedule-services-field">
@@ -1554,7 +1607,7 @@ function renderScheduleDialog() {
         <button class="exit-button" id="cancelScheduleDialog" type="button">Cancelar</button>
         <button class="primary-button" id="confirmScheduleButton" type="submit" disabled>
           <span data-icon="check"></span>
-          <span>Agendar</span>
+          <span>${isEditing ? "Salvar agendamento" : "Agendar"}</span>
         </button>
       </div>
     </form>
@@ -1564,19 +1617,38 @@ function renderScheduleDialog() {
 function bindScheduleDialogControls(dialog) {
   $("#closeScheduleDialog", dialog).addEventListener("click", closeScheduleDialog);
   $("#cancelScheduleDialog", dialog).addEventListener("click", closeScheduleDialog);
-  $("#schedulePlateLookup", dialog).addEventListener("input", (event) => {
-    event.currentTarget.value = formatPlate(event.currentTarget.value);
-    selectedScheduleVehicleId = null;
-    $("#scheduleDatePanel", dialog).hidden = true;
-    $("#confirmScheduleButton", dialog).disabled = true;
-    renderSchedulePlateResults(event.currentTarget.value);
-  });
+  if (!selectedScheduledPatioVehicleId) {
+    $("#schedulePlateLookup", dialog).addEventListener("input", (event) => {
+      event.currentTarget.value = formatPlate(event.currentTarget.value);
+      selectedScheduleVehicleId = null;
+      $("#scheduleDatePanel", dialog).hidden = true;
+      $("#confirmScheduleButton", dialog).disabled = true;
+      renderSchedulePlateResults(event.currentTarget.value);
+    });
+  }
   $("#scheduleForm", dialog).addEventListener("submit", (event) => {
     event.preventDefault();
-    createScheduleFromSelectedVehicle();
+    saveScheduleDialog();
   });
   $("#addScheduleServiceButton", dialog).addEventListener("click", addScheduleServiceFromDropdown);
   $("#schedulePayment", dialog).addEventListener("change", updateScheduleBillingPanel);
+}
+
+function getSelectedScheduledPatioVehicle() {
+  return selectedScheduledPatioVehicleId ? patioVehicles.find((vehicle) => vehicle.id === selectedScheduledPatioVehicleId) || null : null;
+}
+
+function hydrateScheduleDialogForEdit(dialog, scheduledVehicle) {
+  const registryVehicle = selectedScheduleVehicleId ? findVehicleById(selectedScheduleVehicleId) : findVehicleByPlate(scheduledVehicle.plate);
+  const scheduleSource = registryVehicle || scheduledVehicle;
+  $("#scheduleDatePanel", dialog).hidden = false;
+  $("#confirmScheduleButton", dialog).disabled = false;
+  $("#scheduleSelectedVehicle", dialog).innerHTML = renderScheduleSelectedVehicle(scheduleSource);
+  renderScheduleServiceOptions(scheduleSource, scheduledVehicle.services || []);
+  $("#schedulePayment", dialog).value = scheduledVehicle.payment || "";
+  $("#scheduleLookupDate", dialog).value = scheduledVehicle.scheduledDate || "";
+  $("#scheduleLookupTime", dialog).value = scheduledVehicle.scheduledTime || "";
+  updateScheduleBillingPanel();
 }
 
 function renderSchedulePlateResults(query) {
@@ -1822,6 +1894,91 @@ async function createScheduleFromSelectedVehicle() {
 
   closeScheduleDialog();
   addVehicleToPatio(scheduledVehicle);
+}
+
+async function saveScheduleDialog() {
+  if (selectedScheduledPatioVehicleId) {
+    await updateScheduleFromSelectedVehicle();
+    return;
+  }
+
+  await createScheduleFromSelectedVehicle();
+}
+
+async function updateScheduleFromSelectedVehicle() {
+  const scheduledVehicle = getSelectedScheduledPatioVehicle();
+  const registryVehicle = selectedScheduleVehicleId ? findVehicleById(selectedScheduleVehicleId) : findVehicleByPlate(scheduledVehicle?.plate || "");
+  const dateInput = $("#scheduleLookupDate");
+  const timeInput = $("#scheduleLookupTime");
+  const paymentInput = $("#schedulePayment");
+  const services = getSelectedScheduleServices();
+  if (!scheduledVehicle || !registryVehicle) {
+    showToast("Agendamento não localizado.");
+    return;
+  }
+  if (!services.length) {
+    showToast("Selecione ao menos um serviço contratado.");
+    return;
+  }
+  if (!paymentInput.reportValidity() || !dateInput.reportValidity() || !timeInput.reportValidity()) return;
+  if (!validateScheduleSlot(scheduledVehicle.plate, dateInput.value, timeInput.value, scheduledVehicle.id)) {
+    (!dateInput.value ? dateInput : timeInput).focus();
+    return;
+  }
+
+  let selectedInvoice = null;
+  if (paymentInput.value === "Faturado") {
+    const invoiceId = $("#scheduleInvoiceSelect")?.value || "";
+    selectedInvoice = billingInvoices.find((item) => String(item.id) === String(invoiceId));
+    if (!selectedInvoice) {
+      await showMessageBox({
+        title: "Fatura obrigatória",
+        message:
+          "Para editar como Faturado, selecione uma fatura aberta do cliente. Se não houver fatura disponível, abra uma nova na Central de Faturas após aprovação do administrador.",
+        eyebrow: "Financeiro",
+        confirmLabel: "Entendi"
+      });
+      return;
+    }
+  }
+
+  const previousValue = getVehiclePaymentTotal(scheduledVehicle);
+  const previousService = scheduledVehicle.service;
+  const previousPayment = scheduledVehicle.payment;
+  const refreshedSchedule = buildScheduledVehicleFromRegistry(registryVehicle, dateInput.value, timeInput.value, {
+    services,
+    payment: paymentInput.value
+  });
+
+  if (previousPayment === "Faturado" && scheduledVehicle.billing) {
+    detachVehicleFromBilling(scheduledVehicle, previousValue, previousService);
+  }
+
+  Object.assign(scheduledVehicle, {
+    brand: refreshedSchedule.brand,
+    model: refreshedSchedule.model,
+    color: refreshedSchedule.color,
+    type: refreshedSchedule.type,
+    category: refreshedSchedule.category,
+    owner: refreshedSchedule.owner,
+    phone: refreshedSchedule.phone,
+    services,
+    service: refreshedSchedule.service,
+    payment: refreshedSchedule.payment,
+    scheduledDate: refreshedSchedule.scheduledDate,
+    scheduledTime: refreshedSchedule.scheduledTime,
+    entry: refreshedSchedule.entry,
+    status: "agendado"
+  });
+
+  if (scheduledVehicle.payment === "Faturado" && selectedInvoice && !attachVehicleToInvoice(scheduledVehicle, selectedInvoice)) {
+    showToast("Não foi possível atualizar o vínculo faturado do agendamento.");
+    return;
+  }
+
+  closeScheduleDialog();
+  refreshScheduleScreens();
+  showToast(`Agendamento de ${scheduledVehicle.plate} atualizado.`);
 }
 
 function buildScheduledVehicleFromRegistry(registryVehicle, scheduledDate, scheduledTime, options = {}) {
@@ -3317,6 +3474,14 @@ function getVehicleSpecialCareFormState() {
   };
 }
 
+function inferVehicleSpecialCareTypeFromTags(selectedTags = []) {
+  const firstTag = (selectedTags || []).find(Boolean);
+  if (!firstTag) return "Cuidado especial";
+  const option = vehicleSpecialCareCombinedRestrictionOptions.find((item) => item.tag === firstTag);
+  const group = vehicleSpecialCareOptionGroups.find((item) => item.options.includes(firstTag));
+  return group?.title || option?.label || "Cuidado especial";
+}
+
 function renderVehicleSpecialCareGroupedChoices(prefix, selectedTags) {
   return `
     <div class="vehicle-special-care-choice-groups">
@@ -3333,7 +3498,8 @@ function renderVehicleSpecialCareGroupedChoices(prefix, selectedTags) {
               </div>
               ${renderChoiceChipGroup(options, selectedTags, {
                 name: prefix,
-                twoColumns: true
+                compact: true,
+                variant: "list"
               })}
             </article>
           `;
@@ -3348,14 +3514,6 @@ function renderVehicleSpecialCareFields(prefix, state, options = {}) {
   const selectedTags = [...(state.restrictionTags || []), ...(state.recommendedTags || [])];
   return `
     <div class="vehicle-special-care-fields${compact ? " is-compact" : ""}" data-special-care-fields="${escapeHtml(prefix)}" ${state.enabled ? "" : "hidden"}>
-      <div class="vehicle-form-grid client-form-grid">
-        <label class="login-field" for="${escapeHtml(prefix)}Type">
-          <span>Tipo de cuidado</span>
-          <select id="${escapeHtml(prefix)}Type">
-            ${renderSelectOptions(vehicleSpecialCareTypes, state.type || vehicleSpecialCareTypes[0] || "")}
-          </select>
-        </label>
-      </div>
       <div class="vehicle-special-care-choice-block">
         <span>Restrições e cuidados de execução</span>
         ${renderVehicleSpecialCareGroupedChoices(`${prefix}Restriction`, selectedTags)}
@@ -3449,7 +3607,7 @@ function readVehicleSpecialCareFormState(container, prefix) {
   const selectedRestrictions = getCheckedValuesByName(container, `${prefix}Restriction`);
   return {
     enabled,
-    type: $(`#${prefix}Type`, container)?.value || vehicleSpecialCareTypes[0] || "Outro",
+    type: inferVehicleSpecialCareTypeFromTags(selectedRestrictions),
     attentionLevel: $(`#${prefix}AttentionLevel`, container)?.value || "Atenção",
     source: $(`#${prefix}Source`, container)?.value || vehicleSpecialCareSources[0] || "Informado pelo cliente",
     restrictionTags: selectedRestrictions,
@@ -7414,6 +7572,360 @@ function renderAdminTrendGrid() {
     .join("");
 }
 
+function getDashboardPeriodLabel(periodKey) {
+  return DASHBOARD_PERIOD_PRESETS.find((preset) => preset.key === periodKey)?.label || "30 dias";
+}
+
+function getAdminDashboardSnapshot() {
+  return {
+    attendances: patioVehicles.map((vehicle) => ({
+      id: vehicle.id,
+      status: vehicle.status || "",
+      scheduledDate: vehicle.scheduledDate || "",
+      finishedDate: vehicle.finishedDate || "",
+      date: vehicle.date || "",
+      scheduledTime: vehicle.scheduledTime || vehicle.entry || "",
+      entryTime: vehicle.entry || "",
+      paymentMethod: vehicle.payment || "",
+      totalValue: toFiniteNumber(getVehiclePaymentTotal(vehicle)),
+      services: Array.isArray(vehicle.services) ? vehicle.services : [],
+      service: vehicle.service || ""
+    })),
+    cashEntries: cashEntries.map((entry) => ({
+      id: entry.id,
+      date: entry.date || "",
+      time: entry.time || "",
+      value: toFiniteNumber(entry.value),
+      status: entry.status || "",
+      method: entry.method || "",
+      category: entry.category || "",
+      type: entry.type || "",
+      description: entry.description || ""
+    })),
+    openPayments: getActiveOpenPayments().map((payment) => ({
+      id: payment.id,
+      value: toFiniteNumber(payment.value),
+      status: payment.status || "",
+      dueDate: payment.dueDate || ""
+    }))
+  };
+}
+
+function getDashboardReferenceDate(snapshot) {
+  const dates = [
+    ...(snapshot?.attendances || []).flatMap((attendance) => [attendance.finishedDate, attendance.scheduledDate, attendance.date]),
+    ...(snapshot?.cashEntries || []).map((entry) => entry.date),
+    ...(snapshot?.openPayments || []).map((payment) => payment.dueDate)
+  ].filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value || ""));
+  if (!dates.length) return getTodayISO();
+  return [...dates].sort().at(-1) || getTodayISO();
+}
+
+function renderDashboardMetricCard(metric) {
+  return `
+    <article class="metric-card dashboard-kpi-card">
+      <span class="metric-icon">${icons[metric.icon]}</span>
+      <span>${escapeHtml(metric.label)}</span>
+      <strong>${escapeHtml(metric.value)}</strong>
+      <small>${escapeHtml(metric.detail)}</small>
+    </article>
+  `;
+}
+
+function renderDashboardEmptyState(message) {
+  return `<div class="dashboard-empty-state">${escapeHtml(message || "Ainda não há dados suficientes para este período.")}</div>`;
+}
+
+function buildSvgLineChartGeometry(data) {
+  const values = data.map((entry) => toFiniteNumber(entry.value));
+  const maxValue = Math.max(...values, 1);
+  const width = 100;
+  const height = 64;
+  const step = data.length > 1 ? width / (data.length - 1) : width;
+  const points = data.map((entry, index) => {
+    const value = toFiniteNumber(entry.value);
+    const x = Number((index * step).toFixed(2));
+    const y = Number((height - (value / maxValue) * height).toFixed(2));
+    return { x, y };
+  });
+  const linePoints = points.map((point) => `${point.x},${point.y}`).join(" ");
+  const areaPath = points.length
+    ? `M ${points[0].x} ${height} L ${points.map((point) => `${point.x} ${point.y}`).join(" L ")} L ${points.at(-1).x} ${height} Z`
+    : "";
+  return { linePoints, areaPath };
+}
+
+function renderDashboardLineChart(chart, formatter) {
+  if (!chart.hasData) return renderDashboardEmptyState(chart.emptyMessage);
+  const geometry = buildSvgLineChartGeometry(chart.data);
+  return `
+    <div class="dashboard-line-chart" role="img" aria-label="Evolução da receita no período selecionado">
+      <svg viewBox="0 0 100 64" preserveAspectRatio="none" aria-hidden="true">
+        <path class="dashboard-line-chart-area" d="${geometry.areaPath}"></path>
+        <polyline class="dashboard-line-chart-line" points="${geometry.linePoints}"></polyline>
+      </svg>
+      <div class="dashboard-axis-labels">
+        ${chart.data
+          .map(
+            (entry) => `
+              <div class="dashboard-axis-label">
+                <strong>${escapeHtml(formatter(toFiniteNumber(entry.value)))}</strong>
+                <span>${escapeHtml(entry.label)}</span>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderDashboardGroupedBarChart(chart, formatIncoming, formatOutgoing) {
+  if (!chart.hasData) return renderDashboardEmptyState(chart.emptyMessage);
+  const maxValue = Math.max(
+    ...chart.data.flatMap((entry) => [toFiniteNumber(entry.incoming), toFiniteNumber(entry.outgoing)]),
+    1
+  );
+
+  return `
+    <div class="dashboard-grouped-chart" role="img" aria-label="Entradas e saídas do período selecionado">
+      <div class="dashboard-grouped-bars">
+        ${chart.data
+          .map((entry) => {
+            const incomingHeight = Math.max(8, Math.round((toFiniteNumber(entry.incoming) / maxValue) * 100));
+            const outgoingHeight = Math.max(8, Math.round((toFiniteNumber(entry.outgoing) / maxValue) * 100));
+            return `
+              <div class="dashboard-grouped-bar">
+                <div class="dashboard-grouped-bar-values">
+                  <span>${escapeHtml(formatIncoming(toFiniteNumber(entry.incoming)))}</span>
+                  <span>${escapeHtml(formatOutgoing(toFiniteNumber(entry.outgoing)))}</span>
+                </div>
+                <div class="dashboard-grouped-bar-track">
+                  <span class="dashboard-grouped-bar-shape is-incoming" style="height: ${incomingHeight}%"></span>
+                  <span class="dashboard-grouped-bar-shape is-outgoing" style="height: ${outgoingHeight}%"></span>
+                </div>
+                <span class="dashboard-grouped-bar-label">${escapeHtml(entry.label)}</span>
+              </div>
+            `;
+          })
+          .join("")}
+      </div>
+      <div class="dashboard-chart-legend">
+        <span><i class="legend-swatch is-incoming"></i> Entradas</span>
+        <span><i class="legend-swatch is-outgoing"></i> Saídas</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderDashboardColumnChart(chart) {
+  if (!chart.hasData) return renderDashboardEmptyState(chart.emptyMessage);
+  const maxValue = Math.max(...chart.data.map((entry) => toFiniteNumber(entry.value)), 1);
+  return `
+    <div class="dashboard-column-chart" role="img" aria-label="Atendimentos por período">
+      ${chart.data
+        .map((entry) => {
+          const height = Math.max(8, Math.round((toFiniteNumber(entry.value) / maxValue) * 100));
+          return `
+            <div class="dashboard-column-bar">
+              <strong>${toFiniteNumber(entry.value)}</strong>
+              <span class="dashboard-column-bar-shape" style="height: ${height}%"></span>
+              <span>${escapeHtml(entry.label)}</span>
+            </div>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function renderDashboardStackedStatusChart(chart) {
+  if (!chart.hasData) return renderDashboardEmptyState(chart.emptyMessage);
+  const total = Math.max(chart.data.reduce((sum, entry) => sum + toFiniteNumber(entry.value), 0), 1);
+  return `
+    <div class="dashboard-status-chart">
+      <div class="dashboard-status-track" role="img" aria-label="Distribuição atual do pátio">
+        ${chart.data
+          .filter((entry) => toFiniteNumber(entry.value) > 0)
+          .map((entry) => {
+            const width = Math.max(6, Math.round((toFiniteNumber(entry.value) / total) * 100));
+            return `<span class="dashboard-status-segment status-${escapeHtml(entry.id)}" style="width:${width}%"></span>`;
+          })
+          .join("")}
+      </div>
+      <div class="dashboard-status-list">
+        ${chart.data
+          .map(
+            (entry) => `
+              <div class="dashboard-status-item">
+                <span class="status-dot-icon status-${escapeHtml(entry.id)}">${icons[statusMeta[entry.id]?.icon || "dashboard"]}</span>
+                <span>${escapeHtml(statusMeta[entry.id]?.label || capitalize(entry.label))}</span>
+                <strong>${toFiniteNumber(entry.value)}</strong>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderDashboardHorizontalBarChart(chart, formatter = (value) => String(value)) {
+  if (!chart.hasData) return renderDashboardEmptyState(chart.emptyMessage);
+  const maxValue = Math.max(...chart.data.map((entry) => toFiniteNumber(entry.value)), 1);
+  return `
+    <div class="dashboard-horizontal-chart" role="img" aria-label="Ranking de serviços">
+      ${chart.data
+        .map((entry) => {
+          const width = Math.max(8, Math.round((toFiniteNumber(entry.value) / maxValue) * 100));
+          return `
+            <div class="dashboard-horizontal-row">
+              <div class="dashboard-horizontal-copy">
+                <strong>${escapeHtml(entry.label)}</strong>
+                <span>${escapeHtml(formatter(toFiniteNumber(entry.value)))}</span>
+              </div>
+              <div class="dashboard-horizontal-track">
+                <span class="dashboard-horizontal-fill" style="width:${width}%"></span>
+              </div>
+            </div>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function renderDashboardDonutChart(chart) {
+  if (!chart.hasData) return renderDashboardEmptyState(chart.emptyMessage);
+  const total = Math.max(chart.data.reduce((sum, entry) => sum + toFiniteNumber(entry.value), 0), 1);
+  const palette = ["#25c0e3", "#0c425d", "#8de314", "#4a90ff", "#ffb554", "#89a6b8"];
+  let cursor = 0;
+  const gradient = chart.data
+    .map((entry, index) => {
+      const start = cursor;
+      const slice = (toFiniteNumber(entry.value) / total) * 100;
+      const end = cursor + slice;
+      cursor = end;
+      entry.color = palette[index % palette.length];
+      return `${entry.color} ${start}% ${end}%`;
+    })
+    .join(", ");
+
+  return `
+    <div class="dashboard-donut-wrap">
+      <div class="dashboard-donut-chart" style="--donut-gradient: conic-gradient(${gradient});" role="img" aria-label="Formas de pagamento confirmadas"></div>
+      <div class="dashboard-donut-legend">
+        ${chart.data
+          .map(
+            (entry) => `
+              <div class="dashboard-donut-item">
+                <i class="legend-swatch" style="background:${entry.color}"></i>
+                <span>${escapeHtml(entry.label)}</span>
+                <strong>${escapeHtml(formatCurrency(toFiniteNumber(entry.value)))}</strong>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderDashboardChartCard({ title, subtitle, description, summary, visual, footer, span = "" }) {
+  return `
+    <article class="admin-panel dashboard-chart-card ${span}">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">${escapeHtml(subtitle)}</p>
+          <h2>${escapeHtml(title)}</h2>
+        </div>
+      </div>
+      <p class="dashboard-chart-description">${escapeHtml(description)}</p>
+      <strong class="dashboard-chart-summary">${escapeHtml(summary)}</strong>
+      ${visual}
+      <p class="dashboard-chart-footer">${escapeHtml(footer)}</p>
+    </article>
+  `;
+}
+
+function renderResponsiveDashboardCharts(dashboardMetrics) {
+  const periodLabel = getDashboardPeriodLabel(adminDashboardPeriodKey);
+  const revenueData = dashboardMetrics.charts.revenueTrend.data;
+  const revenueCurrent = revenueData.at(-1)?.value || 0;
+  const revenuePrevious = revenueData.at(-2)?.value || 0;
+  const revenueDelta = revenueCurrent - revenuePrevious;
+
+  const cards = [
+    renderDashboardChartCard({
+      title: "Evolução da receita",
+      subtitle: "Linha / área",
+      description: "Receita confirmada em caixa ao longo do período selecionado.",
+      summary: `${formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value)} · ${revenueDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(revenueDelta))}`,
+      visual: renderDashboardLineChart(dashboardMetrics.charts.revenueTrend, formatCompactCurrency),
+      footer: `${periodLabel} · origem principal: cashEntries confirmados`,
+      span: "dashboard-chart-card--wide"
+    }),
+    renderDashboardChartCard({
+      title: "Entradas x saídas",
+      subtitle: "Barras agrupadas",
+      description: "Movimento financeiro do período, sem depender de Supabase.",
+      summary: `${formatCurrency(dashboardMetrics.kpis.netCash.value)} de resultado líquido`,
+      visual: renderDashboardGroupedBarChart(dashboardMetrics.charts.cashflowBreakdown, formatCompactCurrency, formatCompactCurrency),
+      footer: `${periodLabel} · origem principal: cashEntries`
+    }),
+    renderDashboardChartCard({
+      title: "Atendimentos por período",
+      subtitle: "Colunas",
+      description: "Atendimentos operacionais não cancelados no intervalo selecionado.",
+      summary: `${dashboardMetrics.kpis.attendances.value} atendimento(s)`,
+      visual: renderDashboardColumnChart(dashboardMetrics.charts.attendanceTrend),
+      footer: `${periodLabel} · origem principal: patioVehicles`
+    }),
+    renderDashboardChartCard({
+      title: "Status do pátio",
+      subtitle: "Barra empilhada",
+      description: "Leitura atual dos veículos por etapa operacional.",
+      summary: `${dashboardMetrics.kpis.activePatio.value} veículo(s) ativos agora`,
+      visual: renderDashboardStackedStatusChart(dashboardMetrics.charts.patioStatus),
+      footer: "Snapshot atual · origem principal: patioVehicles"
+    }),
+    renderDashboardChartCard({
+      title: "Serviços mais vendidos",
+      subtitle: "Barras horizontais",
+      description: "Ranking por recorrência operacional no período selecionado.",
+      summary: `${dashboardMetrics.charts.topServices.data.length || 0} categoria(s) monitoradas`,
+      visual: renderDashboardHorizontalBarChart(dashboardMetrics.charts.topServices, (value) => `${value} venda(s)`),
+      footer: `${periodLabel} · origem principal: patioVehicles`
+    }),
+    renderDashboardChartCard({
+      title: "Formas de pagamento",
+      subtitle: "Donut",
+      description: "Distribuição das entradas confirmadas por meio de pagamento.",
+      summary: `${formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value)} confirmados`,
+      visual: renderDashboardDonutChart(dashboardMetrics.charts.paymentMethods),
+      footer: `${periodLabel} · origem principal: cashEntries`
+    })
+  ];
+
+  return `
+    <section class="dashboard-filter-bar" aria-label="Filtro temporal do dashboard">
+      <div class="screen-filters dashboard-filter-buttons">
+        ${DASHBOARD_PERIOD_PRESETS.map(
+          (preset) => `
+            <button class="${preset.key === adminDashboardPeriodKey ? "is-active" : ""}" type="button" data-dashboard-period="${preset.key}">
+              ${escapeHtml(preset.label)}
+            </button>
+          `
+        ).join("")}
+      </div>
+      <p class="dashboard-filter-copy">Período ativo: ${escapeHtml(periodLabel)}</p>
+    </section>
+    <section class="admin-trend-grid" id="adminDashboardCharts" aria-label="Gráficos gerenciais responsivos">
+      ${cards.join("")}
+    </section>
+  `;
+}
+
 function getAdminAlertItems(billedOpen) {
   const scheduledCashDue = getCashflowScheduledDueToday();
   const lowStockProducts = getLowStockProducts();
@@ -7519,7 +8031,7 @@ function handleAdminAlertNavigation(view, focus = "") {
   if (!view || !showAdminView(view)) return;
   window.setTimeout(() => {
     if (focus === "maintenance") $("#adminMaintenanceDue")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    if (focus === "trends") $("#adminTrendGrid")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (focus === "trends") $("#adminDashboardCharts")?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, 120);
 }
 
@@ -7530,6 +8042,137 @@ function renderAdminDashboard() {
   const maintenanceContainer = $("#adminMaintenanceDue");
   const trendContainer = $("#adminTrendGrid");
   if (!metricsContainer || !flowContainer || !alertsContainer) return;
+
+  {
+    const dashboardSnapshot = getAdminDashboardSnapshot();
+    const dashboardMetrics = buildDashboardMetrics(dashboardSnapshot, {
+      periodKey: adminDashboardPeriodKey,
+      nowIso: getDashboardReferenceDate(dashboardSnapshot)
+    });
+    const activeVehiclesSnapshot = patioVehicles.filter((vehicle) => ["aguardando", "lavando", "pronto"].includes(vehicle.status));
+    const expectedRevenueSnapshot = activeVehiclesSnapshot.reduce(
+      (total, vehicle) => total + toFiniteNumber(getVehiclePaymentTotal(vehicle)),
+      0
+    );
+    const billedOpenSnapshot = patioVehicles
+      .filter((vehicle) => vehicle.payment === "Faturado" && !isFinalizedStatus(vehicle.status))
+      .reduce((total, vehicle) => total + toFiniteNumber(getVehiclePaymentTotal(vehicle)), 0);
+    const lowStockAlertsSnapshot = getLowStockProducts().length + getLowStockSupplies().length;
+    const servicesWithoutProfileSnapshot = getServicesWithoutSupplyProfile().length;
+    const patioVehiclesWithSpecialCareSnapshot = activeVehiclesSnapshot.filter((vehicle) => hasVehicleSpecialCare(vehicle)).length;
+    const acknowledgedCareWarningsSnapshot = patioVehicles.filter((vehicle) =>
+      (vehicle.specialCareWarningLog || []).some((entry) => entry.acknowledged)
+    ).length;
+
+    const metricsSnapshot = [
+      {
+        label: "Receita confirmada",
+        value: formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value),
+        detail: `${getDashboardPeriodLabel(adminDashboardPeriodKey)} · qualidade confirmada`,
+        icon: "wallet"
+      },
+      {
+        label: "Ticket médio",
+        value: formatCurrency(dashboardMetrics.kpis.ticketAverage.value),
+        detail: "Derivado dos atendimentos com valor apurado",
+        icon: "card"
+      },
+      {
+        label: "Atendimentos",
+        value: String(dashboardMetrics.kpis.attendances.value),
+        detail: "Não cancelados dentro do período ativo",
+        icon: "service"
+      },
+      {
+        label: "Pátio atual",
+        value: String(dashboardMetrics.kpis.activePatio.value),
+        detail: "Veículos ativos na operação agora",
+        icon: "carFront"
+      },
+      {
+        label: "Contas a receber",
+        value: formatCurrency(dashboardMetrics.kpis.receivablesOpen.value),
+        detail: "Recebimentos em aberto monitorados",
+        icon: "invoice"
+      },
+      {
+        label: "Resultado líquido",
+        value: formatCurrency(dashboardMetrics.kpis.netCash.value),
+        detail: "Entradas menos saídas no período",
+        icon: "cashflow"
+      },
+      {
+        label: "Receita prevista",
+        value: formatCurrency(expectedRevenueSnapshot),
+        detail: "Valor operacional ainda em pátio",
+        icon: "package"
+      },
+      {
+        label: "Faturado aberto",
+        value: formatCurrency(billedOpenSnapshot),
+        detail: "Atendimentos faturados ainda não liquidados",
+        icon: "wallet"
+      },
+      {
+        label: "Com cuidado especial",
+        value: String(patioVehiclesWithSpecialCareSnapshot),
+        detail: "Veículos ativos com restrições técnicas",
+        icon: "alert"
+      },
+      {
+        label: "Alertas confirmados",
+        value: String(acknowledgedCareWarningsSnapshot),
+        detail: "Alertas técnicos já reconhecidos",
+        icon: "shield"
+      },
+      {
+        label: "Alertas de estoque",
+        value: String(lowStockAlertsSnapshot),
+        detail: "Produtos e insumos em nível mínimo",
+        icon: "alert"
+      },
+      {
+        label: "Serviços sem ficha",
+        value: String(servicesWithoutProfileSnapshot),
+        detail: "Perfis de consumo ainda pendentes",
+        icon: "service"
+      }
+    ];
+
+    metricsContainer.innerHTML = metricsSnapshot.map(renderDashboardMetricCard).join("");
+
+    const totalVehiclesSnapshot = Math.max(patioVehicles.length, 1);
+    flowContainer.innerHTML = statusOrder
+      .map((status) => {
+        const meta = statusMeta[status];
+        const count = countByStatus(status);
+        const percent = count ? Math.max((count / totalVehiclesSnapshot) * 100, 8) : 0;
+        return `
+          <div class="flow-row">
+            <div class="flow-label">
+              <span class="status-dot-icon status-${status}">${icons[meta.icon]}</span>
+              <span>${getStatusGroupLabel(status)}</span>
+              <strong>${count}</strong>
+            </div>
+            <span class="flow-track">
+              <span class="flow-bar status-${status}" style="width: ${percent}%"></span>
+            </span>
+          </div>
+        `;
+      })
+      .join("");
+
+    alertsContainer.innerHTML = renderAdminAlerts(billedOpenSnapshot);
+    if (maintenanceContainer) maintenanceContainer.innerHTML = renderMaintenanceDashboardPanel();
+    if (trendContainer) trendContainer.innerHTML = renderResponsiveDashboardCharts(dashboardMetrics);
+    $$("[data-dashboard-period]", trendContainer || document).forEach((button) => {
+      button.addEventListener("click", () => {
+        adminDashboardPeriodKey = button.dataset.dashboardPeriod || "last30Days";
+        renderAdminDashboard();
+      });
+    });
+    return;
+  }
 
   const activeVehicles = patioVehicles.filter((vehicle) =>
     ["aguardando", "lavando", "pronto"].includes(vehicle.status)
@@ -7796,6 +8439,107 @@ function getScheduledVehiclesChronological() {
     });
 }
 
+function getAdminScheduleSearchText(vehicle) {
+  return normalizeText(
+    [
+      vehicle.plate,
+      vehicle.owner,
+      vehicle.service,
+      vehicle.payment,
+      vehicle.status,
+      vehicle.model,
+      vehicle.brand
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+}
+
+function getAdminScheduleAvailableYears(scheduledVehicles, referenceMonth) {
+  const yearSet = new Set([referenceMonth.getFullYear(), new Date().getFullYear()]);
+  scheduledVehicles.forEach((vehicle) => {
+    const year = Number(String(vehicle.scheduledDate || "").slice(0, 4));
+    if (Number.isFinite(year) && year >= 2000 && year <= 2100) yearSet.add(year);
+  });
+  return [...yearSet].sort((left, right) => left - right);
+}
+
+function setAdminScheduleReferenceMonth(year, monthIndex) {
+  const currentMonth = getMonthStartFromOffset(0);
+  adminScheduleMonthOffset = (Number(year) - currentMonth.getFullYear()) * 12 + (Number(monthIndex) - currentMonth.getMonth());
+  adminScheduleSelectedDate = "";
+  adminScheduleActionVehicleId = null;
+}
+
+function refreshScheduleScreens() {
+  renderPatio();
+  renderAdminDashboard();
+  refreshCashflowScreen();
+  const scheduleView = $("#adminScheduleView");
+  const scheduleContainer = $("#adminScheduleContent");
+  if (scheduleView && !scheduleView.hidden && scheduleContainer) renderAdminScheduleScreen(scheduleContainer);
+}
+
+function renderScheduleAppointmentSummary(vehicle, includeStatus = false) {
+  const statusLabel = statusMeta[vehicle.status]?.label || vehicle.status;
+  return `
+    <strong>${escapeHtml(vehicle.scheduledTime || "--:--")} · ${escapeHtml(vehicle.plate)}</strong>
+    <p>${escapeHtml(vehicle.owner)} · ${escapeHtml(vehicle.service || "Serviço a confirmar")}</p>
+    <small>${escapeHtml(vehicle.payment || "Pagamento a definir")}${includeStatus ? ` · ${escapeHtml(statusLabel)}` : ""}</small>
+  `;
+}
+
+function renderScheduleAppointmentActionPanel(vehicle) {
+  if (!vehicle) {
+    return `
+      <article class="schedule-appointment-panel is-empty">
+        <p class="empty-alert">Selecione um agendamento no calendário para abrir ações rápidas.</p>
+      </article>
+    `;
+  }
+
+  const isSchedulable = vehicle.status === "agendado";
+  return `
+    <article class="schedule-appointment-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Ações do agendamento</p>
+          <h2>${escapeHtml(vehicle.plate)} · ${escapeHtml(formatDateBR(vehicle.scheduledDate || getTodayISO()))}</h2>
+        </div>
+      </div>
+      <div class="schedule-appointment-summary">
+        ${renderScheduleAppointmentSummary(vehicle, true)}
+      </div>
+      <div class="schedule-appointment-actions">
+        ${
+          isSchedulable
+            ? `
+              <button class="primary-button" type="button" data-schedule-action="enter" data-schedule-vehicle-id="${vehicle.id}">
+                <span data-icon="check"></span>
+                <span>Entrar no pátio</span>
+              </button>
+              <button class="ghost-action" type="button" data-schedule-action="edit" data-schedule-vehicle-id="${vehicle.id}">
+                <span data-icon="service"></span>
+                <span>Alterar / editar</span>
+              </button>
+              <button class="exit-button" type="button" data-schedule-action="cancel" data-schedule-vehicle-id="${vehicle.id}">
+                <span data-icon="cancel"></span>
+                <span>Cancelar agendamento</span>
+              </button>
+            `
+            : `
+              <p class="empty-alert">Este agendamento já foi tratado no fluxo operacional. Você pode acompanhá-lo pelo Pátio de Atendimento.</p>
+              <button class="ghost-action" type="button" data-schedule-action="open-patio" data-schedule-vehicle-id="${vehicle.id}">
+                <span data-icon="carFront"></span>
+                <span>Abrir no pátio</span>
+              </button>
+            `
+        }
+      </div>
+    </article>
+  `;
+}
+
 function ensureAdminScheduleSelectedDate(referenceMonth, scheduledVehicles) {
   const monthKey = formatLocalDateISO(referenceMonth).slice(0, 7);
   if (adminScheduleSelectedDate && adminScheduleSelectedDate.startsWith(monthKey)) return adminScheduleSelectedDate;
@@ -7811,16 +8555,25 @@ function renderAdminScheduleScreen(container) {
   const referenceMonth = getMonthStartFromOffset(adminScheduleMonthOffset);
   const monthKey = formatLocalDateISO(referenceMonth).slice(0, 7);
   const monthLabel = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(referenceMonth);
-  adminScheduleSelectedDate = ensureAdminScheduleSelectedDate(referenceMonth, scheduledVehicles);
-
+  const availableYears = getAdminScheduleAvailableYears(scheduledVehicles, referenceMonth);
   const monthVehicles = scheduledVehicles.filter((vehicle) => (vehicle.scheduledDate || "").startsWith(monthKey));
+  const normalizedQuery = normalizeText(adminScheduleSearchQuery);
+  const filteredMonthVehicles = normalizedQuery
+    ? monthVehicles.filter((vehicle) => getAdminScheduleSearchText(vehicle).includes(normalizedQuery))
+    : monthVehicles;
+  adminScheduleSelectedDate = ensureAdminScheduleSelectedDate(referenceMonth, filteredMonthVehicles.length ? filteredMonthVehicles : monthVehicles);
   const upcoming = scheduledVehicles.filter((vehicle) => `${vehicle.scheduledDate}T${vehicle.scheduledTime || "00:00"}` >= `${getTodayISO()}T00:00`);
-  const selectedDayVehicles = scheduledVehicles.filter((vehicle) => vehicle.scheduledDate === adminScheduleSelectedDate);
+  const selectedDayVehicles = filteredMonthVehicles.filter((vehicle) => vehicle.scheduledDate === adminScheduleSelectedDate);
+  const selectedActionVehicle =
+    selectedDayVehicles.find((vehicle) => Number(vehicle.id) === Number(adminScheduleActionVehicleId)) ||
+    getPatioVehicleById(adminScheduleActionVehicleId) ||
+    null;
 
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo dos agendamentos">
+    <section class="screen-metrics schedule-screen-metrics" aria-label="Resumo dos agendamentos">
       ${[
         { label: "No mês", value: monthVehicles.length, icon: "hourglass" },
+        { label: "Exibidos", value: filteredMonthVehicles.length, icon: "dashboard" },
         { label: "Futuros", value: upcoming.length, icon: "clock" },
         { label: "Hoje", value: scheduledVehicles.filter((vehicle) => vehicle.scheduledDate === getTodayISO()).length, icon: "dashboard" },
         { label: "Passados", value: scheduledVehicles.filter((vehicle) => vehicle.scheduledDate < getTodayISO()).length, icon: "clipboard" }
@@ -7828,27 +8581,47 @@ function renderAdminScheduleScreen(container) {
         .map(renderScreenMetric)
         .join("")}
     </section>
-    <section class="admin-schedule-layout">
-      <article class="admin-panel schedule-calendar-panel">
-        <div class="schedule-calendar-toolbar">
-          <div>
-            <p class="eyebrow">Agenda mensal</p>
-            <h2>${escapeHtml(capitalize(monthLabel))}</h2>
-          </div>
-          <div class="schedule-calendar-actions">
-            <button class="ghost-action" type="button" data-schedule-shift="-1">Mês anterior</button>
-            <button class="ghost-action" type="button" data-schedule-shift="0">Mês atual</button>
-            <button class="ghost-action" type="button" data-schedule-shift="1">Próximo mês</button>
-          </div>
+    <article class="admin-panel schedule-calendar-panel">
+      <div class="schedule-calendar-toolbar">
+        <div>
+          <p class="eyebrow">Agenda mensal</p>
+          <h2>${escapeHtml(capitalize(monthLabel))}</h2>
         </div>
-        ${renderScheduleCalendarGrid(referenceMonth, scheduledVehicles)}
-      </article>
-      <article class="admin-panel schedule-agenda-panel">
+        <div class="schedule-calendar-actions">
+          <button class="ghost-action" type="button" data-schedule-shift="-1">Mês anterior</button>
+          <button class="ghost-action" type="button" data-schedule-shift="0">Mês atual</button>
+          <button class="ghost-action" type="button" data-schedule-shift="1">Próximo mês</button>
+        </div>
+      </div>
+      <div class="schedule-calendar-filter-row">
+        <label class="login-field schedule-filter-field" for="scheduleMonthFilter">
+          <span>Mês</span>
+          <select id="scheduleMonthFilter">
+            ${Array.from({ length: 12 }, (_, monthIndex) => {
+              const label = new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date(2026, monthIndex, 1));
+              return `<option value="${monthIndex}" ${referenceMonth.getMonth() === monthIndex ? "selected" : ""}>${escapeHtml(capitalize(label))}</option>`;
+            }).join("")}
+          </select>
+        </label>
+        <label class="login-field schedule-filter-field" for="scheduleYearFilter">
+          <span>Ano</span>
+          <select id="scheduleYearFilter">
+            ${availableYears.map((year) => `<option value="${year}" ${referenceMonth.getFullYear() === year ? "selected" : ""}>${year}</option>`).join("")}
+          </select>
+        </label>
+        <label class="screen-search schedule-search-field">
+          <span class="screen-search-icon">${icons.carFront}</span>
+          <input id="scheduleSearchInput" type="search" value="${escapeHtml(adminScheduleSearchQuery)}" placeholder="Buscar por cliente, placa, serviço ou pagamento" />
+        </label>
+      </div>
+      ${renderScheduleCalendarGrid(referenceMonth, filteredMonthVehicles)}
+      <section class="schedule-selected-day-panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Rotina do dia</p>
             <h2>${escapeHtml(formatDateBR(adminScheduleSelectedDate))}</h2>
           </div>
+          <span class="client-status-label">${selectedDayVehicles.length} item(ns)</span>
         </div>
         <div class="schedule-agenda-list">
           ${
@@ -7856,10 +8629,8 @@ function renderAdminScheduleScreen(container) {
               ? selectedDayVehicles
                   .map(
                     (vehicle) => `
-                      <button class="schedule-agenda-item" type="button" data-open-schedule-vehicle="${vehicle.id}">
-                        <strong>${escapeHtml(vehicle.scheduledTime || "--:--")} · ${escapeHtml(vehicle.plate)}</strong>
-                        <p>${escapeHtml(vehicle.owner)} · ${escapeHtml(vehicle.service || "Serviço a confirmar")}</p>
-                        <small>${escapeHtml(vehicle.payment || "Pagamento a definir")} · ${escapeHtml(statusMeta[vehicle.status]?.label || vehicle.status)}</small>
+                      <button class="schedule-agenda-item${Number(adminScheduleActionVehicleId) === Number(vehicle.id) ? " is-active" : ""}" type="button" data-schedule-vehicle="${vehicle.id}">
+                        ${renderScheduleAppointmentSummary(vehicle, true)}
                       </button>
                     `
                   )
@@ -7867,8 +8638,9 @@ function renderAdminScheduleScreen(container) {
               : '<p class="empty-alert">Nenhum agendamento para o dia selecionado.</p>'
           }
         </div>
-      </article>
-    </section>
+        ${renderScheduleAppointmentActionPanel(selectedActionVehicle)}
+      </section>
+    </article>
   `;
   initIcons();
   bindAdminScheduleScreenControls(container);
@@ -7889,26 +8661,27 @@ function renderScheduleCalendarGrid(referenceMonth, scheduledVehicles) {
     const isToday = dateKey === getTodayISO();
     const isSelected = dateKey === adminScheduleSelectedDate;
     cells.push(`
-      <button class="schedule-calendar-day${isOutsideMonth ? " is-outside-month" : ""}${isToday ? " is-today" : ""}${isSelected ? " is-selected" : ""}" type="button" data-schedule-date="${dateKey}">
-        <span class="schedule-calendar-day-head">
-          <span class="schedule-calendar-day-number">${cellDate.getDate()}</span>
-          ${items.length ? `<span class="schedule-calendar-day-count">${items.length}</span>` : ""}
-        </span>
+      <article class="schedule-calendar-day${isOutsideMonth ? " is-outside-month" : ""}${isToday ? " is-today" : ""}${isSelected ? " is-selected" : ""}">
+        <button class="schedule-calendar-day-select" type="button" data-schedule-date="${dateKey}">
+          <span class="schedule-calendar-day-head">
+            <span class="schedule-calendar-day-number">${cellDate.getDate()}</span>
+            ${items.length ? `<span class="schedule-calendar-day-count">${items.length}</span>` : ""}
+          </span>
+        </button>
         <span class="schedule-calendar-day-list">
           ${items
             .slice(0, 2)
             .map(
               (vehicle) => `
-                <span class="schedule-calendar-day-item">
-                  <strong>${escapeHtml(vehicle.scheduledTime || "--:--")} · ${escapeHtml(vehicle.plate)}</strong>
-                  <p>${escapeHtml(vehicle.owner)}</p>
-                </span>
+                <button class="schedule-calendar-day-item" type="button" data-schedule-vehicle="${vehicle.id}">
+                  ${renderScheduleAppointmentSummary(vehicle)}
+                </button>
               `
             )
             .join("")}
-          ${items.length > 2 ? `<span class="schedule-calendar-day-more">+${items.length - 2} agendamento(s)</span>` : ""}
+          ${items.length > 2 ? `<button class="schedule-calendar-day-more" type="button" data-schedule-date="${dateKey}">+${items.length - 2} agendamento(s)</button>` : ""}
         </span>
-      </button>
+      </article>
     `);
   }
 
@@ -7926,6 +8699,7 @@ function bindAdminScheduleScreenControls(container) {
       const shift = Number(button.dataset.scheduleShift || 0);
       adminScheduleMonthOffset = shift === 0 ? 0 : adminScheduleMonthOffset + shift;
       adminScheduleSelectedDate = "";
+      adminScheduleActionVehicleId = null;
       renderAdminScheduleScreen(container);
     });
   });
@@ -7933,16 +8707,80 @@ function bindAdminScheduleScreenControls(container) {
   $$("[data-schedule-date]", container).forEach((button) => {
     button.addEventListener("click", () => {
       adminScheduleSelectedDate = button.dataset.scheduleDate || getTodayISO();
+      adminScheduleActionVehicleId = null;
       renderAdminScheduleScreen(container);
     });
   });
 
-  $$("[data-open-schedule-vehicle]", container).forEach((button) => {
+  $$("[data-schedule-vehicle]", container).forEach((button) => {
     button.addEventListener("click", () => {
-      const vehicleId = Number(button.dataset.openScheduleVehicle || 0);
+      const vehicleId = Number(button.dataset.scheduleVehicle || 0);
       if (!vehicleId) return;
-      showAdminView("patio");
-      window.setTimeout(() => openStatusDialog(vehicleId), 0);
+      const vehicle = getPatioVehicleById(vehicleId);
+      if (!vehicle) return;
+      adminScheduleSelectedDate = vehicle.scheduledDate || adminScheduleSelectedDate || getTodayISO();
+      adminScheduleActionVehicleId = vehicle.id;
+      renderAdminScheduleScreen(container);
+    });
+  });
+
+  $("#scheduleSearchInput", container)?.addEventListener("input", (event) => {
+    adminScheduleSearchQuery = event.currentTarget.value || "";
+    adminScheduleActionVehicleId = null;
+    renderAdminScheduleScreen(container);
+  });
+
+  $("#scheduleMonthFilter", container)?.addEventListener("change", () => {
+    const monthValue = Number($("#scheduleMonthFilter", container)?.value || 0);
+    const yearValue = Number($("#scheduleYearFilter", container)?.value || new Date().getFullYear());
+    setAdminScheduleReferenceMonth(yearValue, monthValue);
+    renderAdminScheduleScreen(container);
+  });
+
+  $("#scheduleYearFilter", container)?.addEventListener("change", () => {
+    const monthValue = Number($("#scheduleMonthFilter", container)?.value || 0);
+    const yearValue = Number($("#scheduleYearFilter", container)?.value || new Date().getFullYear());
+    setAdminScheduleReferenceMonth(yearValue, monthValue);
+    renderAdminScheduleScreen(container);
+  });
+
+  $$("[data-schedule-action]", container).forEach((button) => {
+    button.addEventListener("click", async () => {
+      const vehicleId = Number(button.dataset.scheduleVehicleId || 0);
+      const action = button.dataset.scheduleAction || "";
+      if (!vehicleId || !action) return;
+      const vehicle = getPatioVehicleById(vehicleId);
+      if (!vehicle) return;
+
+      if (action === "enter") {
+        showAdminView("patio");
+        window.setTimeout(() => openStatusDialog(vehicle.id), 0);
+        return;
+      }
+
+      if (action === "edit") {
+        openScheduleDialog({ scheduledVehicleId: vehicle.id });
+        return;
+      }
+
+      if (action === "open-patio") {
+        showAdminView("patio");
+        window.setTimeout(() => openStatusDialog(vehicle.id), 0);
+        return;
+      }
+
+      if (action === "cancel") {
+        const confirmed = await showMessageBox({
+          title: "Cancelar agendamento",
+          message: `Deseja cancelar o agendamento de ${vehicle.plate} para ${formatDateBR(vehicle.scheduledDate || getTodayISO())} às ${vehicle.scheduledTime || "--:--"}?`,
+          eyebrow: "Agenda",
+          confirmLabel: "Cancelar agendamento",
+          cancelLabel: "Voltar"
+        });
+        if (!confirmed) return;
+        activeVehicleId = vehicle.id;
+        await updateVehicleStatus("cancelado");
+      }
     });
   });
 }
@@ -13704,15 +14542,17 @@ function renderChoiceChipGroup(options, selectedValues = [], config = {}) {
   const values = new Set((selectedValues || []).map((value) => String(value)));
   const name = config.name || "choice";
   const twoColumns = config.twoColumns ? " is-two-columns" : "";
+  const variantClass = config.variant ? ` is-${config.variant}` : "";
+  const compactClass = config.compact ? " is-compact" : "";
   return `
-    <div class="choice-chip-group${twoColumns}">
+    <div class="choice-chip-group${twoColumns}${variantClass}">
       ${options
         .map((option, index) => {
           const value = String(option.value ?? option.tag ?? option.label ?? "");
           const label = String(option.label ?? option.value ?? option.tag ?? "");
           const inputId = `${name}-${index}-${value.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
           return `
-            <label class="choice-chip" for="${escapeHtml(inputId)}">
+            <label class="choice-chip${compactClass}" for="${escapeHtml(inputId)}">
               <input id="${escapeHtml(inputId)}" type="checkbox" name="${escapeHtml(name)}" value="${escapeHtml(value)}" ${values.has(value) ? "checked" : ""} />
               <span>${escapeHtml(label)}</span>
             </label>
@@ -19616,7 +20456,7 @@ function renderVehicleCard(vehicle, queuePosition = 0) {
     <button class="vehicle-card ${queuePosition ? "is-queued" : ""} ${queuePosition === 1 ? "is-next" : ""}" type="button" data-vehicle-id="${vehicle.id}" aria-label="${escapeHtml(cardLabel)}">
       ${queuePosition ? `<span class="queue-badge">${queuePosition === 1 ? "Próximo" : `Fila ${queuePosition}`}</span>` : ""}
       <span class="vehicle-visual">
-        <span class="vehicle-car-icon vehicle-car-icon-svg" aria-hidden="true">${icons.carFront}</span>
+        <img class="vehicle-car-icon" src="./assets/brand/icone_carro.png" alt="" aria-hidden="true" />
         <span class="status-corner status-${vehicle.status}" aria-hidden="true">${icons[status.icon]}</span>
       </span>
       <span class="vehicle-info">
@@ -21550,6 +22390,10 @@ async function updateVehicleStatus(status) {
       : `Status de ${vehicle.plate} alterado para ${statusMeta[status].label}.`
   );
 }
+
+syncAppViewportHeight();
+window.addEventListener("resize", syncAppViewportHeight);
+setShellScrollLock(true);
 
 initIcons();
 preloadPdfLogoImage();
