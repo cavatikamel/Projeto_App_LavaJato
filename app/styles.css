@@ -928,6 +928,40 @@ h2 {
   gap: calc(12px * var(--ui-scale));
 }
 
+.dashboard-chart-card-head {
+  display: grid;
+  grid-template-columns: minmax(calc(170px * var(--ui-scale)), 0.72fr) minmax(0, 1fr);
+  gap: calc(14px * var(--ui-scale));
+  align-items: start;
+}
+
+.dashboard-chart-highlight {
+  display: grid;
+  gap: calc(4px * var(--ui-scale));
+  padding: calc(14px * var(--ui-scale));
+  background: linear-gradient(180deg, rgba(12, 66, 93, 0.96), rgba(5, 35, 52, 0.94));
+  border-radius: var(--radius);
+  color: #ffffff;
+}
+
+.dashboard-chart-highlight span,
+.dashboard-chart-highlight small {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.dashboard-chart-highlight strong {
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.dashboard-chart-meta {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: calc(10px * var(--ui-scale));
+}
+
 .dashboard-chart-card--wide {
   grid-column: span 2;
 }
@@ -967,6 +1001,12 @@ h2 {
   width: 100%;
   height: calc(208px * var(--ui-scale));
   overflow: visible;
+}
+
+.dashboard-line-chart-baseline {
+  stroke: rgba(12, 66, 93, 0.16);
+  stroke-width: 0.9;
+  stroke-dasharray: 2 2;
 }
 
 .dashboard-line-chart-area {
@@ -1243,6 +1283,89 @@ h2 {
   font-weight: 600;
 }
 
+.dashboard-optional-controls {
+  display: grid;
+  gap: calc(10px * var(--ui-scale));
+  margin-bottom: calc(14px * var(--ui-scale));
+  padding: calc(14px * var(--ui-scale));
+  background: rgba(247, 251, 253, 0.88);
+  border: 1px solid rgba(12, 66, 93, 0.08);
+  border-radius: var(--radius);
+}
+
+.dashboard-optional-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(8px * var(--ui-scale));
+}
+
+#adminQuotesContent .quote-metrics,
+#adminClientsContent .client-metrics,
+#adminServicesContent .service-metrics,
+#adminBusinessContent .business-metrics,
+#adminBusinessFinanceContent .business-metrics,
+#adminBusinessSocialContent .business-metrics,
+#adminBusinessMessagesContent .business-metrics,
+#adminProductsContent [aria-label="Resumo dos produtos"],
+#adminSuppliesContent [aria-label="Resumo dos insumos"],
+#adminProductSalesContent [aria-label="Resumo das vendas de produtos"],
+#adminDocumentsContent [aria-label="Resumo dos documentos"] {
+  display: none;
+}
+
+#adminProductsContent .screen-side-panel,
+#adminProductSalesContent .screen-side-panel,
+#adminDocumentsContent .screen-side-panel {
+  display: none;
+}
+
+#adminProductsContent .inventory-screen-grid,
+#adminSuppliesContent .inventory-screen-grid,
+#adminProductSalesContent .inventory-screen-grid,
+#adminDocumentsContent .inventory-screen-grid {
+  grid-template-columns: 1fr;
+}
+
+#adminBusinessFinanceContent .business-finance-layout {
+  align-items: stretch;
+}
+
+#adminBusinessFinanceContent .business-finance-layout > .admin-panel {
+  height: 100%;
+}
+
+#adminBusinessFinanceContent .business-finance-primary-panel .step-copy,
+#adminBusinessFinanceContent [data-toggle-business-payment-method],
+#cashflowDialog [data-open-business-finance="payment-methods"] {
+  display: none;
+}
+
+#adminOpenPaymentsContent .cashflow-toolbar {
+  grid-template-columns: minmax(0, 1.4fr) auto auto;
+  align-items: end;
+}
+
+#adminOpenPaymentsContent .cashflow-export-actions {
+  align-items: stretch;
+}
+
+#adminOpenPaymentsContent #exportOpenPaymentsPdfButton {
+  min-height: calc(44px * var(--ui-scale));
+}
+
+.quote-row-actions .table-plate-chip,
+.quote-row-actions .primary-button,
+.quote-row-actions .exit-button,
+.quote-row-actions .ghost-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(38px * var(--ui-scale));
+  padding: 0 calc(12px * var(--ui-scale));
+  border-radius: calc(12px * var(--ui-scale));
+  white-space: nowrap;
+}
+
 .schedule-calendar-panel,
 .schedule-agenda-panel,
 .schedule-selected-day-panel,
@@ -1280,6 +1403,10 @@ h2 {
   align-items: end;
 }
 
+.schedule-calendar-filter-row--wide {
+  grid-template-columns: minmax(calc(118px * var(--ui-scale)), 0.7fr) minmax(calc(118px * var(--ui-scale)), 0.7fr) minmax(0, 2.8fr);
+}
+
 .schedule-filter-field {
   margin: 0;
 }
@@ -1307,7 +1434,7 @@ h2 {
   display: grid;
   gap: calc(8px * var(--ui-scale));
   align-content: start;
-  min-height: calc(132px * var(--ui-scale));
+  min-height: calc(108px * var(--ui-scale));
   padding: calc(10px * var(--ui-scale));
   color: var(--ink);
   background: #ffffff;
@@ -1383,6 +1510,11 @@ h2 {
   background: var(--ink);
   border-radius: 999px;
   font-size: 0.74rem;
+}
+
+.schedule-calendar-day-count.is-empty {
+  color: var(--muted);
+  background: #eef5f8;
 }
 
 .schedule-calendar-day-list,
@@ -1512,6 +1644,62 @@ h2 {
 
 .schedule-screen-metrics {
   grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.schedule-screen-metrics--compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.schedule-calendar-panel--wide {
+  position: relative;
+}
+
+.schedule-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: grid;
+  place-items: center;
+  padding: calc(24px * var(--ui-scale));
+  background: rgba(4, 36, 52, 0.42);
+}
+
+.schedule-popup-panel {
+  display: grid;
+  gap: calc(14px * var(--ui-scale));
+  width: min(calc(980px * var(--ui-scale)), 100%);
+  max-height: min(80vh, calc(720px * var(--ui-scale)));
+  padding: calc(18px * var(--ui-scale));
+  overflow: auto;
+  background: #ffffff;
+  border-radius: calc(22px * var(--ui-scale));
+  box-shadow: 0 28px 54px rgba(4, 36, 52, 0.22);
+}
+
+.schedule-popup-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: calc(12px * var(--ui-scale));
+}
+
+.schedule-popup-head h2,
+.schedule-popup-head p {
+  margin: 0;
+}
+
+.schedule-popup-body {
+  display: grid;
+  gap: calc(12px * var(--ui-scale));
+}
+
+.schedule-popup-item {
+  display: grid;
+  gap: calc(10px * var(--ui-scale));
+  padding: calc(14px * var(--ui-scale));
+  background: #f8fbfc;
+  border: 1px solid rgba(12, 66, 93, 0.1);
+  border-radius: var(--radius);
 }
 
 .screen-metric {
@@ -2346,6 +2534,30 @@ h2 {
   background: var(--ice);
 }
 
+.service-registry-inline-panel {
+  display: grid;
+  gap: calc(10px * var(--ui-scale));
+  padding: calc(12px * var(--ui-scale));
+  background: rgba(247, 251, 253, 0.92);
+  border: 1px solid rgba(12, 66, 93, 0.1);
+  border-radius: calc(14px * var(--ui-scale));
+}
+
+.service-registry-inline-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: calc(10px * var(--ui-scale));
+  align-items: end;
+}
+
+.service-registry-inline-row .login-field {
+  margin: 0;
+}
+
+.service-registry-inline-row .ghost-action {
+  min-height: calc(44px * var(--ui-scale));
+}
+
 .cashflow-registry-options {
   display: grid;
   gap: calc(8px * var(--ui-scale));
@@ -2725,6 +2937,75 @@ h2 {
   border-color: rgba(245, 143, 44, 0.34);
 }
 
+.inventory-status-stack {
+  display: grid;
+  justify-items: start;
+  gap: calc(6px * var(--ui-scale));
+}
+
+.inventory-trend-badge,
+.inventory-dot-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(7px * var(--ui-scale));
+  min-height: calc(28px * var(--ui-scale));
+  padding: 0 calc(10px * var(--ui-scale));
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.inventory-trend-icon {
+  font-size: 0.86rem;
+  line-height: 1;
+}
+
+.inventory-trend-badge.is-high {
+  color: #166534;
+  background: #e9f9ee;
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.inventory-trend-badge.is-medium {
+  color: #7a5200;
+  background: #fff4d7;
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.inventory-trend-badge.is-low {
+  color: #991b1b;
+  background: #ffe7e7;
+  border-color: rgba(239, 68, 68, 0.28);
+}
+
+.inventory-dot {
+  width: calc(10px * var(--ui-scale));
+  height: calc(10px * var(--ui-scale));
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.72);
+}
+
+.inventory-dot-badge.is-normal {
+  color: #166534;
+  background: #eef9f0;
+  border-color: rgba(34, 197, 94, 0.24);
+}
+
+.inventory-dot-badge.is-warning {
+  color: #8a5b00;
+  background: #fff6dc;
+  border-color: rgba(245, 158, 11, 0.24);
+}
+
+.inventory-dot-badge.is-critical {
+  color: #b42318;
+  background: #ffecec;
+  border-color: rgba(239, 68, 68, 0.24);
+}
+
 .sale-lines-block {
   display: grid;
   gap: calc(10px * var(--ui-scale));
@@ -2756,11 +3037,13 @@ h2 {
 }
 
 .supply-line-row {
-  grid-template-columns: minmax(0, 1.1fr) minmax(calc(110px * var(--ui-scale)), 0.45fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1.45fr) minmax(calc(120px * var(--ui-scale)), 0.45fr) auto;
 }
 
 .sale-line-remove {
   align-self: center;
+  min-width: 0;
+  padding-inline: calc(10px * var(--ui-scale));
 }
 
 .sale-total-card {
@@ -5635,6 +5918,19 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .dashboard-chart-card-head {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-chart-meta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-optional-actions {
+    flex-direction: column;
+  }
+
   .schedule-calendar-grid {
     gap: calc(7px * var(--ui-scale));
   }
@@ -5650,6 +5946,15 @@ h2 {
 
   .schedule-calendar-filter-row {
     grid-template-columns: 1fr;
+  }
+
+  .schedule-popup-backdrop {
+    padding: calc(12px * var(--ui-scale));
+  }
+
+  .schedule-popup-panel {
+    width: 100%;
+    max-height: 88vh;
   }
 
   .schedule-appointment-actions {

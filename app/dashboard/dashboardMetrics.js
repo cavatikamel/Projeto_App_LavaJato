@@ -1,8 +1,7 @@
 export const DASHBOARD_PERIOD_PRESETS = Object.freeze([
-  { key: "today", label: "Hoje" },
-  { key: "last7Days", label: "7 dias" },
-  { key: "last30Days", label: "30 dias" },
-  { key: "currentMonth", label: "Mês atual" }
+  { key: "day", label: "Dia" },
+  { key: "month", label: "Mês" },
+  { key: "year", label: "Ano" }
 ]);
 
 const ACTIVE_STATUSES = new Set(["agendado", "aguardando", "lavando", "pronto"]);
@@ -46,16 +45,20 @@ function getNowDate(nowIso) {
   return today;
 }
 
-export function getDashboardDateRange(periodKey = "last30Days", nowIso = "") {
+export function getDashboardDateRange(periodKey = "month", nowIso = "") {
   const today = getNowDate(nowIso);
   const end = formatIsoDate(today);
-  if (periodKey === "today") return { key: periodKey, start: end, end, granularity: "hour" };
-  if (periodKey === "last7Days") return { key: periodKey, start: formatIsoDate(addDays(today, -6)), end, granularity: "day" };
-  if (periodKey === "currentMonth") {
+  if (periodKey === "day") return { key: periodKey, start: end, end, granularity: "hour" };
+  if (periodKey === "month") {
     const start = new Date(today.getFullYear(), today.getMonth(), 1);
     return { key: periodKey, start: formatIsoDate(start), end, granularity: "day" };
   }
-  return { key: "last30Days", start: formatIsoDate(addDays(today, -29)), end, granularity: "day" };
+  if (periodKey === "year") {
+    const start = new Date(today.getFullYear(), 0, 1);
+    return { key: periodKey, start: formatIsoDate(start), end, granularity: "month" };
+  }
+  const fallbackStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  return { key: "month", start: formatIsoDate(fallbackStart), end, granularity: "day" };
 }
 
 function isDateWithinRange(dateValue, range) {
@@ -79,7 +82,30 @@ function bucketDateByHour(dateValue, timeValue = "") {
   return `${dateValue} ${hour}:00`;
 }
 
+function bucketDateByMonth(dateValue) {
+  if (!isIsoDate(dateValue)) return "";
+  return String(dateValue).slice(0, 7);
+}
+
 function buildTimeBuckets(range) {
+  if (range.granularity === "month") {
+    const start = parseIsoDate(range.start);
+    const end = parseIsoDate(range.end);
+    const buckets = [];
+    const formatter = new Intl.DateTimeFormat("pt-BR", { month: "short" });
+    for (
+      let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      cursor <= end;
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)
+    ) {
+      buckets.push({
+        key: `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`,
+        label: formatter.format(cursor).replace(".", "")
+      });
+    }
+    return buckets;
+  }
+
   if (range.granularity === "hour") {
     return Array.from({ length: 24 }, (_, index) => {
       const hour = String(index).padStart(2, "0");
@@ -108,6 +134,7 @@ function buildSeriesBase(range) {
     period: bucket.key,
     label: bucket.label,
     revenue: 0,
+    estimatedProfit: 0,
     incoming: 0,
     outgoing: 0,
     attendances: 0
@@ -136,7 +163,7 @@ function collapseTopCategories(entries, valueKey, limit = 5) {
 }
 
 function summarizeChartState(data, valueKeys) {
-  const hasData = data.some((entry) => valueKeys.some((key) => toFiniteNumber(entry[key]) > 0));
+  const hasData = data.some((entry) => valueKeys.some((key) => Math.abs(toFiniteNumber(entry[key])) > 0));
   return {
     hasData,
     emptyMessage: hasData ? "" : "Ainda não há dados suficientes para este período."
@@ -144,7 +171,7 @@ function summarizeChartState(data, valueKeys) {
 }
 
 export function buildDashboardMetrics(snapshot, options = {}) {
-  const periodKey = options.periodKey || "last30Days";
+  const periodKey = options.periodKey || "month";
   const range = getDashboardDateRange(periodKey, options.nowIso);
   const series = buildSeriesBase(range);
   const seriesByPeriod = new Map(series.map((entry) => [entry.period, entry]));
@@ -162,18 +189,28 @@ export function buildDashboardMetrics(snapshot, options = {}) {
     const bucketKey =
       range.granularity === "hour"
         ? bucketDateByHour(getAttendanceDate(attendance), attendance.entryTime || attendance.scheduledTime || "")
-        : getAttendanceDate(attendance);
+        : range.granularity === "month"
+          ? bucketDateByMonth(getAttendanceDate(attendance))
+          : getAttendanceDate(attendance);
     const bucket = seriesByPeriod.get(bucketKey);
     if (bucket) bucket.attendances += 1;
   });
 
   const filteredCashEntries = cashEntries.filter((entry) => isDateWithinRange(entry?.date, range));
   filteredCashEntries.forEach((entry) => {
-    const bucketKey = range.granularity === "hour" ? bucketDateByHour(entry.date, entry.time || "") : entry.date;
+    const bucketKey =
+      range.granularity === "hour"
+        ? bucketDateByHour(entry.date, entry.time || "")
+        : range.granularity === "month"
+          ? bucketDateByMonth(entry.date)
+          : entry.date;
     const bucket = seriesByPeriod.get(bucketKey);
     if (!bucket) return;
     const amount = toFiniteNumber(entry.value);
     if (amount > 0 && entry.status === "Confirmado") bucket.revenue += amount;
+    if (entry.status === "Confirmado") {
+      bucket.estimatedProfit += amount > 0 ? toFiniteNumber(entry.netAmount ?? amount) : amount;
+    }
     if (amount > 0) bucket.incoming += amount;
     if (amount < 0) bucket.outgoing += Math.abs(amount);
   });
@@ -185,6 +222,7 @@ export function buildDashboardMetrics(snapshot, options = {}) {
   }, 0);
 
   const totalRevenue = series.reduce((total, entry) => total + entry.revenue, 0);
+  const totalEstimatedProfit = series.reduce((total, entry) => total + entry.estimatedProfit, 0);
   const totalIncoming = series.reduce((total, entry) => total + entry.incoming, 0);
   const totalOutgoing = series.reduce((total, entry) => total + entry.outgoing, 0);
   const attendancesWithValue = filteredAttendances.filter((attendance) => toFiniteNumber(attendance.totalValue) > 0);
@@ -233,6 +271,7 @@ export function buildDashboardMetrics(snapshot, options = {}) {
     period: range,
     kpis: {
       revenueConfirmed: { value: totalRevenue, quality: "CONFIRMED" },
+      estimatedProfit: { value: totalEstimatedProfit, quality: "DERIVED" },
       ticketAverage: { value: ticketAverage, quality: "DERIVED" },
       attendances: { value: filteredAttendances.length, quality: "CONFIRMED" },
       activePatio: { value: activePatioCount, quality: "CONFIRMED" },
@@ -245,6 +284,12 @@ export function buildDashboardMetrics(snapshot, options = {}) {
         data: series.map((entry) => ({ period: entry.period, label: entry.label, value: entry.revenue })),
         quality: "CONFIRMED",
         ...summarizeChartState(series, ["revenue"])
+      },
+      estimatedProfitTrend: {
+        type: "line-area",
+        data: series.map((entry) => ({ period: entry.period, label: entry.label, value: entry.estimatedProfit })),
+        quality: "DERIVED",
+        ...summarizeChartState(series, ["estimatedProfit"])
       },
       cashflowBreakdown: {
         type: "grouped-bar",

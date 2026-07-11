@@ -152,7 +152,8 @@ let adminScheduleMonthOffset = 0;
 let adminScheduleSelectedDate = "";
 let adminScheduleSearchQuery = "";
 let adminScheduleActionVehicleId = null;
-let adminDashboardPeriodKey = "last30Days";
+let adminDashboardPeriodKey = "month";
+let adminSchedulePopupDate = "";
 let quoteDialogStep = "vehicle";
 let selectedQuoteVehicleId = null;
 let pendingQuotePatioEntry = null;
@@ -461,6 +462,7 @@ const businessStorageKeys = {
   pix: "lavaprime-business-pix-v1",
   paymentMethods: "lavaprime-business-payment-methods-v1",
   financeSettings: "lavaprime-business-finance-settings-v1",
+  dashboardPreferences: "lavaprime-dashboard-preferences-v1",
   products: "lavaprime-products-v1",
   supplies: "lavaprime-supplies-v1",
   productSales: "lavaprime-product-sales-v1",
@@ -472,6 +474,33 @@ const businessStorageKeys = {
   social: "lavaprime-business-social-v1",
   messages: "lavaprime-business-message-templates-v1"
 };
+
+const DEFAULT_DASHBOARD_OPTIONAL_CHART_IDS = Object.freeze([
+  "cashflowBreakdown",
+  "attendanceTrend",
+  "topServices",
+  "paymentMethods"
+]);
+
+function getDefaultDashboardPreferences() {
+  return {
+    periodKey: "month",
+    visibleOptionalChartIds: []
+  };
+}
+
+function normalizeDashboardPreferences(preferences = {}) {
+  const periodKey = DASHBOARD_PERIOD_PRESETS.some((preset) => preset.key === preferences?.periodKey)
+    ? preferences.periodKey
+    : "month";
+  const visibleOptionalChartIds = Array.isArray(preferences?.visibleOptionalChartIds)
+    ? preferences.visibleOptionalChartIds.filter((chartId, index, list) => DEFAULT_DASHBOARD_OPTIONAL_CHART_IDS.includes(chartId) && list.indexOf(chartId) === index)
+    : [];
+  return {
+    periodKey,
+    visibleOptionalChartIds
+  };
+}
 const businessSocialChannels = [
   { key: "whatsapp", label: "WhatsApp", placeholder: "(11) 99999-9999" },
   { key: "instagram", label: "Instagram", placeholder: "@perfil" },
@@ -480,6 +509,10 @@ const businessSocialChannels = [
   { key: "linkedin", label: "LinkedIn", placeholder: "linkedin.com/company/perfil" },
   { key: "site", label: "Site", placeholder: "https://site.com.br" }
 ];
+let dashboardPreferences = normalizeDashboardPreferences(
+  loadBusinessStorageItem(businessStorageKeys.dashboardPreferences, getDefaultDashboardPreferences())
+);
+adminDashboardPeriodKey = dashboardPreferences.periodKey;
 const businessSocialReportTargets = [
   { key: "all", label: "Todos os relatórios" },
   { key: "financial", label: "Financeiro geral" },
@@ -7423,6 +7456,35 @@ function getMonthStartFromOffset(offset = 0) {
   return new Date(now.getFullYear(), now.getMonth() + Number(offset || 0), 1);
 }
 
+function getPreferredScheduleReferenceMonth(scheduledVehicles = []) {
+  const currentMonth = getMonthStartFromOffset(adminScheduleMonthOffset);
+  if (adminScheduleMonthOffset !== 0) return currentMonth;
+
+  const currentKey = formatLocalDateISO(currentMonth).slice(0, 7);
+  if ((scheduledVehicles || []).some((vehicle) => String(vehicle.scheduledDate || "").startsWith(currentKey))) {
+    return currentMonth;
+  }
+
+  const todayKey = getTodayISO();
+  const orderedVehicles = [...(scheduledVehicles || [])].sort((left, right) => {
+    const leftKey = `${left.scheduledDate || ""}T${left.scheduledTime || "00:00"}`;
+    const rightKey = `${right.scheduledDate || ""}T${right.scheduledTime || "00:00"}`;
+    return leftKey.localeCompare(rightKey);
+  });
+  const referenceVehicle =
+    orderedVehicles.find((vehicle) => String(vehicle.scheduledDate || "") >= todayKey) ||
+    orderedVehicles[orderedVehicles.length - 1] ||
+    null;
+
+  if (!referenceVehicle?.scheduledDate) return currentMonth;
+
+  const [year, month] = String(referenceVehicle.scheduledDate)
+    .split("-")
+    .map((part) => Number(part));
+  if (!year || !month) return currentMonth;
+  return new Date(year, month - 1, 1);
+}
+
 function getStartOfWeek(date) {
   const reference = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const currentDay = reference.getDay();
@@ -7573,7 +7635,7 @@ function renderAdminTrendGrid() {
 }
 
 function getDashboardPeriodLabel(periodKey) {
-  return DASHBOARD_PERIOD_PRESETS.find((preset) => preset.key === periodKey)?.label || "30 dias";
+  return DASHBOARD_PERIOD_PRESETS.find((preset) => preset.key === periodKey)?.label || "Mês";
 }
 
 function getAdminDashboardSnapshot() {
@@ -7636,23 +7698,44 @@ function renderDashboardEmptyState(message) {
   return `<div class="dashboard-empty-state">${escapeHtml(message || "Ainda não há dados suficientes para este período.")}</div>`;
 }
 
+function saveDashboardPreferences() {
+  dashboardPreferences.periodKey = adminDashboardPeriodKey;
+  saveBusinessStorageItem(businessStorageKeys.dashboardPreferences, dashboardPreferences);
+}
+
+function isOptionalDashboardChartVisible(chartId) {
+  return dashboardPreferences.visibleOptionalChartIds.includes(chartId);
+}
+
+function setOptionalDashboardChartVisibility(chartId, shouldShow) {
+  const nextIds = new Set(dashboardPreferences.visibleOptionalChartIds);
+  if (shouldShow) nextIds.add(chartId);
+  else nextIds.delete(chartId);
+  dashboardPreferences.visibleOptionalChartIds = DEFAULT_DASHBOARD_OPTIONAL_CHART_IDS.filter((id) => nextIds.has(id));
+  saveDashboardPreferences();
+}
+
 function buildSvgLineChartGeometry(data) {
   const values = data.map((entry) => toFiniteNumber(entry.value));
-  const maxValue = Math.max(...values, 1);
+  const maxValue = Math.max(...values, 0, 1);
+  const minValue = Math.min(...values, 0);
   const width = 100;
   const height = 64;
+  const valueSpan = Math.max(maxValue - minValue, 1);
   const step = data.length > 1 ? width / (data.length - 1) : width;
+  const resolveY = (value) => Number((height - ((value - minValue) / valueSpan) * height).toFixed(2));
   const points = data.map((entry, index) => {
     const value = toFiniteNumber(entry.value);
     const x = Number((index * step).toFixed(2));
-    const y = Number((height - (value / maxValue) * height).toFixed(2));
+    const y = resolveY(value);
     return { x, y };
   });
+  const zeroY = resolveY(0);
   const linePoints = points.map((point) => `${point.x},${point.y}`).join(" ");
   const areaPath = points.length
-    ? `M ${points[0].x} ${height} L ${points.map((point) => `${point.x} ${point.y}`).join(" L ")} L ${points.at(-1).x} ${height} Z`
+    ? `M ${points[0].x} ${zeroY} L ${points.map((point) => `${point.x} ${point.y}`).join(" L ")} L ${points.at(-1).x} ${zeroY} Z`
     : "";
-  return { linePoints, areaPath };
+  return { linePoints, areaPath, zeroY, hasNegativeValues: minValue < 0 };
 }
 
 function renderDashboardLineChart(chart, formatter) {
@@ -7661,6 +7744,7 @@ function renderDashboardLineChart(chart, formatter) {
   return `
     <div class="dashboard-line-chart" role="img" aria-label="Evolução da receita no período selecionado">
       <svg viewBox="0 0 100 64" preserveAspectRatio="none" aria-hidden="true">
+        ${geometry.hasNegativeValues ? `<line class="dashboard-line-chart-baseline" x1="0" y1="${geometry.zeroY}" x2="100" y2="${geometry.zeroY}"></line>` : ""}
         <path class="dashboard-line-chart-area" d="${geometry.areaPath}"></path>
         <polyline class="dashboard-line-chart-line" points="${geometry.linePoints}"></polyline>
       </svg>
@@ -7831,13 +7915,34 @@ function renderDashboardDonutChart(chart) {
   `;
 }
 
-function renderDashboardChartCard({ title, subtitle, description, summary, visual, footer, span = "" }) {
+function renderDashboardChartCard({
+  chartId = "",
+  title,
+  subtitle,
+  metricLabel,
+  metricValue,
+  metricDetail,
+  description,
+  summary,
+  visual,
+  footer,
+  span = "",
+  dismissible = false
+}) {
   return `
-    <article class="admin-panel dashboard-chart-card ${span}">
-      <div class="panel-heading">
-        <div>
-          <p class="eyebrow">${escapeHtml(subtitle)}</p>
-          <h2>${escapeHtml(title)}</h2>
+    <article class="admin-panel dashboard-chart-card ${span}" ${chartId ? `data-dashboard-chart="${escapeHtml(chartId)}"` : ""}>
+      <div class="dashboard-chart-card-head">
+        <div class="dashboard-chart-highlight">
+          <span>${escapeHtml(metricLabel)}</span>
+          <strong>${escapeHtml(metricValue)}</strong>
+          <small>${escapeHtml(metricDetail)}</small>
+        </div>
+        <div class="dashboard-chart-meta">
+          <div>
+            <p class="eyebrow">${escapeHtml(subtitle)}</p>
+            <h2>${escapeHtml(title)}</h2>
+          </div>
+          ${dismissible ? `<button class="ghost-action compact" type="button" data-dashboard-toggle="${escapeHtml(chartId)}" data-dashboard-visibility="hide">Ocultar</button>` : ""}
         </div>
       </div>
       <p class="dashboard-chart-description">${escapeHtml(description)}</p>
@@ -7846,6 +7951,63 @@ function renderDashboardChartCard({ title, subtitle, description, summary, visua
       <p class="dashboard-chart-footer">${escapeHtml(footer)}</p>
     </article>
   `;
+}
+
+function getDashboardOptionalChartDefinitions(dashboardMetrics, periodLabel) {
+  return [
+    {
+      id: "cashflowBreakdown",
+      title: "Entradas x saÃ­das",
+      subtitle: "Barras agrupadas",
+      metricLabel: "Caixa lÃ­quido",
+      metricValue: formatCurrency(dashboardMetrics.kpis.netCash.value),
+      metricDetail: `${periodLabel} · resultado do perÃ­odo`,
+      description: "Movimento financeiro consolidado sem depender de runtime externo.",
+      summary: `${formatCurrency(dashboardMetrics.kpis.netCash.value)} de saldo lÃ­quido no recorte atual`,
+      visual: renderDashboardGroupedBarChart(dashboardMetrics.charts.cashflowBreakdown, formatCompactCurrency, formatCompactCurrency),
+      footer: `${periodLabel} · origem principal: cashEntries`,
+      dismissible: true
+    },
+    {
+      id: "attendanceTrend",
+      title: "Atendimentos por perÃ­odo",
+      subtitle: "Colunas",
+      metricLabel: "Atendimentos",
+      metricValue: String(dashboardMetrics.kpis.attendances.value),
+      metricDetail: `${periodLabel} · nÃ£o cancelados`,
+      description: "Volume operacional do pÃ¡tio dentro do intervalo selecionado.",
+      summary: `${dashboardMetrics.kpis.attendances.value} atendimento(s) lidos no perÃ­odo`,
+      visual: renderDashboardColumnChart(dashboardMetrics.charts.attendanceTrend),
+      footer: `${periodLabel} · origem principal: patioVehicles`,
+      dismissible: true
+    },
+    {
+      id: "topServices",
+      title: "ServiÃ§os mais vendidos",
+      subtitle: "Barras horizontais",
+      metricLabel: "Categorias monitoradas",
+      metricValue: String(dashboardMetrics.charts.topServices.data.length || 0),
+      metricDetail: `${periodLabel} · ranking operacional`,
+      description: "Ranking dos serviÃ§os com maior recorrÃªncia no recorte atual.",
+      summary: `${dashboardMetrics.charts.topServices.data.length || 0} categoria(s) com leitura ativa`,
+      visual: renderDashboardHorizontalBarChart(dashboardMetrics.charts.topServices, (value) => `${value} venda(s)`),
+      footer: `${periodLabel} · origem principal: patioVehicles`,
+      dismissible: true
+    },
+    {
+      id: "paymentMethods",
+      title: "Formas de pagamento",
+      subtitle: "Donut",
+      metricLabel: "Entradas confirmadas",
+      metricValue: formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value),
+      metricDetail: `${periodLabel} · meios confirmados`,
+      description: "DistribuiÃ§Ã£o das entradas confirmadas por forma de pagamento.",
+      summary: `${formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value)} em entradas classificadas`,
+      visual: renderDashboardDonutChart(dashboardMetrics.charts.paymentMethods),
+      footer: `${periodLabel} · origem principal: cashEntries`,
+      dismissible: true
+    }
+  ];
 }
 
 function renderResponsiveDashboardCharts(dashboardMetrics) {
@@ -7921,6 +8083,161 @@ function renderResponsiveDashboardCharts(dashboardMetrics) {
       <p class="dashboard-filter-copy">Período ativo: ${escapeHtml(periodLabel)}</p>
     </section>
     <section class="admin-trend-grid" id="adminDashboardCharts" aria-label="Gráficos gerenciais responsivos">
+      ${cards.join("")}
+    </section>
+  `;
+}
+
+function getDashboardOptionalChartDefinitionsSafe(dashboardMetrics, periodLabel) {
+  return [
+    {
+      id: "cashflowBreakdown",
+      title: "Entradas x saidas",
+      subtitle: "Barras agrupadas",
+      metricLabel: "Caixa liquido",
+      metricValue: formatCurrency(dashboardMetrics.kpis.netCash.value),
+      metricDetail: `${periodLabel} · resultado do periodo`,
+      description: "Movimento financeiro consolidado sem depender de runtime externo.",
+      summary: `${formatCurrency(dashboardMetrics.kpis.netCash.value)} de saldo liquido no recorte atual`,
+      visual: renderDashboardGroupedBarChart(dashboardMetrics.charts.cashflowBreakdown, formatCompactCurrency, formatCompactCurrency),
+      footer: `${periodLabel} · origem principal: cashEntries`,
+      dismissible: true
+    },
+    {
+      id: "attendanceTrend",
+      title: "Atendimentos por periodo",
+      subtitle: "Colunas",
+      metricLabel: "Atendimentos",
+      metricValue: String(dashboardMetrics.kpis.attendances.value),
+      metricDetail: `${periodLabel} · nao cancelados`,
+      description: "Volume operacional do patio dentro do intervalo selecionado.",
+      summary: `${dashboardMetrics.kpis.attendances.value} atendimento(s) lidos no periodo`,
+      visual: renderDashboardColumnChart(dashboardMetrics.charts.attendanceTrend),
+      footer: `${periodLabel} · origem principal: patioVehicles`,
+      dismissible: true
+    },
+    {
+      id: "topServices",
+      title: "Servicos mais vendidos",
+      subtitle: "Barras horizontais",
+      metricLabel: "Categorias monitoradas",
+      metricValue: String(dashboardMetrics.charts.topServices.data.length || 0),
+      metricDetail: `${periodLabel} · ranking operacional`,
+      description: "Ranking dos servicos com maior recorrencia no recorte atual.",
+      summary: `${dashboardMetrics.charts.topServices.data.length || 0} categoria(s) com leitura ativa`,
+      visual: renderDashboardHorizontalBarChart(dashboardMetrics.charts.topServices, (value) => `${value} venda(s)`),
+      footer: `${periodLabel} · origem principal: patioVehicles`,
+      dismissible: true
+    },
+    {
+      id: "paymentMethods",
+      title: "Formas de pagamento",
+      subtitle: "Donut",
+      metricLabel: "Entradas confirmadas",
+      metricValue: formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value),
+      metricDetail: `${periodLabel} · meios confirmados`,
+      description: "Distribuicao das entradas confirmadas por forma de pagamento.",
+      summary: `${formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value)} em entradas classificadas`,
+      visual: renderDashboardDonutChart(dashboardMetrics.charts.paymentMethods),
+      footer: `${periodLabel} · origem principal: cashEntries`,
+      dismissible: true
+    }
+  ];
+}
+
+function renderResponsiveDashboardChartsV2(dashboardMetrics) {
+  const periodLabel = getDashboardPeriodLabel(adminDashboardPeriodKey);
+  const revenueData = dashboardMetrics.charts.revenueTrend.data;
+  const revenueCurrent = revenueData.at(-1)?.value || 0;
+  const revenuePrevious = revenueData.at(-2)?.value || 0;
+  const revenueDelta = revenueCurrent - revenuePrevious;
+  const estimatedProfitData = dashboardMetrics.charts.estimatedProfitTrend.data;
+  const estimatedProfitCurrent = estimatedProfitData.at(-1)?.value || 0;
+  const estimatedProfitPrevious = estimatedProfitData.at(-2)?.value || 0;
+  const estimatedProfitDelta = estimatedProfitCurrent - estimatedProfitPrevious;
+  const optionalCharts = getDashboardOptionalChartDefinitionsSafe(dashboardMetrics, periodLabel);
+  const visibleOptionalCharts = optionalCharts.filter((chart) => isOptionalDashboardChartVisible(chart.id));
+  const hiddenOptionalCharts = optionalCharts.filter((chart) => !isOptionalDashboardChartVisible(chart.id));
+
+  const cards = [
+    renderDashboardChartCard({
+      chartId: "revenueTrend",
+      title: "Faturamento",
+      subtitle: "Linha / area",
+      metricLabel: "Faturamento confirmado",
+      metricValue: formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value),
+      metricDetail: `${periodLabel} · receita confirmada`,
+      description: "Receita confirmada em caixa ao longo do periodo selecionado.",
+      summary: `${revenueDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(revenueDelta))} em relacao ao ponto anterior do filtro`,
+      visual: renderDashboardLineChart(dashboardMetrics.charts.revenueTrend, formatCompactCurrency),
+      footer: `${periodLabel} · origem principal: cashEntries confirmados`,
+      span: "dashboard-chart-card--wide"
+    }),
+    renderDashboardChartCard({
+      chartId: "estimatedProfitTrend",
+      title: "Lucro estimado",
+      subtitle: "Linha / area",
+      metricLabel: "Lucro estimado",
+      metricValue: formatCurrency(dashboardMetrics.kpis.estimatedProfit.value),
+      metricDetail: `${periodLabel} · taxas e saidas consideradas`,
+      description: "Estimativa liquida do periodo considerando entradas confirmadas, taxas e saidas.",
+      summary: `${estimatedProfitDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(estimatedProfitDelta))} em relacao ao ponto anterior do filtro`,
+      visual: renderDashboardLineChart(dashboardMetrics.charts.estimatedProfitTrend, formatCompactCurrency),
+      footer: `${periodLabel} · origem principal: cashEntries + netAmount`,
+      span: "dashboard-chart-card--wide"
+    }),
+    renderDashboardChartCard({
+      chartId: "patioStatus",
+      title: "Situacao do patio",
+      subtitle: "Barra empilhada",
+      metricLabel: "Veiculos ativos",
+      metricValue: String(dashboardMetrics.kpis.activePatio.value),
+      metricDetail: "Snapshot operacional atual",
+      description: "Leitura atual dos veiculos por etapa operacional.",
+      summary: `${dashboardMetrics.kpis.activePatio.value} veiculo(s) em operacao neste momento`,
+      visual: renderDashboardStackedStatusChart(dashboardMetrics.charts.patioStatus),
+      footer: "Snapshot atual · origem principal: patioVehicles"
+    }),
+    ...visibleOptionalCharts.map((chart) => renderDashboardChartCard(chart))
+  ];
+
+  return `
+    <section class="dashboard-filter-bar" aria-label="Filtro temporal do dashboard">
+      <div class="screen-filters dashboard-filter-buttons">
+        ${DASHBOARD_PERIOD_PRESETS.map(
+          (preset) => `
+            <button class="${preset.key === adminDashboardPeriodKey ? "is-active" : ""}" type="button" data-dashboard-period="${preset.key}">
+              ${escapeHtml(preset.label)}
+            </button>
+          `
+        ).join("")}
+      </div>
+      <p class="dashboard-filter-copy">Periodo ativo: ${escapeHtml(periodLabel)}</p>
+    </section>
+    <section class="dashboard-optional-controls" aria-label="Gerenciar graficos opcionais">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Graficos adicionais</p>
+          <h2>Escolha do administrador</h2>
+        </div>
+      </div>
+      <div class="dashboard-optional-actions">
+        ${
+          hiddenOptionalCharts.length
+            ? hiddenOptionalCharts
+                .map(
+                  (chart) => `
+                    <button class="ghost-action compact" type="button" data-dashboard-toggle="${escapeHtml(chart.id)}" data-dashboard-visibility="show">
+                      Exibir ${escapeHtml(chart.title)}
+                    </button>
+                  `
+                )
+                .join("")
+            : '<p class="dashboard-filter-copy">Todos os graficos opcionais ja estao visiveis.</p>'
+        }
+      </div>
+    </section>
+    <section class="admin-trend-grid" id="adminDashboardCharts" aria-label="Graficos gerenciais responsivos">
       ${cards.join("")}
     </section>
   `;
@@ -8139,7 +8456,8 @@ function renderAdminDashboard() {
       }
     ];
 
-    metricsContainer.innerHTML = metricsSnapshot.map(renderDashboardMetricCard).join("");
+    metricsContainer.innerHTML = "";
+    metricsContainer.hidden = true;
 
     const totalVehiclesSnapshot = Math.max(patioVehicles.length, 1);
     flowContainer.innerHTML = statusOrder
@@ -8164,10 +8482,20 @@ function renderAdminDashboard() {
 
     alertsContainer.innerHTML = renderAdminAlerts(billedOpenSnapshot);
     if (maintenanceContainer) maintenanceContainer.innerHTML = renderMaintenanceDashboardPanel();
-    if (trendContainer) trendContainer.innerHTML = renderResponsiveDashboardCharts(dashboardMetrics);
+    if (trendContainer) trendContainer.innerHTML = renderResponsiveDashboardChartsV2(dashboardMetrics);
     $$("[data-dashboard-period]", trendContainer || document).forEach((button) => {
       button.addEventListener("click", () => {
-        adminDashboardPeriodKey = button.dataset.dashboardPeriod || "last30Days";
+        adminDashboardPeriodKey = button.dataset.dashboardPeriod || "month";
+        saveDashboardPreferences();
+        renderAdminDashboard();
+      });
+    });
+    $$("[data-dashboard-toggle]", trendContainer || document).forEach((button) => {
+      button.addEventListener("click", () => {
+        const chartId = button.dataset.dashboardToggle || "";
+        const shouldShow = button.dataset.dashboardVisibility === "show";
+        if (!chartId) return;
+        setOptionalDashboardChartVisibility(chartId, shouldShow);
         renderAdminDashboard();
       });
     });
@@ -8289,7 +8617,7 @@ function renderAdminScreen(view) {
   }
 
   if (view === "schedule") {
-    renderAdminScheduleScreen(container);
+    renderAdminScheduleScreenV2(container);
     return;
   }
 
@@ -8468,6 +8796,7 @@ function setAdminScheduleReferenceMonth(year, monthIndex) {
   const currentMonth = getMonthStartFromOffset(0);
   adminScheduleMonthOffset = (Number(year) - currentMonth.getFullYear()) * 12 + (Number(monthIndex) - currentMonth.getMonth());
   adminScheduleSelectedDate = "";
+  adminSchedulePopupDate = "";
   adminScheduleActionVehicleId = null;
 }
 
@@ -8477,7 +8806,7 @@ function refreshScheduleScreens() {
   refreshCashflowScreen();
   const scheduleView = $("#adminScheduleView");
   const scheduleContainer = $("#adminScheduleContent");
-  if (scheduleView && !scheduleView.hidden && scheduleContainer) renderAdminScheduleScreen(scheduleContainer);
+  if (scheduleView && !scheduleView.hidden && scheduleContainer) renderAdminScheduleScreenV2(scheduleContainer);
 }
 
 function renderScheduleAppointmentSummary(vehicle, includeStatus = false) {
@@ -8780,6 +9109,242 @@ function bindAdminScheduleScreenControls(container) {
         if (!confirmed) return;
         activeVehicleId = vehicle.id;
         await updateVehicleStatus("cancelado");
+      }
+    });
+  });
+}
+
+function renderScheduleAppointmentPopupCard(vehicle) {
+  const isSchedulable = vehicle.status === "agendado";
+  const context = getMessageContextFromVehicle(vehicle);
+  return `
+    <article class="schedule-popup-item">
+      <div class="schedule-appointment-summary">
+        ${renderScheduleAppointmentSummary(vehicle, true)}
+      </div>
+      <div class="schedule-appointment-actions">
+        <button class="primary-button compact-action" type="button" data-schedule-action="enter" data-schedule-vehicle-id="${vehicle.id}">
+          Entrar no patio
+        </button>
+        <button class="ghost-action compact" type="button" data-schedule-action="edit" data-schedule-vehicle-id="${vehicle.id}">
+          Editar
+        </button>
+        <button class="exit-button compact" type="button" data-schedule-action="cancel" data-schedule-vehicle-id="${vehicle.id}">
+          Cancelar
+        </button>
+        <button class="ghost-action compact" type="button" data-schedule-action="message" data-schedule-vehicle-id="${vehicle.id}" data-schedule-message-key="${isSchedulable ? "schedule-confirmation" : "yard-entry"}">
+          ${isSchedulable ? "Enviar lembrete" : "Enviar mensagem"}
+        </button>
+        ${context?.phone ? `<button class="ghost-action compact" type="button" data-schedule-action="message-charge" data-schedule-vehicle-id="${vehicle.id}" data-schedule-message-key="open-service-payment">Mensagem de cobranca</button>` : ""}
+      </div>
+    </article>
+  `;
+}
+
+function renderScheduleDayPopup(dateKey, vehicles) {
+  if (!dateKey) return "";
+  return `
+    <div class="schedule-popup-backdrop" data-schedule-close-popup="true">
+      <section class="schedule-popup-panel" role="dialog" aria-modal="true" aria-label="Agenda do dia">
+        <div class="schedule-popup-head">
+          <div>
+            <p class="eyebrow">Agenda do dia</p>
+            <h2>${escapeHtml(formatDateBR(dateKey))}</h2>
+          </div>
+          <button class="icon-button" type="button" data-schedule-close-popup="true" aria-label="Fechar popup de agendamentos">
+            <span data-icon="x"></span>
+          </button>
+        </div>
+        <div class="schedule-popup-body">
+          ${
+            vehicles.length
+              ? vehicles.map((vehicle) => renderScheduleAppointmentPopupCard(vehicle)).join("")
+              : '<p class="empty-alert">Nenhum agendamento para este dia.</p>'
+          }
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderScheduleCalendarGridV2(referenceMonth, scheduledVehicles) {
+  const weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
+  const firstDay = new Date(referenceMonth.getFullYear(), referenceMonth.getMonth(), 1);
+  const startDay = getStartOfWeek(firstDay);
+  const cells = [];
+
+  for (let index = 0; index < 42; index += 1) {
+    const cellDate = new Date(startDay);
+    cellDate.setDate(startDay.getDate() + index);
+    const dateKey = formatLocalDateISO(cellDate);
+    const items = scheduledVehicles.filter((vehicle) => vehicle.scheduledDate === dateKey);
+    const isOutsideMonth = cellDate.getMonth() !== referenceMonth.getMonth();
+    const isToday = dateKey === getTodayISO();
+    const isSelected = dateKey === adminSchedulePopupDate;
+    cells.push(`
+      <article class="schedule-calendar-day${isOutsideMonth ? " is-outside-month" : ""}${isToday ? " is-today" : ""}${isSelected ? " is-selected" : ""}">
+        <button class="schedule-calendar-day-select" type="button" data-schedule-date="${dateKey}">
+          <span class="schedule-calendar-day-head">
+            <span class="schedule-calendar-day-number">${cellDate.getDate()}</span>
+            ${items.length ? `<span class="schedule-calendar-day-count">${items.length}</span>` : '<span class="schedule-calendar-day-count is-empty">0</span>'}
+          </span>
+        </button>
+      </article>
+    `);
+  }
+
+  return `
+    <div class="schedule-calendar-grid" aria-label="Calendario mensal de agendamentos">
+      ${weekdays.map((day) => `<span class="schedule-calendar-weekday">${day}</span>`).join("")}
+      ${cells.join("")}
+    </div>
+  `;
+}
+
+function renderAdminScheduleScreenV2(container) {
+  const scheduledVehicles = getScheduledVehiclesChronological();
+  const referenceMonth = getPreferredScheduleReferenceMonth(scheduledVehicles);
+  const monthKey = formatLocalDateISO(referenceMonth).slice(0, 7);
+  const monthLabel = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(referenceMonth);
+  const availableYears = getAdminScheduleAvailableYears(scheduledVehicles, referenceMonth);
+  const monthVehicles = scheduledVehicles.filter((vehicle) => (vehicle.scheduledDate || "").startsWith(monthKey));
+  const normalizedQuery = normalizeText(adminScheduleSearchQuery);
+  const filteredMonthVehicles = normalizedQuery
+    ? monthVehicles.filter((vehicle) => getAdminScheduleSearchText(vehicle).includes(normalizedQuery))
+    : monthVehicles;
+  const upcoming = scheduledVehicles.filter((vehicle) => `${vehicle.scheduledDate}T${vehicle.scheduledTime || "00:00"}` >= `${getTodayISO()}T00:00`);
+  const popupVehicles = adminSchedulePopupDate ? filteredMonthVehicles.filter((vehicle) => vehicle.scheduledDate === adminSchedulePopupDate) : [];
+
+  if (adminSchedulePopupDate && !adminSchedulePopupDate.startsWith(monthKey)) adminSchedulePopupDate = "";
+
+  container.innerHTML = `
+    <section class="screen-metrics schedule-screen-metrics schedule-screen-metrics--compact" aria-label="Resumo dos agendamentos">
+      ${[
+        { label: "No mes", value: monthVehicles.length, icon: "hourglass" },
+        { label: "Exibidos", value: filteredMonthVehicles.length, icon: "dashboard" },
+        { label: "Futuros", value: upcoming.length, icon: "clock" },
+        { label: "Hoje", value: scheduledVehicles.filter((vehicle) => vehicle.scheduledDate === getTodayISO()).length, icon: "dashboard" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+    <article class="admin-panel schedule-calendar-panel schedule-calendar-panel--wide">
+      <div class="schedule-calendar-toolbar">
+        <div>
+          <p class="eyebrow">Agenda mensal</p>
+          <h2>${escapeHtml(capitalize(monthLabel))}</h2>
+        </div>
+        <div class="schedule-calendar-actions">
+          <button class="ghost-action" type="button" data-schedule-shift="-1">Mes anterior</button>
+          <button class="ghost-action" type="button" data-schedule-shift="0">Mes atual</button>
+          <button class="ghost-action" type="button" data-schedule-shift="1">Proximo mes</button>
+        </div>
+      </div>
+      <div class="schedule-calendar-filter-row schedule-calendar-filter-row--wide">
+        <label class="login-field schedule-filter-field" for="scheduleMonthFilter">
+          <span>Mes</span>
+          <select id="scheduleMonthFilter">
+            ${Array.from({ length: 12 }, (_, monthIndex) => {
+              const label = new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date(2026, monthIndex, 1));
+              return `<option value="${monthIndex}" ${referenceMonth.getMonth() === monthIndex ? "selected" : ""}>${escapeHtml(capitalize(label))}</option>`;
+            }).join("")}
+          </select>
+        </label>
+        <label class="login-field schedule-filter-field" for="scheduleYearFilter">
+          <span>Ano</span>
+          <select id="scheduleYearFilter">
+            ${availableYears.map((year) => `<option value="${year}" ${referenceMonth.getFullYear() === year ? "selected" : ""}>${year}</option>`).join("")}
+          </select>
+        </label>
+        <label class="screen-search schedule-search-field schedule-search-field--wide">
+          <span class="screen-search-icon">${icons.carFront}</span>
+          <input id="scheduleSearchInput" type="search" value="${escapeHtml(adminScheduleSearchQuery)}" placeholder="Buscar por cliente, placa, servico, status ou pagamento" />
+        </label>
+      </div>
+      ${renderScheduleCalendarGridV2(referenceMonth, filteredMonthVehicles)}
+      ${renderScheduleDayPopup(adminSchedulePopupDate, popupVehicles)}
+    </article>
+  `;
+
+  initIcons();
+  bindAdminScheduleScreenControlsV2(container);
+}
+
+function bindAdminScheduleScreenControlsV2(container) {
+  $$("[data-schedule-shift]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      const shift = Number(button.dataset.scheduleShift || 0);
+      adminScheduleMonthOffset = shift === 0 ? 0 : adminScheduleMonthOffset + shift;
+      adminSchedulePopupDate = "";
+      renderAdminScheduleScreenV2(container);
+    });
+  });
+
+  $$("[data-schedule-date]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      adminSchedulePopupDate = button.dataset.scheduleDate || "";
+      renderAdminScheduleScreenV2(container);
+    });
+  });
+
+  $$("#scheduleSearchInput, #scheduleMonthFilter, #scheduleYearFilter", container).forEach((field) => {
+    field.addEventListener(field.id === "scheduleSearchInput" ? "input" : "change", () => {
+      adminScheduleSearchQuery = $("#scheduleSearchInput", container)?.value || "";
+      const monthValue = Number($("#scheduleMonthFilter", container)?.value || 0);
+      const yearValue = Number($("#scheduleYearFilter", container)?.value || new Date().getFullYear());
+      setAdminScheduleReferenceMonth(yearValue, monthValue);
+      adminSchedulePopupDate = "";
+      renderAdminScheduleScreenV2(container);
+    });
+  });
+
+  $$("[data-schedule-close-popup]", container).forEach((button) => {
+    button.addEventListener("click", (event) => {
+      if (event.target !== button && !event.target.closest("[data-schedule-close-popup='true']")) return;
+      adminSchedulePopupDate = "";
+      renderAdminScheduleScreenV2(container);
+    });
+  });
+
+  $$("[data-schedule-action]", container).forEach((button) => {
+    button.addEventListener("click", async () => {
+      const vehicleId = Number(button.dataset.scheduleVehicleId || 0);
+      const action = button.dataset.scheduleAction || "";
+      if (!vehicleId || !action) return;
+      const vehicle = getPatioVehicleById(vehicleId);
+      if (!vehicle) return;
+
+      if (action === "enter" || action === "open-patio") {
+        adminSchedulePopupDate = "";
+        showAdminView("patio");
+        window.setTimeout(() => openStatusDialog(vehicle.id), 0);
+        return;
+      }
+
+      if (action === "edit") {
+        openScheduleDialog({ scheduledVehicleId: vehicle.id });
+        return;
+      }
+
+      if (action === "message" || action === "message-charge") {
+        const messageKey = button.dataset.scheduleMessageKey || (action === "message-charge" ? "open-service-payment" : "schedule-confirmation");
+        sendManualMessage(messageKey, getMessageContextFromVehicle(vehicle));
+        return;
+      }
+
+      if (action === "cancel") {
+        const confirmed = await showMessageBox({
+          title: "Cancelar agendamento",
+          message: `Deseja cancelar o agendamento de ${vehicle.plate} para ${formatDateBR(vehicle.scheduledDate || getTodayISO())} as ${vehicle.scheduledTime || "--:--"}?`,
+          eyebrow: "Agenda",
+          confirmLabel: "Cancelar agendamento",
+          cancelLabel: "Voltar"
+        });
+        if (!confirmed) return;
+        activeVehicleId = vehicle.id;
+        await updateVehicleStatus("cancelado");
+        adminSchedulePopupDate = "";
+        renderAdminScheduleScreenV2(container);
       }
     });
   });
@@ -10609,17 +11174,6 @@ function renderClientsScreen(container) {
   runCustomerLegacyDataValidation(clientRegistry);
 
   container.innerHTML = `
-    <section class="screen-metrics client-metrics" aria-label="Resumo de clientes">
-      ${[
-        { label: "Clientes ativos", value: clientRegistry.length, icon: "users" },
-        { label: "Avulsos", value: clientRegistry.filter((client) => !client.billing).length, icon: "user" },
-        { label: "Faturados", value: clientRegistry.filter((client) => client.billing).length, icon: "invoice" },
-        { label: "Placas vinculadas", value: getRegisteredPlates().length, icon: "carFront" }
-      ]
-        .map(renderScreenMetric)
-        .join("")}
-    </section>
-
     <section class="screen-toolbar" aria-label="Filtros de clientes">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.users}</span>
@@ -13717,6 +14271,7 @@ function renderOperatorHistoryPanel(operator) {
     `;
   }
 
+  if (!Array.isArray(operator.journeyHistory)) operator.journeyHistory = [];
   const totals = getOperatorProductionTotals(operator);
   return `
     <div class="panel-heading">
@@ -13729,6 +14284,13 @@ function renderOperatorHistoryPanel(operator) {
       <span>${escapeHtml(operator.accessProfile)}</span>
       <strong>${formatCurrency(getOperatorCommission(operator))}</strong>
       <p>${totals.services} serviço(s) / ${formatCurrency(totals.revenue)} em produção registrada</p>
+      <small>Diária: ${formatCurrency(Number(operator.dailyRate || 0))}</small>
+    </div>
+    <div class="operator-report-actions">
+      <button class="ghost-action" type="button" data-operator-journey-action="start" data-operator-id="${operator.id}">Iniciar jornada</button>
+      <button class="ghost-action" type="button" data-operator-journey-action="pause" data-operator-id="${operator.id}">Pausar</button>
+      <button class="ghost-action" type="button" data-operator-journey-action="resume" data-operator-id="${operator.id}">Reiniciar</button>
+      <button class="ghost-action" type="button" data-operator-journey-action="finish" data-operator-id="${operator.id}">Encerrar</button>
     </div>
     <div class="history-section">
       ${operator.accessHistory
@@ -13741,6 +14303,20 @@ function renderOperatorHistoryPanel(operator) {
           `
         )
         .join("")}
+      ${
+        operator.journeyHistory.length
+          ? operator.journeyHistory
+              .map(
+                (item) => `
+                  <article class="history-item">
+                    <strong>${formatDateBR(item.date)} / ${escapeHtml(item.time || "--:--")} - ${escapeHtml(item.actionLabel)}</strong>
+                    <p>${escapeHtml(item.note || "Registro de jornada")}</p>
+                  </article>
+                `
+              )
+              .join("")
+          : '<p class="empty-plates">Nenhum registro de jornada manual ainda.</p>'
+      }
     </div>
   `;
 }
@@ -13853,7 +14429,7 @@ function normalizeOperatorProductionRow(operator, row) {
 
 function getProductionServiceDuration(serviceName) {
   const service = serviceCatalog.find((item) => normalizeText(item.name) === normalizeText(serviceName));
-  return service?.duration || "A definir";
+  return normalizeDurationToMinutesLabel(service?.duration);
 }
 
 function getOperatorProductionTotals(operator) {
@@ -13928,6 +14504,30 @@ function getCommissionTypeValue(label) {
   return label === "Percentual por serviço" ? "percent" : "fixed";
 }
 
+function getOperatorDailyRate(operator) {
+  return Number(operator?.dailyRate || 0);
+}
+
+function recordOperatorJourneyEvent(operator, action) {
+  if (!operator) return;
+  if (!Array.isArray(operator.journeyHistory)) operator.journeyHistory = [];
+  const labelMap = {
+    start: "Início de jornada",
+    pause: "Pausa",
+    resume: "Reinício",
+    finish: "Término de jornada"
+  };
+  const now = new Date();
+  operator.journeyHistory.unshift({
+    id: `journey-${operator.id}-${Date.now()}`,
+    action,
+    actionLabel: labelMap[action] || "Jornada",
+    date: now.toISOString().slice(0, 10),
+    time: now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    note: `Registro manual por ${activeSessionUser || "Administrador"}`
+  });
+}
+
 function findOperatorById(id) {
   return adminOperators.find((operator) => operator.id === Number(id));
 }
@@ -13954,6 +14554,7 @@ function saveOperatorRegistration(container) {
   const password = $("#operatorPassword", container).value.trim();
   const commissionType = getCommissionTypeValue($("#operatorCommissionType", container).value);
   const commissionValue = getOperatorCommissionInputValue(container);
+  const dailyRate = getCurrencyInputValue("#operatorDailyRate", container);
   const status = $("#operatorStatus", container).value;
 
   if (!name || !cpf || !phone || !username || !password || Number.isNaN(commissionValue)) {
@@ -13981,6 +14582,7 @@ function saveOperatorRegistration(container) {
       password,
       commissionType,
       commissionValue,
+      dailyRate,
       role,
       shift,
       status
@@ -13996,6 +14598,7 @@ function saveOperatorRegistration(container) {
       password,
       commissionType,
       commissionValue,
+      dailyRate,
       role,
       shift,
       today: 0,
@@ -14005,7 +14608,8 @@ function saveOperatorRegistration(container) {
       ],
       production: [
         { date: new Date().toISOString().slice(0, 10), services: 0, revenue: 0, attendance: "Cadastrado" }
-      ]
+      ],
+      journeyHistory: []
     };
     adminOperators.push(savedOperator);
   }
@@ -14016,6 +14620,266 @@ function saveOperatorRegistration(container) {
   renderOperatorsScreen($("#adminOperatorsContent"));
   renderAdminDashboard();
   showToast(wasEdit ? "Operador atualizado." : "Operador cadastrado.");
+}
+
+function renderOperatorsScreen(container) {
+  if (!container) return;
+  const selectedOperator = getSelectedReportOperator();
+  container.innerHTML = `
+    <section class="screen-toolbar" aria-label="Filtros de equipe e usuários">
+      <label class="screen-search">
+        <span class="screen-search-icon">${icons.badge}</span>
+        <input id="operatorSearchInput" type="search" placeholder="Buscar colaborador, login ou perfil" />
+      </label>
+      <div class="screen-filters">
+        <button class="is-active" type="button" data-operator-filter="all">Todos</button>
+        <button type="button" data-operator-filter="Ativo">Ativos</button>
+        <button type="button" data-operator-filter="Operador">Operadores</button>
+        <button type="button" data-operator-filter="Administrador">Administradores</button>
+      </div>
+    </section>
+
+    <section class="screen-metrics operator-metrics" aria-label="Resumo da equipe">
+      ${[
+        { label: "Usuários ativos", value: adminOperators.filter((operator) => operator.status === "Ativo").length, icon: "badge" },
+        { label: "Comissão prevista", value: formatCurrency(getOperatorsCommissionTotal()), icon: "wallet" },
+        { label: "Diárias configuradas", value: formatCurrency(adminOperators.reduce((total, operator) => total + getOperatorDailyRate(operator), 0)), icon: "card" },
+        { label: "Acessos registrados", value: adminOperators.reduce((total, operator) => total + (operator.accessHistory?.length || 0), 0), icon: "clock" }
+      ]
+        .map(renderScreenMetric)
+        .join("")}
+    </section>
+
+    <section class="operator-registration-grid">
+      <article class="admin-panel screen-table-panel operator-form-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Cadastros</p>
+            <h2>Equipe e usuários</h2>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table operator-table">
+            <thead>
+              <tr>
+                <th>Colaborador</th>
+                <th>Perfil</th>
+                <th>Login</th>
+                <th>Comissão</th>
+                <th>Diária</th>
+                <th>Produção</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${renderOperatorRows()}
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <div class="operator-insights-grid">
+        <article class="admin-panel operator-history-panel">
+          ${renderOperatorHistoryPanel(selectedOperator)}
+        </article>
+        <article class="admin-panel operator-report-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Relatórios</p>
+              <h2>Emissão por colaborador</h2>
+            </div>
+          </div>
+          <label class="login-field operator-report-selector" for="operatorReportSelect">
+            <span>Colaborador</span>
+            <select id="operatorReportSelect">
+              ${adminOperators
+                .map((operator) => `<option value="${operator.id}" ${operator.id === selectedOperator?.id ? "selected" : ""}>${escapeHtml(operator.name)}</option>`)
+                .join("")}
+            </select>
+          </label>
+          <div class="operator-report-actions">
+            <button class="ghost-action" type="button" data-operator-report="production">PDF de produção</button>
+            <button class="ghost-action" type="button" data-operator-report="commission">Comissão e recibo</button>
+            <button class="ghost-action" type="button" data-operator-report="attendance">Frequência</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  `;
+
+  initIcons();
+  bindOperatorsScreenControls(container);
+}
+
+function renderOperatorDialogForm(operator = null) {
+  return `
+    <form class="vehicle-box operator-box" id="operatorForm" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">${operator ? "Edição" : "Cadastro"}</p>
+          <h2>${operator ? escapeHtml(operator.name) : "Novo colaborador"}</h2>
+        </div>
+        <button class="icon-button" id="closeOperatorDialog" type="button" aria-label="Fechar">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+      <div class="vehicle-form-grid operator-dialog-grid">
+        <label class="login-field" for="operatorName">
+          <span>Nome</span>
+          <input id="operatorName" type="text" value="${escapeHtml(operator?.name || "")}" required />
+        </label>
+        <label class="login-field" for="operatorCpf">
+          <span>CPF</span>
+          <input id="operatorCpf" type="text" value="${escapeHtml(operator?.cpf || "")}" />
+        </label>
+        <label class="login-field" for="operatorPhone">
+          <span>Telefone</span>
+          <input id="operatorPhone" type="text" value="${escapeHtml(operator?.phone || "")}" />
+        </label>
+        <label class="login-field" for="operatorAccessProfile">
+          <span>Perfil</span>
+          <select id="operatorAccessProfile">
+            ${renderSelectOptions(["Operador", "Administrador"], operator?.accessProfile || "Operador")}
+          </select>
+        </label>
+        <label class="login-field" for="operatorRole">
+          <span>Função</span>
+          <input id="operatorRole" type="text" value="${escapeHtml(operator?.role || "")}" placeholder="Ex.: Operador de pátio" />
+        </label>
+        <label class="login-field" for="operatorShift">
+          <span>Turno</span>
+          <input id="operatorShift" type="text" value="${escapeHtml(operator?.shift || "")}" placeholder="08:00 - 17:00" />
+        </label>
+        <label class="login-field" for="operatorUsername">
+          <span>Login</span>
+          <input id="operatorUsername" type="text" value="${escapeHtml(operator?.username || "")}" required />
+        </label>
+        <label class="login-field" for="operatorPassword">
+          <span>Senha</span>
+          <input id="operatorPassword" type="text" value="${escapeHtml(operator?.password || "")}" required />
+        </label>
+        <label class="login-field" for="operatorCommissionType">
+          <span>Comissionamento</span>
+          <select id="operatorCommissionType">
+            ${renderSelectOptions(["Valor fixo por serviço", "Percentual por serviço"], getCommissionTypeLabel(operator?.commissionType || "fixed"))}
+          </select>
+        </label>
+        <label class="login-field" for="operatorCommissionValue">
+          <span>Valor da comissão</span>
+          <input id="operatorCommissionValue" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(operator?.commissionType === "percent" ? String(operator?.commissionValue || 0).replace(".", ",") : formatCurrencyFieldValue(operator?.commissionValue || 0))}" />
+        </label>
+        <label class="login-field" for="operatorDailyRate">
+          <span>Valor da diária</span>
+          <input id="operatorDailyRate" type="text" inputmode="decimal" data-money-input="true" value="${escapeHtml(formatCurrencyFieldValue(operator?.dailyRate || 0))}" />
+        </label>
+        <label class="login-field" for="operatorStatus">
+          <span>Status</span>
+          <select id="operatorStatus">
+            ${renderSelectOptions(["Ativo", "Inativo"], operator?.status || "Ativo")}
+          </select>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        ${operator ? '<button class="exit-button" id="deleteOperatorDialogButton" type="button">Excluir</button>' : '<button class="exit-button" id="cancelOperatorDialog" type="button">Cancelar</button>'}
+        <button class="primary-button" type="submit">
+          <span data-icon="check"></span>
+          <span>${operator ? "Salvar colaborador" : "Cadastrar colaborador"}</span>
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function openOperatorDialog(operatorId = null) {
+  selectedOperatorId = operatorId ? Number(operatorId) : null;
+  const dialog = $("#operatorDialog");
+  if (!dialog) return;
+  dialog.innerHTML = renderOperatorDialogForm(findOperatorById(selectedOperatorId));
+  initIcons();
+  bindCurrencyInputs(dialog);
+  updateOperatorCommissionInputMode(dialog);
+  bindOperatorDialogControls(dialog);
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+  window.setTimeout(() => $("#operatorName", dialog)?.focus(), 0);
+}
+
+function closeOperatorDialog() {
+  const dialog = $("#operatorDialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function") dialog.close();
+  else dialog.removeAttribute("open");
+  dialog.innerHTML = "";
+  selectedOperatorId = null;
+}
+
+async function deleteOperatorRecord(operatorId) {
+  const operator = findOperatorById(operatorId);
+  if (!operator) return;
+  const confirmed = await showMessageBox({
+    title: "Excluir colaborador",
+    message: `Deseja excluir o cadastro de ${operator.name}?`,
+    eyebrow: "Equipe",
+    confirmLabel: "Excluir",
+    cancelLabel: "Voltar",
+    confirmOnly: false
+  });
+  if (!confirmed) return;
+  const index = adminOperators.findIndex((item) => item.id === operator.id);
+  if (index >= 0) adminOperators.splice(index, 1);
+  selectedReportOperatorId = adminOperators[0]?.id || null;
+  closeOperatorDialog();
+  renderOperatorsScreen($("#adminOperatorsContent"));
+  renderAdminDashboard();
+  showToast("Colaborador excluído.");
+}
+
+function bindOperatorDialogControls(dialog) {
+  $("#closeOperatorDialog", dialog)?.addEventListener("click", closeOperatorDialog);
+  $("#cancelOperatorDialog", dialog)?.addEventListener("click", closeOperatorDialog);
+  $("#operatorCommissionType", dialog)?.addEventListener("change", () => updateOperatorCommissionInputMode(dialog));
+  $("#operatorPhone", dialog)?.addEventListener("input", (event) => {
+    event.currentTarget.value = formatPhone(event.currentTarget.value);
+  });
+  $("#deleteOperatorDialogButton", dialog)?.addEventListener("click", () => {
+    if (!selectedOperatorId) return;
+    deleteOperatorRecord(selectedOperatorId);
+  });
+  $("#operatorForm", dialog)?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveOperatorRegistration(dialog);
+  });
+}
+
+function bindOperatorsScreenControls(container) {
+  applyOperatorTableFilter(container);
+  $("#operatorSearchInput", container)?.addEventListener("input", () => applyOperatorTableFilter(container));
+  $$("[data-operator-filter]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      $$("[data-operator-filter]", container).forEach((item) => item.classList.toggle("is-active", item === button));
+      applyOperatorTableFilter(container);
+    });
+  });
+  $$("[data-edit-operator]", container).forEach((button) => {
+    button.addEventListener("click", () => openOperatorDialog(Number(button.dataset.editOperator)));
+  });
+  $("#operatorReportSelect", container)?.addEventListener("change", (event) => {
+    selectedReportOperatorId = Number(event.currentTarget.value || 0) || adminOperators[0]?.id || null;
+    renderOperatorsScreen(container);
+  });
+  $$("[data-operator-report]", container).forEach((button) => {
+    button.addEventListener("click", () => emitOperatorReport(button.dataset.operatorReport));
+  });
+  $$("[data-operator-journey-action]", container).forEach((button) => {
+    button.addEventListener("click", () => {
+      const operator = findOperatorById(Number(button.dataset.operatorId || 0));
+      if (!operator) return;
+      recordOperatorJourneyEvent(operator, button.dataset.operatorJourneyAction || "start");
+      renderOperatorsScreen(container);
+      showToast("Registro de jornada atualizado.");
+    });
+  });
 }
 
 function emitOperatorReport(type) {
@@ -14137,43 +15001,6 @@ function renderServicesScreen(container) {
           </table>
         </div>
       </article>
-
-      <article class="admin-panel service-list-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">Veículos</p>
-            <h2>Tipos e categorias</h2>
-          </div>
-        </div>
-
-        <div class="registry-list-block">
-          <label class="login-field" for="newVehicleTypeName">
-            <span>Tipo de veículo</span>
-            <input id="newVehicleTypeName" type="text" placeholder="Ex.: Caminhão" />
-          </label>
-          <button class="ghost-action" id="addVehicleTypeButton" type="button">
-            <span data-icon="plus"></span>
-            <span>Adicionar tipo</span>
-          </button>
-          <div class="registry-chip-list">
-            ${renderRegistryChipList(vehicleTypes, "type")}
-          </div>
-        </div>
-
-        <div class="registry-list-block">
-          <label class="login-field" for="newVehicleCategoryName">
-            <span>Categoria de veículo</span>
-            <input id="newVehicleCategoryName" type="text" placeholder="Ex.: Premium" />
-          </label>
-          <button class="ghost-action" id="addVehicleCategoryButton" type="button">
-            <span data-icon="plus"></span>
-            <span>Adicionar categoria</span>
-          </button>
-          <div class="registry-chip-list">
-            ${renderRegistryChipList(vehicleCategories, "category")}
-          </div>
-        </div>
-      </article>
     </section>
   `;
 
@@ -14185,20 +15012,6 @@ function bindServicesScreenControls(container) {
   $$("[data-edit-service]", container).forEach((button) => {
     button.addEventListener("click", () => openServiceDialog(Number(button.dataset.editService)));
   });
-
-  $("#addVehicleTypeButton", container).addEventListener("click", () => {
-    addVehicleRegistryOption(container, "#newVehicleTypeName", vehicleTypes, "Tipo de veículo cadastrado.");
-  });
-
-  $("#addVehicleCategoryButton", container).addEventListener("click", () => {
-    addVehicleRegistryOption(container, "#newVehicleCategoryName", vehicleCategories, "Categoria cadastrada.");
-  });
-
-  $$("[data-delete-registry-option]", container).forEach((button) => {
-    button.addEventListener("click", () => {
-      deleteVehicleRegistryOption(container, button.dataset.registryKind, button.dataset.deleteRegistryOption);
-    });
-  });
 }
 
 function renderServiceRows() {
@@ -14209,7 +15022,7 @@ function renderServiceRows() {
           <td data-label="Serviço"><strong>${escapeHtml(service.name)}</strong></td>
           <td data-label="Tipo de veículo">${escapeHtml(service.vehicleType)}</td>
           <td data-label="Categoria">${escapeHtml(shouldUseVehicleCategory(service.vehicleType) ? service.vehicleCategory : "-")}</td>
-          <td data-label="Tempo">${escapeHtml(service.duration)}</td>
+          <td data-label="Tempo">${escapeHtml(normalizeDurationToMinutesLabel(service.duration))}</td>
           <td data-label="Preço">${formatCurrency(service.price)}</td>
           <td data-label="Status">${escapeHtml(service.status)}</td>
           <td data-label="Ações">
@@ -14245,6 +15058,69 @@ function closeServiceDialog() {
   selectedServiceIndex = null;
 }
 
+function getServiceRegistryList(kind) {
+  return kind === "type" ? vehicleTypes : vehicleCategories;
+}
+
+function getServiceRegistryFieldMeta(kind) {
+  if (kind === "type") {
+    return {
+      inputId: "serviceVehicleType",
+      inputFieldId: "serviceRegistryTypeInput",
+      addButtonId: "addServiceRegistryTypeButton",
+      listId: "serviceRegistryTypeList",
+      label: "Tipo de veículo",
+      placeholder: "Novo tipo",
+      successMessage: "Tipo de veículo cadastrado."
+    };
+  }
+
+  return {
+    inputId: "serviceVehicleCategory",
+    inputFieldId: "serviceRegistryCategoryInput",
+    addButtonId: "addServiceRegistryCategoryButton",
+    listId: "serviceRegistryCategoryList",
+    label: "Categoria de veículo",
+    placeholder: "Nova categoria",
+    successMessage: "Categoria de veículo cadastrada."
+  };
+}
+
+function renderServiceManagedRegistryField({ kind, selectedValue }) {
+  const meta = getServiceRegistryFieldMeta(kind);
+  const list = getServiceRegistryList(kind);
+  return `
+    <div class="cashflow-managed-select service-managed-select" data-service-registry-kind="${escapeHtml(kind)}">
+      <div class="cashflow-managed-select-head">
+        <span>${escapeHtml(meta.label)}</span>
+        <button class="icon-button cashflow-add-option-button" type="button" data-toggle-service-registry="${escapeHtml(kind)}" aria-label="Gerenciar ${escapeHtml(meta.label.toLowerCase())}">
+          <span data-icon="plus"></span>
+        </button>
+      </div>
+      <label class="login-field" for="${escapeHtml(meta.inputId)}">
+        <select id="${escapeHtml(meta.inputId)}" required>
+          ${renderRegistrySelectOptions(list, selectedValue || list[0] || "")}
+        </select>
+      </label>
+      <div class="service-registry-inline-panel" data-service-registry-panel="${escapeHtml(kind)}" hidden>
+        <div class="service-registry-inline-row">
+          <label class="login-field" for="${escapeHtml(meta.inputFieldId)}">
+            <span>${escapeHtml(meta.label)}</span>
+            <input id="${escapeHtml(meta.inputFieldId)}" type="text" placeholder="${escapeHtml(meta.placeholder)}" data-service-registry-input="${escapeHtml(kind)}" />
+          </label>
+          <button class="ghost-action compact" id="${escapeHtml(meta.addButtonId)}" type="button" data-add-service-registry="${escapeHtml(kind)}">
+            <span data-icon="plus"></span>
+            <span>Adicionar</span>
+          </button>
+        </div>
+        <div class="registry-chip-list" id="${escapeHtml(meta.listId)}" data-service-registry-list="${escapeHtml(kind)}">
+          ${renderRegistryChipList(list, kind)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderServiceDialogForm(service) {
   return `
     <form class="vehicle-box service-box" id="serviceForm" novalidate>
@@ -14263,25 +15139,15 @@ function renderServiceDialogForm(service) {
           <span>Nome do serviço</span>
           <input id="serviceName" type="text" placeholder="Ex.: Lavagem Prime" value="${escapeHtml(service?.name || "")}" required />
         </label>
-        <label class="login-field" for="serviceVehicleType">
-          <span>Tipo de veículo</span>
-          <select id="serviceVehicleType" required>
-            ${renderRegistrySelectOptions(vehicleTypes, service?.vehicleType || vehicleTypes[0] || "")}
-          </select>
-        </label>
-        <label class="login-field" for="serviceVehicleCategory">
-          <span>Categoria de veículo</span>
-          <select id="serviceVehicleCategory" required>
-            ${renderRegistrySelectOptions(vehicleCategories, service?.vehicleCategory || vehicleCategories[0] || "")}
-          </select>
-        </label>
+        ${renderServiceManagedRegistryField({ kind: "type", selectedValue: service?.vehicleType || vehicleTypes[0] || "" })}
+        ${renderServiceManagedRegistryField({ kind: "category", selectedValue: service?.vehicleCategory || vehicleCategories[0] || "" })}
         <label class="login-field" for="servicePrice">
           <span>Valor</span>
           <input id="servicePrice" type="text" inputmode="decimal" data-money-input="true" placeholder="R$ 0,00" value="${escapeHtml(formatCurrencyFieldValue(service?.price))}" required />
         </label>
         <label class="login-field" for="serviceDuration">
-          <span>Tempo previsto</span>
-          <input id="serviceDuration" type="text" placeholder="35 min" value="${escapeHtml(service?.duration || "")}" />
+          <span>Tempo previsto (minutos)</span>
+          <input id="serviceDuration" type="number" min="1" step="1" placeholder="35" value="${escapeHtml(String(extractDurationMinutes(service?.duration) || ""))}" />
         </label>
         <label class="login-field" for="serviceStatus">
           <span>Status</span>
@@ -14365,10 +15231,107 @@ function bindServiceDialogControls(dialog) {
   });
   updateServiceMaintenanceFields(dialog);
   bindServiceDialogSupplyControls(dialog);
+  bindServiceDialogRegistryControls(dialog);
   updateServiceDialogEstimatedCost(dialog);
   $("#serviceForm", dialog).addEventListener("submit", (event) => {
     event.preventDefault();
     saveServiceRegistration(dialog);
+  });
+}
+
+function toggleServiceRegistryPanel(dialog, kind) {
+  $$("[data-service-registry-panel]", dialog).forEach((panel) => {
+    const shouldOpen = panel.dataset.serviceRegistryPanel === kind && panel.hidden;
+    panel.hidden = !shouldOpen;
+  });
+}
+
+function refreshServiceDialogRegistryState(dialog, kind, preferredValue = "") {
+  const meta = getServiceRegistryFieldMeta(kind);
+  const list = getServiceRegistryList(kind);
+  refreshOpenServiceDialogRegistryOptions(kind, preferredValue);
+  const listContainer = $(`#${meta.listId}`, dialog);
+  if (listContainer) listContainer.innerHTML = renderRegistryChipList(list, kind);
+  initIcons();
+}
+
+function addServiceDialogRegistryOption(dialog, kind) {
+  const meta = getServiceRegistryFieldMeta(kind);
+  const input = $(`#${meta.inputFieldId}`, dialog);
+  const list = getServiceRegistryList(kind);
+  const value = String(input?.value || "").trim();
+  if (!input) return;
+  if (!value) {
+    input.focus();
+    showToast("Informe um nome para cadastrar.");
+    return;
+  }
+  if (list.some((item) => normalizeText(item) === normalizeText(value))) {
+    showToast("Item já cadastrado.");
+    return;
+  }
+  list.push(value);
+  input.value = "";
+  renderServicesScreen($("#adminServicesContent"));
+  renderVehicleEntryOptions();
+  refreshServiceDialogRegistryState(dialog, kind, value);
+  input.focus();
+  showToast(meta.successMessage);
+}
+
+async function deleteServiceDialogRegistryOption(dialog, kind, value) {
+  const list = getServiceRegistryList(kind);
+  const meta = getServiceRegistryFieldMeta(kind);
+  const index = list.findIndex((item) => item === value);
+  if (index < 0) return;
+  if (list.length <= 1) {
+    showToast(`Mantenha ao menos um ${meta.label.toLowerCase()} cadastrado.`);
+    return;
+  }
+  const usage = getVehicleRegistryOptionUsage(kind, value);
+  if (usage.services || usage.vehicles) {
+    await showMessageBox({
+      title: "Item em uso",
+      message: `Não é possível excluir este ${meta.label.toLowerCase()}, pois ele está vinculado a ${usage.services} serviço(s) e ${usage.vehicles} veículo(s).`,
+      confirmLabel: "Entendi"
+    });
+    return;
+  }
+  list.splice(index, 1);
+  renderServicesScreen($("#adminServicesContent"));
+  renderVehicleEntryOptions();
+  refreshServiceDialogRegistryState(dialog, kind);
+  showToast(`${meta.label} removido.`);
+}
+
+function bindServiceDialogRegistryControls(dialog) {
+  $$("[data-toggle-service-registry]", dialog).forEach((button) => {
+    button.addEventListener("click", () => toggleServiceRegistryPanel(dialog, button.dataset.toggleServiceRegistry || ""));
+  });
+
+  $$("[data-add-service-registry]", dialog).forEach((button) => {
+    button.addEventListener("click", () => addServiceDialogRegistryOption(dialog, button.dataset.addServiceRegistry || ""));
+  });
+
+  $$("[data-service-registry-input]", dialog).forEach((input) => {
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      addServiceDialogRegistryOption(dialog, event.currentTarget.dataset.serviceRegistryInput || "");
+    });
+  });
+
+  dialog.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest("[data-delete-registry-option]");
+    if (deleteButton?.closest("[data-service-registry-panel]")) {
+      deleteServiceDialogRegistryOption(dialog, deleteButton.dataset.registryKind, deleteButton.dataset.deleteRegistryOption);
+      return;
+    }
+    if (!event.target.closest("[data-service-registry-kind]")) {
+      $$("[data-service-registry-panel]", dialog).forEach((panel) => {
+        panel.hidden = true;
+      });
+    }
   });
 }
 
@@ -14403,7 +15366,8 @@ function saveServiceRegistration(container) {
   const vehicleType = $("#serviceVehicleType", container).value;
   const vehicleCategory = getVehicleCategoryValue(vehicleType, $("#serviceVehicleCategory", container).value);
   const price = getCurrencyInputValue("#servicePrice", container);
-  const duration = $("#serviceDuration", container).value.trim() || "A definir";
+  const durationMinutes = Math.max(0, Number($("#serviceDuration", container).value || 0));
+  const duration = durationMinutes > 0 ? `${durationMinutes} min` : "A definir";
   const status = $("#serviceStatus", container).value;
   const supplyEntries = readServiceSupplyEntriesFromDialog(container);
   const maintenanceRequired = Boolean($("#serviceMaintenanceRequired", container)?.checked);
@@ -14696,6 +15660,154 @@ function getTopSoldProducts(limit = 3) {
     .slice(0, limit);
 }
 
+function getProductSalesQuantityMap() {
+  const totals = new Map();
+  productSales.forEach((sale) => {
+    (sale.items || []).forEach((item) => {
+      const productId = Number(item.productId || 0);
+      if (!productId) return;
+      totals.set(productId, (totals.get(productId) || 0) + Number(item.quantity || 0));
+    });
+  });
+  return totals;
+}
+
+function getProductTurnoverState(product) {
+  const totals = getProductSalesQuantityMap();
+  const quantity = totals.get(Number(product?.id || 0)) || 0;
+  const topQuantity = Math.max(0, ...totals.values());
+  if (quantity > 0 && quantity === topQuantity) return { key: "high", quantity, label: "Em alta" };
+  if (quantity > 0) return { key: "medium", quantity, label: "Venda moderada" };
+  return { key: "low", quantity, label: "Baixo giro" };
+}
+
+function renderProductTurnoverBadge(product) {
+  const state = getProductTurnoverState(product);
+  const symbolMap = {
+    high: "↑",
+    medium: "■",
+    low: "↓"
+  };
+  return `
+    <span class="inventory-trend-badge is-${state.key}" title="${escapeHtml(`${state.label}: ${state.quantity} item(ns)`)}">
+      <span class="inventory-trend-icon" aria-hidden="true">${symbolMap[state.key]}</span>
+      <span>${escapeHtml(state.label)}</span>
+    </span>
+  `;
+}
+
+function getSupplyStockState(item) {
+  const stock = Number(item?.stock || 0);
+  const minStock = Math.max(0, Number(item?.minStock || 0));
+  if (stock <= minStock) return { key: "critical", label: "Estoque baixo" };
+  if (minStock > 0 && stock <= minStock * 1.4) return { key: "warning", label: "Estoque em atenção" };
+  return { key: "normal", label: "Estoque normal" };
+}
+
+function renderSupplyStockBadge(item) {
+  const state = getSupplyStockState(item);
+  return `
+    <span class="inventory-dot-badge is-${state.key}">
+      <span class="inventory-dot" aria-hidden="true"></span>
+      <span>${escapeHtml(state.label)}</span>
+    </span>
+  `;
+}
+
+function extractDurationMinutes(value) {
+  const text = String(value || "").trim().toLowerCase();
+  if (!text) return 0;
+  const directNumber = Number(text.replace(/[^\d.]/g, ""));
+  if (/^\d+$/.test(text)) return Math.max(0, directNumber);
+  const hourMatch = text.match(/(\d+)\s*h(?:\s*(\d{1,2}))?/);
+  if (hourMatch) {
+    const hours = Number(hourMatch[1] || 0);
+    const minutes = Number(hourMatch[2] || 0);
+    return hours * 60 + minutes;
+  }
+  const minuteMatch = text.match(/(\d+)\s*min/);
+  if (minuteMatch) return Number(minuteMatch[1] || 0);
+  return Number.isFinite(directNumber) ? Math.max(0, Math.round(directNumber)) : 0;
+}
+
+function normalizeDurationToMinutesLabel(value) {
+  const minutes = extractDurationMinutes(value);
+  return minutes > 0 ? `${minutes} min` : "A definir";
+}
+
+function getDocumentHistoryItemById(documentId) {
+  return documentHistory.find((item) => Number(item.id) === Number(documentId)) || null;
+}
+
+function buildDocumentHistoryPdfLines(item) {
+  return [
+    `Titulo: ${item.title || "-"}`,
+    `Numero: ${item.documentNumber || "-"}`,
+    `Categoria: ${item.category || "-"}`,
+    `Responsavel: ${item.responsible || "-"}`,
+    `Emitido em: ${item.createdAt || "-"}`,
+    `Arquivo: ${item.fileName || "-"}`,
+    "",
+    item.summary || item.subtitle || "Documento emitido pelo LavaPrime."
+  ];
+}
+
+function createDocumentHistoryPdfBlob(item) {
+  const payload = {
+    fileName: item.fileName || `documento-${item.id || "lavaprime"}.pdf`,
+    title: item.title || "Documento LavaPrime",
+    lines: buildDocumentHistoryPdfLines(item),
+    subtitle: item.subtitle || getPdfDocumentSubtitle(item.title || "Documento LavaPrime"),
+    documentNumber: item.documentNumber || createPdfDocumentNumber(item.fileName || "documento.pdf"),
+    responsible: item.responsible || activeSessionUser || "Sistema LavaPrime",
+    category: item.category || "Documento",
+    summary: item.summary || "Documento emitido pelo LavaPrime.",
+    reportTarget: item.reportTarget || "documents"
+  };
+  const pdf = createStandardPdfDocument(payload, getPdfLogoImage());
+  return new Blob([pdf], { type: "application/pdf" });
+}
+
+function openDocumentHistoryItem(documentId) {
+  const item = getDocumentHistoryItemById(documentId);
+  if (!item) return;
+  const url = URL.createObjectURL(createDocumentHistoryPdfBlob(item));
+  window.open(url, "_blank", "noopener,noreferrer");
+  window.setTimeout(() => URL.revokeObjectURL(url), 120000);
+}
+
+function printDocumentHistoryItem(documentId) {
+  const item = getDocumentHistoryItemById(documentId);
+  if (!item) return;
+  const url = URL.createObjectURL(createDocumentHistoryPdfBlob(item));
+  const printWindow = window.open(url, "_blank", "noopener,noreferrer");
+  if (printWindow) {
+    printWindow.addEventListener("load", () => {
+      printWindow.focus();
+      printWindow.print();
+    });
+  }
+  window.setTimeout(() => URL.revokeObjectURL(url), 120000);
+}
+
+function sendDocumentHistoryWhatsapp(documentId) {
+  const item = getDocumentHistoryItemById(documentId);
+  if (!item) return;
+  const phone = businessSocialLinks.whatsapp?.value || businessProfile.phone || "";
+  if (!phone) {
+    showToast("Cadastre um WhatsApp do negócio para compartilhar documentos.");
+    return;
+  }
+  const text = [
+    `Documento pronto para compartilhamento: ${item.title || "Documento LavaPrime"}`,
+    item.documentNumber ? `Numero: ${item.documentNumber}` : "",
+    item.summary || item.subtitle || "Emitido pelo LavaPrime."
+  ]
+    .filter(Boolean)
+    .join("\n");
+  window.open(`https://wa.me/${sanitizeWhatsappPhone(phone)}?text=${encodeURIComponent(text)}`, "_blank", "noreferrer");
+}
+
 function getDocumentHistoryByCategory(category = "Todos") {
   return documentHistory.filter((item) => category === "Todos" || normalizeText(item.category) === normalizeText(category));
 }
@@ -14795,21 +15907,7 @@ function renderServiceEntryScreen(container) {
 }
 
 function renderProductsScreen(container) {
-  const lowStock = getLowStockProducts();
-  const averageMargin = productCatalog.length
-    ? `${(productCatalog.reduce((total, product) => total + getProductMarginPercent(product), 0) / productCatalog.length).toFixed(1).replace(".", ",")}%`
-    : "0%";
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo dos produtos">
-      ${[
-        { label: "Produtos ativos", value: productCatalog.filter((item) => item.active !== false).length, icon: "package" },
-        { label: "Baixo estoque", value: lowStock.length, icon: "alert" },
-        { label: "Margem média", value: averageMargin, icon: "wallet" },
-        { label: "Valor em estoque", value: formatCurrency(productCatalog.reduce((total, item) => total + Number(item.stock || 0) * Number(item.cost || 0), 0)), icon: "clipboard" }
-      ]
-        .map(renderScreenMetric)
-        .join("")}
-    </section>
     <section class="screen-toolbar inventory-toolbar" aria-label="Filtros dos produtos">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.package}</span>
@@ -14860,7 +15958,12 @@ function renderProductsScreen(container) {
                       <td data-label="Custo">${formatCurrency(product.cost)}</td>
                       <td data-label="Venda">${formatCurrency(product.price)}</td>
                       <td data-label="Margem">${getProductMarginPercent(product).toFixed(1).replace(".", ",")}%</td>
-                      <td data-label="Status"><span class="inventory-pill ${product.active !== false ? "is-active" : "is-inactive"}">${product.active !== false ? "Ativo" : "Inativo"}</span></td>
+                      <td data-label="Status">
+                        <div class="inventory-status-stack">
+                          <span class="inventory-pill ${product.active !== false ? "is-active" : "is-inactive"}">${product.active !== false ? "Ativo" : "Inativo"}</span>
+                          ${product.active !== false ? renderProductTurnoverBadge(product) : ""}
+                        </div>
+                      </td>
                       <td data-label="Ações">
                         <div class="cashflow-row-actions">
                           <button class="ghost-action" type="button" data-edit-product="${product.id}">Editar</button>
@@ -14875,31 +15978,6 @@ function renderProductsScreen(container) {
           </table>
         </div>
       </article>
-      <article class="admin-panel screen-side-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">Atenção</p>
-            <h2>Produtos em foco</h2>
-          </div>
-        </div>
-        <div class="screen-side-list">
-          ${
-            lowStock.length
-              ? lowStock
-                  .map(
-                    (item) => `
-                      <article class="screen-side-item">
-                        <span>Baixo estoque</span>
-                        <strong>${escapeHtml(item.name)}</strong>
-                        <p>${formatInventoryQuantity(item.stock, item.unit)} em estoque · mínimo ${formatInventoryQuantity(item.minStock, item.unit)}</p>
-                      </article>
-                    `
-                  )
-                  .join("")
-              : '<p class="empty-alert">Todos os produtos estão acima do estoque mínimo.</p>'
-          }
-        </div>
-      </article>
     </section>
   `;
   initIcons();
@@ -14907,18 +15985,7 @@ function renderProductsScreen(container) {
 }
 
 function renderSuppliesScreen(container) {
-  const lowStock = getLowStockSupplies();
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo dos insumos">
-      ${[
-        { label: "Insumos ativos", value: supplyCatalog.filter((item) => item.active !== false).length, icon: "flask" },
-        { label: "Baixo estoque", value: lowStock.length, icon: "alert" },
-        { label: "Custo imobilizado", value: formatCurrency(supplyCatalog.reduce((total, item) => total + Number(item.stock || 0) * Number(item.cost || 0), 0)), icon: "wallet" },
-        { label: "Serviços com ficha", value: getServiceTechnicalCoverageCount(), icon: "service" }
-      ]
-        .map(renderScreenMetric)
-        .join("")}
-    </section>
     <section class="screen-toolbar inventory-toolbar" aria-label="Filtros dos insumos">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.flask}</span>
@@ -14967,7 +16034,12 @@ function renderSuppliesScreen(container) {
                       <td data-label="Estoque">${formatInventoryQuantity(item.stock, item.unit)}</td>
                       <td data-label="Custo">${formatCurrency(item.cost)}</td>
                       <td data-label="Fornecedor">${escapeHtml(item.supplier || "-")}</td>
-                      <td data-label="Status"><span class="inventory-pill ${item.active !== false ? "is-active" : "is-inactive"}">${item.active !== false ? "Ativo" : "Inativo"}</span></td>
+                      <td data-label="Status">
+                        <div class="inventory-status-stack">
+                          <span class="inventory-pill ${item.active !== false ? "is-active" : "is-inactive"}">${item.active !== false ? "Ativo" : "Inativo"}</span>
+                          ${item.active !== false ? renderSupplyStockBadge(item) : ""}
+                        </div>
+                      </td>
                       <td data-label="Ações">
                         <div class="cashflow-row-actions">
                           <button class="ghost-action" type="button" data-edit-supply="${item.id}">Editar</button>
@@ -15090,18 +16162,7 @@ function renderInventoryScreen(container) {
 }
 
 function renderProductSalesScreen(container) {
-  const topProducts = getTopSoldProducts();
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo das vendas de produtos">
-      ${[
-        { label: "Vendas registradas", value: productSales.length, icon: "package" },
-        { label: "Itens vendidos", value: getProductSalesItemsTotal(), icon: "clipboard" },
-        { label: "Faturamento", value: formatCurrency(getProductSalesRevenueTotal()), icon: "wallet" },
-        { label: "Métodos ativos", value: getActivePaymentMethodNames("productSale").length, icon: "card" }
-      ]
-        .map(renderScreenMetric)
-        .join("")}
-    </section>
     <section class="screen-toolbar inventory-toolbar" aria-label="Filtros das vendas">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.package}</span>
@@ -15168,31 +16229,6 @@ function renderProductSalesScreen(container) {
           </table>
         </div>
       </article>
-      <article class="admin-panel screen-side-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">Destaques</p>
-            <h2>Mais vendidos</h2>
-          </div>
-        </div>
-        <div class="screen-side-list">
-          ${
-            topProducts.length
-              ? topProducts
-                  .map(
-                    (item) => `
-                      <article class="screen-side-item">
-                        <span>Produto</span>
-                        <strong>${escapeHtml(item.name)}</strong>
-                        <p>${item.quantity} unidade(s) já registradas em vendas.</p>
-                      </article>
-                    `
-                  )
-                  .join("")
-              : '<p class="empty-alert">As vendas aparecerão aqui assim que forem registradas.</p>'
-          }
-        </div>
-      </article>
     </section>
   `;
   initIcons();
@@ -15200,19 +16236,7 @@ function renderProductSalesScreen(container) {
 }
 
 function renderDocumentsScreen(container) {
-  const receiptsCount = documentHistory.filter((item) => normalizeText(item.category).includes("recibo")).length;
-  const reportsCount = documentHistory.filter((item) => normalizeText(item.category).includes("relatorio")).length;
   container.innerHTML = `
-    <section class="screen-metrics" aria-label="Resumo dos documentos">
-      ${[
-        { label: "Documentos gerados", value: documentHistory.length, icon: "clipboard" },
-        { label: "Recibos", value: receiptsCount, icon: "invoice" },
-        { label: "Relatórios", value: reportsCount, icon: "dashboard" },
-        { label: "Hoje", value: documentHistory.filter((item) => normalizeText(item.createdAt).includes(normalizeText(formatDateBR(getTodayISO())))).length, icon: "clock" }
-      ]
-        .map(renderScreenMetric)
-        .join("")}
-    </section>
     <section class="screen-toolbar inventory-toolbar" aria-label="Filtros dos documentos">
       <label class="screen-search">
         <span class="screen-search-icon">${icons.clipboard}</span>
@@ -15242,6 +16266,7 @@ function renderDocumentsScreen(container) {
                 <th>Categoria</th>
                 <th>Responsável</th>
                 <th>Arquivo</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -15257,34 +16282,21 @@ function renderDocumentsScreen(container) {
                             <td data-label="Categoria">${escapeHtml(item.category)}</td>
                             <td data-label="Responsável">${escapeHtml(item.responsible)}</td>
                             <td data-label="Arquivo">${escapeHtml(item.fileName)}</td>
+                            <td data-label="Ações">
+                              <div class="cashflow-row-actions">
+                                <button class="ghost-action compact" type="button" data-open-document-history="${item.id}">Abrir</button>
+                                <button class="ghost-action compact" type="button" data-print-document-history="${item.id}">Imprimir</button>
+                                <button class="primary-button compact-action" type="button" data-share-document-history="${item.id}">WhatsApp</button>
+                              </div>
+                            </td>
                           </tr>
                         `
                       )
                       .join("")
-                  : '<tr><td colspan="6"><p class="empty-alert">Os documentos emitidos passarão a aparecer aqui.</p></td></tr>'
+                  : '<tr><td colspan="7"><p class="empty-alert">Os documentos emitidos passarão a aparecer aqui.</p></td></tr>'
               }
             </tbody>
           </table>
-        </div>
-      </article>
-      <article class="admin-panel screen-side-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">Observação</p>
-            <h2>Padrão documental</h2>
-          </div>
-        </div>
-        <div class="screen-side-list">
-          <article class="screen-side-item">
-            <span>Papel timbrado</span>
-            <strong>Ativo em toda a rotina PDF</strong>
-            <p>Recibos, relatórios e comprovantes continuam saindo pelo mesmo gerador central do LavaPrime.</p>
-          </article>
-          <article class="screen-side-item">
-            <span>Financeiro</span>
-            <strong>Pix e contas bancárias</strong>
-            <p>Quando o documento é compatível com cobrança, os dados de pagamento definidos em Configurações Financeiras continuam disponíveis.</p>
-          </article>
         </div>
       </article>
     </section>
@@ -15414,6 +16426,15 @@ function bindDocumentsScreenControls(container) {
     filterContainerSelector: "#documentHistoryFilters",
     filterDatasetKey: "documentFilter",
     filterMatcher: (activeFilter, rowFilterValue) => activeFilter === "Todos" || rowFilterValue === activeFilter
+  });
+  $$("[data-open-document-history]", container).forEach((button) => {
+    button.addEventListener("click", () => openDocumentHistoryItem(Number(button.dataset.openDocumentHistory)));
+  });
+  $$("[data-print-document-history]", container).forEach((button) => {
+    button.addEventListener("click", () => printDocumentHistoryItem(Number(button.dataset.printDocumentHistory)));
+  });
+  $$("[data-share-document-history]", container).forEach((button) => {
+    button.addEventListener("click", () => sendDocumentHistoryWhatsapp(Number(button.dataset.shareDocumentHistory)));
   });
 }
 
@@ -20286,6 +21307,15 @@ function toggleChecklistArea(container, scope, area) {
   const toggle = $(`[data-checklist-area-toggle="${cssEscape(scope)}"][data-area="${cssEscape(area)}"]`, container);
   if (!body || !toggle) return;
   const shouldCollapse = !body.hidden;
+  $$(`[data-checklist-area-body="${cssEscape(scope)}"]`, container).forEach((item) => {
+    if (item === body) return;
+    item.hidden = true;
+  });
+  $$(`[data-checklist-area-toggle="${cssEscape(scope)}"]`, container).forEach((item) => {
+    if (item === toggle) return;
+    item.setAttribute("aria-expanded", "false");
+    item.classList.add("is-collapsed");
+  });
   body.hidden = shouldCollapse;
   toggle.setAttribute("aria-expanded", String(!shouldCollapse));
   toggle.classList.toggle("is-collapsed", shouldCollapse);
