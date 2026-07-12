@@ -8092,54 +8092,54 @@ function getDashboardOptionalChartDefinitionsSafe(dashboardMetrics, periodLabel)
   return [
     {
       id: "cashflowBreakdown",
-      title: "Entradas x saidas",
-      subtitle: "Barras agrupadas",
-      metricLabel: "Caixa liquido",
+      title: "Entradas x saídas",
+      subtitle: "Resultado do caixa",
+      metricLabel: "Caixa líquido",
       metricValue: formatCurrency(dashboardMetrics.kpis.netCash.value),
-      metricDetail: `${periodLabel} · resultado do periodo`,
-      description: "Movimento financeiro consolidado sem depender de runtime externo.",
-      summary: `${formatCurrency(dashboardMetrics.kpis.netCash.value)} de saldo liquido no recorte atual`,
+      metricDetail: `${periodLabel} · resultado do período`,
+      description: "Movimento financeiro consolidado do período.",
+      summary: `${formatCurrency(dashboardMetrics.kpis.netCash.value)} de saldo líquido no recorte atual`,
       visual: renderDashboardGroupedBarChart(dashboardMetrics.charts.cashflowBreakdown, formatCompactCurrency, formatCompactCurrency),
-      footer: `${periodLabel} · origem principal: cashEntries`,
+      footer: `${periodLabel} · lançamentos de caixa`,
       dismissible: true
     },
     {
       id: "attendanceTrend",
-      title: "Atendimentos por periodo",
-      subtitle: "Colunas",
+      title: "Atendimentos por período",
+      subtitle: "Volume operacional",
       metricLabel: "Atendimentos",
       metricValue: String(dashboardMetrics.kpis.attendances.value),
-      metricDetail: `${periodLabel} · nao cancelados`,
-      description: "Volume operacional do patio dentro do intervalo selecionado.",
-      summary: `${dashboardMetrics.kpis.attendances.value} atendimento(s) lidos no periodo`,
+      metricDetail: `${periodLabel} · não cancelados`,
+      description: "Volume operacional do pátio dentro do intervalo selecionado.",
+      summary: `${dashboardMetrics.kpis.attendances.value} atendimento(s) lidos no período`,
       visual: renderDashboardColumnChart(dashboardMetrics.charts.attendanceTrend),
-      footer: `${periodLabel} · origem principal: patioVehicles`,
+      footer: `${periodLabel} · movimentação do pátio`,
       dismissible: true
     },
     {
       id: "topServices",
-      title: "Servicos mais vendidos",
-      subtitle: "Barras horizontais",
+      title: "Serviços mais vendidos",
+      subtitle: "Ranking",
       metricLabel: "Categorias monitoradas",
       metricValue: String(dashboardMetrics.charts.topServices.data.length || 0),
       metricDetail: `${periodLabel} · ranking operacional`,
-      description: "Ranking dos servicos com maior recorrencia no recorte atual.",
+      description: "Ranking dos serviços com maior recorrência no recorte atual.",
       summary: `${dashboardMetrics.charts.topServices.data.length || 0} categoria(s) com leitura ativa`,
       visual: renderDashboardHorizontalBarChart(dashboardMetrics.charts.topServices, (value) => `${value} venda(s)`),
-      footer: `${periodLabel} · origem principal: patioVehicles`,
+      footer: `${periodLabel} · movimentação do pátio`,
       dismissible: true
     },
     {
       id: "paymentMethods",
       title: "Formas de pagamento",
-      subtitle: "Donut",
+      subtitle: "Distribuição",
       metricLabel: "Entradas confirmadas",
       metricValue: formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value),
       metricDetail: `${periodLabel} · meios confirmados`,
-      description: "Distribuicao das entradas confirmadas por forma de pagamento.",
+      description: "Distribuição das entradas confirmadas por forma de pagamento.",
       summary: `${formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value)} em entradas classificadas`,
       visual: renderDashboardDonutChart(dashboardMetrics.charts.paymentMethods),
-      footer: `${periodLabel} · origem principal: cashEntries`,
+      footer: `${periodLabel} · lançamentos de caixa`,
       dismissible: true
     }
   ];
@@ -8163,38 +8163,38 @@ function renderResponsiveDashboardChartsV2(dashboardMetrics) {
     renderDashboardChartCard({
       chartId: "revenueTrend",
       title: "Faturamento",
-      subtitle: "Linha / area",
+      subtitle: "Tendência do período",
       metricLabel: "Faturamento confirmado",
       metricValue: formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value),
       metricDetail: `${periodLabel} · receita confirmada`,
-      description: "Receita confirmada em caixa ao longo do periodo selecionado.",
-      summary: `${revenueDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(revenueDelta))} em relacao ao ponto anterior do filtro`,
+      description: "Receita confirmada em caixa ao longo do período selecionado.",
+      summary: `${revenueDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(revenueDelta))} em relação ao ponto anterior do filtro`,
       visual: renderDashboardLineChart(dashboardMetrics.charts.revenueTrend, formatCompactCurrency),
-      footer: `${periodLabel} · origem principal: cashEntries confirmados`
+      footer: `${periodLabel} · recebimentos confirmados`
     }),
     renderDashboardChartCard({
       chartId: "estimatedProfitTrend",
       title: "Lucro estimado",
-      subtitle: "Linha / area",
+      subtitle: "Tendência do período",
       metricLabel: "Lucro estimado",
       metricValue: formatCurrency(dashboardMetrics.kpis.estimatedProfit.value),
-      metricDetail: `${periodLabel} · taxas e saidas consideradas`,
-      description: "Estimativa liquida do periodo considerando entradas confirmadas, taxas e saidas.",
-      summary: `${estimatedProfitDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(estimatedProfitDelta))} em relacao ao ponto anterior do filtro`,
+      metricDetail: `${periodLabel} · taxas e saídas consideradas`,
+      description: "Estimativa líquida do período considerando entradas confirmadas, taxas e saídas.",
+      summary: `${estimatedProfitDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(estimatedProfitDelta))} em relação ao ponto anterior do filtro`,
       visual: renderDashboardLineChart(dashboardMetrics.charts.estimatedProfitTrend, formatCompactCurrency),
-      footer: `${periodLabel} · origem principal: cashEntries + netAmount`
+      footer: `${periodLabel} · caixa e taxas`
     }),
     renderDashboardChartCard({
       chartId: "patioStatus",
-      title: "Situacao do patio",
-      subtitle: "Barra empilhada",
-      metricLabel: "Veiculos ativos",
+      title: "Situação do pátio",
+      subtitle: "Operação agora",
+      metricLabel: "Veículos ativos",
       metricValue: String(dashboardMetrics.kpis.activePatio.value),
-      metricDetail: "Snapshot operacional atual",
-      description: "Leitura atual dos veiculos por etapa operacional.",
-      summary: `${dashboardMetrics.kpis.activePatio.value} veiculo(s) em operacao neste momento`,
+      metricDetail: "Situação operacional atual",
+      description: "Leitura atual dos veículos por etapa operacional.",
+      summary: `${dashboardMetrics.kpis.activePatio.value} veículo(s) em operação neste momento`,
       visual: renderDashboardStackedStatusChart(dashboardMetrics.charts.patioStatus),
-      footer: "Snapshot atual · origem principal: patioVehicles",
+      footer: "Situação atual · movimentação do pátio",
       span: "dashboard-chart-card--full-row"
     }),
     ...visibleOptionalCharts.map((chart) => renderDashboardChartCard(chart))
@@ -8211,12 +8211,12 @@ function renderResponsiveDashboardChartsV2(dashboardMetrics) {
           `
         ).join("")}
       </div>
-      <p class="dashboard-filter-copy">Periodo ativo: ${escapeHtml(periodLabel)}</p>
+      <p class="dashboard-filter-copy">Período ativo: ${escapeHtml(periodLabel)}</p>
     </section>
-    <section class="dashboard-optional-controls" aria-label="Gerenciar graficos opcionais">
+    <section class="dashboard-optional-controls" aria-label="Gerenciar gráficos opcionais">
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">Graficos adicionais</p>
+          <p class="eyebrow">Gráficos adicionais</p>
           <h2>Escolha do administrador</h2>
         </div>
       </div>
@@ -8232,11 +8232,11 @@ function renderResponsiveDashboardChartsV2(dashboardMetrics) {
                   `
                 )
                 .join("")
-            : '<p class="dashboard-filter-copy">Todos os graficos opcionais ja estao visiveis.</p>'
+            : '<p class="dashboard-filter-copy">Todos os gráficos opcionais já estão visíveis.</p>'
         }
       </div>
     </section>
-    <section class="admin-trend-grid" id="adminDashboardCharts" aria-label="Graficos gerenciais responsivos">
+    <section class="admin-trend-grid" id="adminDashboardCharts" aria-label="Gráficos gerenciais responsivos">
       ${cards.join("")}
     </section>
   `;
