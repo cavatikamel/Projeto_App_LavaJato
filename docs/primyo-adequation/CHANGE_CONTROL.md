@@ -543,3 +543,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a Visao Geral passa a usar uma camada dedicada de metricas em `app/dashboard/dashboardMetrics.js`, com KPIs e 6 graficos responsivos baseados em `patioVehicles`, `cashEntries` e `openPayments`, sem abrir Supabase e sem mudar o bootstrap padrao.
 - Observacao de risco: a base continua majoritariamente `demo/teste`, entao as metricas ficam limitadas ao que existe no runtime atual; publicacao e deploy continuam dependentes de fase propria de homologacao.
+
+### LP-WEB-DASHBOARD-ACCEL-001
+
+- Change record: `docs/primyo-changes/LP-WEB-DASHBOARD-ACCEL-001.md`
+- Closure: `docs/primyo-changes/LP-WEB-DASHBOARD-ACCEL-001-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a area analitica da Visao Geral foi reorganizada diretamente em `app/main.js` e `app/styles.css`, com `Faturamento` e `Lucro estimado` na dupla principal, `Situacao do patio` em linha dedicada e colapso do grid movido para `960px`.
+- Observacao de risco: o warning de chunk acima de `500 kB` permanece nao bloqueante e a homologacao publicada em `staging` continua sendo a evidencia final mais confiavel para viewport repetido.

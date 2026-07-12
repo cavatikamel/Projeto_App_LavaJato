@@ -544,3 +544,28 @@ Ela devera avancar por:
 - matriz de impacto;
 - evidencia registrada;
 - decisao final objetiva.
+
+## Complemento aplicado em `LP-WEB-DASHBOARD-ACCEL-001`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- Visao Geral
+- leitura dos 3 graficos principais
+- checagem de overflow em `1024px`, `768px`, `480px`, `390px` e `360px`
+- Patio
+- Financeiro
+- Documentos / Relatorios
+- logout
+- login operador sem quebra de fluxo permitido

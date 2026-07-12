@@ -377,3 +377,12 @@ Antes de iniciar qualquer mudanca:
 - Agendamentos precisa manter calendario dominante, cards em no maximo uma linha no desktop e acoes de `Entrar no patio`, `Alterar / editar` e `Cancelar agendamento`;
 - o Patio precisa manter o icone de carro frontal correto e os cuidados especiais em lista compacta com selecao multipla;
 - o console do browser deve permanecer sem erro bloqueante.
+
+## Regra aplicada em `LP-WEB-DASHBOARD-ACCEL-001`
+
+- revalidar `LA`, `LO`, `LG`, `AD`, `PA`, `FN` e `RL`;
+- a Visao Geral deve manter `Faturamento`, `Lucro estimado` e `Situacao do patio` sem desalinhamento estrutural;
+- em `1024px`, a dupla principal deve permanecer em leitura desktop util;
+- em `768px`, `480px`, `390px` e `360px`, a area analitica deve colapsar para uma coluna sem overflow horizontal;
+- nenhum grafico pode expor `NaN`, `undefined`, `null` ou `Invalid Date`;
+- a publicacao deve ocorrer somente em `staging`, sem alterar `main`.

@@ -161,3 +161,17 @@ Justificativa:
 2. o pacote de metricas ja esta encapsulado e testavel sem depender de backend real;
 3. o proximo passo seguro deixa de ser implementacao funcional local e passa a ser homologacao controlada;
 4. a publicacao continua exigindo push/deploy em fase propria, com rollback e validacao publicados.
+
+## Atualizacao LP-WEB-DASHBOARD-ACCEL-001
+
+- a Visao Geral foi refinada diretamente no runtime principal para corrigir alinhamento, spans dos cards e colapso responsivo do grid analitico;
+- `Faturamento` e `Lucro estimado` passam a liderar a leitura gerencial em desktop, enquanto `Situacao do patio` fica em linha dedicada;
+- a publicacao desta fase fica autorizada apenas em `staging`;
+- a proxima fatia recomendada passa a ser `LP-WEB-DASHBOARD-ACCEL-002 - Validate overview charts on Netlify staging and refine secondary cards`.
+
+Justificativa:
+
+1. a correção foi pequena, reversivel e diretamente ligada ao problema visual reportado;
+2. o runtime local passou em gate, build e verify;
+3. a validacao final de viewport repetido fica mais segura na homologacao publicada do que no browser embutido sob timeout intermitente;
+4. producao e `main` permanecem protegidos.

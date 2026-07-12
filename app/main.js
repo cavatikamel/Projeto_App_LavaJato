@@ -8170,8 +8170,7 @@ function renderResponsiveDashboardChartsV2(dashboardMetrics) {
       description: "Receita confirmada em caixa ao longo do periodo selecionado.",
       summary: `${revenueDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(revenueDelta))} em relacao ao ponto anterior do filtro`,
       visual: renderDashboardLineChart(dashboardMetrics.charts.revenueTrend, formatCompactCurrency),
-      footer: `${periodLabel} · origem principal: cashEntries confirmados`,
-      span: "dashboard-chart-card--wide"
+      footer: `${periodLabel} · origem principal: cashEntries confirmados`
     }),
     renderDashboardChartCard({
       chartId: "estimatedProfitTrend",
@@ -8183,8 +8182,7 @@ function renderResponsiveDashboardChartsV2(dashboardMetrics) {
       description: "Estimativa liquida do periodo considerando entradas confirmadas, taxas e saidas.",
       summary: `${estimatedProfitDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(estimatedProfitDelta))} em relacao ao ponto anterior do filtro`,
       visual: renderDashboardLineChart(dashboardMetrics.charts.estimatedProfitTrend, formatCompactCurrency),
-      footer: `${periodLabel} · origem principal: cashEntries + netAmount`,
-      span: "dashboard-chart-card--wide"
+      footer: `${periodLabel} · origem principal: cashEntries + netAmount`
     }),
     renderDashboardChartCard({
       chartId: "patioStatus",
@@ -8196,7 +8194,8 @@ function renderResponsiveDashboardChartsV2(dashboardMetrics) {
       description: "Leitura atual dos veiculos por etapa operacional.",
       summary: `${dashboardMetrics.kpis.activePatio.value} veiculo(s) em operacao neste momento`,
       visual: renderDashboardStackedStatusChart(dashboardMetrics.charts.patioStatus),
-      footer: "Snapshot atual · origem principal: patioVehicles"
+      footer: "Snapshot atual · origem principal: patioVehicles",
+      span: "dashboard-chart-card--full-row"
     }),
     ...visibleOptionalCharts.map((chart) => renderDashboardChartCard(chart))
   ];
