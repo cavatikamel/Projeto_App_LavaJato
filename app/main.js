@@ -8082,7 +8082,7 @@ function renderResponsiveDashboardCharts(dashboardMetrics) {
       </div>
       <p class="dashboard-filter-copy">Período ativo: ${escapeHtml(periodLabel)}</p>
     </section>
-    <section class="admin-trend-grid" id="adminDashboardCharts" aria-label="Gráficos gerenciais responsivos">
+    <section class="dashboard-chart-grid" id="adminDashboardCharts" aria-label="Gráficos gerenciais responsivos">
       ${cards.join("")}
     </section>
   `;
@@ -8236,7 +8236,7 @@ function renderResponsiveDashboardChartsV2(dashboardMetrics) {
         }
       </div>
     </section>
-    <section class="admin-trend-grid" id="adminDashboardCharts" aria-label="Gráficos gerenciais responsivos">
+    <section class="dashboard-chart-grid" id="adminDashboardCharts" aria-label="Gráficos gerenciais responsivos">
       ${cards.join("")}
     </section>
   `;
