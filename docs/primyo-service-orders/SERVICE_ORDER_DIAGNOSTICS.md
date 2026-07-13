@@ -226,3 +226,36 @@ Novos espelhos tecnicos relevantes:
 - `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterCanActivate`
 - `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterPayloadsEligible`
 - `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterWritesBlocked`
+
+## Atualizacao LP-SERVICE-ORDER-007
+
+Novos campos principais do snapshot:
+
+- `shadowWriteRehearsal`
+
+Bloco `shadowWriteRehearsal` esperado:
+
+- `enabled`
+- `mode`
+- `contractsAnalyzed`
+- `payloadsValidated`
+- `payloadsEligibleLocalOnly`
+- `payloadsRejected`
+- `adapterMode`
+- `gateCanActivate`
+- `writeAttempted`
+- `writeBlocked`
+- `blockedWriteVerified`
+- `blockedWriteVerificationMethod`
+- `supabaseTouched`
+- `networkWriteAttempted`
+- `readyForStagingActivation`
+- `blockers`
+- `warnings`
+
+Novos espelhos tecnicos relevantes:
+
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalMode`
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalEligible`
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalBlockedVerified`
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalReadyForStaging`

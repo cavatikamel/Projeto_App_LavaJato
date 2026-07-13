@@ -46,6 +46,7 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-SERVICE-ORDER-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-SERVICE-ORDER-005 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-SERVICE-ORDER-006 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-007 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-TEST-AUTO-003 | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional |
 | LP-PERM-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -449,6 +450,23 @@ Antes de iniciar qualquer mudanca:
 - `shadowWriteAdapter.canActivate` deve permanecer `false`;
 - `shadowWriteAdapter.supabaseTouched` deve permanecer `false`;
 - `shadowWriteAdapter.networkWriteAttempted` deve permanecer `false`;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `readyForSupabaseWrite` deve permanecer `false`;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-007`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- documentos, recibos e relatorios devem continuar renderizando igual;
+- o rehearsal nao pode alterar fonte visual principal nem tentar rede;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor `shadowWriteRehearsal`;
+- `shadowWriteRehearsal.mode` deve permanecer `dry-run-rehearsal`;
+- `shadowWriteRehearsal.gateCanActivate` deve permanecer `false`;
+- `shadowWriteRehearsal.supabaseTouched` deve permanecer `false`;
+- `shadowWriteRehearsal.networkWriteAttempted` deve permanecer `false`;
+- `shadowWriteAdapter.mode` deve permanecer `disabled`;
 - `shadowWrite.enabled` deve permanecer `false`;
 - `readyForSupabaseWrite` deve permanecer `false`;
 - `DEMO_BOOTSTRAP` continua padrao;

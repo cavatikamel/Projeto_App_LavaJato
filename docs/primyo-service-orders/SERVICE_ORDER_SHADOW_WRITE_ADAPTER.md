@@ -25,6 +25,17 @@ O adapter:
 - expõe `dryRun()` apenas como plano derivado;
 - expõe `write(...)` apenas como bloqueio explicito.
 
+## Atualizacao LP-SERVICE-ORDER-007
+
+O adapter passa a participar de um `rehearsal` tecnico controlado.
+
+Esse rehearsal:
+
+- reaproveita os payloads validados do proprio adapter;
+- pode usar `write(...)` apenas como simulacao bloqueada e sem rede;
+- nao altera o comportamento do adapter real;
+- nao muda `mode = disabled`.
+
 ## Garantias obrigatorias
 
 - `shadowWrite.enabled = false`;

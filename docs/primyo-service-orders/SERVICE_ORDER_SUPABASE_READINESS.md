@@ -61,3 +61,13 @@ O adapter desta fase serve apenas para:
 - bloquear write acidental;
 - validar payload local;
 - documentar readiness de ativacao futura em staging.
+
+## Atualizacao LP-SERVICE-ORDER-007
+
+O rehearsal desta fase reforca que:
+
+- payload elegivel localmente nao autoriza write;
+- `readyForStagingActivation` continua `false`;
+- `readyForSupabaseWrite` continua `false`;
+- `networkWriteAttempted` continua `false`;
+- `supabaseTouched` continua `false`.

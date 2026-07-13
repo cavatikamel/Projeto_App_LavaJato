@@ -600,3 +600,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a trilha de `Service Order` passa a ter gate explicito, adapter inerte e validacao local de payload para o futuro `shadow write`, com diagnostico pronto para homologacao controlada.
 - Observacao de risco: o adapter continua totalmente desligado e a ativacao depende de staging, migration, RLS, rollback e autorizacao explicita do usuario.
+
+### LP-SERVICE-ORDER-007
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-007.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-007-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: o `shadow write` passa a ter rehearsal tecnico local, com validacao em lote de payloads e verificacao explicita do bloqueio do adapter.
+- Observacao de risco: a trilha continua sem write real, sem staging real e sem backend ativo; a proxima liberacao depende de revisar pre-requisitos externos antes de qualquer ativacao.

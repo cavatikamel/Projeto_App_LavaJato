@@ -277,3 +277,25 @@ Justificativa:
 2. o proximo passo seguro e ensaiar readiness em staging, nao escrever em producao;
 3. a trilha ainda precisa validar ambiente, URL, backend staging e rollback antes de qualquer write;
 4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-007
+
+- o runtime passa a expor `shadowWriteRehearsal`;
+- payloads da OS passam a ser analisados e classificados em lote;
+- o bloqueio do adapter passa a ficar verificado por diagnostico;
+- `readyForStagingActivation` continua `false`;
+- `shadowWrite.enabled` continua `false`;
+- `shadowWriteAdapter.mode` continua `disabled`;
+- `supabaseTouched` continua `false`;
+- `networkWriteAttempted` continua `false`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-008 - Service Order staging activation prerequisites review`
+
+Justificativa:
+
+1. o rehearsal local ja provou a arquitetura e o bloqueio sem tocar rede;
+2. o proximo passo seguro e revisar os pre-requisitos externos reais de staging antes de qualquer tentativa de ativacao;
+3. a trilha ainda depende de branch, URL, backend staging, migrations e rollback;
+4. Supabase continua corretamente fora desta etapa.

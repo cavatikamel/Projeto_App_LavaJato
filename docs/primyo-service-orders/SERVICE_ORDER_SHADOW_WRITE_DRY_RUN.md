@@ -44,6 +44,17 @@ Agora ele tambem deve refletir:
 - `writesBlocked = 0`;
 - `networkWriteAttempted = false`.
 
+## Atualizacao LP-SERVICE-ORDER-007
+
+O dry-run passa a ser acompanhado por `shadowWriteRehearsal`, que consolida:
+
+- contratos analisados;
+- payloads validados;
+- payloads elegiveis apenas localmente;
+- payloads rejeitados;
+- verificacao de bloqueio do adapter;
+- blockers e warnings consolidados.
+
 ## Limites desta fase
 
 O dry-run nao:

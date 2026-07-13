@@ -48,3 +48,11 @@ Motivo:
 - ainda nao ha migration validada;
 - ainda nao ha RLS formal;
 - ainda nao ha autorizacao para write real.
+
+## Atualizacao LP-SERVICE-ORDER-007
+
+O rehearsal tecnico passa a provar:
+
+- que `canActivate` continua `false`;
+- que o bloqueio continua mesmo com payloads locais elegiveis;
+- que o bloqueio pode ser auditado por diagnostico sem rede e sem Supabase.

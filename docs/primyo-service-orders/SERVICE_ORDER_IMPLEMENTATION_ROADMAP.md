@@ -106,3 +106,18 @@ Objetivo sugerido:
 - continuar sem tocar producao;
 - validar comparacao legado x payload elegivel;
 - preparar criterio formal para primeira escrita controlada.
+
+## Atualizacao LP-SERVICE-ORDER-007
+
+- rehearsal tecnico local criado;
+- payloads da OS passam a ser analisados e classificados em lote;
+- bloqueio do adapter passa a ficar verificavel por diagnostico;
+- checklist de ativacao em staging fica formalizada.
+
+## Proxima trilha recomendada
+
+### LP-SERVICE-ORDER-008 - Service Order staging activation prerequisites review
+
+- revisar se a branch `staging`, a URL real de homologacao e o backend staging existem de fato;
+- transformar a checklist em criterio formal de liberacao;
+- continuar sem write real ate a fase propria de ativacao controlada.

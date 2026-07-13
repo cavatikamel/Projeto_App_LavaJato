@@ -12617,6 +12617,18 @@ function publishServiceOrderDiagnostics(snapshot = getServiceOrderDiagnosticsSna
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterWritesBlocked = String(
     snapshot.shadowWriteAdapter?.writesBlocked ?? 0
   );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalMode = String(
+    snapshot.shadowWriteRehearsal?.mode || ""
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalEligible = String(
+    snapshot.shadowWriteRehearsal?.payloadsEligibleLocalOnly ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalBlockedVerified = String(
+    snapshot.shadowWriteRehearsal?.blockedWriteVerified ?? false
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalReadyForStaging = String(
+    snapshot.shadowWriteRehearsal?.readyForStagingActivation ?? false
+  );
 
   let diagnosticsNode = diagnosticsDocument.getElementById(SERVICE_ORDER_DIAGNOSTICS_SCRIPT_ID);
   if (!diagnosticsNode) {
@@ -12673,6 +12685,13 @@ function cloneServiceOrderDiagnosticsSnapshot(snapshot) {
           blockers: [...(snapshot.shadowWriteAdapter?.blockers || [])]
         }
       : null,
+    shadowWriteRehearsal: snapshot?.shadowWriteRehearsal
+      ? {
+          ...snapshot.shadowWriteRehearsal,
+          blockers: [...(snapshot.shadowWriteRehearsal?.blockers || [])],
+          warnings: [...(snapshot.shadowWriteRehearsal?.warnings || [])]
+        }
+      : null,
     issueExamples: Array.isArray(snapshot?.issueExamples)
       ? snapshot.issueExamples.map((example) => ({
           ...example,
@@ -12701,12 +12720,24 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
   const documentReadModels = buildDocumentServiceOrderReadModels({ runtimeContext });
   const documentSourceQuality = buildDocumentSourceQualityMetrics({ documentReadModels });
   const shadowWrite = buildServiceOrderShadowWritePlan({ storageSnapshots, documentSourceQuality });
-  const shadowWriteAdapter = buildServiceOrderShadowWriteAdapterDiagnostics({
+  const shadowWriteGate = evaluateServiceOrderShadowWriteGate({ analyzedAt, plan: shadowWrite });
+  const shadowWriteAdapterInstance = createServiceOrderShadowWriteAdapter({
     analyzedAt,
     serviceOrders,
     storageSnapshots,
     documentSourceQuality,
-    plan: shadowWrite
+    plan: shadowWrite,
+    gate: shadowWriteGate
+  });
+  const shadowWriteAdapter = buildServiceOrderShadowWriteAdapterDiagnostics({
+    adapter: shadowWriteAdapterInstance
+  });
+  const shadowWriteRehearsal = buildServiceOrderShadowWriteRehearsal({
+    analyzedAt,
+    storageSnapshots,
+    plan: shadowWrite,
+    gate: shadowWriteGate,
+    adapter: shadowWriteAdapterInstance
   });
   const unsupportedStatuses = [
     ...new Set(
@@ -12850,6 +12881,7 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
     documentSourceQuality,
     shadowWrite,
     shadowWriteAdapter,
+    shadowWriteRehearsal,
     storage: {
       schemaVersion: SERVICE_ORDER_STORAGE_SCHEMA_VERSION,
       contractsBuilt: storageContractsBuilt,
@@ -13848,6 +13880,69 @@ function buildServiceOrderShadowWriteAdapterDiagnostics(context = {}) {
     supabaseTouched: Boolean(adapter?.gate?.supabaseTouched),
     networkWriteAttempted: Boolean(adapter?.gate?.networkWriteAttempted),
     blockers: [...(adapter?.gate?.blockers || [])]
+  };
+}
+
+function buildServiceOrderShadowWriteRehearsal(context = {}) {
+  const storageSnapshots = Array.isArray(context?.storageSnapshots)
+    ? context.storageSnapshots
+    : buildServiceOrderStorageSnapshots(context);
+  const plan = context?.plan || buildServiceOrderShadowWritePlan({ ...context, storageSnapshots });
+  const gate = context?.gate || evaluateServiceOrderShadowWriteGate({ ...context, plan });
+  const adapter = context?.adapter || createServiceOrderShadowWriteAdapter({ ...context, storageSnapshots, plan, gate });
+  const payloadValidations = Array.isArray(adapter?.payloadValidations)
+    ? adapter.payloadValidations
+    : storageSnapshots.map((snapshot) => ({
+        serviceOrderId: String(snapshot?.contract?.serviceOrder?.id || "").trim(),
+        orderNumber: String(snapshot?.contract?.serviceOrder?.orderNumber || "").trim(),
+        validation: validateServiceOrderShadowWritePayload(snapshot?.contract || {})
+      }));
+  const payloadsValidated = payloadValidations.length;
+  const payloadsEligibleLocalOnly = payloadValidations.filter((entry) => entry?.validation?.eligibleForShadowWrite).length;
+  const payloadsRejected = payloadsValidated - payloadsEligibleLocalOnly;
+  const warnings = [...new Set(payloadValidations.flatMap((entry) => entry?.validation?.warnings || []))];
+  const blockers = [
+    ...new Set([
+      ...(gate?.blockers || []),
+      ...(plan?.blockers || []),
+      ...(payloadsRejected > 0 ? ["shadow-write-payloads-rejected"] : [])
+    ])
+  ];
+  const firstEligibleSnapshot = storageSnapshots.find((snapshot) => {
+    const serviceOrderId = String(snapshot?.contract?.serviceOrder?.id || "").trim();
+    return payloadValidations.some(
+      (entry) => entry?.serviceOrderId === serviceOrderId && entry?.validation?.eligibleForShadowWrite
+    );
+  });
+  const blockedWriteProbe = firstEligibleSnapshot ? adapter.write(firstEligibleSnapshot.contract) : null;
+  const blockedWriteVerified = blockedWriteProbe
+    ? blockedWriteProbe?.blocked === true &&
+      blockedWriteProbe?.supabaseTouched === false &&
+      blockedWriteProbe?.networkWriteAttempted === false
+    : true;
+  const blockedWriteVerificationMethod = firstEligibleSnapshot
+    ? "adapter-write-blocked"
+    : "gate-only";
+
+  return {
+    enabled: true,
+    mode: "dry-run-rehearsal",
+    contractsAnalyzed: storageSnapshots.length,
+    payloadsValidated,
+    payloadsEligibleLocalOnly,
+    payloadsRejected,
+    adapterMode: normalizeServiceOrderText(adapter?.mode, "disabled"),
+    gateCanActivate: Boolean(gate?.canActivate),
+    writeAttempted: Boolean(blockedWriteProbe?.attempted),
+    writeBlocked: Boolean(blockedWriteProbe?.blocked ?? true),
+    blockedWriteVerified,
+    blockedWriteVerificationMethod,
+    supabaseTouched: Boolean(blockedWriteProbe?.supabaseTouched ?? gate?.supabaseTouched),
+    networkWriteAttempted: Boolean(blockedWriteProbe?.networkWriteAttempted ?? gate?.networkWriteAttempted),
+    readyForStagingActivation: false,
+    blockers,
+    warnings,
+    generatedAt: context?.analyzedAt || new Date().toISOString()
   };
 }
 

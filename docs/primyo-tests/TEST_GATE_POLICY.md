@@ -734,3 +734,35 @@ Regras adicionais:
 - `shadowWriteAdapter.supabaseTouched` deve permanecer `false`;
 - `shadowWriteAdapter.networkWriteAttempted` deve permanecer `false`;
 - a fase nao autoriza migration, Supabase, bootstrap novo ou refatoracao ampla de UX.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-007`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- login operador
+- logout
+- documentos / recibos / relatorios sem quebra visual
+- ausencia de `NaN`, `undefined`, `null` ou `Invalid Date`
+- consulta manual de `window.__lavaprimeGetServiceOrderDiagnostics?.()` com `shadowWriteRehearsal`
+
+Regras adicionais:
+
+- o rehearsal pode ficar `enabled`, mas apenas como ensaio tecnico;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `shadowWriteAdapter.mode` deve permanecer `disabled`;
+- `shadowWriteRehearsal.gateCanActivate` deve permanecer `false`;
+- `shadowWriteRehearsal.supabaseTouched` deve permanecer `false`;
+- `shadowWriteRehearsal.networkWriteAttempted` deve permanecer `false`;
+- a fase nao autoriza migration, Supabase, bootstrap novo ou refatoracao ampla de UX.
