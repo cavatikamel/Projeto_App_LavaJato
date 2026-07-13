@@ -559,3 +559,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: o runtime passa a montar `Service Order` interna a partir de `patioVehicles`, com numeracao local, lifecycle minimo, vinculos financeiros/documentais derivados e diagnostico tecnico silencioso, sem trocar a UX atual de `Atendimento`.
 - Observacao de risco: a fundacao continua local e derivada, sem persistencia propria, com numeracao nao definitiva e documentos ainda parcialmente ligados por heuristica legacy; a proxima fatia deve consolidar boundary de persistencia e vinculos explicitos sem abrir Supabase.
+
+### LP-SERVICE-ORDER-002
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-002.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-002-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a bridge de `Service Order` passa a resolver identidade explicita, anexar `serviceOrderId` e `serviceOrderNumber` a pagamentos, documentos e eventos derivados, e publicar um snapshot local de persistencia futura sem tocar Supabase.
+- Observacao de risco: a persistencia continua somente preparada, a numeracao ainda e local e os documentos legacy seguem parcialmente dependentes de heuristica; a proxima fatia deve formalizar contrato de storage e plano de migracao antes de qualquer backend real.

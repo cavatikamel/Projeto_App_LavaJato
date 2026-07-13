@@ -215,6 +215,7 @@ const SERVICE_ORDER_BRIDGE_VERSION = 1;
 const SERVICE_ORDER_NUMBER_PREFIX = "OS";
 const SERVICE_ORDER_NUMBER_PAD_SIZE = 6;
 const SERVICE_ORDER_DIAGNOSTIC_SAMPLE_LIMIT = 5;
+const SERVICE_ORDER_PERSISTENCE_BOUNDARY_MODE = "local-derived-boundary";
 const SERVICE_ORDER_ROLLBACK_PATH = Object.freeze([
   "remove service order foundation constants and diagnostics state from app/main.js",
   "remove service order bridge helpers from app/main.js",
@@ -12497,11 +12498,32 @@ function publishServiceOrderDiagnostics(snapshot = getServiceOrderDiagnosticsSna
 
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDiagnosticsAvailable = "true";
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderTotal = String(snapshot.totalServiceOrdersBuilt ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderWithExplicitId = String(snapshot.withExplicitId ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderWithOrderNumber = String(snapshot.withOrderNumber ?? 0);
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderMissingCustomer = String(snapshot.missingCustomer ?? 0);
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderMissingVehicle = String(snapshot.missingVehicle ?? 0);
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderInvalidTotals = String(snapshot.invalidTotals ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDuplicateIds = String(snapshot.duplicateServiceOrderIds ?? 0);
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDuplicateNumbers = String(
     snapshot.duplicateOrderNumbers ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderPaymentsLinked = String(snapshot.paymentsLinked ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderPaymentsMissingLink = String(
+    snapshot.paymentsMissingLink ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDocumentsLinked = String(snapshot.documentsLinked ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDocumentsMissingLink = String(
+    snapshot.documentsMissingLink ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderEventsBuilt = String(snapshot.eventsBuilt ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderEventsWithId = String(
+    snapshot.eventsWithServiceOrderId ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderPersistenceSnapshots = String(
+    snapshot.persistenceSnapshotsBuilt ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderSupabaseTouched = String(
+    snapshot.supabaseTouched ?? false
   );
 
   let diagnosticsNode = diagnosticsDocument.getElementById(SERVICE_ORDER_DIAGNOSTICS_SCRIPT_ID);
@@ -12520,6 +12542,7 @@ function cloneServiceOrderDiagnosticsSnapshot(snapshot) {
     ...snapshot,
     rollbackPath: [...(snapshot?.rollbackPath || [])],
     unsupportedStatuses: [...(snapshot?.unsupportedStatuses || [])],
+    unknownStatuses: [...(snapshot?.unknownStatuses || [])],
     issueExamples: Array.isArray(snapshot?.issueExamples)
       ? snapshot.issueExamples.map((example) => ({
           ...example,
@@ -12539,8 +12562,9 @@ function getServiceOrderDiagnosticsSnapshot() {
 
 function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
   const usedOrderNumbers = new Map();
+  const usedServiceOrderIds = new Map();
   const serviceOrders = patioVehicles.map((attendance) =>
-    buildServiceOrderFromLegacyAttendance(attendance, { analyzedAt, usedOrderNumbers })
+    buildServiceOrderFromLegacyAttendance(attendance, { analyzedAt, usedOrderNumbers, usedServiceOrderIds })
   );
   const unsupportedStatuses = [
     ...new Set(
@@ -12581,11 +12605,37 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
     activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
     totalLegacyAttendances: patioVehicles.length,
     totalServiceOrdersBuilt: serviceOrders.length,
+    withExplicitId: serviceOrders.filter((serviceOrder) => Boolean(serviceOrder.id)).length,
+    withOrderNumber: serviceOrders.filter((serviceOrder) => Boolean(serviceOrder.orderNumber)).length,
     missingCustomer: serviceOrders.filter((serviceOrder) => serviceOrder.bridgeIssues.missingCustomer).length,
     missingVehicle: serviceOrders.filter((serviceOrder) => serviceOrder.bridgeIssues.missingVehicle).length,
     invalidTotals: serviceOrders.filter((serviceOrder) => serviceOrder.bridgeIssues.invalidTotals.length > 0).length,
+    paymentsLinked: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.payments.filter((entry) => Boolean(entry.serviceOrderId)).length,
+      0
+    ),
+    paymentsMissingLink: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.payments.filter((entry) => !entry.serviceOrderId).length,
+      0
+    ),
+    documentsLinked: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.documents.filter((entry) => Boolean(entry.serviceOrderId)).length,
+      0
+    ),
+    documentsMissingLink: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.documents.filter((entry) => !entry.serviceOrderId).length,
+      0
+    ),
+    eventsBuilt: serviceOrders.reduce((total, serviceOrder) => total + serviceOrder.events.length, 0),
+    eventsWithServiceOrderId: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.events.filter((entry) => Boolean(entry.serviceOrderId)).length,
+      0
+    ),
+    persistenceSnapshotsBuilt: serviceOrders.filter((serviceOrder) => Boolean(serviceOrder.persistence?.ready)).length,
+    duplicateServiceOrderIds: [...usedServiceOrderIds.values()].filter((count) => count > 1).length,
     duplicateOrderNumbers: [...usedOrderNumbers.values()].filter((count) => count > 1).length,
     unsupportedStatuses,
+    unknownStatuses: [...unsupportedStatuses],
     totalCashEntriesLinked: serviceOrders.reduce(
       (total, serviceOrder) => total + serviceOrder.source.linkedCashEntryIds.length,
       0
@@ -12598,8 +12648,67 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
       (total, serviceOrder) => total + serviceOrder.source.linkedDocumentIds.length,
       0
     ),
+    backendRequired: true,
+    supabaseTouched: false,
     issueExamples,
     rollbackPath: [...SERVICE_ORDER_ROLLBACK_PATH]
+  };
+}
+
+function resolveServiceOrderIdentityFromLegacy(legacyAttendance, vehiclePlate = "", context = {}) {
+  const canonicalId = buildServiceOrderCanonicalId(legacyAttendance, vehiclePlate, context);
+  const orderNumber = buildLocalServiceOrderNumber(legacyAttendance, context);
+  const legacyAttendanceId = String(legacyAttendance?.id ?? vehiclePlate ?? "").trim();
+
+  return {
+    id: canonicalId,
+    orderNumber,
+    legacyAttendanceId,
+    idMode: String(legacyAttendance?.id ?? "").trim() ? "legacy-id" : vehiclePlate ? "plate-fallback" : "untracked-fallback",
+    orderNumberMode: String(legacyAttendance?.id ?? "").trim() ? "seeded-legacy-id" : vehiclePlate ? "seeded-plate" : "seeded-hash"
+  };
+}
+
+function createServiceOrderLink(serviceOrder) {
+  return {
+    serviceOrderId: String(serviceOrder?.id || "").trim(),
+    serviceOrderNumber: String(serviceOrder?.orderNumber || "").trim(),
+    legacyAttendanceId: String(serviceOrder?.legacyAttendanceId || "").trim()
+  };
+}
+
+function attachServiceOrderLink(record, serviceOrder, extraFields = {}) {
+  return {
+    ...record,
+    ...createServiceOrderLink(serviceOrder),
+    ...extraFields
+  };
+}
+
+function buildServiceOrderPersistenceSnapshot(serviceOrder, context = {}) {
+  return {
+    ready: Boolean(serviceOrder?.id && serviceOrder?.orderNumber),
+    mode: SERVICE_ORDER_PERSISTENCE_BOUNDARY_MODE,
+    requiresBackend: true,
+    supabaseTouched: false,
+    legacyBridgeVersion: SERVICE_ORDER_BRIDGE_VERSION,
+    serviceOrderId: String(serviceOrder?.id || "").trim(),
+    orderNumber: String(serviceOrder?.orderNumber || "").trim(),
+    linkCounts: {
+      payments: Array.isArray(serviceOrder?.payments) ? serviceOrder.payments.length : 0,
+      documents: Array.isArray(serviceOrder?.documents) ? serviceOrder.documents.length : 0,
+      events: Array.isArray(serviceOrder?.events) ? serviceOrder.events.length : 0,
+      linkedInvoiceLineItems: Array.isArray(context?.linkedInvoiceLineItems) ? context.linkedInvoiceLineItems.length : 0,
+      linkedCashEntries: Array.isArray(context?.linkedCashEntries) ? context.linkedCashEntries.length : 0,
+      linkedOpenPayments: Array.isArray(context?.linkedOpenPayments) ? context.linkedOpenPayments.length : 0,
+      linkedDocuments: Array.isArray(context?.linkedDocuments) ? context.linkedDocuments.length : 0
+    },
+    gaps: {
+      missingCustomer: Boolean(serviceOrder?.bridgeIssues?.missingCustomer),
+      missingVehicle: Boolean(serviceOrder?.bridgeIssues?.missingVehicle),
+      invalidTotals: [...(serviceOrder?.bridgeIssues?.invalidTotals || [])],
+      unsupportedStatus: Boolean(serviceOrder?.bridgeIssues?.unsupportedStatus)
+    }
   };
 }
 
@@ -12673,7 +12782,7 @@ function buildServiceOrderFromLegacyAttendance(legacyAttendance, context = {}) {
     if (!Number.isFinite(Number(value)) || Number(value) < 0) bridgeIssues.invalidTotals.push(key);
   });
 
-  const orderNumber = buildLocalServiceOrderNumber(attendance, context);
+  const serviceOrderIdentity = resolveServiceOrderIdentityFromLegacy(attendance, vehiclePlate, context);
   const createdAt =
     normalizeServiceOrderTimestamp(attendance.createdAt) ||
     getOldestAttendanceHistoryTimestamp(attendance) ||
@@ -12687,10 +12796,10 @@ function buildServiceOrderFromLegacyAttendance(legacyAttendance, context = {}) {
     normalizeServiceOrderTimestamp(attendance.startedAt) ||
     (["in_progress", "ready", "completed"].includes(status) ? buildServiceOrderDateTime(getTodayISO(), attendance.entry) : "");
 
-  return {
-    id: buildServiceOrderCanonicalId(attendance, vehiclePlate),
-    orderNumber,
-    legacyAttendanceId: String(attendance.id ?? vehiclePlate ?? "").trim(),
+  const serviceOrder = {
+    id: serviceOrderIdentity.id,
+    orderNumber: serviceOrderIdentity.orderNumber,
+    legacyAttendanceId: serviceOrderIdentity.legacyAttendanceId,
     customerId: linkedClient?.id ? String(linkedClient.id) : "",
     customerName: linkedClient ? getClientDisplayName(linkedClient) : normalizeServiceOrderText(attendance.owner, "Cliente avulso"),
     vehicleId: linkedVehicle?.id ? String(linkedVehicle.id) : "",
@@ -12704,16 +12813,18 @@ function buildServiceOrderFromLegacyAttendance(legacyAttendance, context = {}) {
     services: serviceEntries,
     products: productEntries,
     supplies: supplyEntries,
-    payments: buildServiceOrderPaymentEntries(linkedCashEntries, linkedOpenPayments),
+    payments: [],
     totals,
     notes: buildServiceOrderNotes(attendance, linkedVehicle),
-    documents: buildServiceOrderDocumentEntries(linkedDocuments),
-    events: buildServiceOrderEvents(attendance, linkedCashEntries, linkedOpenPayments, linkedDocuments, status),
+    documents: [],
+    events: [],
     source: {
       type: "legacy-attendance-bridge",
       version: SERVICE_ORDER_BRIDGE_VERSION,
       legacyCollection: "patioVehicles",
       activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+      identityMode: serviceOrderIdentity.idMode,
+      orderNumberMode: serviceOrderIdentity.orderNumberMode,
       legacyStatus: normalizeServiceOrderText(attendance.status),
       linkedCashEntryIds: linkedCashEntries.map((entry) => String(entry.id)),
       linkedOpenPaymentIds: linkedOpenPayments.map((entry) => String(entry.id)),
@@ -12724,11 +12835,37 @@ function buildServiceOrderFromLegacyAttendance(legacyAttendance, context = {}) {
     },
     bridgeIssues
   };
+
+  serviceOrder.payments = buildServiceOrderPaymentEntries(linkedCashEntries, linkedOpenPayments, serviceOrder);
+  serviceOrder.documents = buildServiceOrderDocumentEntries(linkedDocuments, serviceOrder);
+  serviceOrder.events = buildServiceOrderEvents(
+    attendance,
+    linkedCashEntries,
+    linkedOpenPayments,
+    linkedDocuments,
+    status,
+    serviceOrder
+  );
+  serviceOrder.persistence = buildServiceOrderPersistenceSnapshot(serviceOrder, {
+    linkedInvoiceLineItems,
+    linkedCashEntries,
+    linkedOpenPayments,
+    linkedDocuments
+  });
+
+  return serviceOrder;
 }
 
-function buildServiceOrderCanonicalId(legacyAttendance, vehiclePlate) {
+function buildServiceOrderCanonicalId(legacyAttendance, vehiclePlate, context = {}) {
   const sourceIdentity = String(legacyAttendance?.id ?? vehiclePlate ?? "untracked").trim() || "untracked";
-  return `service-order:legacy:${sourceIdentity}`;
+  const canonicalId = `service-order:legacy:${sourceIdentity}`;
+
+  if (context.usedServiceOrderIds instanceof Map) {
+    const duplicateCount = (context.usedServiceOrderIds.get(canonicalId) || 0) + 1;
+    context.usedServiceOrderIds.set(canonicalId, duplicateCount);
+  }
+
+  return canonicalId;
 }
 
 function buildLocalServiceOrderNumber(legacyAttendance, context = {}) {
@@ -12837,33 +12974,51 @@ function buildServiceOrderSupplyEntries(serviceDefinitions) {
   );
 }
 
-function buildServiceOrderPaymentEntries(linkedCashEntries, linkedOpenPayments) {
-  const cashPaymentEntries = linkedCashEntries.map((entry) => ({
-    id: `cash-entry-${entry.id}`,
-    sourceType: "cashEntry",
-    sourceId: String(entry.id),
-    status: normalizeServiceOrderText(entry.status, "Pendente"),
-    method: normalizeServiceOrderText(entry.method, "Nao informado"),
-    grossAmount: Math.max(0, toFiniteNumber(entry.value)),
-    netAmount: Math.max(0, toFiniteNumber(entry.netAmount, toFiniteNumber(entry.value))),
-    feeAmount: Math.max(0, toFiniteNumber(entry.feeAmount)),
-    partialPayment: Boolean(entry.partialPayment),
-    openPayment: Boolean(entry.openPayment),
-    effectiveAt: buildServiceOrderDateTime(entry.date, entry.time)
-  }));
-  const openPaymentEntries = linkedOpenPayments.map((entry) => ({
-    id: `open-payment-${entry.id}`,
-    sourceType: "openPayment",
-    sourceId: String(entry.id),
-    status: normalizeServiceOrderText(entry.status, "Aberto"),
-    method: normalizeServiceOrderText(entry.paymentMethod, "Nao informado"),
-    grossAmount: Math.max(0, toFiniteNumber(entry.value)),
-    netAmount: Math.max(0, toFiniteNumber(entry.value)),
-    feeAmount: 0,
-    partialPayment: Boolean(entry.partialPayment),
-    openPayment: true,
-    effectiveAt: normalizeServiceOrderTimestamp(entry.createdAt)
-  }));
+function buildServiceOrderPaymentEntries(linkedCashEntries, linkedOpenPayments, serviceOrder) {
+  const cashPaymentEntries = linkedCashEntries.map((entry) =>
+    attachServiceOrderLink(
+      {
+        id: `cash-entry-${entry.id}`,
+        sourceType: "cashEntry",
+        sourceId: String(entry.id),
+        status: normalizeServiceOrderText(entry.status, "Pendente"),
+        method: normalizeServiceOrderText(entry.method, "Nao informado"),
+        grossAmount: Math.max(0, toFiniteNumber(entry.value)),
+        netAmount: Math.max(0, toFiniteNumber(entry.netAmount, toFiniteNumber(entry.value))),
+        feeAmount: Math.max(0, toFiniteNumber(entry.feeAmount)),
+        partialPayment: Boolean(entry.partialPayment),
+        openPayment: Boolean(entry.openPayment),
+        effectiveAt: buildServiceOrderDateTime(entry.date, entry.time),
+        legacyReference: {
+          collection: "cashEntries",
+          id: String(entry.id)
+        }
+      },
+      serviceOrder
+    )
+  );
+  const openPaymentEntries = linkedOpenPayments.map((entry) =>
+    attachServiceOrderLink(
+      {
+        id: `open-payment-${entry.id}`,
+        sourceType: "openPayment",
+        sourceId: String(entry.id),
+        status: normalizeServiceOrderText(entry.status, "Aberto"),
+        method: normalizeServiceOrderText(entry.paymentMethod, "Nao informado"),
+        grossAmount: Math.max(0, toFiniteNumber(entry.value)),
+        netAmount: Math.max(0, toFiniteNumber(entry.value)),
+        feeAmount: 0,
+        partialPayment: Boolean(entry.partialPayment),
+        openPayment: true,
+        effectiveAt: normalizeServiceOrderTimestamp(entry.createdAt),
+        legacyReference: {
+          collection: "openPayments",
+          id: String(entry.id)
+        }
+      },
+      serviceOrder
+    )
+  );
   return [...cashPaymentEntries, ...openPaymentEntries];
 }
 
@@ -12876,28 +13031,48 @@ function buildServiceOrderNotes(attendance, linkedVehicle) {
   ].filter(Boolean);
 }
 
-function buildServiceOrderDocumentEntries(linkedDocuments) {
-  return linkedDocuments.map((documentItem) => ({
-    id: String(documentItem.id),
-    title: normalizeServiceOrderText(documentItem.title, "Documento"),
-    category: normalizeServiceOrderText(documentItem.category, "Documento"),
-    documentNumber: normalizeServiceOrderText(documentItem.documentNumber),
-    fileName: normalizeServiceOrderText(documentItem.fileName),
-    createdAt: normalizeServiceOrderTimestamp(documentItem.createdAt),
-    sourceType: normalizeServiceOrderText(documentItem.sourceType),
-    sourceId: normalizeServiceOrderText(documentItem.sourceId)
-  }));
+function buildServiceOrderDocumentEntries(linkedDocuments, serviceOrder) {
+  return linkedDocuments.map((documentItem) =>
+    attachServiceOrderLink(
+      {
+        id: String(documentItem.id),
+        title: normalizeServiceOrderText(documentItem.title, "Documento"),
+        category: normalizeServiceOrderText(documentItem.category, "Documento"),
+        documentNumber: normalizeServiceOrderText(documentItem.documentNumber),
+        fileName: normalizeServiceOrderText(documentItem.fileName),
+        createdAt: normalizeServiceOrderTimestamp(documentItem.createdAt),
+        sourceType: normalizeServiceOrderText(documentItem.sourceType),
+        sourceId: normalizeServiceOrderText(documentItem.sourceId),
+        legacyReference: {
+          collection: "documentHistory",
+          id: String(documentItem.id)
+        }
+      },
+      serviceOrder
+    )
+  );
 }
 
-function buildServiceOrderEvents(attendance, linkedCashEntries, linkedOpenPayments, linkedDocuments, status) {
-  const historyEvents = (Array.isArray(attendance?.attendanceHistory) ? attendance.attendanceHistory : []).map((event) => ({
-    id: String(event.id || ""),
-    type: normalizeServiceOrderText(event.type, "note"),
-    description: normalizeServiceOrderText(event.description, "Evento de atendimento"),
-    createdAt: normalizeServiceOrderTimestamp(event.createdAt),
-    author: normalizeServiceOrderText(event.author, "Operador"),
-    sourceType: "attendanceHistory"
-  }));
+function buildServiceOrderEventsLegacyBridge(attendance, linkedCashEntries, linkedOpenPayments, linkedDocuments, status, serviceOrder) {
+  const historyEvents = (Array.isArray(attendance?.attendanceHistory) ? attendance.attendanceHistory : []).map((event) =>
+    attachServiceOrderLink(
+      {
+        id: String(event.id || ""),
+        type: normalizeServiceOrderText(event.type, "note"),
+        description: normalizeServiceOrderText(event.description, "Evento de atendimento"),
+        occurredAt: normalizeServiceOrderTimestamp(event.createdAt),
+        createdAt: normalizeServiceOrderTimestamp(event.createdAt),
+        author: normalizeServiceOrderText(event.author, "Operador"),
+        source: "attendanceHistory",
+        sourceType: "attendanceHistory",
+        legacyReference: {
+          collection: "attendanceHistory",
+          id: String(event.id || "")
+        }
+      },
+      serviceOrder
+    )
+  );
   const syntheticEvents = [
     {
       id: `service-order-created-${attendance?.id ?? formatPlate(attendance?.plate || "legacy")}`,
@@ -12945,6 +13120,162 @@ function buildServiceOrderEvents(attendance, linkedCashEntries, linkedOpenPaymen
       author: normalizeServiceOrderText(documentItem.responsible, "Sistema LavaPrime"),
       sourceType: "documentHistory"
     }))
+  ];
+
+  return [...historyEvents, ...syntheticEvents].filter((event) => event.description);
+}
+
+function buildServiceOrderEvents(attendance, linkedCashEntries, linkedOpenPayments, linkedDocuments, status, serviceOrder) {
+  const historyEvents = (Array.isArray(attendance?.attendanceHistory) ? attendance.attendanceHistory : []).map((event) =>
+    attachServiceOrderLink(
+      {
+        id: String(event.id || ""),
+        type: normalizeServiceOrderText(event.type, "note"),
+        description: normalizeServiceOrderText(event.description, "Evento de atendimento"),
+        occurredAt: normalizeServiceOrderTimestamp(event.createdAt),
+        createdAt: normalizeServiceOrderTimestamp(event.createdAt),
+        author: normalizeServiceOrderText(event.author, "Operador"),
+        source: "attendanceHistory",
+        sourceType: "attendanceHistory",
+        legacyReference: {
+          collection: "attendanceHistory",
+          id: String(event.id || "")
+        }
+      },
+      serviceOrder
+    )
+  );
+  const syntheticEvents = [
+    attachServiceOrderLink(
+      {
+        id: `service-order-created-${attendance?.id ?? formatPlate(attendance?.plate || "legacy")}`,
+        type: "created",
+        description: `Ordem de servico derivada do atendimento legado ${formatPlate(attendance?.plate || "") || attendance?.id || ""}.`,
+        occurredAt:
+          normalizeServiceOrderTimestamp(attendance?.createdAt) ||
+          buildServiceOrderDateTime(attendance?.scheduledDate, attendance?.scheduledTime) ||
+          buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+        createdAt:
+          normalizeServiceOrderTimestamp(attendance?.createdAt) ||
+          buildServiceOrderDateTime(attendance?.scheduledDate, attendance?.scheduledTime) ||
+          buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+        author: normalizeServiceOrderOperator(attendance, linkedCashEntries),
+        source: "legacy-attendance-bridge",
+        sourceType: "legacy-attendance-bridge",
+        legacyReference: {
+          collection: "patioVehicles",
+          id: String(attendance?.id ?? "")
+        }
+      },
+      serviceOrder
+    ),
+    attachServiceOrderLink(
+      {
+        id: `service-order-status-${attendance?.id ?? formatPlate(attendance?.plate || "legacy")}`,
+        type: "status_mapped",
+        description: `Status atual normalizado para ${status}.`,
+        occurredAt:
+          normalizeServiceOrderTimestamp(attendance?.finishedAt) ||
+          normalizeServiceOrderTimestamp(attendance?.paymentConfirmedAt) ||
+          buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+        createdAt:
+          normalizeServiceOrderTimestamp(attendance?.finishedAt) ||
+          normalizeServiceOrderTimestamp(attendance?.paymentConfirmedAt) ||
+          buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+        author: normalizeServiceOrderOperator(attendance, linkedCashEntries),
+        source: "legacy-attendance-bridge",
+        sourceType: "legacy-attendance-bridge",
+        legacyReference: {
+          collection: "patioVehicles",
+          id: String(attendance?.id ?? "")
+        }
+      },
+      serviceOrder
+    ),
+    ...linkedCashEntries.map((entry) =>
+      attachServiceOrderLink(
+        {
+          id: `service-order-payment-${entry.id}`,
+          type: "payment_linked",
+          description: `${normalizeServiceOrderText(entry.method, "Pagamento")} registrado com status ${normalizeServiceOrderText(entry.status, "Pendente")}.`,
+          occurredAt: buildServiceOrderDateTime(entry.date, entry.time),
+          createdAt: buildServiceOrderDateTime(entry.date, entry.time),
+          author: normalizeServiceOrderText(entry.operator, "Operador"),
+          source: "cashEntries",
+          sourceType: "cashEntry",
+          legacyReference: {
+            collection: "cashEntries",
+            id: String(entry.id)
+          }
+        },
+        serviceOrder
+      )
+    ),
+    ...linkedOpenPayments.map((entry) =>
+      attachServiceOrderLink(
+        {
+          id: `service-order-open-payment-${entry.id}`,
+          type: "payment_linked",
+          description: `Pagamento em aberto registrado com status ${normalizeServiceOrderText(entry.status, "Aberto")}.`,
+          occurredAt: normalizeServiceOrderTimestamp(entry.createdAt),
+          createdAt: normalizeServiceOrderTimestamp(entry.createdAt),
+          author: normalizeServiceOrderText(entry.operator, "Operador"),
+          source: "openPayments",
+          sourceType: "openPayment",
+          legacyReference: {
+            collection: "openPayments",
+            id: String(entry.id)
+          }
+        },
+        serviceOrder
+      )
+    ),
+    ...linkedDocuments.map((documentItem) =>
+      attachServiceOrderLink(
+        {
+          id: `service-order-document-${documentItem.id}`,
+          type: "document_linked",
+          description: `${normalizeServiceOrderText(documentItem.title, "Documento")} registrado para a OS.`,
+          occurredAt: normalizeServiceOrderTimestamp(documentItem.createdAt),
+          createdAt: normalizeServiceOrderTimestamp(documentItem.createdAt),
+          author: normalizeServiceOrderText(documentItem.responsible, "Sistema LavaPrime"),
+          source: "documentHistory",
+          sourceType: "documentHistory",
+          legacyReference: {
+            collection: "documentHistory",
+            id: String(documentItem.id)
+          }
+        },
+        serviceOrder
+      )
+    ),
+    ...(status === "completed"
+      ? [
+          attachServiceOrderLink(
+            {
+              id: `service-order-completed-${attendance?.id ?? formatPlate(attendance?.plate || "legacy")}`,
+              type: "completed",
+              description: "Atendimento legado marcado como concluido para a OS.",
+              occurredAt:
+                normalizeServiceOrderTimestamp(attendance?.finishedAt) ||
+                normalizeServiceOrderTimestamp(attendance?.paymentConfirmedAt) ||
+                buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+              createdAt:
+                normalizeServiceOrderTimestamp(attendance?.finishedAt) ||
+                normalizeServiceOrderTimestamp(attendance?.paymentConfirmedAt) ||
+                buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+              author: normalizeServiceOrderOperator(attendance, linkedCashEntries),
+              source: "legacy-attendance-bridge",
+              sourceType: "legacy-attendance-bridge",
+              legacyReference: {
+                collection: "patioVehicles",
+                id: String(attendance?.id ?? "")
+              }
+            },
+            serviceOrder
+          )
+        ]
+      : [])
   ];
 
   return [...historyEvents, ...syntheticEvents].filter((event) => event.description);

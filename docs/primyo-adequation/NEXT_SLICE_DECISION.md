@@ -190,3 +190,17 @@ Justificativa:
 2. ainda falta separar a bridge do monolito e registrar vinculos explicitos entre atendimento, documento, invoice e pagamento;
 3. a numeracao atual nao pode ser tratada como definitiva enquanto nao houver persistencia controlada;
 4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-002
+
+- a `Service Order` passa a ter identidade explicita e links derivados para pagamentos, documentos e eventos;
+- o runtime agora monta um snapshot local de persistencia futura sem tocar banco ou Supabase;
+- o diagnostico passa a medir cobertura de IDs, numeros, links e snapshots;
+- a proxima fatia recomendada passa a ser `LP-SERVICE-ORDER-003 - Service Order storage contract and runtime adoption`.
+
+Justificativa:
+
+1. a OS deixou de ser apenas um espelho conceitual e ganhou uma fronteira tecnica mais clara;
+2. pagamentos, documentos e eventos agora podem apontar explicitamente para a mesma OS sem quebrar o legado;
+3. ainda falta definir o contrato persistivel oficial antes de qualquer migration;
+4. Supabase continua corretamente fora desta etapa.

@@ -397,3 +397,14 @@ Antes de iniciar qualquer mudanca:
 - `window.__lavaprimeGetServiceOrderDiagnostics?.()` deve retornar objeto valido;
 - `DEMO_BOOTSTRAP` continua padrao;
 - `CLEAN_BOOTSTRAP` continua protegido.
+
+## Regra aplicada em `LP-SERVICE-ORDER-002`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- a montagem da `Service Order` nao pode quebrar patio ou detalhes de atendimento;
+- pagamentos derivados precisam continuar sem `NaN`, `undefined`, `null` ou `Invalid Date`;
+- documentos e recibos precisam continuar renderizando sem quebra enquanto carregam `serviceOrderId` e `serviceOrderNumber` derivados;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor os novos campos de links e persistencia;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.

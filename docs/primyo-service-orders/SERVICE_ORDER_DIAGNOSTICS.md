@@ -55,3 +55,35 @@ O diagnostico nao:
 - troca bootstrap;
 - abre Supabase;
 - promove `Service Order` a entidade persistida oficial.
+
+## Atualizacao LP-SERVICE-ORDER-002
+
+Novos campos principais do snapshot:
+
+- `withExplicitId`
+- `withOrderNumber`
+- `paymentsLinked`
+- `paymentsMissingLink`
+- `documentsLinked`
+- `documentsMissingLink`
+- `eventsBuilt`
+- `eventsWithServiceOrderId`
+- `persistenceSnapshotsBuilt`
+- `duplicateServiceOrderIds`
+- `unknownStatuses`
+- `backendRequired`
+- `supabaseTouched`
+
+Novos espelhos tecnicos relevantes:
+
+- `document.documentElement.dataset.lavaprimeServiceOrderWithExplicitId`
+- `document.documentElement.dataset.lavaprimeServiceOrderWithOrderNumber`
+- `document.documentElement.dataset.lavaprimeServiceOrderDuplicateIds`
+- `document.documentElement.dataset.lavaprimeServiceOrderPaymentsLinked`
+- `document.documentElement.dataset.lavaprimeServiceOrderPaymentsMissingLink`
+- `document.documentElement.dataset.lavaprimeServiceOrderDocumentsLinked`
+- `document.documentElement.dataset.lavaprimeServiceOrderDocumentsMissingLink`
+- `document.documentElement.dataset.lavaprimeServiceOrderEventsBuilt`
+- `document.documentElement.dataset.lavaprimeServiceOrderEventsWithId`
+- `document.documentElement.dataset.lavaprimeServiceOrderPersistenceSnapshots`
+- `document.documentElement.dataset.lavaprimeServiceOrderSupabaseTouched`

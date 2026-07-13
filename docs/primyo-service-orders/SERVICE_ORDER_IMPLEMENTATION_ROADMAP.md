@@ -31,3 +31,20 @@ Objetivo sugerido:
 - definir contrato persistido;
 - definir sequencia de integracao com backend/Supabase;
 - definir numeracao definitiva.
+
+## Atualizacao LP-SERVICE-ORDER-002
+
+- identidade explicita de OS consolidada no runtime;
+- pagamentos, documentos e eventos passam a carregar `serviceOrderId` e `serviceOrderNumber`;
+- snapshot `serviceOrder.persistence` passa a representar a fronteira futura de persistencia;
+- diagnostico silencioso agora mede cobertura de IDs, links, eventos e snapshots;
+- Supabase continua fechado e a persistencia segue somente preparada, nao executada.
+
+## Proxima trilha recomendada
+
+### LP-SERVICE-ORDER-003 - Service Order storage contract and runtime adoption
+
+- extrair a montagem da OS do bloco monolitico de `app/main.js`;
+- definir contrato persistivel oficial para `service_orders` e relacionamentos;
+- iniciar adocao controlada do numero de OS em recibos, documentos e detalhes operacionais;
+- preparar sequencia de migration sem ainda abrir producao.
