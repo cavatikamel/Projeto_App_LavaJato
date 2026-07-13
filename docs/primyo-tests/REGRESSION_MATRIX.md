@@ -45,6 +45,7 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-SERVICE-ORDER-003 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-SERVICE-ORDER-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-SERVICE-ORDER-005 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-006 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-TEST-AUTO-003 | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional |
 | LP-PERM-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -434,6 +435,22 @@ Antes de iniciar qualquer mudanca:
 - `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor `documentSourceQuality` e `shadowWrite`;
 - `shadowWrite.enabled` deve permanecer `false`;
 - `supabaseTouched` deve permanecer `false`;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-006`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- documentos, recibos e relatorios devem continuar renderizando igual;
+- o adapter de `shadow write` nao pode alterar fonte visual principal nem tentar rede;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor `shadowWriteAdapter`;
+- `shadowWriteAdapter.mode` deve permanecer `disabled`;
+- `shadowWriteAdapter.canActivate` deve permanecer `false`;
+- `shadowWriteAdapter.supabaseTouched` deve permanecer `false`;
+- `shadowWriteAdapter.networkWriteAttempted` deve permanecer `false`;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `readyForSupabaseWrite` deve permanecer `false`;
 - `DEMO_BOOTSTRAP` continua padrao;
 - `CLEAN_BOOTSTRAP` continua protegido;
 - Supabase permanece fechado.

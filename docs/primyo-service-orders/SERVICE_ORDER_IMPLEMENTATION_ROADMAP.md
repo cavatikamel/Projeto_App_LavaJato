@@ -88,3 +88,21 @@ Objetivo sugerido:
 - preparar o checklist tecnico para futura ativacao em staging;
 - definir comparacao controlada entre legado e payload de `shadow write`;
 - manter `enabled = false` ate existir trilha propria de backend/Supabase.
+
+## Atualizacao LP-SERVICE-ORDER-006
+
+- gate explicito de ativacao de `shadow write` criado;
+- adapter interno inerte criado;
+- validacao local de payload de `shadow write` criada;
+- dry-run integrado ao adapter;
+- diagnostico da OS passa a expor `shadowWriteAdapter`;
+- staging passa a ser pre-condicao formal antes de qualquer write futuro.
+
+## Proxima trilha recomendada
+
+### LP-SERVICE-ORDER-007 - Service Order staging shadow write rehearsal
+
+- usar o gate criado para ensaiar ativacao apenas em homologacao;
+- continuar sem tocar producao;
+- validar comparacao legado x payload elegivel;
+- preparar criterio formal para primeira escrita controlada.

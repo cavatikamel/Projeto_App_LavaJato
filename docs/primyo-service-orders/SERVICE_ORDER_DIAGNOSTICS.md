@@ -198,3 +198,31 @@ Novos espelhos tecnicos relevantes:
 - `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteDesigned`
 - `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteEnabled`
 - `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteRecordsPlanned`
+
+## Atualizacao LP-SERVICE-ORDER-006
+
+Novos campos principais do snapshot:
+
+- `shadowWriteAdapter`
+
+Bloco `shadowWriteAdapter` esperado:
+
+- `exists`
+- `mode`
+- `gateEnabled`
+- `canActivate`
+- `allowedEnvironment`
+- `payloadsValidated`
+- `payloadsEligible`
+- `writesAttempted`
+- `writesBlocked`
+- `supabaseTouched`
+- `networkWriteAttempted`
+- `blockers`
+
+Novos espelhos tecnicos relevantes:
+
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterMode`
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterCanActivate`
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterPayloadsEligible`
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterWritesBlocked`

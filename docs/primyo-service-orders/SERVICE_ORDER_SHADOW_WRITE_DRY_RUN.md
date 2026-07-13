@@ -30,6 +30,20 @@ O dry-run deve apenas retornar um plano derivado com:
 - `blockers` lista o que ainda impede escrita real;
 - `activationCriteria` lista as condicoes formais para futura ativacao.
 
+## Atualizacao LP-SERVICE-ORDER-006
+
+O dry-run passa a ficar integrado ao adapter inerte.
+
+Agora ele tambem deve refletir:
+
+- `mode = disabled`;
+- `canActivate = false`;
+- `payloadsValidated`;
+- `payloadsEligible`;
+- `writesAttempted = 0`;
+- `writesBlocked = 0`;
+- `networkWriteAttempted = false`.
+
 ## Limites desta fase
 
 O dry-run nao:

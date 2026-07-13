@@ -45,3 +45,19 @@ Estado atualizado:
 - `readyForSupabaseWrite = false`;
 - `migrationRequired = true`;
 - nenhuma escrita real foi iniciada.
+
+## Atualizacao LP-SERVICE-ORDER-006
+
+Mesmo com adapter e gate de `shadow write` criados:
+
+- `readyForSupabaseWrite` continua `false`;
+- `shadowWrite.enabled` continua `false`;
+- `shadowWriteAdapter.mode` continua `disabled`;
+- `supabaseTouched` continua `false`;
+- `networkWriteAttempted` continua `false`.
+
+O adapter desta fase serve apenas para:
+
+- bloquear write acidental;
+- validar payload local;
+- documentar readiness de ativacao futura em staging.

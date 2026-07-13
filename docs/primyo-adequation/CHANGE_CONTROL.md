@@ -592,3 +592,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a trilha de `Service Order` passa a enriquecer a origem dos documentos derivados com prioridade explicita de vinculo, diagnostico de qualidade documental e desenho local de `shadow write`, sem alterar a fonte visual principal.
 - Observacao de risco: documentos antigos ainda podem cair em fallback por placa e o `shadow write` continua apenas desenhado, sem migration, sem Supabase e sem escrita real.
+
+### LP-SERVICE-ORDER-006
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-006.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-006-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a trilha de `Service Order` passa a ter gate explicito, adapter inerte e validacao local de payload para o futuro `shadow write`, com diagnostico pronto para homologacao controlada.
+- Observacao de risco: o adapter continua totalmente desligado e a ativacao depende de staging, migration, RLS, rollback e autorizacao explicita do usuario.

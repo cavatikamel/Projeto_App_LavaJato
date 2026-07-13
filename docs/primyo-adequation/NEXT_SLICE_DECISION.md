@@ -254,3 +254,26 @@ Justificativa:
 2. o diagnostico agora ja consegue medir fallback e readiness sem tocar backend;
 3. o proximo passo seguro e preparar a ativacao tecnica em staging, ainda sem gravar;
 4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-006
+
+- o runtime passa a ter gate explicito de `shadow write`;
+- o adapter interno de `shadow write` existe, mas permanece `disabled`;
+- a validacao local de payload passa a separar payload elegivel de write permitido;
+- o diagnostico da OS passa a expor `shadowWriteAdapter`;
+- staging passa a ser pre-condicao formal antes de qualquer write futuro;
+- `shadowWrite.enabled = false`;
+- `readyForSupabaseWrite = false`;
+- `supabaseTouched = false`;
+- `networkWriteAttempted = false`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-007 - Service Order staging shadow write rehearsal`
+
+Justificativa:
+
+1. a porta tecnica do `shadow write` agora existe e esta protegida;
+2. o proximo passo seguro e ensaiar readiness em staging, nao escrever em producao;
+3. a trilha ainda precisa validar ambiente, URL, backend staging e rollback antes de qualquer write;
+4. Supabase continua corretamente fora desta etapa.

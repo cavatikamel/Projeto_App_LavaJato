@@ -12605,6 +12605,18 @@ function publishServiceOrderDiagnostics(snapshot = getServiceOrderDiagnosticsSna
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteRecordsPlanned = String(
     snapshot.shadowWrite?.recordsPlanned ?? 0
   );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterMode = String(
+    snapshot.shadowWriteAdapter?.mode || "disabled"
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterCanActivate = String(
+    snapshot.shadowWriteAdapter?.canActivate ?? false
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterPayloadsEligible = String(
+    snapshot.shadowWriteAdapter?.payloadsEligible ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterWritesBlocked = String(
+    snapshot.shadowWriteAdapter?.writesBlocked ?? 0
+  );
 
   let diagnosticsNode = diagnosticsDocument.getElementById(SERVICE_ORDER_DIAGNOSTICS_SCRIPT_ID);
   if (!diagnosticsNode) {
@@ -12655,6 +12667,12 @@ function cloneServiceOrderDiagnosticsSnapshot(snapshot) {
           tables: [...(snapshot.shadowWrite?.tables || [])]
         }
       : null,
+    shadowWriteAdapter: snapshot?.shadowWriteAdapter
+      ? {
+          ...snapshot.shadowWriteAdapter,
+          blockers: [...(snapshot.shadowWriteAdapter?.blockers || [])]
+        }
+      : null,
     issueExamples: Array.isArray(snapshot?.issueExamples)
       ? snapshot.issueExamples.map((example) => ({
           ...example,
@@ -12683,6 +12701,13 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
   const documentReadModels = buildDocumentServiceOrderReadModels({ runtimeContext });
   const documentSourceQuality = buildDocumentSourceQualityMetrics({ documentReadModels });
   const shadowWrite = buildServiceOrderShadowWritePlan({ storageSnapshots, documentSourceQuality });
+  const shadowWriteAdapter = buildServiceOrderShadowWriteAdapterDiagnostics({
+    analyzedAt,
+    serviceOrders,
+    storageSnapshots,
+    documentSourceQuality,
+    plan: shadowWrite
+  });
   const unsupportedStatuses = [
     ...new Set(
       serviceOrders
@@ -12824,6 +12849,7 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
     },
     documentSourceQuality,
     shadowWrite,
+    shadowWriteAdapter,
     storage: {
       schemaVersion: SERVICE_ORDER_STORAGE_SCHEMA_VERSION,
       contractsBuilt: storageContractsBuilt,
@@ -13661,6 +13687,167 @@ function buildServiceOrderShadowWritePlan(context = {}) {
     ],
     supabaseTouched: false,
     migrationRequired: true
+  };
+}
+
+function evaluateServiceOrderShadowWriteGate(context = {}) {
+  const environment = normalizeServiceOrderText(context?.environment, "local");
+  const allowedEnvironment = environment === "staging";
+  const hasValidatedStagingBranch = Boolean(context?.hasValidatedStagingBranch);
+  const hasStagingUrl = Boolean(context?.hasStagingUrl);
+  const hasSupabaseConfig = Boolean(context?.hasSupabaseConfig);
+  const hasApprovedMigration = Boolean(context?.hasApprovedMigration);
+  const hasRlsDesign = Boolean(context?.hasRlsDesign);
+  const hasRollbackPlan = Boolean(context?.hasRollbackPlan);
+  const hasExplicitUserApproval = Boolean(context?.hasExplicitUserApproval);
+  const blockers = [];
+
+  if (!allowedEnvironment) blockers.push("environment-not-staging");
+  if (!hasValidatedStagingBranch) blockers.push("staging-branch-not-validated");
+  if (!hasStagingUrl) blockers.push("staging-url-unavailable");
+  if (!hasSupabaseConfig) blockers.push("supabase-staging-config-unavailable");
+  if (!hasApprovedMigration) blockers.push("approved-migration-unavailable");
+  if (!hasRlsDesign) blockers.push("rls-design-unavailable");
+  if (!hasRollbackPlan) blockers.push("rollback-plan-unavailable");
+  if (!hasExplicitUserApproval) blockers.push("explicit-user-approval-missing");
+  blockers.push("phase-keeps-shadow-write-disabled");
+
+  return {
+    enabled: false,
+    environment,
+    allowedEnvironment,
+    hasValidatedStagingBranch,
+    hasStagingUrl,
+    hasSupabaseConfig,
+    hasApprovedMigration,
+    hasRlsDesign,
+    hasRollbackPlan,
+    hasExplicitUserApproval,
+    canActivate: false,
+    blockers: [...new Set(blockers)],
+    supabaseTouched: false,
+    networkWriteAttempted: false
+  };
+}
+
+function validateServiceOrderShadowWritePayload(contract) {
+  const normalizedContract = contract && typeof contract === "object" ? contract : {};
+  const storageValidation = validateServiceOrderStorageContract(normalizedContract);
+  const errors = [...(storageValidation?.errors || [])];
+  const warnings = [...(storageValidation?.warnings || [])];
+  const missingRequiredFields = [...(storageValidation?.missingRequiredFields || [])];
+  const schemaVersion = toFiniteNumber(normalizedContract?.schemaVersion);
+  const serviceOrderId = String(normalizedContract?.serviceOrder?.id || "").trim();
+  const orderNumber = String(normalizedContract?.serviceOrder?.orderNumber || "").trim();
+  const status = String(normalizedContract?.serviceOrder?.status || "").trim();
+  const legacyAttendanceId = String(normalizedContract?.legacy?.legacyAttendanceId || "").trim();
+  const payments = Array.isArray(normalizedContract?.payments) ? normalizedContract.payments : [];
+  const documents = Array.isArray(normalizedContract?.documents) ? normalizedContract.documents : [];
+  const events = Array.isArray(normalizedContract?.events) ? normalizedContract.events : [];
+  const totals = normalizedContract?.totals || {};
+  const hasFiniteNumericValue = (value) => value !== null && value !== undefined && String(value).trim() !== "" && Number.isFinite(Number(value));
+
+  if (!schemaVersion) errors.push("missing-shadow-write-schema-version");
+  if (!serviceOrderId) errors.push("missing-shadow-write-service-order-id");
+  if (!orderNumber) errors.push("missing-shadow-write-order-number");
+  if (!status) errors.push("missing-shadow-write-status");
+  if (!legacyAttendanceId) errors.push("missing-shadow-write-legacy-attendance-id");
+
+  [
+    ["grossAmount", totals.grossAmount],
+    ["netAmount", totals.netAmount],
+    ["paidAmount", totals.paidAmount],
+    ["pendingAmount", totals.pendingAmount]
+  ].forEach(([fieldName, value]) => {
+    if (!hasFiniteNumericValue(value)) errors.push(`invalid-shadow-write-total-${fieldName}`);
+  });
+
+  if (payments.some((entry) => !String(entry?.serviceOrderId || "").trim())) errors.push("payments-missing-service-order-id");
+  if (documents.some((entry) => !String(entry?.serviceOrderId || "").trim())) errors.push("documents-missing-service-order-id");
+  if (events.some((entry) => !String(entry?.serviceOrderId || "").trim())) errors.push("events-missing-service-order-id");
+
+  const uniqueErrors = [...new Set(errors)];
+  const uniqueWarnings = [...new Set(warnings)];
+  const uniqueMissingRequiredFields = [...new Set(missingRequiredFields)];
+  const valid = uniqueErrors.length === 0;
+
+  return {
+    valid,
+    errors: uniqueErrors,
+    warnings: uniqueWarnings,
+    missingRequiredFields: uniqueMissingRequiredFields,
+    eligibleForShadowWrite: valid,
+    backendRequired: true,
+    readyForSupabaseWrite: false,
+    supabaseTouched: false,
+    networkWriteAttempted: false,
+    serviceOrderId,
+    orderNumber
+  };
+}
+
+function createServiceOrderShadowWriteAdapter(context = {}) {
+  const storageSnapshots = Array.isArray(context?.storageSnapshots)
+    ? context.storageSnapshots
+    : buildServiceOrderStorageSnapshots(context);
+  const plan = context?.plan || buildServiceOrderShadowWritePlan({ ...context, storageSnapshots });
+  const gate = context?.gate || evaluateServiceOrderShadowWriteGate({ ...context, plan });
+  const payloadValidations = storageSnapshots.map((snapshot) => ({
+    serviceOrderId: String(snapshot?.contract?.serviceOrder?.id || "").trim(),
+    orderNumber: String(snapshot?.contract?.serviceOrder?.orderNumber || "").trim(),
+    validation: validateServiceOrderShadowWritePayload(snapshot?.contract || {})
+  }));
+
+  return {
+    mode: "disabled",
+    gate,
+    plan,
+    payloadValidations,
+    dryRun() {
+      return {
+        designed: true,
+        mode: "disabled",
+        canActivate: false,
+        payloadsValidated: payloadValidations.length,
+        payloadsEligible: payloadValidations.filter((entry) => entry?.validation?.eligibleForShadowWrite).length,
+        writesAttempted: 0,
+        writesBlocked: 0,
+        supabaseTouched: false,
+        networkWriteAttempted: false,
+        blockers: [...(gate?.blockers || [])],
+        recordsPlanned: plan?.recordsPlanned ?? storageSnapshots.length
+      };
+    },
+    write(contract) {
+      const validation = validateServiceOrderShadowWritePayload(contract);
+      return {
+        attempted: false,
+        blocked: true,
+        reason: "shadow-write-disabled",
+        payloadValidation: validation,
+        supabaseTouched: false,
+        networkWriteAttempted: false
+      };
+    }
+  };
+}
+
+function buildServiceOrderShadowWriteAdapterDiagnostics(context = {}) {
+  const adapter = context?.adapter || createServiceOrderShadowWriteAdapter(context);
+  const dryRun = adapter.dryRun();
+  return {
+    exists: true,
+    mode: normalizeServiceOrderText(adapter?.mode, "disabled"),
+    gateEnabled: Boolean(adapter?.gate?.enabled),
+    canActivate: Boolean(adapter?.gate?.canActivate),
+    allowedEnvironment: Boolean(adapter?.gate?.allowedEnvironment),
+    payloadsValidated: dryRun.payloadsValidated ?? 0,
+    payloadsEligible: dryRun.payloadsEligible ?? 0,
+    writesAttempted: dryRun.writesAttempted ?? 0,
+    writesBlocked: dryRun.writesBlocked ?? 0,
+    supabaseTouched: Boolean(adapter?.gate?.supabaseTouched),
+    networkWriteAttempted: Boolean(adapter?.gate?.networkWriteAttempted),
+    blockers: [...(adapter?.gate?.blockers || [])]
   };
 }
 
