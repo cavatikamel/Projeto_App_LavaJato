@@ -211,12 +211,27 @@ const CLEAN_BOOTSTRAP_TRIAL_EXECUTION_ROLLBACK_PATH = Object.freeze([
   "remove clean bootstrap trial execution baseline export from app/demo/lavaprimeCleanBootstrap.js",
   "rerun node --check app/main.js, node --check app/demo/lavaprimeCleanBootstrap.js, adapter gate, primyo:gate, build, verify and cleanup smoke"
 ]);
+const buildTimeEnv =
+  typeof import.meta !== "undefined" && import.meta && import.meta.env ? import.meta.env : {};
+
+function normalizeConfiguredCredential(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+const configuredLoginUsername = normalizeConfiguredCredential(buildTimeEnv.VITE_LOGIN_USERNAME);
+const configuredLoginPassword = normalizeConfiguredCredential(buildTimeEnv.VITE_LOGIN_PASSWORD);
+
+// Gate temporário de login. Credenciais vêm de variáveis de build (VITE_LOGIN_USERNAME /
+// VITE_LOGIN_PASSWORD) e nunca são versionadas. Isto é apenas um paliativo para o frontend
+// estático; a autenticação real deve migrar para o Supabase Auth (ver docs/SUPABASE_BACKEND.md).
 const TEMPORARY_LOGIN_GATE = Object.freeze({
-  username: "Kamel",
-  normalizedUsername: "kamel",
-  password: "193746",
+  username: configuredLoginUsername,
+  normalizedUsername: configuredLoginUsername.toLowerCase(),
+  password: configuredLoginPassword,
+  isConfigured: Boolean(configuredLoginUsername && configuredLoginPassword),
   rollbackPath: [
-    "remove TEMPORARY_LOGIN_GATE constant from app/main.js",
+    "definir VITE_LOGIN_USERNAME e VITE_LOGIN_PASSWORD no ambiente de build (.env)",
+    "remove TEMPORARY_LOGIN_GATE constant from app/main.js once Supabase Auth replaces the gate",
     "remove isTemporaryLoginAuthorized(user, password) helper from app/main.js",
     "restore confirmLogin() to the previous permissive flow",
     "rerun node --check app/main.js, primyo:gate, build, verify and login smoke"
@@ -891,7 +906,7 @@ const adminOperators = [
     phone: "(11) 98888-0101",
     accessProfile: "Operador",
     username: "carlos",
-    password: "lava123",
+    credentialDefined: true,
     commissionType: "fixed",
     commissionValue: 12,
     role: "Operador de pátio",
@@ -941,7 +956,7 @@ const adminOperators = [
     phone: "(11) 97777-0202",
     accessProfile: "Operador",
     username: "juliana",
-    password: "prime456",
+    credentialDefined: true,
     commissionType: "percent",
     commissionValue: 8,
     role: "Lavagem e acabamento",
@@ -987,7 +1002,7 @@ const adminOperators = [
     phone: "(11) 96666-0303",
     accessProfile: "Administrador",
     username: "mateus.admin",
-    password: "admin789",
+    credentialDefined: true,
     commissionType: "fixed",
     commissionValue: 0,
     role: "Financeiro",
@@ -1031,7 +1046,7 @@ const serviceCatalog = [
     duration: "35 min",
     vehicleType: "Carro",
     vehicleCategory: "Hatch",
-    status: "Ativo",
+    status: "Ativo",
     autoCreateVehicleCareType: "",
     maintenanceRequired: false,
     maintenanceInterval: "monthly",
@@ -1043,7 +1058,7 @@ const serviceCatalog = [
     duration: "1h20",
     vehicleType: "Carro",
     vehicleCategory: "Sedan",
-    status: "Ativo",
+    status: "Ativo",
     autoCreateVehicleCareType: "Couro tratado ou sensível",
     maintenanceRequired: true,
     maintenanceInterval: "semiannual",
@@ -1055,7 +1070,7 @@ const serviceCatalog = [
     duration: "3h00",
     vehicleType: "Carro",
     vehicleCategory: "SUV",
-    status: "Ativo",
+    status: "Ativo",
     autoCreateVehicleCareType: "",
     maintenanceRequired: true,
     maintenanceInterval: "quarterly",
@@ -1067,7 +1082,7 @@ const serviceCatalog = [
     duration: "4h00",
     vehicleType: "Caminhonete",
     vehicleCategory: "Picape",
-    status: "Ativo",
+    status: "Ativo",
     autoCreateVehicleCareType: "Vitrificação / coating cerâmico",
     maintenanceRequired: true,
     maintenanceInterval: "annual",
@@ -1226,6 +1241,7 @@ function selectProfile(button) {
 }
 
 function isTemporaryLoginAuthorized(user, password) {
+  if (!TEMPORARY_LOGIN_GATE.isConfigured) return false;
   const normalizedUser = typeof user === "string" ? user.trim().toLowerCase() : "";
   const normalizedPassword = typeof password === "string" ? password.trim() : "";
   return normalizedUser === TEMPORARY_LOGIN_GATE.normalizedUsername && normalizedPassword === TEMPORARY_LOGIN_GATE.password;
@@ -1235,6 +1251,11 @@ function confirmLogin() {
   const user = $("#loginUser").value.trim();
   const password = $("#loginPassword").value.trim();
   const activeProfile = sessionBoundary.getActiveProfile();
+
+  if (!TEMPORARY_LOGIN_GATE.isConfigured) {
+    showToast("Login nao configurado. Defina VITE_LOGIN_USERNAME e VITE_LOGIN_PASSWORD no ambiente.");
+    return null;
+  }
 
   if (!user || !password) {
     showToast("Preencha Usuario e Senha para continuar.");
@@ -4289,7 +4310,7 @@ function renderInvoiceClientSelect() {
   const approvedClients = billingClients.filter((client) => isBillingClientApproved(client.id));
   select.innerHTML = [
     '<option value="">Selecione o cliente</option>',
-    ...approvedClients.map((client) => `<option value="${client.id}">${client.name}</option>`)
+    ...approvedClients.map((client) => `<option value="${client.id}">${escapeHtml(client.name)}</option>`)
   ].join("");
   select.value = selectedBillingClientId;
   setInvoiceDateMin();
@@ -4885,7 +4906,7 @@ function getDefaultSupplyCatalog() {
       riskTags: [],
       safeForCoating: "true",
       safeForWrap: "true",
-      safeForMattePaint: "true",
+      safeForMattePaint: "true",
       createdAt: today,
       updatedAt: today
     },
@@ -4906,7 +4927,7 @@ function getDefaultSupplyCatalog() {
       riskTags: ["strong_alkaline_product", "degreaser", "heavy_cleaner"],
       safeForCoating: "false",
       safeForWrap: "false",
-      safeForMattePaint: "unknown",
+      safeForMattePaint: "unknown",
       createdAt: today,
       updatedAt: today
     },
@@ -4927,7 +4948,7 @@ function getDefaultSupplyCatalog() {
       riskTags: [],
       safeForCoating: "true",
       safeForWrap: "unknown",
-      safeForMattePaint: "true",
+      safeForMattePaint: "true",
       createdAt: today,
       updatedAt: today
     },
@@ -4948,7 +4969,7 @@ function getDefaultSupplyCatalog() {
       riskTags: [],
       safeForCoating: "true",
       safeForWrap: "true",
-      safeForMattePaint: "true",
+      safeForMattePaint: "true",
       createdAt: today,
       updatedAt: today
     }
@@ -14242,7 +14263,7 @@ function renderOperatorRows() {
             <small>${escapeHtml(operator.cpf)}</small>
           </td>
           <td>${escapeHtml(operator.accessProfile)}</td>
-          <td>${escapeHtml(operator.username)}<br /><small>Senha: ${escapeHtml(operator.password)}</small></td>
+          <td>${escapeHtml(operator.username)}<br /><small>${operator.credentialDefined ? "Senha definida" : "Senha pendente"}</small></td>
           <td>${escapeHtml(operator.phone)}</td>
           <td>${escapeHtml(formatCommissionRule(operator))}</td>
           <td>${totals.services} serviço(s)<br /><small>${formatCurrency(totals.revenue)}</small></td>
@@ -14551,14 +14572,17 @@ function saveOperatorRegistration(container) {
   const role = $("#operatorRole", container).value.trim() || accessProfile;
   const shift = $("#operatorShift", container).value.trim() || "A definir";
   const username = $("#operatorUsername", container).value.trim();
+  // A senha não é persistida em texto claro. Enquanto o app não usa Supabase Auth, apenas
+  // registramos que uma credencial foi definida; ao editar, campo em branco mantém a atual.
   const password = $("#operatorPassword", container).value.trim();
   const commissionType = getCommissionTypeValue($("#operatorCommissionType", container).value);
   const commissionValue = getOperatorCommissionInputValue(container);
   const dailyRate = getCurrencyInputValue("#operatorDailyRate", container);
   const status = $("#operatorStatus", container).value;
 
-  if (!name || !cpf || !phone || !username || !password || Number.isNaN(commissionValue)) {
-    showToast("Preencha nome, CPF, telefone, login, senha e comissão.");
+  const isEditingOperator = Boolean(selectedOperatorId);
+  if (!name || !cpf || !phone || !username || (!isEditingOperator && !password) || Number.isNaN(commissionValue)) {
+    showToast(`Preencha nome, CPF, telefone, login${isEditingOperator ? "" : ", senha"} e comissão.`);
     return;
   }
 
@@ -14579,7 +14603,7 @@ function saveOperatorRegistration(container) {
       phone,
       accessProfile,
       username,
-      password,
+      credentialDefined: password ? true : Boolean(operator.credentialDefined),
       commissionType,
       commissionValue,
       dailyRate,
@@ -14595,7 +14619,7 @@ function saveOperatorRegistration(container) {
       phone,
       accessProfile,
       username,
-      password,
+      credentialDefined: Boolean(password),
       commissionType,
       commissionValue,
       dailyRate,
@@ -14757,7 +14781,7 @@ function renderOperatorDialogForm(operator = null) {
         </label>
         <label class="login-field" for="operatorPassword">
           <span>Senha</span>
-          <input id="operatorPassword" type="text" value="${escapeHtml(operator?.password || "")}" required />
+          <input id="operatorPassword" type="password" autocomplete="new-password" value="" placeholder="${operator ? "Deixe em branco para manter" : "Defina uma senha"}" ${operator ? "" : "required"} />
         </label>
         <label class="login-field" for="operatorCommissionType">
           <span>Comissionamento</span>
@@ -16726,7 +16750,7 @@ function renderServiceSuppliesDialog(serviceIndex) {
           <span data-icon="x"></span>
         </button>
       </div>
-      <p class="step-copy">${service ? `Defina a média de consumo usada ao concluir ${service.name}.` : "Selecione um serviço válido."}</p>
+      <p class="step-copy">${service ? `Defina a média de consumo usada ao concluir ${escapeHtml(service.name)}.` : "Selecione um serviço válido."}</p>
       <div class="sale-lines-block">
         <div class="sale-lines-head">
           <h3>Composição do serviço</h3>
@@ -21491,8 +21515,8 @@ function renderVehicleCard(vehicle, queuePosition = 0) {
       </span>
       <span class="vehicle-info">
         <h3>${escapeHtml(vehicle.plate)} - ${escapeHtml(vehicleName)} ${escapeHtml(vehicle.color || "")}</h3>
-        <p>${vehicle.owner}</p>
-        <p>${vehicle.service}</p>
+        <p>${escapeHtml(vehicle.owner)}</p>
+        <p>${escapeHtml(vehicle.service)}</p>
         ${getVehicleSoldProducts(vehicle).length ? `<p>Produtos: ${escapeHtml(getVehicleSoldProducts(vehicle).map((item) => item.productName).join(", "))}</p>` : ""}
         <span class="vehicle-meta">
           <span class="status-pill">${status.label}</span>

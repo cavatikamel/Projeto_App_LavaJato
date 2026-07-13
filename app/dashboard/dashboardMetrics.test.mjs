@@ -1,18 +1,41 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildDashboardMetrics, getDashboardDateRange } from "./dashboardMetrics.js";
+import { buildDashboardMetrics, getDashboardDateRange, DASHBOARD_PERIOD_PRESETS } from "./dashboardMetrics.js";
+
+test("DASHBOARD_PERIOD_PRESETS expose day, month and year presets", () => {
+  assert.deepEqual(
+    DASHBOARD_PERIOD_PRESETS.map((preset) => preset.key),
+    ["day", "month", "year"]
+  );
+});
 
 test("getDashboardDateRange returns the expected presets", () => {
-  assert.deepEqual(getDashboardDateRange("today", "2026-07-05"), {
-    key: "today",
+  assert.deepEqual(getDashboardDateRange("day", "2026-07-05"), {
+    key: "day",
     start: "2026-07-05",
     end: "2026-07-05",
     granularity: "hour"
   });
 
-  assert.deepEqual(getDashboardDateRange("currentMonth", "2026-07-05"), {
-    key: "currentMonth",
+  assert.deepEqual(getDashboardDateRange("month", "2026-07-05"), {
+    key: "month",
+    start: "2026-07-01",
+    end: "2026-07-05",
+    granularity: "day"
+  });
+
+  assert.deepEqual(getDashboardDateRange("year", "2026-07-05"), {
+    key: "year",
+    start: "2026-01-01",
+    end: "2026-07-05",
+    granularity: "month"
+  });
+});
+
+test("getDashboardDateRange falls back to month for unknown presets", () => {
+  assert.deepEqual(getDashboardDateRange("unknown", "2026-07-05"), {
+    key: "month",
     start: "2026-07-01",
     end: "2026-07-05",
     granularity: "day"
@@ -26,7 +49,7 @@ test("buildDashboardMetrics handles empty datasets without NaN or invalid output
       cashEntries: [],
       openPayments: []
     },
-    { periodKey: "last7Days", nowIso: "2026-07-05" }
+    { periodKey: "month", nowIso: "2026-07-05" }
   );
 
   assert.equal(metrics.kpis.revenueConfirmed.value, 0);
@@ -38,7 +61,8 @@ test("buildDashboardMetrics handles empty datasets without NaN or invalid output
   assert.equal(metrics.charts.revenueTrend.hasData, false);
   assert.equal(metrics.charts.cashflowBreakdown.hasData, false);
   assert.equal(metrics.charts.paymentMethods.hasData, false);
-  assert.equal(metrics.charts.revenueTrend.data.length, 7);
+  // Faixa 2026-07-01..2026-07-05 com granularidade diária = 5 buckets.
+  assert.equal(metrics.charts.revenueTrend.data.length, 5);
 });
 
 test("buildDashboardMetrics ignores invalid values and preserves negative cashflow", () => {
@@ -60,7 +84,7 @@ test("buildDashboardMetrics ignores invalid values and preserves negative cashfl
         { value: 120, status: "Baixado" }
       ]
     },
-    { periodKey: "last7Days", nowIso: "2026-07-05" }
+    { periodKey: "month", nowIso: "2026-07-05" }
   );
 
   assert.equal(metrics.kpis.revenueConfirmed.value, 0);
@@ -93,7 +117,7 @@ test("buildDashboardMetrics aggregates full datasets, duplicate services and ope
         { value: 80, status: "Aberto" }
       ]
     },
-    { periodKey: "currentMonth", nowIso: "2026-07-05" }
+    { periodKey: "month", nowIso: "2026-07-05" }
   );
 
   assert.equal(metrics.kpis.revenueConfirmed.value, 420);
@@ -115,7 +139,7 @@ test("buildDashboardMetrics returns zeroed series for periods without matching d
       cashEntries: [{ date: "2026-06-01", time: "10:00", value: 100, status: "Confirmado", method: "Pix" }],
       openPayments: [{ value: 90, status: "Aberto" }]
     },
-    { periodKey: "last7Days", nowIso: "2026-07-05" }
+    { periodKey: "month", nowIso: "2026-07-05" }
   );
 
   assert.equal(metrics.kpis.revenueConfirmed.value, 0);
@@ -140,7 +164,7 @@ test("buildDashboardMetrics groups many payment methods into Outros", () => {
       cashEntries,
       openPayments: []
     },
-    { periodKey: "today", nowIso: "2026-07-05" }
+    { periodKey: "day", nowIso: "2026-07-05" }
   );
 
   assert.equal(metrics.charts.paymentMethods.data.length, 6);
