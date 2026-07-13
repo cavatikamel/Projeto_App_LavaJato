@@ -155,3 +155,46 @@ Novos espelhos tecnicos relevantes:
 - `document.documentElement.dataset.lavaprimeServiceOrderProgressiveReadModels`
 - `document.documentElement.dataset.lavaprimeServiceOrderProgressiveReadWithFallback`
 - `document.documentElement.dataset.lavaprimeServiceOrderProgressiveReadWithoutServiceOrder`
+
+## Atualizacao LP-SERVICE-ORDER-005
+
+Novos campos principais do snapshot:
+
+- `documentSourceQuality`
+- `shadowWrite`
+
+Bloco `documentSourceQuality` esperado:
+
+- `documentsAnalyzed`
+- `documentsWithExplicitServiceOrderId`
+- `documentsWithServiceOrderNumber`
+- `documentsMatchedByLegacyId`
+- `documentsMatchedByPaymentLink`
+- `documentsMatchedByDocumentLink`
+- `documentsMatchedByPlateFallback`
+- `documentsWithoutServiceOrder`
+- `highConfidenceMatches`
+- `mediumConfidenceMatches`
+- `lowConfidenceMatches`
+- `fallbackRate`
+
+Bloco `shadowWrite` esperado:
+
+- `designed`
+- `dryRunAvailable`
+- `enabled`
+- `mode`
+- `recordsPlanned`
+- `tables`
+- `blockers`
+- `activationCriteria`
+- `supabaseTouched`
+- `migrationRequired`
+
+Novos espelhos tecnicos relevantes:
+
+- `document.documentElement.dataset.lavaprimeServiceOrderDocumentQualityAnalyzed`
+- `document.documentElement.dataset.lavaprimeServiceOrderDocumentQualityFallbackRate`
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteDesigned`
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteEnabled`
+- `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteRecordsPlanned`

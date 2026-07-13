@@ -233,3 +233,24 @@ Justificativa:
 2. a readiness pode ser medida sem trocar fonte funcional do runtime;
 3. ainda falta escolher um ponto de leitura controlada e desenhar a migration real;
 4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-005
+
+- documentos passam a carregar `documentServiceOrderSource` auxiliar em runtime;
+- a resolucao documental passa a priorizar `serviceOrderId`, `serviceOrderNumber`, `legacyAttendanceId`, links de pagamento e `sourceType/sourceId` antes de placa;
+- recibos novos derivados de atendimento passam a nascer com metadados de OS mais explicitos;
+- o diagnostico da OS passa a medir `documentSourceQuality` e `shadowWrite`;
+- `shadowWrite` fica oficialmente desenhado como `dry-run`, com `enabled = false` e `supabaseTouched = false`;
+- `visualOutputChanged = false`;
+- `primarySourceChanged = false`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-006 - Service Order shadow write adapters and staging activation gate`
+
+Justificativa:
+
+1. a origem documental ficou mais confiavel, mas a escrita futura ainda precisa de payload operacional mais detalhado;
+2. o diagnostico agora ja consegue medir fallback e readiness sem tocar backend;
+3. o proximo passo seguro e preparar a ativacao tecnica em staging, ainda sem gravar;
+4. Supabase continua corretamente fora desta etapa.

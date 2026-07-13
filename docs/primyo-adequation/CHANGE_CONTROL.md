@@ -584,3 +584,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a `Service Order` passa a ter contrato canonico de storage, validacao local e builder em lote para readiness de backend, com adocao runtime limitada ao diagnostico tecnico.
 - Observacao de risco: o contrato continua local e derivado, ainda sem migration, sem escrita real e sem troca das fontes atuais de dashboard, financeiro ou documentos.
+
+### LP-SERVICE-ORDER-005
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-005.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-005-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a trilha de `Service Order` passa a enriquecer a origem dos documentos derivados com prioridade explicita de vinculo, diagnostico de qualidade documental e desenho local de `shadow write`, sem alterar a fonte visual principal.
+- Observacao de risco: documentos antigos ainda podem cair em fallback por placa e o `shadow write` continua apenas desenhado, sem migration, sem Supabase e sem escrita real.

@@ -673,3 +673,33 @@ Regras adicionais:
 - o contrato de storage continua local e derivado;
 - `readyForSupabaseDesign` pode ficar `true`, mas `readyForSupabaseWrite` deve permanecer `false`;
 - a fase nao autoriza migration, Supabase, bootstrap novo ou refatoracao ampla de UX.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-005`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- login operador
+- logout
+- documentos / recibos / relatorios sem quebra visual
+- ausencia de `NaN`, `undefined`, `null` ou `Invalid Date`
+- consulta manual de `window.__lavaprimeGetServiceOrderDiagnostics?.()` com `documentSourceQuality` e `shadowWrite`
+
+Regras adicionais:
+
+- `documentHistory` continua sendo a fonte visual principal;
+- fallback por placa continua permitido apenas como fallback;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `supabaseTouched` deve permanecer `false`;
+- a fase nao autoriza migration, Supabase, bootstrap novo ou refatoracao ampla de UX.

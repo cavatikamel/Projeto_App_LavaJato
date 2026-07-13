@@ -72,3 +72,19 @@ Objetivo sugerido:
 - enriquecer a emissao de recibos e documentos novos com `serviceOrderId/serviceOrderNumber` desde a origem;
 - reduzir dependencia de inferencia por placa;
 - desenhar `shadow write` local/adapter-friendly antes da futura trilha Supabase.
+
+## Atualizacao LP-SERVICE-ORDER-005
+
+- origem documental passa a ser normalizada com prioridade explicita de vinculos;
+- documentos novos gerados por atendimento passam a carregar metadados de OS desde a origem;
+- diagnostico da OS passa a medir qualidade de vinculo documental e readiness de `shadow write`;
+- `shadow write` passa a existir como desenho e dry-run, ainda sem qualquer escrita real.
+
+## Proxima trilha recomendada
+
+### LP-SERVICE-ORDER-006 - Service Order shadow write adapters and staging activation gate
+
+- transformar o desenho atual em contrato de adapter-friendly payload;
+- preparar o checklist tecnico para futura ativacao em staging;
+- definir comparacao controlada entre legado e payload de `shadow write`;
+- manter `enabled = false` ate existir trilha propria de backend/Supabase.

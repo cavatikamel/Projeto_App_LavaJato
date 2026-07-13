@@ -44,6 +44,7 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-SERVICE-ORDER-002 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-SERVICE-ORDER-003 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-SERVICE-ORDER-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-005 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-TEST-AUTO-003 | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional |
 | LP-PERM-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -420,6 +421,19 @@ Antes de iniciar qualquer mudanca:
 - documentos e recibos devem continuar renderizando sem quebra;
 - `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor o bloco `storage`;
 - `readyForSupabaseWrite` deve permanecer `false`;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-005`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- documentos, recibos e relatorios devem continuar renderizando igual, sem troca de fonte visual principal;
+- a resolucao documental deve priorizar IDs explicitos e manter placa apenas como fallback;
+- financeiro deve continuar sem `NaN`, `undefined`, `null` ou `Invalid Date`;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor `documentSourceQuality` e `shadowWrite`;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `supabaseTouched` deve permanecer `false`;
 - `DEMO_BOOTSTRAP` continua padrao;
 - `CLEAN_BOOTSTRAP` continua protegido;
 - Supabase permanece fechado.

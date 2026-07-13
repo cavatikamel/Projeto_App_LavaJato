@@ -51,3 +51,20 @@ Adocao runtime escolhida:
 - dashboard continua visualmente ligado ao legado;
 - financeiro continua visualmente ligado ao legado;
 - nenhum save ou persistencia foi alterado.
+
+## Atualizacao LP-SERVICE-ORDER-005
+
+### O que mudou
+
+- documentos passam a carregar `documentServiceOrderSource` auxiliar em runtime;
+- a resolucao de origem documental passa a priorizar `serviceOrderId`, `serviceOrderNumber`, `legacyAttendanceId`, links de pagamento e `sourceType/sourceId` antes de usar placa;
+- recibos novos gerados pelo fluxo de atendimento passam a nascer com mais metadados de OS;
+- o diagnostico tecnico passa a expor `documentSourceQuality` e `shadowWrite`.
+
+### O que continua igual
+
+- `documentHistory` continua fonte principal visual;
+- `visualOutputChanged = false`;
+- `primarySourceChanged = false`;
+- dashboard e financeiro nao trocam de fonte principal;
+- nenhuma escrita real e executada.
