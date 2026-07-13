@@ -569,3 +569,33 @@ Smoke minimo da fase:
 - Documentos / Relatorios
 - logout
 - login operador sem quebra de fluxo permitido
+
+## Complemento aplicado em `LP-SERVICE-ORDER-001`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- login operador
+- logout
+- patio com atendimento existente
+- confirmacao de que atendimento continua editavel e sem quebra visual
+- financeiro sem `NaN`, `undefined`, `null` ou `Invalid Date`
+- documentos / relatorios sem quebra
+- consulta manual de `window.__lavaprimeGetServiceOrderDiagnostics?.()`
+
+Regras adicionais:
+
+- a `Service Order` desta fase continua derivada e sem persistencia dedicada;
+- a numeracao local de OS nao pode ser tratada como sequencial definitiva de producao;
+- a fase nao autoriza Supabase, bootstrap novo ou refatoracao ampla de UX.

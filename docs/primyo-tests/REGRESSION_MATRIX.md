@@ -40,6 +40,7 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-WEB-011 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-ID-RESOLVER-002 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-ADAPTER-HELPERS-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-TEST-AUTO-003 | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional |
 | LP-PERM-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -386,3 +387,13 @@ Antes de iniciar qualquer mudanca:
 - em `768px`, `480px`, `390px` e `360px`, a area analitica deve colapsar para uma coluna sem overflow horizontal;
 - nenhum grafico pode expor `NaN`, `undefined`, `null` ou `Invalid Date`;
 - a publicacao deve ocorrer somente em `staging`, sem alterar `main`.
+
+## Regra aplicada em `LP-SERVICE-ORDER-001`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- o patio precisa continuar abrindo e atualizando o atendimento sem alterar a UX principal;
+- pagamentos vinculados ao atendimento nao podem exibir `NaN`, `undefined`, `null` ou `Invalid Date`;
+- documentos e recibos precisam continuar renderizando sem quebra;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` deve retornar objeto valido;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido.

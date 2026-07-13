@@ -551,3 +551,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a area analitica da Visao Geral foi reorganizada diretamente em `app/main.js` e `app/styles.css`, com `Faturamento` e `Lucro estimado` na dupla principal, `Situacao do patio` em linha dedicada e colapso do grid movido para `960px`.
 - Observacao de risco: o warning de chunk acima de `500 kB` permanece nao bloqueante e a homologacao publicada em `staging` continua sendo a evidencia final mais confiavel para viewport repetido.
+
+### LP-SERVICE-ORDER-001
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-001.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-001-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: o runtime passa a montar `Service Order` interna a partir de `patioVehicles`, com numeracao local, lifecycle minimo, vinculos financeiros/documentais derivados e diagnostico tecnico silencioso, sem trocar a UX atual de `Atendimento`.
+- Observacao de risco: a fundacao continua local e derivada, sem persistencia propria, com numeracao nao definitiva e documentos ainda parcialmente ligados por heuristica legacy; a proxima fatia deve consolidar boundary de persistencia e vinculos explicitos sem abrir Supabase.

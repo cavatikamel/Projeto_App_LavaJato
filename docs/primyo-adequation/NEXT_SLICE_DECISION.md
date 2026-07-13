@@ -175,3 +175,18 @@ Justificativa:
 2. o runtime local passou em gate, build e verify;
 3. a validacao final de viewport repetido fica mais segura na homologacao publicada do que no browser embutido sob timeout intermitente;
 4. producao e `main` permanecem protegidos.
+
+## Atualizacao LP-SERVICE-ORDER-001
+
+- o runtime passa a ter uma `Service Order` interna derivada do atendimento legado;
+- a origem primaria atual da bridge e `patioVehicles`, com enriquecimento por `clientRegistry`, `vehicleRegistry`, `cashEntries`, `openPayments`, `invoiceLineItems` e `documentHistory`;
+- a interface continua simples e baseada em `Atendimento`;
+- a numeracao atual de OS fica classificada como `foundation/local/demo-compatible`;
+- a proxima fatia recomendada passa a ser `LP-SERVICE-ORDER-002 - Service Order persistence boundary and explicit links`.
+
+Justificativa:
+
+1. a primeira ponte tecnica agora existe e permite auditar a OS sem quebrar a UX atual;
+2. ainda falta separar a bridge do monolito e registrar vinculos explicitos entre atendimento, documento, invoice e pagamento;
+3. a numeracao atual nao pode ser tratada como definitiva enquanto nao houver persistencia controlada;
+4. Supabase continua corretamente fora desta etapa.
