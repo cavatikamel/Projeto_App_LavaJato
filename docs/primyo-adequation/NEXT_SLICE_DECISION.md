@@ -78,6 +78,19 @@ Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-003`.
 - qualquer ampliacao do `shadow read`:
   - rejeitada enquanto a trilha de cleanup nao estabilizar melhor a diferenca entre ambiente demo e ambiente limpo;
 - qualquer integracao de `idResolver` ao runtime:
+
+## Atualizacao LP-SERVICE-ORDER-004
+
+- a adocao progressiva da `Service Order` foi iniciada apenas em `documents`;
+- o runtime continua com `documentHistory` como fonte principal visual;
+- a OS passa a enriquecer documentos com `serviceOrderReadModel` auxiliar;
+- a migration para Supabase continua apenas desenhada;
+- `visualOutputChanged = false`;
+- `primarySourceChanged = false`;
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-005 - Service Order shadow write design and document source enrichment`
   - continua cedo demais.
 - qualquer tentativa de tratar `LP-WEB-DATA-CLEANUP-013` como obrigacao imediata para fechar o programa:
   - rejeitada, porque o encerramento documental ja esta consolidado.

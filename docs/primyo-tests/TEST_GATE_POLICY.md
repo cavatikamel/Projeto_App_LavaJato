@@ -114,6 +114,21 @@ Estado oficial apos `LP-WEB-ADAPTER-HELPERS-001`:
 - qualquer mudanca em `adapterHelpers.js` passa a exigir revalidacao conjunta dos tres adapters, do Adapter Gate, do Primyo Gate, do build e do verify;
 - a cobertura continua local e sem runtime: nenhum adapter foi integrado ao produto por causa desta consolidacao.
 
+## Aplicacao em LP-SERVICE-ORDER-004
+
+Como a fase toca runtime Web em `app/main.js`, o pacote completo permanece obrigatorio:
+
+- `git status --short`
+- `git diff --name-only`
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
 Estado oficial apos `LP-WEB-010`:
 
 - `scripts/primyo-adapter-gate.mjs` passa a importar `productAdapter` em Node puro;

@@ -56,3 +56,19 @@ Objetivo sugerido:
 - detalhar o desenho de migration para `service_orders` e tabelas relacionadas;
 - decidir se documentos, financeiro ou detalhes operacionais serao a primeira leitura controlada;
 - manter Supabase fechado ate existir fase propria de backend.
+
+## Atualizacao LP-SERVICE-ORDER-004
+
+- a primeira adocao controlada foi fixada em `documents`;
+- helper de leitura progressiva e `read model` leve foram adicionados ao runtime;
+- o fallback legado continua ativo;
+- migration design e schema draft Supabase foram documentados;
+- a promocao de leitura principal continua adiada.
+
+## Proxima trilha recomendada
+
+### LP-SERVICE-ORDER-005 - Service Order shadow write design and document source enrichment
+
+- enriquecer a emissao de recibos e documentos novos com `serviceOrderId/serviceOrderNumber` desde a origem;
+- reduzir dependencia de inferencia por placa;
+- desenhar `shadow write` local/adapter-friendly antes da futura trilha Supabase.

@@ -79,6 +79,15 @@ Toda proposta futura devera registrar, no minimo:
 
 ## Resultado de npm.cmd run primyo:gate
 
+## Atualizacao LP-SERVICE-ORDER-004
+
+- `Change ID`: `LP-SERVICE-ORDER-004`
+- `Backlog ID`: `Service Order progressive read adoption`
+- `Area afetada`: `service orders`, `documents`, `diagnostics`
+- `Arquivos afetados`: `app/main.js` e documentacao `docs/primyo-service-orders/**`
+- `Risco`: medio controlado, porque a fonte visual principal de documentos nao foi trocada
+- `Plano de rollback`: `git revert <hash-do-commit-da-fase>`
+
 ## Decisao final
 ```
 

@@ -217,7 +217,7 @@ const SERVICE_ORDER_NUMBER_PAD_SIZE = 6;
 const SERVICE_ORDER_DIAGNOSTIC_SAMPLE_LIMIT = 5;
 const SERVICE_ORDER_STORAGE_SCHEMA_VERSION = 1;
 const SERVICE_ORDER_PERSISTENCE_BOUNDARY_MODE = "local-derived-boundary";
-const SERVICE_ORDER_RUNTIME_ADOPTION_MODE = "diagnostics-storage-contract";
+const SERVICE_ORDER_RUNTIME_ADOPTION_MODE = "documents-auxiliary-read";
 const SERVICE_ORDER_ROLLBACK_PATH = Object.freeze([
   "remove service order foundation constants and diagnostics state from app/main.js",
   "remove service order bridge helpers from app/main.js",
@@ -12542,6 +12542,18 @@ function publishServiceOrderDiagnostics(snapshot = getServiceOrderDiagnosticsSna
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderSupabaseTouched = String(
     snapshot.supabaseTouched ?? false
   );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderProgressiveReadArea = String(
+    snapshot.progressiveRead?.area || ""
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderProgressiveReadModels = String(
+    snapshot.progressiveRead?.readModelsBuilt ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderProgressiveReadWithFallback = String(
+    snapshot.progressiveRead?.readModelsWithFallback ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderProgressiveReadWithoutServiceOrder = String(
+    snapshot.progressiveRead?.readModelsWithoutServiceOrder ?? 0
+  );
 
   let diagnosticsNode = diagnosticsDocument.getElementById(SERVICE_ORDER_DIAGNOSTICS_SCRIPT_ID);
   if (!diagnosticsNode) {
@@ -12574,6 +12586,11 @@ function cloneServiceOrderDiagnosticsSnapshot(snapshot) {
             : []
         }
       : null,
+    progressiveRead: snapshot?.progressiveRead
+      ? {
+          ...snapshot.progressiveRead
+        }
+      : null,
     issueExamples: Array.isArray(snapshot?.issueExamples)
       ? snapshot.issueExamples.map((example) => ({
           ...example,
@@ -12598,6 +12615,8 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
     buildServiceOrderFromLegacyAttendance(attendance, { analyzedAt, usedOrderNumbers, usedServiceOrderIds })
   );
   const storageSnapshots = buildServiceOrderStorageSnapshots({ analyzedAt, serviceOrders });
+  const runtimeContext = buildServiceOrderReadRuntimeContext({ analyzedAt, serviceOrders, storageSnapshots });
+  const documentReadModels = buildDocumentServiceOrderReadModels({ runtimeContext });
   const unsupportedStatuses = [
     ...new Set(
       serviceOrders
@@ -12657,6 +12676,12 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
   const contractsWithLinkedDocuments = storageSnapshots.filter((snapshot) => (snapshot.contract?.documents || []).length > 0).length;
   const contractsWithEvents = storageSnapshots.filter((snapshot) => (snapshot.contract?.events || []).length > 0).length;
   const readyForSupabaseDesign = storageContractsBuilt > 0 && invalidStorageContracts === 0;
+  const progressiveReadWithFallback = documentReadModels.filter(
+    (entry) => entry?.serviceOrderReadModel?.fallbackActive
+  ).length;
+  const progressiveReadWithoutServiceOrder = documentReadModels.filter(
+    (entry) => !String(entry?.serviceOrderReadModel?.serviceOrderId || "").trim()
+  ).length;
 
   return {
     analyzedAt,
@@ -12721,6 +12746,16 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
     backendRequired: true,
     supabaseTouched: false,
     runtimeAdoptionMode: SERVICE_ORDER_RUNTIME_ADOPTION_MODE,
+    progressiveRead: {
+      enabled: true,
+      area: "documents",
+      readModelsBuilt: documentReadModels.length,
+      readModelsWithFallback: progressiveReadWithFallback,
+      readModelsWithoutServiceOrder: progressiveReadWithoutServiceOrder,
+      legacyFallbackActive: true,
+      visualOutputChanged: false,
+      primarySourceChanged: false
+    },
     storage: {
       schemaVersion: SERVICE_ORDER_STORAGE_SCHEMA_VERSION,
       contractsBuilt: storageContractsBuilt,
@@ -13112,6 +13147,186 @@ function buildServiceOrderStorageSnapshots(context = {}) {
       validation
     };
   });
+}
+
+function buildServiceOrderSourceLinkKey(sourceType, sourceId) {
+  const normalizedType = normalizeText(sourceType || "");
+  const normalizedId = String(sourceId || "").trim();
+  return normalizedType && normalizedId ? `${normalizedType}::${normalizedId}` : "";
+}
+
+function buildServiceOrderReadRuntimeContext(context = {}) {
+  const analyzedAt = context?.analyzedAt || new Date().toISOString();
+  const storageSnapshots = Array.isArray(context?.storageSnapshots)
+    ? context.storageSnapshots
+    : buildServiceOrderStorageSnapshots({
+        analyzedAt,
+        serviceOrders: Array.isArray(context?.serviceOrders) ? context.serviceOrders : undefined
+      });
+  const runtimeContext = {
+    analyzedAt,
+    storageSnapshots,
+    byLegacyAttendanceId: new Map(),
+    byPlate: new Map(),
+    byDocumentSourceKey: new Map(),
+    byPaymentSourceKey: new Map(),
+    byServiceOrderId: new Map(),
+    byOrderNumber: new Map()
+  };
+
+  storageSnapshots.forEach((snapshot) => {
+    const contract = snapshot?.contract || null;
+    const serviceOrderId = String(contract?.serviceOrder?.id || "").trim();
+    const orderNumber = String(contract?.serviceOrder?.orderNumber || "").trim();
+    const legacyAttendanceId = String(contract?.legacy?.legacyAttendanceId || "").trim();
+    const plate = formatPlate(contract?.vehicleSnapshot?.plate || contract?.serviceOrder?.vehiclePlate || "");
+    if (serviceOrderId) runtimeContext.byServiceOrderId.set(serviceOrderId, snapshot);
+    if (orderNumber) runtimeContext.byOrderNumber.set(orderNumber, snapshot);
+    if (legacyAttendanceId) runtimeContext.byLegacyAttendanceId.set(legacyAttendanceId, snapshot);
+    if (plate) runtimeContext.byPlate.set(plate, snapshot);
+    (contract?.documents || []).forEach((entry) => {
+      const sourceKey = buildServiceOrderSourceLinkKey(entry?.sourceType, entry?.sourceId);
+      if (sourceKey) runtimeContext.byDocumentSourceKey.set(sourceKey, snapshot);
+    });
+    (contract?.payments || []).forEach((entry) => {
+      const sourceKey = buildServiceOrderSourceLinkKey(entry?.sourceType, entry?.sourceId);
+      if (sourceKey) runtimeContext.byPaymentSourceKey.set(sourceKey, snapshot);
+    });
+  });
+
+  return runtimeContext;
+}
+
+function findServiceOrderByLegacyReference(legacyAttendanceId, context = {}) {
+  const normalizedLegacyAttendanceId = String(legacyAttendanceId || "").trim();
+  if (!normalizedLegacyAttendanceId) return null;
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  return runtimeContext.byLegacyAttendanceId.get(normalizedLegacyAttendanceId) || null;
+}
+
+function extractServiceOrderCandidatePlate(documentItem) {
+  const candidates = [documentItem?.fileName, documentItem?.documentNumber, documentItem?.summary, documentItem?.title];
+  for (const candidate of candidates) {
+    const raw = String(candidate || "").toUpperCase();
+    if (!raw) continue;
+    const match = raw.match(/\b([A-Z]{3}-?\d{4}|[A-Z]{3}\d[A-Z0-9]\d{2})\b/);
+    if (!match?.[1]) continue;
+    const formattedPlate = formatPlate(match[1]);
+    if (formattedPlate) return formattedPlate;
+  }
+  return "";
+}
+
+function buildServiceOrderReadModel(serviceOrderSnapshot, options = {}) {
+  const contract = serviceOrderSnapshot?.contract || serviceOrderSnapshot || {};
+  const validation = serviceOrderSnapshot?.validation || validateServiceOrderStorageContract(contract);
+  return {
+    serviceOrderId: String(contract?.serviceOrder?.id || "").trim(),
+    serviceOrderNumber: String(contract?.serviceOrder?.orderNumber || "").trim(),
+    legacyAttendanceId: String(contract?.legacy?.legacyAttendanceId || "").trim(),
+    status: normalizeServiceOrderText(contract?.serviceOrder?.status, "unknown"),
+    customerName: normalizeServiceOrderText(contract?.customerSnapshot?.customerName, "Cliente avulso"),
+    vehicleLabel: normalizeServiceOrderText(
+      contract?.vehicleSnapshot?.displayLabel ||
+        contract?.vehicleSnapshot?.plate ||
+        contract?.serviceOrder?.vehiclePlate,
+      "Veiculo nao identificado"
+    ),
+    totalAmount: Math.max(0, toFiniteNumber(contract?.totals?.netAmount)),
+    paidAmount: Math.max(0, toFiniteNumber(contract?.totals?.paidAmount)),
+    pendingAmount: Math.max(0, toFiniteNumber(contract?.totals?.pendingAmount)),
+    documentRefs: Array.isArray(contract?.documents)
+      ? contract.documents.map((entry) => ({
+          id: String(entry?.documentId || entry?.sourceId || "").trim(),
+          type: normalizeServiceOrderText(entry?.documentType || entry?.category, "documento")
+        }))
+      : [],
+    paymentRefs: Array.isArray(contract?.payments)
+      ? contract.payments.map((entry) => ({
+          id: String(entry?.paymentId || entry?.sourceId || "").trim(),
+          type: normalizeServiceOrderText(entry?.paymentType || entry?.sourceType, "payment")
+        }))
+      : [],
+    ready: Boolean(validation?.valid),
+    source: "service-order-storage-contract",
+    fallbackActive: Boolean(options?.fallbackActive),
+    fallbackReason: normalizeServiceOrderText(options?.fallbackReason),
+    matchedBy: normalizeServiceOrderText(options?.matchedBy)
+  };
+}
+
+function resolveDocumentServiceOrderReadModel(documentItem, context = {}) {
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  const sourceKey = buildServiceOrderSourceLinkKey(documentItem?.sourceType, documentItem?.sourceId);
+  const sourceMatch = sourceKey ? runtimeContext.byDocumentSourceKey.get(sourceKey) : null;
+  if (sourceMatch) {
+    return buildServiceOrderReadModel(sourceMatch, {
+      fallbackActive: false,
+      matchedBy: "document-source-link"
+    });
+  }
+
+  const paymentMatch = sourceKey ? runtimeContext.byPaymentSourceKey.get(sourceKey) : null;
+  if (paymentMatch) {
+    return buildServiceOrderReadModel(paymentMatch, {
+      fallbackActive: false,
+      matchedBy: "payment-source-link"
+    });
+  }
+
+  const legacyMatch =
+    findServiceOrderByLegacyReference(documentItem?.sourceId, { runtimeContext }) ||
+    findServiceOrderByLegacyReference(documentItem?.legacyAttendanceId, { runtimeContext });
+  if (legacyMatch) {
+    return buildServiceOrderReadModel(legacyMatch, {
+      fallbackActive: false,
+      matchedBy: "legacy-attendance-id"
+    });
+  }
+
+  const candidatePlate = extractServiceOrderCandidatePlate(documentItem);
+  if (candidatePlate && runtimeContext.byPlate.has(candidatePlate)) {
+    return buildServiceOrderReadModel(runtimeContext.byPlate.get(candidatePlate), {
+      fallbackActive: true,
+      fallbackReason: "plate-inferred-from-document",
+      matchedBy: "vehicle-plate"
+    });
+  }
+
+  return {
+    serviceOrderId: "",
+    serviceOrderNumber: "",
+    legacyAttendanceId: "",
+    status: "unknown",
+    customerName: "",
+    vehicleLabel: candidatePlate || "",
+    totalAmount: 0,
+    paidAmount: 0,
+    pendingAmount: 0,
+    documentRefs: [],
+    paymentRefs: [],
+    ready: false,
+    source: "legacy-document-fallback",
+    fallbackActive: true,
+    fallbackReason: "service-order-unavailable",
+    matchedBy: ""
+  };
+}
+
+function getDocumentHistoryRuntimeItems(context = {}) {
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  return documentHistory.map((item) => ({
+    ...item,
+    serviceOrderReadModel: resolveDocumentServiceOrderReadModel(item, { runtimeContext })
+  }));
+}
+
+function buildDocumentServiceOrderReadModels(context = {}) {
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  return documentHistory.map((item) => ({
+    documentId: Number(item?.id || 0),
+    serviceOrderReadModel: resolveDocumentServiceOrderReadModel(item, { runtimeContext })
+  }));
 }
 
 function buildServiceOrderFromLegacyAttendance(legacyAttendance, context = {}) {
@@ -17053,7 +17268,13 @@ function normalizeDurationToMinutesLabel(value) {
 }
 
 function getDocumentHistoryItemById(documentId) {
-  return documentHistory.find((item) => Number(item.id) === Number(documentId)) || null;
+  const runtimeContext = buildServiceOrderReadRuntimeContext();
+  const item = documentHistory.find((item) => Number(item.id) === Number(documentId)) || null;
+  if (!item) return null;
+  return {
+    ...item,
+    serviceOrderReadModel: resolveDocumentServiceOrderReadModel(item, { runtimeContext })
+  };
 }
 
 function buildDocumentHistoryPdfLines(item) {
@@ -17126,7 +17347,8 @@ function sendDocumentHistoryWhatsapp(documentId) {
 }
 
 function getDocumentHistoryByCategory(category = "Todos") {
-  return documentHistory.filter((item) => category === "Todos" || normalizeText(item.category) === normalizeText(category));
+  const runtimeItems = getDocumentHistoryRuntimeItems();
+  return runtimeItems.filter((item) => category === "Todos" || normalizeText(item.category) === normalizeText(category));
 }
 
 function renderServiceEntryScreen(container) {
@@ -17553,6 +17775,7 @@ function renderProductSalesScreen(container) {
 }
 
 function renderDocumentsScreen(container) {
+  const documentItems = getDocumentHistoryRuntimeItems();
   container.innerHTML = `
     <section class="screen-toolbar inventory-toolbar" aria-label="Filtros dos documentos">
       <label class="screen-search">
@@ -17588,8 +17811,8 @@ function renderDocumentsScreen(container) {
             </thead>
             <tbody>
               ${
-                documentHistory.length
-                  ? documentHistory
+                documentItems.length
+                  ? documentItems
                       .map(
                         (item) => `
                           <tr data-document-row data-document-filter-value="${escapeHtml(normalizeText(item.category).includes("recibo") ? "Recibo" : normalizeText(item.category).includes("relatorio") ? "Relatório" : "Documento")}">

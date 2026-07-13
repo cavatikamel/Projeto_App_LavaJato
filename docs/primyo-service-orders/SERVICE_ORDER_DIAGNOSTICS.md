@@ -131,3 +131,27 @@ Novos espelhos tecnicos relevantes:
 - `document.documentElement.dataset.lavaprimeServiceOrderStorageInvalidContracts`
 - `document.documentElement.dataset.lavaprimeServiceOrderReadyForSupabaseDesign`
 - `document.documentElement.dataset.lavaprimeServiceOrderReadyForSupabaseWrite`
+
+## Atualizacao LP-SERVICE-ORDER-004
+
+Novos campos principais do snapshot:
+
+- `progressiveRead`
+
+Bloco `progressiveRead` esperado:
+
+- `enabled`
+- `area`
+- `readModelsBuilt`
+- `readModelsWithFallback`
+- `readModelsWithoutServiceOrder`
+- `legacyFallbackActive`
+- `visualOutputChanged`
+- `primarySourceChanged`
+
+Novos espelhos tecnicos relevantes:
+
+- `document.documentElement.dataset.lavaprimeServiceOrderProgressiveReadArea`
+- `document.documentElement.dataset.lavaprimeServiceOrderProgressiveReadModels`
+- `document.documentElement.dataset.lavaprimeServiceOrderProgressiveReadWithFallback`
+- `document.documentElement.dataset.lavaprimeServiceOrderProgressiveReadWithoutServiceOrder`
