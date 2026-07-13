@@ -215,7 +215,9 @@ const SERVICE_ORDER_BRIDGE_VERSION = 1;
 const SERVICE_ORDER_NUMBER_PREFIX = "OS";
 const SERVICE_ORDER_NUMBER_PAD_SIZE = 6;
 const SERVICE_ORDER_DIAGNOSTIC_SAMPLE_LIMIT = 5;
+const SERVICE_ORDER_STORAGE_SCHEMA_VERSION = 1;
 const SERVICE_ORDER_PERSISTENCE_BOUNDARY_MODE = "local-derived-boundary";
+const SERVICE_ORDER_RUNTIME_ADOPTION_MODE = "diagnostics-storage-contract";
 const SERVICE_ORDER_ROLLBACK_PATH = Object.freeze([
   "remove service order foundation constants and diagnostics state from app/main.js",
   "remove service order bridge helpers from app/main.js",
@@ -12522,6 +12524,21 @@ function publishServiceOrderDiagnostics(snapshot = getServiceOrderDiagnosticsSna
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderPersistenceSnapshots = String(
     snapshot.persistenceSnapshotsBuilt ?? 0
   );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderStorageContracts = String(
+    snapshot.storage?.contractsBuilt ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderStorageValidContracts = String(
+    snapshot.storage?.validContracts ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderStorageInvalidContracts = String(
+    snapshot.storage?.invalidContracts ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderReadyForSupabaseDesign = String(
+    snapshot.storage?.readyForSupabaseDesign ?? false
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderReadyForSupabaseWrite = String(
+    snapshot.storage?.readyForSupabaseWrite ?? false
+  );
   diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderSupabaseTouched = String(
     snapshot.supabaseTouched ?? false
   );
@@ -12543,6 +12560,20 @@ function cloneServiceOrderDiagnosticsSnapshot(snapshot) {
     rollbackPath: [...(snapshot?.rollbackPath || [])],
     unsupportedStatuses: [...(snapshot?.unsupportedStatuses || [])],
     unknownStatuses: [...(snapshot?.unknownStatuses || [])],
+    storage: snapshot?.storage
+      ? {
+          ...snapshot.storage,
+          warnings: [...(snapshot.storage?.warnings || [])],
+          invalidExamples: Array.isArray(snapshot.storage?.invalidExamples)
+            ? snapshot.storage.invalidExamples.map((example) => ({
+                ...example,
+                errors: [...(example?.errors || [])],
+                warnings: [...(example?.warnings || [])],
+                missingRequiredFields: [...(example?.missingRequiredFields || [])]
+              }))
+            : []
+        }
+      : null,
     issueExamples: Array.isArray(snapshot?.issueExamples)
       ? snapshot.issueExamples.map((example) => ({
           ...example,
@@ -12566,6 +12597,7 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
   const serviceOrders = patioVehicles.map((attendance) =>
     buildServiceOrderFromLegacyAttendance(attendance, { analyzedAt, usedOrderNumbers, usedServiceOrderIds })
   );
+  const storageSnapshots = buildServiceOrderStorageSnapshots({ analyzedAt, serviceOrders });
   const unsupportedStatuses = [
     ...new Set(
       serviceOrders
@@ -12596,6 +12628,35 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
       ],
       invalidTotals: [...serviceOrder.bridgeIssues.invalidTotals]
     }));
+  const storageWarnings = [...new Set(storageSnapshots.flatMap((snapshot) => snapshot.validation.warnings || []))];
+  const invalidStorageExamples = storageSnapshots
+    .filter((snapshot) => !snapshot.validation.valid)
+    .slice(0, SERVICE_ORDER_DIAGNOSTIC_SAMPLE_LIMIT)
+    .map((snapshot) => ({
+      serviceOrderId: snapshot.contract?.serviceOrder?.id || "",
+      orderNumber: snapshot.contract?.serviceOrder?.orderNumber || "",
+      errors: [...(snapshot.validation.errors || [])],
+      warnings: [...(snapshot.validation.warnings || [])],
+      missingRequiredFields: [...(snapshot.validation.missingRequiredFields || [])]
+    }));
+  const storageContractsBuilt = storageSnapshots.length;
+  const validStorageContracts = storageSnapshots.filter((snapshot) => snapshot.validation.valid).length;
+  const invalidStorageContracts = storageContractsBuilt - validStorageContracts;
+  const contractsWithRequiredFields = storageSnapshots.filter(
+    (snapshot) => (snapshot.validation.missingRequiredFields || []).length === 0
+  ).length;
+  const contractsMissingCustomerSnapshot = storageSnapshots.filter(
+    (snapshot) =>
+      !snapshot.contract?.customerSnapshot?.customerId && !snapshot.contract?.customerSnapshot?.customerName
+  ).length;
+  const contractsMissingVehicleSnapshot = storageSnapshots.filter(
+    (snapshot) =>
+      !snapshot.contract?.vehicleSnapshot?.vehicleId && !snapshot.contract?.vehicleSnapshot?.plate
+  ).length;
+  const contractsWithLinkedPayments = storageSnapshots.filter((snapshot) => (snapshot.contract?.payments || []).length > 0).length;
+  const contractsWithLinkedDocuments = storageSnapshots.filter((snapshot) => (snapshot.contract?.documents || []).length > 0).length;
+  const contractsWithEvents = storageSnapshots.filter((snapshot) => (snapshot.contract?.events || []).length > 0).length;
+  const readyForSupabaseDesign = storageContractsBuilt > 0 && invalidStorageContracts === 0;
 
   return {
     analyzedAt,
@@ -12632,6 +12693,15 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
       0
     ),
     persistenceSnapshotsBuilt: serviceOrders.filter((serviceOrder) => Boolean(serviceOrder.persistence?.ready)).length,
+    storageContractsBuilt,
+    storageContractsValid: validStorageContracts,
+    storageContractsInvalid: invalidStorageContracts,
+    contractsWithRequiredFields,
+    contractsMissingCustomerSnapshot,
+    contractsMissingVehicleSnapshot,
+    contractsWithLinkedPayments,
+    contractsWithLinkedDocuments,
+    contractsWithEvents,
     duplicateServiceOrderIds: [...usedServiceOrderIds.values()].filter((count) => count > 1).length,
     duplicateOrderNumbers: [...usedOrderNumbers.values()].filter((count) => count > 1).length,
     unsupportedStatuses,
@@ -12650,6 +12720,26 @@ function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
     ),
     backendRequired: true,
     supabaseTouched: false,
+    runtimeAdoptionMode: SERVICE_ORDER_RUNTIME_ADOPTION_MODE,
+    storage: {
+      schemaVersion: SERVICE_ORDER_STORAGE_SCHEMA_VERSION,
+      contractsBuilt: storageContractsBuilt,
+      validContracts: validStorageContracts,
+      invalidContracts: invalidStorageContracts,
+      warnings: [...storageWarnings],
+      invalidExamples: invalidStorageExamples,
+      contractsWithRequiredFields,
+      contractsMissingCustomerSnapshot,
+      contractsMissingVehicleSnapshot,
+      contractsWithLinkedPayments,
+      contractsWithLinkedDocuments,
+      contractsWithEvents,
+      backendRequired: true,
+      supabaseTouched: false,
+      migrationRequired: true,
+      readyForSupabaseDesign,
+      readyForSupabaseWrite: false
+    },
     issueExamples,
     rollbackPath: [...SERVICE_ORDER_ROLLBACK_PATH]
   };
@@ -12710,6 +12800,318 @@ function buildServiceOrderPersistenceSnapshot(serviceOrder, context = {}) {
       unsupportedStatus: Boolean(serviceOrder?.bridgeIssues?.unsupportedStatus)
     }
   };
+}
+
+function buildServiceOrderStorageContract(serviceOrder, context = {}) {
+  const legacyAttendance = context?.legacyAttendance && typeof context.legacyAttendance === "object" ? context.legacyAttendance : null;
+  const linkedVehicle =
+    context?.linkedVehicle ||
+    getAnyVehicleRecord(serviceOrder?.vehicleId || legacyAttendance?.vehicleId || legacyAttendance?.id || null, serviceOrder?.vehiclePlate);
+  const linkedClient =
+    context?.linkedClient ||
+    getLinkedClientForVehicleContext({
+      ...legacyAttendance,
+      plate: serviceOrder?.vehiclePlate || legacyAttendance?.plate || "",
+      currentClientId: serviceOrder?.customerId || linkedVehicle?.currentClientId || legacyAttendance?.currentClientId || null,
+      owner: serviceOrder?.customerName || legacyAttendance?.owner || "",
+      phone: legacyAttendance?.phone || ""
+    }) ||
+    (serviceOrder?.customerId ? getClientById(serviceOrder.customerId) : null);
+  const missingRequiredFields = [];
+
+  if (!String(serviceOrder?.id || "").trim()) missingRequiredFields.push("serviceOrder.id");
+  if (!String(serviceOrder?.orderNumber || "").trim()) missingRequiredFields.push("serviceOrder.orderNumber");
+  if (!String(serviceOrder?.status || "").trim()) missingRequiredFields.push("serviceOrder.status");
+  if (!String(serviceOrder?.createdAt || "").trim()) missingRequiredFields.push("serviceOrder.createdAt");
+  if (!String(serviceOrder?.legacyAttendanceId || "").trim()) missingRequiredFields.push("legacy.legacyAttendanceId");
+
+  return {
+    schemaVersion: SERVICE_ORDER_STORAGE_SCHEMA_VERSION,
+    serviceOrder: {
+      id: normalizeServiceOrderText(serviceOrder?.id),
+      orderNumber: normalizeServiceOrderText(serviceOrder?.orderNumber),
+      legacyAttendanceId: normalizeServiceOrderText(serviceOrder?.legacyAttendanceId),
+      customerId: normalizeServiceOrderText(serviceOrder?.customerId),
+      vehicleId: normalizeServiceOrderText(serviceOrder?.vehicleId),
+      status: normalizeServiceOrderText(serviceOrder?.status, "unknown"),
+      createdAt: normalizeServiceOrderTimestamp(serviceOrder?.createdAt),
+      startedAt: normalizeServiceOrderTimestamp(serviceOrder?.startedAt),
+      completedAt: normalizeServiceOrderTimestamp(serviceOrder?.completedAt),
+      deliveredAt: normalizeServiceOrderTimestamp(serviceOrder?.deliveredAt),
+      operator: normalizeServiceOrderText(serviceOrder?.operator, "Operador"),
+      activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+      runtimeAdoptionMode: SERVICE_ORDER_RUNTIME_ADOPTION_MODE
+    },
+    customerSnapshot: {
+      customerId: normalizeServiceOrderText(serviceOrder?.customerId || linkedClient?.id),
+      customerName: normalizeServiceOrderText(serviceOrder?.customerName || getClientDisplayName(linkedClient)),
+      personType: normalizeServiceOrderText(linkedClient?.personType),
+      document: normalizeServiceOrderText(linkedClient?.document),
+      phone: normalizeServiceOrderText(linkedClient?.phone || legacyAttendance?.phone),
+      email: normalizeServiceOrderText(linkedClient?.email),
+      billing: Boolean(linkedClient?.billing),
+      billingApproved: Boolean(linkedClient?.billingApproved),
+      billingClientId: normalizeServiceOrderText(linkedClient?.billingClientId)
+    },
+    vehicleSnapshot: {
+      vehicleId: normalizeServiceOrderText(serviceOrder?.vehicleId || linkedVehicle?.id),
+      plate: normalizeServiceOrderText(serviceOrder?.vehiclePlate || linkedVehicle?.plate),
+      brand: normalizeServiceOrderText(linkedVehicle?.brand || legacyAttendance?.brand),
+      model: normalizeServiceOrderText(linkedVehicle?.model || legacyAttendance?.model),
+      year: normalizeServiceOrderText(linkedVehicle?.year || legacyAttendance?.year),
+      color: normalizeServiceOrderText(linkedVehicle?.color || legacyAttendance?.color),
+      type: normalizeServiceOrderText(linkedVehicle?.type || legacyAttendance?.type),
+      category: normalizeServiceOrderText(linkedVehicle?.category || legacyAttendance?.category),
+      fuel: normalizeServiceOrderText(linkedVehicle?.fuel),
+      currentClientId: normalizeServiceOrderText(linkedVehicle?.currentClientId || linkedClient?.id)
+    },
+    items: [
+      ...(Array.isArray(serviceOrder?.services)
+        ? serviceOrder.services.map((entry) => ({
+            id: normalizeServiceOrderText(entry?.id),
+            kind: "service",
+            sourceType: normalizeServiceOrderText(entry?.sourceType, "serviceCatalog"),
+            sourceId: normalizeServiceOrderText(entry?.id),
+            description: normalizeServiceOrderText(entry?.name, "Servico"),
+            quantity: 1,
+            unitLabel: "servico",
+            unitPrice: Math.max(0, toFiniteNumber(entry?.price)),
+            totalAmount: Math.max(0, toFiniteNumber(entry?.price)),
+            estimatedMinutes: Math.max(0, toFiniteNumber(entry?.estimatedMinutes)),
+            relatedVehicleType: normalizeServiceOrderText(entry?.vehicleType),
+            relatedVehicleCategory: normalizeServiceOrderText(entry?.vehicleCategory)
+          }))
+        : []),
+      ...(Array.isArray(serviceOrder?.products)
+        ? serviceOrder.products.map((entry) => ({
+            id: normalizeServiceOrderText(entry?.id),
+            kind: "product",
+            sourceType: normalizeServiceOrderText(entry?.sourceType, "attendance-product-sale"),
+            sourceId: normalizeServiceOrderText(entry?.productId || entry?.id),
+            description: normalizeServiceOrderText(entry?.name, "Produto"),
+            quantity: Math.max(0, toFiniteNumber(entry?.quantity)),
+            unitLabel: "un",
+            unitPrice: Math.max(0, toFiniteNumber(entry?.unitPrice)),
+            totalAmount: Math.max(0, toFiniteNumber(entry?.total)),
+            totalCost: Math.max(0, toFiniteNumber(entry?.totalCost))
+          }))
+        : []),
+      ...(Array.isArray(serviceOrder?.supplies)
+        ? serviceOrder.supplies.map((entry) => ({
+            id: normalizeServiceOrderText(entry?.id),
+            kind: "supply",
+            sourceType: "service-supply-profile",
+            sourceId: normalizeServiceOrderText(entry?.supplyId || entry?.id),
+            description: normalizeServiceOrderText(entry?.supplyName, "Insumo"),
+            quantity: Math.max(0, toFiniteNumber(entry?.quantity)),
+            unitLabel: normalizeServiceOrderText(entry?.unit, "un"),
+            unitPrice: Math.max(0, toFiniteNumber(entry?.estimatedUnitCost)),
+            totalAmount: Math.max(0, toFiniteNumber(entry?.estimatedTotalCost)),
+            relatedServiceName: normalizeServiceOrderText(entry?.serviceName),
+            notes: normalizeServiceOrderText(entry?.notes)
+          }))
+        : [])
+    ],
+    payments: (Array.isArray(serviceOrder?.payments) ? serviceOrder.payments : []).map((entry) => ({
+      id: normalizeServiceOrderText(entry?.id),
+      serviceOrderId: normalizeServiceOrderText(entry?.serviceOrderId || serviceOrder?.id),
+      serviceOrderNumber: normalizeServiceOrderText(entry?.serviceOrderNumber || serviceOrder?.orderNumber),
+      legacyAttendanceId: normalizeServiceOrderText(entry?.legacyAttendanceId || serviceOrder?.legacyAttendanceId),
+      sourceType: normalizeServiceOrderText(entry?.sourceType, "payment"),
+      sourceId: normalizeServiceOrderText(entry?.sourceId),
+      status: normalizeServiceOrderText(entry?.status, "Aberto"),
+      method: normalizeServiceOrderText(entry?.method, "Nao informado"),
+      grossAmount: Math.max(0, toFiniteNumber(entry?.grossAmount)),
+      netAmount: Math.max(0, toFiniteNumber(entry?.netAmount)),
+      feeAmount: Math.max(0, toFiniteNumber(entry?.feeAmount)),
+      partialPayment: Boolean(entry?.partialPayment),
+      openPayment: Boolean(entry?.openPayment),
+      effectiveAt: normalizeServiceOrderTimestamp(entry?.effectiveAt),
+      legacyReference: {
+        collection: normalizeServiceOrderText(entry?.legacyReference?.collection),
+        id: normalizeServiceOrderText(entry?.legacyReference?.id)
+      }
+    })),
+    documents: (Array.isArray(serviceOrder?.documents) ? serviceOrder.documents : []).map((entry) => ({
+      id: normalizeServiceOrderText(entry?.id),
+      serviceOrderId: normalizeServiceOrderText(entry?.serviceOrderId || serviceOrder?.id),
+      serviceOrderNumber: normalizeServiceOrderText(entry?.serviceOrderNumber || serviceOrder?.orderNumber),
+      legacyAttendanceId: normalizeServiceOrderText(entry?.legacyAttendanceId || serviceOrder?.legacyAttendanceId),
+      title: normalizeServiceOrderText(entry?.title, "Documento"),
+      category: normalizeServiceOrderText(entry?.category, "Documento"),
+      documentNumber: normalizeServiceOrderText(entry?.documentNumber),
+      fileName: normalizeServiceOrderText(entry?.fileName),
+      createdAt: normalizeServiceOrderTimestamp(entry?.createdAt),
+      sourceType: normalizeServiceOrderText(entry?.sourceType),
+      sourceId: normalizeServiceOrderText(entry?.sourceId),
+      legacyReference: {
+        collection: normalizeServiceOrderText(entry?.legacyReference?.collection),
+        id: normalizeServiceOrderText(entry?.legacyReference?.id)
+      }
+    })),
+    events: (Array.isArray(serviceOrder?.events) ? serviceOrder.events : []).map((entry) => ({
+      id: normalizeServiceOrderText(entry?.id),
+      serviceOrderId: normalizeServiceOrderText(entry?.serviceOrderId || serviceOrder?.id),
+      serviceOrderNumber: normalizeServiceOrderText(entry?.serviceOrderNumber || serviceOrder?.orderNumber),
+      legacyAttendanceId: normalizeServiceOrderText(entry?.legacyAttendanceId || serviceOrder?.legacyAttendanceId),
+      type: normalizeServiceOrderText(entry?.type, "note"),
+      description: normalizeServiceOrderText(entry?.description, "Evento de atendimento"),
+      occurredAt: normalizeServiceOrderTimestamp(entry?.occurredAt || entry?.createdAt),
+      createdAt: normalizeServiceOrderTimestamp(entry?.createdAt || entry?.occurredAt),
+      author: normalizeServiceOrderText(entry?.author, "Sistema LavaPrime"),
+      source: normalizeServiceOrderText(entry?.source),
+      sourceType: normalizeServiceOrderText(entry?.sourceType),
+      legacyReference: {
+        collection: normalizeServiceOrderText(entry?.legacyReference?.collection),
+        id: normalizeServiceOrderText(entry?.legacyReference?.id)
+      }
+    })),
+    totals: {
+      serviceAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.serviceAmount)),
+      productAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.productAmount)),
+      extraAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.extraAmount)),
+      grossAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.grossAmount)),
+      discountAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.discountAmount)),
+      netAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.netAmount)),
+      paidAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.paidAmount)),
+      pendingAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.pendingAmount)),
+      feeAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.feeAmount)),
+      estimatedCost: Math.max(0, toFiniteNumber(serviceOrder?.totals?.estimatedCost)),
+      estimatedProfit: Math.max(0, toFiniteNumber(serviceOrder?.totals?.estimatedProfit))
+    },
+    audit: {
+      generatedAt: normalizeServiceOrderTimestamp(context?.analyzedAt || new Date().toISOString()),
+      bridgeVersion: SERVICE_ORDER_BRIDGE_VERSION,
+      storageSchemaVersion: SERVICE_ORDER_STORAGE_SCHEMA_VERSION,
+      activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+      runtimeAdoptionMode: SERVICE_ORDER_RUNTIME_ADOPTION_MODE,
+      source: "service-order-storage-contract"
+    },
+    legacy: {
+      sourceType: normalizeServiceOrderText(serviceOrder?.source?.type, "legacy-attendance-bridge"),
+      legacyCollection: normalizeServiceOrderText(serviceOrder?.source?.legacyCollection, "patioVehicles"),
+      legacyAttendanceId: normalizeServiceOrderText(serviceOrder?.legacyAttendanceId),
+      legacyStatus: normalizeServiceOrderText(serviceOrder?.source?.legacyStatus),
+      identityMode: normalizeServiceOrderText(serviceOrder?.source?.identityMode),
+      orderNumberMode: normalizeServiceOrderText(serviceOrder?.source?.orderNumberMode),
+      linkedCashEntryIds: [...(serviceOrder?.source?.linkedCashEntryIds || [])].map((value) => String(value)),
+      linkedOpenPaymentIds: [...(serviceOrder?.source?.linkedOpenPaymentIds || [])].map((value) => String(value)),
+      linkedInvoiceIds: [...(serviceOrder?.source?.linkedInvoiceIds || [])].map((value) => String(value)),
+      linkedDocumentIds: [...(serviceOrder?.source?.linkedDocumentIds || [])].map((value) => String(value)),
+      linkedVehicleRegistryId: normalizeServiceOrderText(serviceOrder?.source?.linkedVehicleRegistryId),
+      linkedClientRegistryId: normalizeServiceOrderText(serviceOrder?.source?.linkedClientRegistryId)
+    },
+    readiness: {
+      missingRequiredFields,
+      hasCustomerSnapshot: Boolean(serviceOrder?.customerId || linkedClient?.id || serviceOrder?.customerName),
+      hasVehicleSnapshot: Boolean(serviceOrder?.vehicleId || linkedVehicle?.id || serviceOrder?.vehiclePlate),
+      hasLinkedPayments: Array.isArray(serviceOrder?.payments) && serviceOrder.payments.length > 0,
+      hasLinkedDocuments: Array.isArray(serviceOrder?.documents) && serviceOrder.documents.length > 0,
+      hasEvents: Array.isArray(serviceOrder?.events) && serviceOrder.events.length > 0,
+      backendRequired: true,
+      migrationRequired: true,
+      readyForSupabaseDesign: missingRequiredFields.length === 0,
+      readyForSupabaseWrite: false,
+      derivedFields: ["customerSnapshot", "vehicleSnapshot", "items", "payments", "documents", "events"]
+    }
+  };
+}
+
+function validateServiceOrderStorageContract(contract) {
+  const errors = [];
+  const warnings = [];
+  const missingRequiredFields = [];
+  if (Number(contract?.schemaVersion) !== SERVICE_ORDER_STORAGE_SCHEMA_VERSION) {
+    errors.push(`schemaVersion must be ${SERVICE_ORDER_STORAGE_SCHEMA_VERSION}`);
+  }
+  if (!String(contract?.serviceOrder?.id || "").trim()) missingRequiredFields.push("serviceOrder.id");
+  if (!String(contract?.serviceOrder?.orderNumber || "").trim()) missingRequiredFields.push("serviceOrder.orderNumber");
+  if (!String(contract?.serviceOrder?.status || "").trim()) missingRequiredFields.push("serviceOrder.status");
+  if (!String(contract?.serviceOrder?.createdAt || "").trim()) missingRequiredFields.push("serviceOrder.createdAt");
+  if (!String(contract?.legacy?.legacyAttendanceId || "").trim()) missingRequiredFields.push("legacy.legacyAttendanceId");
+  if (missingRequiredFields.length) {
+    errors.push(`Missing required fields: ${missingRequiredFields.join(", ")}`);
+  }
+  if (!String(contract?.customerSnapshot?.customerId || "").trim() && !String(contract?.customerSnapshot?.customerName || "").trim()) {
+    warnings.push("Customer snapshot is still missing or empty.");
+  }
+  if (!String(contract?.vehicleSnapshot?.vehicleId || "").trim() && !String(contract?.vehicleSnapshot?.plate || "").trim()) {
+    warnings.push("Vehicle snapshot is still missing or empty.");
+  }
+  const numericTotals = [
+    "serviceAmount",
+    "productAmount",
+    "extraAmount",
+    "grossAmount",
+    "discountAmount",
+    "netAmount",
+    "paidAmount",
+    "pendingAmount",
+    "feeAmount",
+    "estimatedCost",
+    "estimatedProfit"
+  ];
+  numericTotals.forEach((field) => {
+    const value = Number(contract?.totals?.[field]);
+    if (!Number.isFinite(value) || value < 0) errors.push(`Invalid total field: ${field}`);
+  });
+  (contract?.payments || []).forEach((entry, index) => {
+    if (!String(entry?.serviceOrderId || "").trim()) errors.push(`Payment ${index + 1} is missing serviceOrderId`);
+  });
+  (contract?.documents || []).forEach((entry, index) => {
+    if (!String(entry?.serviceOrderId || "").trim()) errors.push(`Document ${index + 1} is missing serviceOrderId`);
+  });
+  (contract?.events || []).forEach((entry, index) => {
+    if (!String(entry?.serviceOrderId || "").trim()) errors.push(`Event ${index + 1} is missing serviceOrderId`);
+  });
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+    missingRequiredFields,
+    backendRequired: true,
+    migrationRequired: true,
+    readyForSupabaseDesign: errors.length === 0,
+    readyForSupabaseWrite: false
+  };
+}
+
+function buildServiceOrderStorageSnapshots(context = {}) {
+  const analyzedAt = context?.analyzedAt || new Date().toISOString();
+  const serviceOrders = Array.isArray(context?.serviceOrders)
+    ? context.serviceOrders
+    : patioVehicles.map((attendance) => buildServiceOrderFromLegacyAttendance(attendance, { analyzedAt }));
+  return serviceOrders.map((serviceOrder) => {
+    const legacyAttendance =
+      patioVehicles.find((attendance) => String(attendance?.id ?? "") === String(serviceOrder?.legacyAttendanceId || "")) ||
+      patioVehicles.find((attendance) => formatPlate(attendance?.plate || "") === formatPlate(serviceOrder?.vehiclePlate || "")) ||
+      null;
+    const linkedVehicle = getAnyVehicleRecord(
+      serviceOrder?.vehicleId || legacyAttendance?.vehicleId || legacyAttendance?.id || null,
+      serviceOrder?.vehiclePlate || legacyAttendance?.plate || ""
+    );
+    const linkedClient =
+      getLinkedClientForVehicleContext({
+        ...legacyAttendance,
+        plate: serviceOrder?.vehiclePlate || legacyAttendance?.plate || "",
+        currentClientId: serviceOrder?.customerId || linkedVehicle?.currentClientId || legacyAttendance?.currentClientId || null,
+        owner: serviceOrder?.customerName || legacyAttendance?.owner || "",
+        phone: legacyAttendance?.phone || ""
+      }) || (serviceOrder?.customerId ? getClientById(serviceOrder.customerId) : null);
+    const contract = buildServiceOrderStorageContract(serviceOrder, {
+      analyzedAt,
+      legacyAttendance,
+      linkedVehicle,
+      linkedClient
+    });
+    const validation = validateServiceOrderStorageContract(contract);
+    return {
+      serviceOrderId: contract?.serviceOrder?.id || "",
+      orderNumber: contract?.serviceOrder?.orderNumber || "",
+      contract,
+      validation
+    };
+  });
 }
 
 function buildServiceOrderFromLegacyAttendance(legacyAttendance, context = {}) {

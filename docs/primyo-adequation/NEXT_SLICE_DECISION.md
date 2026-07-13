@@ -204,3 +204,19 @@ Justificativa:
 2. pagamentos, documentos e eventos agora podem apontar explicitamente para a mesma OS sem quebrar o legado;
 3. ainda falta definir o contrato persistivel oficial antes de qualquer migration;
 4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-003
+
+- a `Service Order` passa a ter contrato canonico local de storage com `schemaVersion = 1`;
+- o runtime agora monta snapshots persistiveis em lote apenas para diagnostico tecnico;
+- a validacao local do contrato separa erros estruturais de warnings de cobertura legacy;
+- o diagnostico da OS passa a expor um bloco `storage` com readiness de design para backend;
+- `readyForSupabaseDesign` pode ficar `true`, mas `readyForSupabaseWrite` continua `false`;
+- a proxima fatia recomendada passa a ser `LP-SERVICE-ORDER-004 - Service Order progressive read adoption and migration design`.
+
+Justificativa:
+
+1. a trilha agora ja sabe qual e o formato persistivel local da OS;
+2. a readiness pode ser medida sem trocar fonte funcional do runtime;
+3. ainda falta escolher um ponto de leitura controlada e desenhar a migration real;
+4. Supabase continua corretamente fora desta etapa.

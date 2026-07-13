@@ -41,6 +41,8 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-WEB-ID-RESOLVER-002 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-ADAPTER-HELPERS-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-SERVICE-ORDER-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-002 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-003 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-TEST-AUTO-003 | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional |
 | LP-PERM-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -405,6 +407,18 @@ Antes de iniciar qualquer mudanca:
 - pagamentos derivados precisam continuar sem `NaN`, `undefined`, `null` ou `Invalid Date`;
 - documentos e recibos precisam continuar renderizando sem quebra enquanto carregam `serviceOrderId` e `serviceOrderNumber` derivados;
 - `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor os novos campos de links e persistencia;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-003`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- a criacao do contrato de storage nao pode quebrar o patio nem a abertura do atendimento;
+- financeiro deve continuar sem `NaN`, `undefined`, `null` ou `Invalid Date`;
+- documentos e recibos devem continuar renderizando sem quebra;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor o bloco `storage`;
+- `readyForSupabaseWrite` deve permanecer `false`;
 - `DEMO_BOOTSTRAP` continua padrao;
 - `CLEAN_BOOTSTRAP` continua protegido;
 - Supabase permanece fechado.

@@ -567,3 +567,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a bridge de `Service Order` passa a resolver identidade explicita, anexar `serviceOrderId` e `serviceOrderNumber` a pagamentos, documentos e eventos derivados, e publicar um snapshot local de persistencia futura sem tocar Supabase.
 - Observacao de risco: a persistencia continua somente preparada, a numeracao ainda e local e os documentos legacy seguem parcialmente dependentes de heuristica; a proxima fatia deve formalizar contrato de storage e plano de migracao antes de qualquer backend real.
+
+### LP-SERVICE-ORDER-003
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-003.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-003-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a `Service Order` passa a ter contrato canonico de storage, validacao local e builder em lote para readiness de backend, com adocao runtime limitada ao diagnostico tecnico.
+- Observacao de risco: o contrato continua local e derivado, ainda sem migration, sem escrita real e sem troca das fontes atuais de dashboard, financeiro ou documentos.

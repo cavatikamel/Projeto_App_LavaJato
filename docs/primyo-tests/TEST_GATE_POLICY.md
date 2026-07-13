@@ -629,3 +629,32 @@ Regras adicionais:
 - `serviceOrder.persistence` e um snapshot local de readiness, nao gravacao definitiva;
 - Supabase continua fechado;
 - a fase nao autoriza migration, bootstrap novo ou refatoracao ampla de UX.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-003`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- login operador
+- logout
+- patio com atendimento existente e sem quebra visual
+- financeiro sem `NaN`, `undefined`, `null` ou `Invalid Date`
+- documentos / relatorios sem quebra
+- consulta manual de `window.__lavaprimeGetServiceOrderDiagnostics?.()` com bloco `storage`
+
+Regras adicionais:
+
+- o contrato de storage continua local e derivado;
+- `readyForSupabaseDesign` pode ficar `true`, mas `readyForSupabaseWrite` deve permanecer `false`;
+- a fase nao autoriza migration, Supabase, bootstrap novo ou refatoracao ampla de UX.

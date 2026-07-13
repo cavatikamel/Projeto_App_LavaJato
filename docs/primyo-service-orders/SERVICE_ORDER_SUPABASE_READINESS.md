@@ -18,7 +18,11 @@ Estado confirmado nesta fase:
 - numero local de OS;
 - links explicitos com pagamentos, documentos e eventos;
 - snapshot de persistencia local;
-- diagnostico ampliado para medir cobertura da bridge.
+- diagnostico ampliado para medir cobertura da bridge;
+- contrato canonico de storage com `schemaVersion`;
+- validacao local do contrato;
+- builder em lote de storage snapshots;
+- readiness para design de backend observavel no diagnostico.
 
 ## O que falta antes de backend
 
@@ -34,3 +38,10 @@ Estado confirmado nesta fase:
 Supabase continua fechado.
 
 A readiness desta fase e apenas estrutural.
+
+Estado atualizado:
+
+- `readyForSupabaseDesign = true` quando os contratos locais nao apresentam erros estruturais;
+- `readyForSupabaseWrite = false`;
+- `migrationRequired = true`;
+- nenhuma escrita real foi iniciada.

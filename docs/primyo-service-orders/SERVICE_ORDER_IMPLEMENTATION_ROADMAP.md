@@ -40,11 +40,19 @@ Objetivo sugerido:
 - diagnostico silencioso agora mede cobertura de IDs, links, eventos e snapshots;
 - Supabase continua fechado e a persistencia segue somente preparada, nao executada.
 
+## Atualizacao LP-SERVICE-ORDER-003
+
+- contrato canonico de storage criado no runtime;
+- validacao local do contrato criada;
+- builder em lote de storage snapshots criado;
+- diagnostico da OS passa a medir `storage` e readiness de design;
+- adocao runtime escolhida fica restrita ao diagnostico tecnico.
+
 ## Proxima trilha recomendada
 
-### LP-SERVICE-ORDER-003 - Service Order storage contract and runtime adoption
+### LP-SERVICE-ORDER-004 - Service Order progressive read adoption and migration design
 
-- extrair a montagem da OS do bloco monolitico de `app/main.js`;
-- definir contrato persistivel oficial para `service_orders` e relacionamentos;
-- iniciar adocao controlada do numero de OS em recibos, documentos e detalhes operacionais;
-- preparar sequencia de migration sem ainda abrir producao.
+- escolher um ponto de leitura funcional de baixo risco para consumir o contrato da OS;
+- detalhar o desenho de migration para `service_orders` e tabelas relacionadas;
+- decidir se documentos, financeiro ou detalhes operacionais serao a primeira leitura controlada;
+- manter Supabase fechado ate existir fase propria de backend.

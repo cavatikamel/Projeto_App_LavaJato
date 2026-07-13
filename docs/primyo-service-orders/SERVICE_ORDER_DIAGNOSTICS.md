@@ -87,3 +87,47 @@ Novos espelhos tecnicos relevantes:
 - `document.documentElement.dataset.lavaprimeServiceOrderEventsWithId`
 - `document.documentElement.dataset.lavaprimeServiceOrderPersistenceSnapshots`
 - `document.documentElement.dataset.lavaprimeServiceOrderSupabaseTouched`
+
+## Atualizacao LP-SERVICE-ORDER-003
+
+Novos campos principais do snapshot:
+
+- `runtimeAdoptionMode`
+- `storageContractsBuilt`
+- `storageContractsValid`
+- `storageContractsInvalid`
+- `contractsWithRequiredFields`
+- `contractsMissingCustomerSnapshot`
+- `contractsMissingVehicleSnapshot`
+- `contractsWithLinkedPayments`
+- `contractsWithLinkedDocuments`
+- `contractsWithEvents`
+- `storage`
+
+Bloco `storage` esperado:
+
+- `schemaVersion`
+- `contractsBuilt`
+- `validContracts`
+- `invalidContracts`
+- `warnings`
+- `invalidExamples`
+- `contractsWithRequiredFields`
+- `contractsMissingCustomerSnapshot`
+- `contractsMissingVehicleSnapshot`
+- `contractsWithLinkedPayments`
+- `contractsWithLinkedDocuments`
+- `contractsWithEvents`
+- `backendRequired`
+- `supabaseTouched`
+- `migrationRequired`
+- `readyForSupabaseDesign`
+- `readyForSupabaseWrite`
+
+Novos espelhos tecnicos relevantes:
+
+- `document.documentElement.dataset.lavaprimeServiceOrderStorageContracts`
+- `document.documentElement.dataset.lavaprimeServiceOrderStorageValidContracts`
+- `document.documentElement.dataset.lavaprimeServiceOrderStorageInvalidContracts`
+- `document.documentElement.dataset.lavaprimeServiceOrderReadyForSupabaseDesign`
+- `document.documentElement.dataset.lavaprimeServiceOrderReadyForSupabaseWrite`
