@@ -88,3 +88,16 @@ Somente para fase futura autorizada:
 - `git switch --detach <baseline-web-aprovada>`
 - `git switch -c staging`
 - `git push -u origin staging`
+
+## Complemento LP-SERVICE-ORDER-011
+
+Antes de promover a trilha atual de `Service Order` para `origin/staging`, confirmar:
+
+- baseline candidata local identificada;
+- diff `origin/staging..HEAD` auditado;
+- `app/main.js` como unico arquivo runtime incluso;
+- ausencia de `app/styles.css`, `app/demo/**`, `scripts/**`, `package*.json`, `netlify.toml`, `.env*`, Android, FIPE e Supabase;
+- `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build` aprovados;
+- lock em `dist/assets` ausente ou explicitamente documentado;
+- `PROMOTION_READY = true`;
+- autorizacao explicita do usuario antes do `git push origin HEAD:staging`.

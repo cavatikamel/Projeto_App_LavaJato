@@ -189,3 +189,20 @@ Objetivo sugerido:
 - manter `main` e producao protegidos;
 - continuar sem abrir Supabase, DNS ou runtime de backend;
 - preparar futura validacao remota da trilha `Service Order` somente apos essa promocao.
+
+## Atualizacao LP-SERVICE-ORDER-011
+
+- a baseline local candidata foi consolidada em `a3302df`;
+- o diff contra `origin/staging` foi auditado como restrito ao runtime `Service Order` esperado em `app/main.js` e a documentacao da trilha;
+- os arquivos proibidos da fase nao apareceram no diff;
+- o pacote de validacao oficial passou integralmente;
+- o lock historico em `dist/assets` nao reapareceu nesta execucao;
+- `PROMOTION_READY = true`, mas o push ficou retido por ausencia de autorizacao explicita do usuario.
+
+## Proxima trilha recomendada
+
+### LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging (execucao autorizada)
+
+- repetir a fase com autorizacao explicita para `git push origin HEAD:staging`;
+- confirmar o novo hash remoto de `origin/staging`;
+- somente depois abrir smoke remoto da baseline atual de `Service Order`.

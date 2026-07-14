@@ -40,3 +40,25 @@ A URL real de staging ja foi comprovada e o bloqueio seguinte permanece:
 `LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging`
 
 porque o gargalo atual deixou de ser a URL e passou a ser a baseline remota desatualizada.
+
+## Atualizacao LP-SERVICE-ORDER-011
+
+- `LOCAL_SERVICE_ORDER_BASELINE_CANDIDATE = a3302df`
+- `origin/staging` continua em `cf2eb68` nesta fase
+- o diff `origin/staging..HEAD` foi auditado e ficou restrito a:
+  - `app/main.js`
+  - documentacao `Service Order`
+  - documentacao `deploy`
+  - documentacao `adequation`
+  - documentacao `tests`
+- `app/styles.css`, `app/demo/**`, `scripts/**`, `package*.json`, `netlify.toml`, `.env*`, Android, FIPE e Supabase nao entraram no diff
+- validacoes sequenciais passaram sem reproduzir o lock em `dist/assets`
+
+## Decisao operacional atual
+
+- `PROMOTION_READY = true`
+- `STAGING_CONTAINS_SERVICE_ORDER_CURRENT_BASELINE = false`
+- `SERVICE_ORDER_STAGING_REMOTE_BASELINE_PROVEN = false`
+- `PUSH_TO_STAGING_EXECUTED = false`
+
+Enquanto o push autorizado nao acontecer, a baseline atual continua apenas pronta localmente.

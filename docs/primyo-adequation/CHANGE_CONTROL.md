@@ -648,3 +648,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a fase comprovou a URL real de staging, validou o smoke remoto basico e confirmou `staging@cf2eb68` como baseline publicada.
 - Observacao de risco: a homologacao atual ainda nao contem a trilha de `Service Order`, portanto a validacao remota dessa trilha continua bloqueada por baseline antiga.
+
+### LP-SERVICE-ORDER-011
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-011.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-011-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase auditou a baseline local `a3302df`, confirmou diff limpo de arquivos proibidos e validou que a promocao para `origin/staging` esta tecnicamente pronta.
+- Observacao de risco: nenhum push foi executado porque a governanca continua exigindo autorizacao explicita do usuario para `git push origin HEAD:staging`.

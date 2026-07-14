@@ -539,3 +539,16 @@ Antes de iniciar qualquer mudanca:
 - `DEMO_BOOTSTRAP` continua padrao;
 - `CLEAN_BOOTSTRAP` continua protegido;
 - Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-011`
+
+- a fase pode ler `app/main.js`, mas nao pode altera-lo;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- auditar `origin/staging..HEAD` antes de qualquer decisao de promocao;
+- confirmar ausencia de `app/styles.css`, `app/demo/**`, `scripts/**`, `package*.json`, `netlify.toml`, `.env*`, Android, FIPE e Supabase no diff;
+- tratar lock em `dist/assets` apenas como triagem operacional, sem alterar codigo;
+- `PROMOTION_READY` so pode ser `true` se todas as validacoes passarem;
+- `git push origin HEAD:staging` permanece proibido sem autorizacao explicita do usuario;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.

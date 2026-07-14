@@ -904,3 +904,31 @@ Regras adicionais:
 - a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
 - se o login remoto nao ficar comprovado, o smoke pode ser `partial`, desde que a URL e a baseline publicada tenham sido validadas;
 - a ausencia de diagnostico `Service Order` no staging antigo deve ser registrada como `blocked-by-outdated-staging`.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-011`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- confirmar `origin/staging = cf2eb68` antes da promocao;
+- auditar `origin/staging..HEAD`;
+- confirmar que o delta runtime fica restrito a `app/main.js`;
+- confirmar ausencia de arquivos proibidos no diff;
+- registrar se o lock em `dist/assets` reapareceu ou nao;
+- bloquear push sem autorizacao explicita do usuario.
+
+Regras adicionais:
+
+- a fase nao autoriza alterar runtime, Netlify, Supabase, migration, env ou producao;
+- `PROMOTION_READY` depende de validacao local limpa;
+- se o push nao for autorizado, a fase deve parar em modo `ready-but-not-pushed`.

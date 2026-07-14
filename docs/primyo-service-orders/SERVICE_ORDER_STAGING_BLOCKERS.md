@@ -78,6 +78,27 @@ Consolidar os bloqueios atuais que impedem a futura ativacao controlada do `shad
 - o smoke remoto basico foi executado com classificacao `partial`;
 - o bloqueio principal remanescente agora e somente a defasagem da baseline `Service Order` em `origin/staging`.
 
+## Leitura LP-SERVICE-ORDER-011
+
+- a baseline local candidata `a3302df` foi auditada contra `origin/staging`;
+- o diff ficou limpo de `app/styles.css`, `app/demo/**`, `scripts/**`, `package*.json`, `netlify.toml`, `.env*`, Android, FIPE e Supabase;
+- o lock anterior em `dist/assets` nao reapareceu nesta rodada de validacao;
+- `PROMOTION_READY = true`, mas o push continua bloqueado por governanca ate autorizacao explicita do usuario.
+
+### 8. Push para `origin/staging` ainda nao autorizado nesta execucao
+
+- status: `BLOCKED`
+- evidencia: a fase atual nao recebeu autorizacao explicita para executar `git push origin HEAD:staging`
+- risco: executar push automatico violaria a governanca e poderia publicar a baseline sem aprovacao formal do usuario
+- proxima acao: repetir a fase com autorizacao explicita para push ou abrir fase curta apenas de execucao do push controlado
+
+### 9. Lock em `dist/assets` nao e bloqueio atual
+
+- status: `RESOLVED_IN_THIS_PHASE`
+- evidencia: `npm.cmd run primyo:gate`, `npm.cmd run build` e `npm.cmd run verify:build` passaram em sequencia
+- risco residual: OneDrive/Windows ainda pode reproduzir lock em outra execucao
+- proxima acao: manter validacao sequencial antes do push e registrar qualquer recidiva operacional
+
 ## Regra final
 
 Enquanto qualquer um dos bloqueios acima permanecer aberto:

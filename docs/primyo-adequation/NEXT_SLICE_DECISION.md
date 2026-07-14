@@ -392,3 +392,22 @@ Justificativa:
 1. a prova da URL e do staging basico ja foi concluida;
 2. o bloqueio remanescente agora e a defasagem da baseline publicada;
 3. a homologacao de `Service Order` depende de promover a trilha correta para `staging`, ainda sem tocar `main`, producao, Supabase ou DNS.
+
+## Atualizacao LP-SERVICE-ORDER-011
+
+- a baseline local candidata foi confirmada como `a3302df`;
+- o diff contra `origin/staging` foi auditado e ficou restrito ao runtime `Service Order` em `app/main.js` e a documentacao da trilha;
+- o pacote oficial de validacao passou integralmente;
+- o lock historico em `dist/assets` nao reapareceu;
+- `PROMOTION_READY = true`;
+- o push para `origin/staging` nao foi executado por ausencia de autorizacao explicita nesta execucao.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging (execucao autorizada)`
+
+Justificativa:
+
+1. a preparacao tecnica ja ficou concluida;
+2. o unico bloqueio remanescente para alinhar `origin/staging` agora e de governanca de push;
+3. apos o push autorizado, a proxima validacao util passa a ser o smoke remoto da baseline atual de `Service Order`.

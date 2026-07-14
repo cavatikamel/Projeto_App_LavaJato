@@ -42,3 +42,11 @@ Sim.
 ## Proxima acao segura
 
 Preparar a promocao controlada da baseline atual de `Service Order` para `origin/staging`, sem tocar `main`, producao, Supabase ou DNS.
+
+## Complemento LP-SERVICE-ORDER-011
+
+- a baseline local candidata para substituir `staging@cf2eb68` foi auditada como `a3302df`;
+- as validacoes locais passaram integralmente;
+- o lock historico em `dist/assets` nao reapareceu;
+- o smoke remoto continua limitado ao staging antigo ate que a baseline atual seja realmente promovida para `origin/staging`;
+- nenhum push foi executado nesta fase por falta de autorizacao explicita.
