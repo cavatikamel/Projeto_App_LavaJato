@@ -71,3 +71,13 @@ O rehearsal desta fase reforca que:
 - `readyForSupabaseWrite` continua `false`;
 - `networkWriteAttempted` continua `false`;
 - `supabaseTouched` continua `false`.
+
+## Atualizacao LP-SERVICE-ORDER-008
+
+A revisao de readiness para `staging` confirma que:
+
+- nao existe prova de projeto Supabase staging configurado para esta trilha;
+- `.env.example` continua apenas com placeholders e nao comprova segregacao real de ambiente;
+- nenhuma migration aprovada existe para `service_orders`;
+- `RLS` e isolamento por tenant continuam pendencias formais;
+- `READY_FOR_STAGING_SHADOW_WRITE` permanece `false`.

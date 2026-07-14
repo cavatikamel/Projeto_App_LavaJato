@@ -472,3 +472,18 @@ Antes de iniciar qualquer mudanca:
 - `DEMO_BOOTSTRAP` continua padrao;
 - `CLEAN_BOOTSTRAP` continua protegido;
 - Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-008`
+
+- a fase deve permanecer documental e sem alteracao de runtime;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- `READY_FOR_STAGING_SHADOW_WRITE` deve permanecer `false`;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `shadowWriteAdapter.mode` deve permanecer `disabled`;
+- `readyForSupabaseWrite` deve permanecer `false`;
+- nenhuma prova de staging pode ser assumida sem URL real confirmada;
+- nenhuma prova de backend pode ser assumida sem Supabase staging confirmado;
+- nenhuma readiness de seguranca pode ser assumida sem `RLS` e tenant isolation implementados;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.

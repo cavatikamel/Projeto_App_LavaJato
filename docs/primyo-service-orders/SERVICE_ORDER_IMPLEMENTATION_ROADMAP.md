@@ -121,3 +121,19 @@ Objetivo sugerido:
 - revisar se a branch `staging`, a URL real de homologacao e o backend staging existem de fato;
 - transformar a checklist em criterio formal de liberacao;
 - continuar sem write real ate a fase propria de ativacao controlada.
+
+## Atualizacao LP-SERVICE-ORDER-008
+
+- a branch local `staging` e `origin/staging` agora existem, mas isso nao bastou para readiness de write;
+- a URL real de staging Netlify continua sem comprovacao;
+- o backend Supabase staging continua sem comprovacao;
+- migrations, `RLS`, tenant isolation e smoke remoto continuam bloqueando a ativacao;
+- a decisao formal passa a ser `READY_FOR_STAGING_SHADOW_WRITE = false`.
+
+## Proxima trilha recomendada
+
+### LP-SERVICE-ORDER-009 - Service Order staging environment proof and backend staging preparation
+
+- comprovar URL real de staging e alvo operacional do Netlify;
+- comprovar ambiente Supabase staging sem abrir write no frontend;
+- revisar pacote de seguranca, rollback e observabilidade antes de qualquer ativacao controlada.

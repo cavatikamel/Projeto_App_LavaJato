@@ -259,3 +259,23 @@ Novos espelhos tecnicos relevantes:
 - `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalEligible`
 - `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalBlockedVerified`
 - `document.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalReadyForStaging`
+
+## Atualizacao LP-SERVICE-ORDER-008
+
+Nesta fase nao houve novo campo de runtime.
+
+O diagnostico atual continua suficiente para provar:
+
+- prontidao estrutural local;
+- bloqueio do adapter;
+- ausencia de rede;
+- ausencia de Supabase.
+
+O diagnostico atual continua insuficiente, sozinho, para provar:
+
+- URL real de `staging`;
+- alvo operacional Netlify;
+- backend Supabase staging real;
+- migration aprovada;
+- `RLS` e tenant isolation implementados;
+- smoke remoto publicado.

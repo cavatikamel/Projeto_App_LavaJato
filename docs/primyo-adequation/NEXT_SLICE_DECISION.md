@@ -299,3 +299,22 @@ Justificativa:
 2. o proximo passo seguro e revisar os pre-requisitos externos reais de staging antes de qualquer tentativa de ativacao;
 3. a trilha ainda depende de branch, URL, backend staging, migrations e rollback;
 4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-008
+
+- a revisao documental confirma que branch `staging` local e `origin/staging` existem, mas isso nao basta para readiness de write;
+- a URL real de staging Netlify continua nao comprovada;
+- o backend Supabase staging continua nao comprovado;
+- migrations, `RLS`, tenant isolation, smoke remoto e limpeza da base demo para backend real continuam pendentes;
+- a decisao formal passa a ser `READY_FOR_STAGING_SHADOW_WRITE = false`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-009 - Service Order staging environment proof and backend staging preparation`
+
+Justificativa:
+
+1. o proximo gargalo e operacional e de ambiente, nao mais de adapter local;
+2. a trilha precisa provar URL real de `staging` e target Netlify antes de qualquer discussao de write;
+3. a trilha precisa comprovar Supabase staging, migrations e seguranca antes de qualquer ativacao;
+4. o runtime continua corretamente fora de escopo nesta etapa.

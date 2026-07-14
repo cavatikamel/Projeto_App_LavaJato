@@ -608,3 +608,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: o `shadow write` passa a ter rehearsal tecnico local, com validacao em lote de payloads e verificacao explicita do bloqueio do adapter.
 - Observacao de risco: a trilha continua sem write real, sem staging real e sem backend ativo; a proxima liberacao depende de revisar pre-requisitos externos antes de qualquer ativacao.
+
+### LP-SERVICE-ORDER-008
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-008.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-008-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase auditou readiness de `staging` para futuro `shadow write` e consolidou a decisao formal `READY_FOR_STAGING_SHADOW_WRITE = false`.
+- Observacao de risco: o adapter esta pronto apenas localmente; URL real de `staging`, Supabase staging, migration aprovada, `RLS`, tenant isolation e smoke remoto continuam bloqueando qualquer ativacao controlada.

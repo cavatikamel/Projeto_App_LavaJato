@@ -766,3 +766,31 @@ Regras adicionais:
 - `shadowWriteRehearsal.supabaseTouched` deve permanecer `false`;
 - `shadowWriteRehearsal.networkWriteAttempted` deve permanecer `false`;
 - a fase nao autoriza migration, Supabase, bootstrap novo ou refatoracao ampla de UX.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-008`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- leitura documental da matriz de readiness;
+- confirmacao de que nao houve alteracao de runtime;
+- confirmacao de que `READY_FOR_STAGING_SHADOW_WRITE = false`;
+- confirmacao de que `shadowWrite.enabled` continua `false`;
+- confirmacao de que `shadowWriteAdapter.mode` continua `disabled`;
+- confirmacao de que `readyForSupabaseWrite` continua `false`.
+
+Regras adicionais:
+
+- a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
+- readiness externa so pode ser marcada como `READY` com evidencia comprovada, nunca por inferencia;
+- ausencia de URL real de staging, backend staging, migration aprovada ou `RLS` deve bloquear a liberacao.
