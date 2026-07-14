@@ -514,3 +514,16 @@ Antes de iniciar qualquer mudanca:
 - `DEMO_BOOTSTRAP` continua padrao;
 - `CLEAN_BOOTSTRAP` continua protegido;
 - Supabase permanece fechado.
+
+## Regra aplicada em `LP-DEPLOY-GOV-010`
+
+- a fase deve permanecer documental e operacional, sem alteracao de runtime;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- o guia manual precisa reforcar `Production branch = main`;
+- o guia manual precisa reforcar `Build command = npm run build` e `Publish directory = dist`;
+- a captura da URL real, branch, commit, horario e status do build deve ficar explicita;
+- `staging` deve ser documentada apenas como branch deploy de homologacao;
+- a baseline atual de `Service Order` em `origin/staging` deve continuar tratada como bloqueio separado;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.

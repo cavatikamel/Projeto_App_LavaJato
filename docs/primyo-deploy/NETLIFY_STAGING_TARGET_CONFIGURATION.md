@@ -68,22 +68,22 @@ Riscos:
 
 ## Estrategia recomendada
 
-Recomendacao principal: `Opcao B - Site Netlify separado para staging`.
+Recomendacao principal nesta fase: `Opcao A - Branch deploy no mesmo site`.
 
 Motivos:
 
-1. a producao ja esta associada a `app.lavaprime.com.br` e deve permanecer isolada;
-2. a trilha futura de `Service Order shadow write` vai exigir backend staging proprio e observabilidade separada;
-3. uma URL independente facilita smoke remoto, rollback e comparacao entre baseline legacy e futura ativacao controlada.
+1. e o caminho mais curto para comprovar a URL real de homologacao sem tocar em producao;
+2. respeita o estado atual do projeto, no qual ainda falta apenas a prova operacional do alvo remoto;
+3. permite validar o branch deploy mantendo `main` como unica branch de producao e `app.lavaprime.com.br` protegido.
 
 ## Passo a passo no painel Netlify
 
 1. Abrir o site atual ligado a `app.lavaprime.com.br`.
 2. Confirmar em `Site configuration > Build & deploy` que `Production branch = main`.
 3. Confirmar que o dominio oficial continua ligado apenas a producao.
-4. Escolher uma das estrategias:
+4. Escolher a estrategia mais simples para destravar a prova da URL:
    - `Opcao A`: habilitar branch deploy para `staging`;
-   - `Opcao B`: criar site separado e conectar a branch `staging`.
+   - `Opcao B`: usar site separado apenas se a operacao quiser isolamento adicional.
 5. Confirmar `Build command = npm run build`.
 6. Confirmar `Publish directory = dist`.
 7. Confirmar que nenhuma credencial `service role` sera usada no frontend.
@@ -108,6 +108,7 @@ Nao assumir:
 Assim que a URL real existir, atualizar:
 
 - `docs/primyo-deploy/NETLIFY_STAGING_ENVIRONMENT_PROOF.md`
+- `docs/primyo-deploy/NETLIFY_STAGING_MANUAL_CONFIGURATION.md`
 - `docs/primyo-service-orders/SERVICE_ORDER_STAGING_ENVIRONMENT_PROOF.md`
 - `docs/primyo-service-orders/SERVICE_ORDER_STAGING_ACTIVATION_CHECKLIST.md`
 
@@ -139,3 +140,11 @@ Se a configuracao futura de `staging` ficar errada:
 - baseline correta confirmada;
 - dominio de producao preservado;
 - `READY_FOR_STAGING_SHADOW_WRITE` ainda `false` ate backend staging e seguranca estarem prontos.
+
+## Atualizacao LP-DEPLOY-GOV-010
+
+- esta fase consolidou um guia operacional manual e objetivo para o painel Netlify;
+- a recomendacao imediata voltou para `Opcao A`, porque o bloqueio principal ainda e a prova da URL real de staging;
+- `main` deve permanecer como production branch;
+- `staging` deve ser configurada apenas como branch deploy de homologacao;
+- a trilha atual de `Service Order` continua fora de `origin/staging`, portanto a prova da URL nao substitui a futura promocao controlada dessa baseline.

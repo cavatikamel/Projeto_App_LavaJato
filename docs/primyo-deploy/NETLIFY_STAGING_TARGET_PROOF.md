@@ -53,13 +53,23 @@ Nao existe evidencia suficiente para executar smoke remoto de homologacao nesta 
 
 `Caminho A`
 
-Proxima fase:
+Fase atual de resposta a este bloqueio:
 
 `LP-DEPLOY-GOV-010 - Netlify Staging Branch Deploy Manual Configuration`
 
-Objetivo da proxima fase:
+Objetivo da fase atual:
 
 1. confirmar no painel Netlify qual site e branch representam homologacao;
 2. habilitar ou identificar o branch deploy/site de `staging`;
 3. capturar a URL real;
 4. registrar a URL no projeto antes de qualquer smoke remoto util.
+
+## Proxima fase apos a URL
+
+Assim que a URL real for registrada:
+
+`LP-DEPLOY-GOV-011 - Netlify Staging Remote Smoke Proof`
+
+Observacao:
+
+- se a URL existir, mas continuar apontando para a baseline antiga de `staging`, ainda sera necessaria a futura fase `LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging`.

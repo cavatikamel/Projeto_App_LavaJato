@@ -66,6 +66,12 @@ Consolidar os bloqueios atuais que impedem a futura ativacao controlada do `shad
 - o caminho seguinte imediato continua `A`, porque a URL real de staging segue nao comprovada;
 - o caminho `B` ja esta preparado documentalmente para a fase seguinte ao momento em que a URL existir, porque a baseline remota segue defasada.
 
+## Leitura LP-DEPLOY-GOV-010
+
+- a fase atual criou o runbook manual final para o usuario configurar `staging` no painel Netlify sem tocar em producao;
+- o proximo desbloqueio esperado e trazer a URL real gerada pelo branch deploy;
+- mesmo com a URL, a trilha atual de `Service Order` continuara bloqueada ate uma futura promocao controlada da baseline para `origin/staging`.
+
 ## Regra final
 
 Enquanto qualquer um dos bloqueios acima permanecer aberto:

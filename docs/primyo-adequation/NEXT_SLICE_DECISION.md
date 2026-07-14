@@ -356,3 +356,21 @@ Justificativa:
 1. sem URL real comprovada, qualquer smoke remoto seria tecnicamente invalido;
 2. a prova do alvo Netlify precisa vir antes de qualquer promocao da baseline de `Service Order`;
 3. assim que a URL existir, o proximo bloqueio ja documentado sera a defasagem de `origin/staging`, abrindo entao o futuro `LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging`.
+
+## Atualizacao LP-DEPLOY-GOV-010
+
+- o runbook manual do painel Netlify foi criado;
+- `Production branch = main` foi reforcada como regra obrigatoria;
+- `staging` foi documentada apenas como branch deploy de homologacao;
+- o usuario agora precisa trazer a URL real de staging, branch, commit e status do build;
+- a baseline atual de `Service Order` continua fora de `origin/staging`.
+
+## Proxima fase recomendada
+
+- `LP-DEPLOY-GOV-011 - Netlify Staging Remote Smoke Proof`
+
+Justificativa:
+
+1. o proximo passo util ja depende da URL real de staging vinda do painel;
+2. a fase seguinte deve validar branch, commit e carregamento do app publicado;
+3. a promocao da baseline de `Service Order` continua sendo uma trilha separada e posterior.

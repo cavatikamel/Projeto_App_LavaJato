@@ -52,6 +52,23 @@
 - decisao formal de promocao
 - rollback disponivel
 
+## Complemento LP-DEPLOY-GOV-010
+
+Antes do primeiro smoke remoto oficial, o usuario deve copiar do painel Netlify:
+
+- URL real de staging;
+- branch publicada;
+- commit publicado;
+- status do build;
+- data e hora do deploy;
+- erros do build, se houver.
+
+Regra adicional:
+
+- `Production branch` deve continuar `main`;
+- `staging` deve existir apenas como branch deploy de homologacao;
+- `app.lavaprime.com.br` nao pode ser alterado durante a prova de staging.
+
 ## Comandos futuros recomendados
 
 Somente para fase futura autorizada:

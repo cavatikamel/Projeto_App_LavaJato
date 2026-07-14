@@ -850,3 +850,29 @@ Regras adicionais:
 - o smoke remoto so pode acontecer com URL real comprovada;
 - a existencia de branch remota sem URL nao serve como evidencia de homologacao;
 - a defasagem de `origin/staging` deve ser documentada sem promocao tecnica nesta etapa.
+
+## Complemento aplicado em `LP-DEPLOY-GOV-010`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- leitura documental do runbook manual de `staging`;
+- confirmacao de que `Production branch = main` continua protegida;
+- confirmacao de que `staging` foi documentada apenas como branch deploy de homologacao;
+- confirmacao de que runtime, Netlify, Supabase, env e producao nao foram alterados.
+
+Regras adicionais:
+
+- a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
+- o usuario deve trazer URL real, branch, commit, status e horario do build antes da fase de smoke remoto;
+- a baseline atual de `Service Order` fora de `origin/staging` continua bloqueio separado, nao resolvido por esta fase.

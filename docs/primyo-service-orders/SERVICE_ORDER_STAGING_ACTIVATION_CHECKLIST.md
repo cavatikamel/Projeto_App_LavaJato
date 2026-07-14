@@ -89,3 +89,20 @@ Conclusao:
 - `NETLIFY_STAGING_URL_PROVEN = false`;
 - `STAGING_CONTAINS_SERVICE_ORDER_CURRENT_BASELINE = false`;
 - `READY_FOR_STAGING_SHADOW_WRITE` permanece `false`.
+
+## Atualizacao LP-DEPLOY-GOV-010
+
+Estado operacional apos a criacao do guia manual:
+
+- existe runbook explicito para habilitar `staging` como branch deploy no painel Netlify;
+- a configuracao recomendada imediata e `Opcao A - Branch deploy no mesmo site`;
+- `Production branch` deve permanecer `main`;
+- o usuario deve trazer URL real, branch, commit, status e horario do deploy antes do smoke remoto;
+- a baseline atual de `Service Order` continua fora de `origin/staging`.
+
+Conclusao:
+
+- o checklist segue incompleto;
+- `NETLIFY_STAGING_URL_PROVEN = false`;
+- `STAGING_CONTAINS_SERVICE_ORDER_CURRENT_BASELINE = false`;
+- `READY_FOR_STAGING_SHADOW_WRITE` permanece `false`.
