@@ -45,3 +45,28 @@ Conclusao:
 
 - a checklist continua incompleta;
 - `READY_FOR_STAGING_SHADOW_WRITE` permanece `false`.
+
+## Atualizacao LP-SERVICE-ORDER-009
+
+Estado auditado nesta fase:
+
+- branch local `staging`: existente;
+- `origin/staging`: existente em `cf2eb68`;
+- `origin/main`: separado em `c040408`;
+- `docs/primyo-deploy/NETLIFY_STAGING_TARGET_CONFIGURATION.md`: agora existe;
+- `.netlify/state.json`: ausente;
+- Netlify CLI: indisponivel no ambiente local auditado;
+- URL real de staging Netlify: nao comprovada;
+- alvo operacional Netlify staging: nao comprovado;
+- baseline atual da trilha `Service Order` em `origin/staging`: nao comprovada;
+- Supabase staging: nao comprovado;
+- migration aprovada: ausente;
+- `RLS` e isolamento por tenant: nao implementados;
+- smoke remoto de staging: ausente;
+- base demo/teste para backend real: ainda nao limpa.
+
+Conclusao:
+
+- a checklist continua incompleta;
+- `NETLIFY_STAGING_URL_PROVEN = false`;
+- `READY_FOR_STAGING_SHADOW_WRITE` permanece `false`.

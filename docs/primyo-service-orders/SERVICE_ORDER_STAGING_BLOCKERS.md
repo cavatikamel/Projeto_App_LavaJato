@@ -9,16 +9,16 @@ Consolidar os bloqueios atuais que impedem a futura ativacao controlada do `shad
 ### 1. URL real de staging Netlify nao comprovada
 
 - status: `BLOCKED`
-- evidencia: o repositorio possui `origin/staging`, mas nao ha `.netlify/state.json` nem guia local confirmando qual URL esta publicada para homologacao.
+- evidencia: o repositorio possui `origin/staging`, mas nao ha `.netlify/state.json`, nao ha Netlify CLI disponivel e nenhuma URL real foi comprovada por painel ou metadata local.
 - risco: ativar o fluxo no site errado ou sem visibilidade de smoke remoto.
 - proxima acao: identificar e registrar a URL real e o site/branch deploy oficial do Netlify staging.
 
-### 2. Guia local de target Netlify ausente
+### 2. Baseline remota de staging nao carrega a trilha atual de Service Order
 
 - status: `BLOCKED`
-- evidencia: `docs/primyo-deploy/NETLIFY_STAGING_TARGET_CONFIGURATION.md` nao existe no workspace, apesar de ser referencia pedida para a governanca atual.
-- risco: o runbook de homologacao fica incompleto e dependente de memoria operacional.
-- proxima acao: reconstruir ou recriar o guia documental em fase propria de deploy/documentacao.
+- evidencia: `origin/staging` aponta para `cf2eb68`; `git merge-base --is-ancestor c7dd0ba origin/staging` e `git merge-base --is-ancestor e471e91 origin/staging` retornaram `false`.
+- risco: mesmo que exista URL de staging, ela ainda nao prova a baseline atual da trilha de `Service Order`.
+- proxima acao: confirmar a URL real e, em fase propria/autorizada, alinhar a branch remota de staging com a baseline correta antes do smoke remoto.
 
 ### 3. Supabase staging nao comprovado
 
@@ -54,6 +54,12 @@ Consolidar os bloqueios atuais que impedem a futura ativacao controlada do `shad
 - evidencia: `DEMO_BOOTSTRAP` continua padrao e o clean dataset institucional segue em trilha futura; os docs de cleanup e handoff final mantem a dependencia da seed demo.
 - risco: staging backend receber dados demo como se fossem base operacional real.
 - proxima acao: separar dataset de homologacao e definir politica de backfill/seed institucional.
+
+## Bloqueio resolvido documentalmente na LP-009
+
+- `docs/primyo-deploy/NETLIFY_STAGING_TARGET_CONFIGURATION.md` foi recriado;
+- o runbook local de target Netlify agora existe;
+- isso remove o bloqueio de ausencia documental, mas nao remove o bloqueio de prova operacional da URL/alvo real.
 
 ## Regra final
 

@@ -81,3 +81,14 @@ A revisao de readiness para `staging` confirma que:
 - nenhuma migration aprovada existe para `service_orders`;
 - `RLS` e isolamento por tenant continuam pendencias formais;
 - `READY_FOR_STAGING_SHADOW_WRITE` permanece `false`.
+
+## Atualizacao LP-SERVICE-ORDER-009
+
+A preparacao de backend staging desta fase reforca que:
+
+- `.env.example` apenas confirma os nomes esperados das variaveis, nao a existencia de ambiente real;
+- `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` sao variaveis browser-safe e precisam ser separadas por ambiente;
+- `SUPABASE_SERVICE_ROLE_KEY` continua estritamente proibida no frontend;
+- o backend staging continua sem prova de projeto, credenciais, migration aplicada ou `RLS`;
+- `readyForSupabaseWrite` permanece `false`;
+- `SUPABASE_STAGING_PROVEN = false`.

@@ -487,3 +487,17 @@ Antes de iniciar qualquer mudanca:
 - `DEMO_BOOTSTRAP` continua padrao;
 - `CLEAN_BOOTSTRAP` continua protegido;
 - Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-009`
+
+- a fase deve permanecer documental e sem alteracao de runtime;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- `NETLIFY_STAGING_URL_PROVEN` deve permanecer `false` enquanto a URL real nao for comprovada;
+- `READY_FOR_STAGING_SHADOW_WRITE` deve permanecer `false`;
+- nenhuma prova de homologacao pode ser assumida apenas pela existencia de `origin/staging`;
+- a baseline atual da trilha de `Service Order` em `staging` precisa ser comprovada separadamente da existencia da branch;
+- nenhuma prova de backend pode ser assumida sem Supabase staging confirmado;
+- nenhuma readiness de seguranca pode ser assumida sem `RLS` e tenant isolation implementados;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.

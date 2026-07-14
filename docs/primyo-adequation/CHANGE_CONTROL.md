@@ -616,3 +616,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a fase auditou readiness de `staging` para futuro `shadow write` e consolidou a decisao formal `READY_FOR_STAGING_SHADOW_WRITE = false`.
 - Observacao de risco: o adapter esta pronto apenas localmente; URL real de `staging`, Supabase staging, migration aprovada, `RLS`, tenant isolation e smoke remoto continuam bloqueando qualquer ativacao controlada.
+
+### LP-SERVICE-ORDER-009
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-009.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-009-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase comprovou a existencia de `origin/staging`, recriou o runbook de target Netlify e preparou documentalmente o backend staging sem tocar runtime.
+- Observacao de risco: a URL real de `staging` continua nao comprovada e a branch remota ainda nao prova a baseline atual da trilha de `Service Order`.

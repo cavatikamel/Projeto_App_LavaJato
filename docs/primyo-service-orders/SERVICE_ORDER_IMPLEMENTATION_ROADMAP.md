@@ -137,3 +137,21 @@ Objetivo sugerido:
 - comprovar URL real de staging e alvo operacional do Netlify;
 - comprovar ambiente Supabase staging sem abrir write no frontend;
 - revisar pacote de seguranca, rollback e observabilidade antes de qualquer ativacao controlada.
+
+## Atualizacao LP-SERVICE-ORDER-009
+
+- `origin/staging` foi comprovada em `cf2eb68`, mas a URL real de homologacao continua sem prova;
+- `NETLIFY_STAGING_TARGET_CONFIGURATION.md` foi recriado como runbook operacional;
+- a trilha passa a distinguir `staging branch existence` de `staging environment proof`;
+- a preparacao de backend staging foi documentada sem abrir Supabase;
+- a baseline remota de `staging` ainda nao prova a trilha atual de `Service Order`;
+- `READY_FOR_STAGING_SHADOW_WRITE` continua `false`.
+
+## Proxima trilha recomendada
+
+### LP-SERVICE-ORDER-010 - Service Order staging target confirmation and remote smoke proof
+
+- confirmar no painel Netlify a URL real de `staging`;
+- confirmar qual branch/site esta de fato publicada;
+- provar se a baseline atual da trilha esta ou nao nessa URL;
+- executar smoke remoto controlado sem ativar backend nem `shadow write`.

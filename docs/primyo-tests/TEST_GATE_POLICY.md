@@ -794,3 +794,31 @@ Regras adicionais:
 - a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
 - readiness externa so pode ser marcada como `READY` com evidencia comprovada, nunca por inferencia;
 - ausencia de URL real de staging, backend staging, migration aprovada ou `RLS` deve bloquear a liberacao.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-009`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- leitura documental da prova de `staging`;
+- confirmacao de que nao houve alteracao de runtime;
+- confirmacao de que `NETLIFY_STAGING_URL_PROVEN = false` enquanto nao houver URL real;
+- confirmacao de que `READY_FOR_STAGING_SHADOW_WRITE = false`;
+- confirmacao de que Supabase, Netlify, env e producao nao foram alterados.
+
+Regras adicionais:
+
+- a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
+- a existencia de `origin/staging` nao basta como prova de homologacao publicada;
+- a baseline atual da trilha de `Service Order` em `staging` precisa ser comprovada antes de qualquer smoke remoto util;
+- backend staging continua proibido sem projeto, migration, `RLS` e tenant isolation aprovados.

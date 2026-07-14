@@ -318,3 +318,22 @@ Justificativa:
 2. a trilha precisa provar URL real de `staging` e target Netlify antes de qualquer discussao de write;
 3. a trilha precisa comprovar Supabase staging, migrations e seguranca antes de qualquer ativacao;
 4. o runtime continua corretamente fora de escopo nesta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-009
+
+- a existencia de `origin/staging` foi comprovada em `cf2eb68`, mas a URL real de homologacao continua nao comprovada;
+- `NETLIFY_STAGING_TARGET_CONFIGURATION.md` foi recriado e o runbook de target agora existe;
+- a trilha passa a reconhecer um bloqueio novo e mais preciso: a branch remota `staging` ainda nao comprova a baseline atual de `Service Order`;
+- a preparacao de backend staging foi documentada sem abrir Supabase;
+- `READY_FOR_STAGING_SHADOW_WRITE` continua `false`;
+- `NETLIFY_STAGING_URL_PROVEN` continua `false`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-010 - Service Order staging target confirmation and remote smoke proof`
+
+Justificativa:
+
+1. o proximo bloqueio nao e mais documental puro, e sim prova operacional da URL e do alvo real de homologacao;
+2. a branch remota `staging` precisa ser comparada com a baseline atual da trilha antes de qualquer smoke remoto util;
+3. backend staging, migrations e seguranca continuam bloqueados, entao a fase seguinte deve continuar sem write real.
