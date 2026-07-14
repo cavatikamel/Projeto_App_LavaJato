@@ -374,3 +374,21 @@ Justificativa:
 1. o proximo passo util ja depende da URL real de staging vinda do painel;
 2. a fase seguinte deve validar branch, commit e carregamento do app publicado;
 3. a promocao da baseline de `Service Order` continua sendo uma trilha separada e posterior.
+
+## Atualizacao LP-DEPLOY-GOV-011
+
+- a URL real de staging foi comprovada;
+- o app remoto carregou corretamente a tela de autenticacao;
+- o staging atual foi confirmado como `staging@cf2eb68`;
+- a baseline atual de `Service Order` continua fora da homologacao publicada;
+- o proximo passo seguro agora e promover controladamente essa baseline para `origin/staging`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging`
+
+Justificativa:
+
+1. a prova da URL e do staging basico ja foi concluida;
+2. o bloqueio remanescente agora e a defasagem da baseline publicada;
+3. a homologacao de `Service Order` depende de promover a trilha correta para `staging`, ainda sem tocar `main`, producao, Supabase ou DNS.

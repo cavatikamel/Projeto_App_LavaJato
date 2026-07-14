@@ -527,3 +527,15 @@ Antes de iniciar qualquer mudanca:
 - `DEMO_BOOTSTRAP` continua padrao;
 - `CLEAN_BOOTSTRAP` continua protegido;
 - Supabase permanece fechado.
+
+## Regra aplicada em `LP-DEPLOY-GOV-011`
+
+- a fase deve permanecer documental e de validacao remota, sem alteracao de runtime;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- a URL real de staging precisa ser aberta e classificada com evidencia;
+- o smoke remoto deve registrar se a tela de autenticacao carrega, se ha redireciono para producao e se existem erros bloqueantes de console;
+- a baseline atual de `Service Order` em `origin/staging` deve continuar tratada commit a commit;
+- a indisponibilidade do diagnostico de `Service Order` em staging antigo deve ser tratada como evidencia de baseline desatualizada, nao como falha do staging basico;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.

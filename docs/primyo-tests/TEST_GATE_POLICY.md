@@ -876,3 +876,31 @@ Regras adicionais:
 - a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
 - o usuario deve trazer URL real, branch, commit, status e horario do build antes da fase de smoke remoto;
 - a baseline atual de `Service Order` fora de `origin/staging` continua bloqueio separado, nao resolvido por esta fase.
+
+## Complemento aplicado em `LP-DEPLOY-GOV-011`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- abrir a URL real de staging;
+- confirmar commit e branch publicados;
+- validar tela de autenticacao / carregamento basico;
+- verificar ausencia de erro bloqueante no console;
+- confirmar ausencia de redireciono para producao;
+- classificar a disponibilidade remota da baseline `Service Order`.
+
+Regras adicionais:
+
+- a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
+- se o login remoto nao ficar comprovado, o smoke pode ser `partial`, desde que a URL e a baseline publicada tenham sido validadas;
+- a ausencia de diagnostico `Service Order` no staging antigo deve ser registrada como `blocked-by-outdated-staging`.

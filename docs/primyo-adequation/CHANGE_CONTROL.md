@@ -640,3 +640,11 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a fase consolidou o runbook manual para configurar `staging` como branch deploy no Netlify, preservando `main` como producao.
 - Observacao de risco: a URL real de staging ainda depende de acao do usuario no painel e a baseline atual de `Service Order` continua fora de `origin/staging`.
+
+### LP-DEPLOY-GOV-011
+
+- Change record: `docs/primyo-changes/LP-DEPLOY-GOV-011.md`
+- Closure: `docs/primyo-changes/LP-DEPLOY-GOV-011-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase comprovou a URL real de staging, validou o smoke remoto basico e confirmou `staging@cf2eb68` como baseline publicada.
+- Observacao de risco: a homologacao atual ainda nao contem a trilha de `Service Order`, portanto a validacao remota dessa trilha continua bloqueada por baseline antiga.

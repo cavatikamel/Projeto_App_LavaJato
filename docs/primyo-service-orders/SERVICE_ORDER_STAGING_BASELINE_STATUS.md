@@ -21,6 +21,8 @@ Registrar se `origin/staging` contem ou nao a baseline atual da trilha de `Servi
 | `e471e91` | LP-SERVICE-ORDER-007 | `nao` | `git merge-base --is-ancestor e471e91 origin/staging -> false` | rehearsal ausente |
 | `c7dd0ba` | LP-SERVICE-ORDER-008 | `nao` | `git merge-base --is-ancestor c7dd0ba origin/staging -> false` | readiness review ausente |
 | `6ee9773` | LP-SERVICE-ORDER-009 | `nao` | `git merge-base --is-ancestor 6ee9773 origin/staging -> false` | proof/preparation docs ausentes |
+| `f0bf880` | LP-SERVICE-ORDER-010 | `nao` | `git merge-base --is-ancestor f0bf880 origin/staging -> false` | target proof remoto ausente |
+| `0348ef7` | LP-DEPLOY-GOV-010 | `nao` | `git merge-base --is-ancestor 0348ef7 origin/staging -> false` | runbook manual de staging ausente |
 
 ## Conclusao
 
@@ -31,10 +33,10 @@ Registrar se `origin/staging` contem ou nao a baseline atual da trilha de `Servi
 
 Mesmo se a URL de staging existir, a branch remota hoje conhecida como `origin/staging` nao contem a trilha atual de `Service Order`.
 
-## Caminho seguinte quando a URL existir
+## Caminho seguinte com a URL ja comprovada
 
-Se a URL real de staging for posteriormente comprovada, a trilha deve seguir para:
+A URL real de staging ja foi comprovada e o bloqueio seguinte permanece:
 
 `LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging`
 
-porque o bloqueio seguinte sera baseline remota desatualizada, nao mais falta de URL.
+porque o gargalo atual deixou de ser a URL e passou a ser a baseline remota desatualizada.

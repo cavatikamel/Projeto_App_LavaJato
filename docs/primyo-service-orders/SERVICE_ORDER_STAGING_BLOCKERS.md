@@ -8,10 +8,10 @@ Consolidar os bloqueios atuais que impedem a futura ativacao controlada do `shad
 
 ### 1. URL real de staging Netlify nao comprovada
 
-- status: `BLOCKED`
-- evidencia: o repositorio possui `origin/staging`, mas nao ha `.netlify/state.json`, nao ha Netlify CLI disponivel, nenhuma URL `netlify.app` foi encontrada em docs/logs e nenhuma URL real foi comprovada por painel ou metadata local.
-- risco: ativar o fluxo no site errado ou sem visibilidade de smoke remoto.
-- proxima acao: identificar e registrar a URL real e o site/branch deploy oficial do Netlify staging.
+- status: `RESOLVIDO_DOCUMENTALMENTE`
+- evidencia: a URL `https://staging--lavaprime.netlify.app/` foi informada pelo usuario e validada no smoke remoto; o deploy publicado foi informado como `staging@cf2eb68`.
+- risco: nenhum risco residual de prova de URL nesta etapa; o bloqueio remanescente agora e baseline antiga.
+- proxima acao: manter a URL registrada e seguir para a promocao controlada da baseline `Service Order`.
 
 ### 2. Baseline remota de staging nao carrega a trilha atual de Service Order
 
@@ -71,6 +71,12 @@ Consolidar os bloqueios atuais que impedem a futura ativacao controlada do `shad
 - a fase atual criou o runbook manual final para o usuario configurar `staging` no painel Netlify sem tocar em producao;
 - o proximo desbloqueio esperado e trazer a URL real gerada pelo branch deploy;
 - mesmo com a URL, a trilha atual de `Service Order` continuara bloqueada ate uma futura promocao controlada da baseline para `origin/staging`.
+
+## Leitura LP-DEPLOY-GOV-011
+
+- a URL real de staging foi comprovada;
+- o smoke remoto basico foi executado com classificacao `partial`;
+- o bloqueio principal remanescente agora e somente a defasagem da baseline `Service Order` em `origin/staging`.
 
 ## Regra final
 

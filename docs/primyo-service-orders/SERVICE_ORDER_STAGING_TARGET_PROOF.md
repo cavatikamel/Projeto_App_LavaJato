@@ -8,24 +8,25 @@ Responder, com evidencia tecnica, se a homologacao remota de `Service Order` exi
 
 - `origin/staging` existe;
 - `origin/staging` aponta para `cf2eb68`;
-- a URL real de staging Netlify nao esta comprovada;
-- nenhum ambiente remoto publicado foi localizado por evidencias locais.
+- a URL real de staging Netlify foi comprovada como `https://staging--lavaprime.netlify.app/`;
+- o branch deploy publicado foi informado como `staging@cf2eb68`;
+- nenhum commit atual da trilha `Service Order` esta presente nessa baseline remota.
 
 ## Decisoes formais
 
-- `NETLIFY_STAGING_URL_PROVEN = false`
-- `STAGING_REMOTE_EXISTS = false` para fins de smoke remoto publicado
+- `NETLIFY_STAGING_URL_PROVEN = true`
+- `STAGING_REMOTE_EXISTS = true`
 - `STAGING_REMOTE_CAN_BE_USED_FOR_OS_SMOKE = false`
 
 ## Motivo
 
-A branch remota por si so nao prova:
+A URL publica e o branch deploy agora estao provados.
 
-- URL publica;
-- site Netlify alvo;
-- branch deploy real;
-- commit publicado;
-- disponibilidade de smoke remoto.
+O que continua nao provado para `Service Order`:
+
+- baseline atual publicada;
+- diagnostico remoto da trilha;
+- readiness para smoke remoto da `Service Order`.
 
 ## Efeito para a trilha de Service Order
 
@@ -35,4 +36,4 @@ A trilha continua limitada a:
 - provas Git;
 - readiness documental.
 
-Qualquer validacao remota da `Service Order` continua bloqueada ate a URL ser comprovada.
+Qualquer validacao remota da `Service Order` continua bloqueada ate a baseline correta ser promovida para `origin/staging`.

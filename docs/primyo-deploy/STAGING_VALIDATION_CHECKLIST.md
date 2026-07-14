@@ -69,6 +69,18 @@ Regra adicional:
 - `staging` deve existir apenas como branch deploy de homologacao;
 - `app.lavaprime.com.br` nao pode ser alterado durante a prova de staging.
 
+## Complemento LP-DEPLOY-GOV-011
+
+Resultado da validacao remota atual:
+
+- URL comprovada: `https://staging--lavaprime.netlify.app/`;
+- branch deploy comprovado: `staging`;
+- commit publicado informado: `cf2eb68`;
+- tela de autenticacao carregada corretamente;
+- nenhum erro bloqueante de console foi observado;
+- o login admin nao ficou comprovado nesta automacao;
+- a baseline atual de `Service Order` continua fora do staging remoto.
+
 ## Comandos futuros recomendados
 
 Somente para fase futura autorizada:

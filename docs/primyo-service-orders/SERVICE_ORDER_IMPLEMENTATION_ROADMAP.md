@@ -172,3 +172,20 @@ Objetivo sugerido:
 - capturar e registrar a URL real de `staging`;
 - provar se existe branch deploy ou site separado;
 - manter producao protegida e sem push nesta etapa.
+
+## Atualizacao LP-DEPLOY-GOV-011
+
+- o staging remoto agora esta comprovado em `https://staging--lavaprime.netlify.app/`;
+- o deploy remoto informado e `staging@cf2eb68`;
+- o smoke remoto basico do app foi executado com classificacao `partial`, sem erro bloqueante de console e sem redireciono para producao;
+- o diagnostico de `Service Order` nao esta disponivel nesse staging remoto, o que e esperado para baseline antiga;
+- a prioridade imediata passa a ser promover controladamente a baseline atual de `Service Order` para `origin/staging`.
+
+## Proxima trilha recomendada
+
+### LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging
+
+- preparar promocao controlada da baseline atual de `Service Order` para `origin/staging`;
+- manter `main` e producao protegidos;
+- continuar sem abrir Supabase, DNS ou runtime de backend;
+- preparar futura validacao remota da trilha `Service Order` somente apos essa promocao.

@@ -4,49 +4,41 @@
 
 Registrar se o smoke remoto de homologacao foi executado e, quando nao foi, documentar o bloqueio com evidencias.
 
-## Resultado da LP-SERVICE-ORDER-010
+## Resultado da LP-DEPLOY-GOV-011
 
-Status: `BLOCKED`
+Status: `PARTIAL`
 
 Motivo:
 
-- `NETLIFY_STAGING_URL_PROVEN = false`;
-- nenhuma URL real de staging foi encontrada em metadata local, logs, docs ou CLI;
-- portanto nao existe alvo remoto comprovado para abrir, validar commit ou executar smoke.
+- a URL real de staging foi comprovada;
+- o branch deploy informado ficou consistente com `staging@cf2eb68`;
+- a tela de autenticacao carregou corretamente, sem erro bloqueante de console;
+- o login administrativo nao ficou comprovado nesta automacao, entao a validacao pos-login ficou parcial.
 
 ## Smoke remoto executado?
 
-Nao.
+Sim.
 
-## Porque o smoke nao foi tentado
+## URL validada
 
-Sem URL real comprovada, qualquer tentativa seria:
-
-- chute de URL;
-- risco de abrir producao por engano;
-- risco de validar ambiente errado;
-- evidencia tecnicamente invalida para a trilha de `Service Order`.
+- `https://staging--lavaprime.netlify.app/`
 
 ## Evidencias usadas
 
-- `.netlify/state.json` ausente;
-- `.netlify/` ausente;
-- `Get-Command netlify` sem resultado;
-- `where netlify` sem resultado;
-- busca por `netlify.app` no repo sem resultado;
-- logs locais contendo apenas `localhost/127.0.0.1`.
+- URL final carregada permaneceu `https://staging--lavaprime.netlify.app/`;
+- titulo remoto: `LavaPrime`;
+- nenhum redirecionamento para `app.lavaprime.com.br`;
+- tela remota carregada com `ACESSO SEGURO`, `Autenticacao`, `Usuario`, `Senha`, `Administrador`, `Operador` e `Confirmar login`;
+- console remoto sem `error` ou `warn` bloqueante;
+- diagnostico `Service Order` indisponivel no staging atual.
 
 ## Conclusao
 
-- `REMOTE_SMOKE_FOR_OS = blocked-by-missing-staging-url`
-- `REMOTE_SMOKE_TARGET_CONFIRMED = false`
+- `NETLIFY_STAGING_URL_PROVEN = true`
+- `NETLIFY_STAGING_REMOTE_SMOKE = partial`
+- `SERVICE_ORDER_REMOTE_SMOKE = blocked-by-outdated-staging`
+- `REMOTE_SMOKE_TARGET_CONFIRMED = true`
 
 ## Proxima acao segura
 
-Executar primeiro uma fase de configuracao/prova do alvo Netlify staging.
-
-Somente depois disso:
-
-1. abrir a URL correta;
-2. validar se ela aponta para `staging`;
-3. verificar se o commit publicado contem ou nao a baseline atual de `Service Order`.
+Preparar a promocao controlada da baseline atual de `Service Order` para `origin/staging`, sem tocar `main`, producao, Supabase ou DNS.
