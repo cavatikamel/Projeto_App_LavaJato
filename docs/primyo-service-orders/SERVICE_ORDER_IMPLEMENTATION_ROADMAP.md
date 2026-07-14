@@ -155,3 +155,20 @@ Objetivo sugerido:
 - confirmar qual branch/site esta de fato publicada;
 - provar se a baseline atual da trilha esta ou nao nessa URL;
 - executar smoke remoto controlado sem ativar backend nem `shadow write`.
+
+## Atualizacao LP-SERVICE-ORDER-010
+
+- o alvo Netlify continua nao comprovado por ausencia de URL real, metadata local e CLI;
+- o smoke remoto ficou formalmente bloqueado por falta de URL confiavel;
+- `origin/staging` foi confirmado como desatualizado para toda a trilha atual de `Service Order`;
+- o caminho seguinte imediato passa a ser `A`, focado em configuracao/prova manual do target Netlify;
+- o caminho `B` fica registrado como proxima dependencia depois da URL, para promover a baseline correta a `staging`.
+
+## Proxima trilha recomendada
+
+### LP-DEPLOY-GOV-010 - Netlify staging branch deploy manual configuration
+
+- confirmar no painel qual site/branch representam homologacao;
+- capturar e registrar a URL real de `staging`;
+- provar se existe branch deploy ou site separado;
+- manter producao protegida e sem push nesta etapa.

@@ -501,3 +501,16 @@ Antes de iniciar qualquer mudanca:
 - `DEMO_BOOTSTRAP` continua padrao;
 - `CLEAN_BOOTSTRAP` continua protegido;
 - Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-010`
+
+- a fase deve permanecer documental e sem alteracao de runtime;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- `NETLIFY_STAGING_URL_PROVEN` deve ser avaliado com evidencia, nunca por convencao;
+- `STAGING_CONTAINS_SERVICE_ORDER_CURRENT_BASELINE` deve ser avaliado commit a commit;
+- sem URL real comprovada, o smoke remoto deve ser marcado como `blocked`, nao improvisado;
+- sem baseline atual em `origin/staging`, a fase deve documentar a defasagem sem corrigi-la;
+- `READY_FOR_STAGING_SHADOW_WRITE` deve permanecer `false`;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.

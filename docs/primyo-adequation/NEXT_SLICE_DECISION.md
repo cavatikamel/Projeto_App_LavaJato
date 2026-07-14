@@ -337,3 +337,22 @@ Justificativa:
 1. o proximo bloqueio nao e mais documental puro, e sim prova operacional da URL e do alvo real de homologacao;
 2. a branch remota `staging` precisa ser comparada com a baseline atual da trilha antes de qualquer smoke remoto util;
 3. backend staging, migrations e seguranca continuam bloqueados, entao a fase seguinte deve continuar sem write real.
+
+## Atualizacao LP-SERVICE-ORDER-010
+
+- a URL real de `staging` continua nao comprovada;
+- nao existe `.netlify/state.json`, nao existe Netlify CLI disponivel e nenhuma URL `netlify.app` foi encontrada no workspace;
+- `origin/staging` foi confirmado como desatualizado para todos os commits atuais da trilha `Service Order`;
+- o smoke remoto ficou bloqueado por falta de alvo remoto confiavel;
+- `STAGING_CONTAINS_SERVICE_ORDER_CURRENT_BASELINE = false`;
+- `READY_FOR_STAGING_SHADOW_WRITE` continua `false`.
+
+## Proxima fase recomendada
+
+- `LP-DEPLOY-GOV-010 - Netlify Staging Branch Deploy Manual Configuration`
+
+Justificativa:
+
+1. sem URL real comprovada, qualquer smoke remoto seria tecnicamente invalido;
+2. a prova do alvo Netlify precisa vir antes de qualquer promocao da baseline de `Service Order`;
+3. assim que a URL existir, o proximo bloqueio ja documentado sera a defasagem de `origin/staging`, abrindo entao o futuro `LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging`.

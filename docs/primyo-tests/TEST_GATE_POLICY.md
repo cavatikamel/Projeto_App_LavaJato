@@ -822,3 +822,31 @@ Regras adicionais:
 - a existencia de `origin/staging` nao basta como prova de homologacao publicada;
 - a baseline atual da trilha de `Service Order` em `staging` precisa ser comprovada antes de qualquer smoke remoto util;
 - backend staging continua proibido sem projeto, migration, `RLS` e tenant isolation aprovados.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-010`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- leitura documental da prova do target `staging`;
+- validacao da ausencia ou presenca de URL real;
+- validacao commit a commit da baseline OS em `origin/staging`;
+- se nao houver URL real, registrar `smoke remoto bloqueado`;
+- confirmacao de que runtime, Supabase, Netlify, env e producao nao foram alterados.
+
+Regras adicionais:
+
+- a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
+- o smoke remoto so pode acontecer com URL real comprovada;
+- a existencia de branch remota sem URL nao serve como evidencia de homologacao;
+- a defasagem de `origin/staging` deve ser documentada sem promocao tecnica nesta etapa.

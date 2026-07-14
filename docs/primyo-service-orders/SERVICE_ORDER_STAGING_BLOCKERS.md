@@ -9,14 +9,14 @@ Consolidar os bloqueios atuais que impedem a futura ativacao controlada do `shad
 ### 1. URL real de staging Netlify nao comprovada
 
 - status: `BLOCKED`
-- evidencia: o repositorio possui `origin/staging`, mas nao ha `.netlify/state.json`, nao ha Netlify CLI disponivel e nenhuma URL real foi comprovada por painel ou metadata local.
+- evidencia: o repositorio possui `origin/staging`, mas nao ha `.netlify/state.json`, nao ha Netlify CLI disponivel, nenhuma URL `netlify.app` foi encontrada em docs/logs e nenhuma URL real foi comprovada por painel ou metadata local.
 - risco: ativar o fluxo no site errado ou sem visibilidade de smoke remoto.
 - proxima acao: identificar e registrar a URL real e o site/branch deploy oficial do Netlify staging.
 
 ### 2. Baseline remota de staging nao carrega a trilha atual de Service Order
 
 - status: `BLOCKED`
-- evidencia: `origin/staging` aponta para `cf2eb68`; `git merge-base --is-ancestor c7dd0ba origin/staging` e `git merge-base --is-ancestor e471e91 origin/staging` retornaram `false`.
+- evidencia: `origin/staging` aponta para `cf2eb68`; os comandos `git merge-base --is-ancestor <commit> origin/staging` retornaram `false` para todos os commits `25569e8`, `802af1c`, `e135931`, `a119d9b`, `801e2ad`, `1e8e735`, `e471e91`, `c7dd0ba` e `6ee9773`.
 - risco: mesmo que exista URL de staging, ela ainda nao prova a baseline atual da trilha de `Service Order`.
 - proxima acao: confirmar a URL real e, em fase propria/autorizada, alinhar a branch remota de staging com a baseline correta antes do smoke remoto.
 
@@ -60,6 +60,11 @@ Consolidar os bloqueios atuais que impedem a futura ativacao controlada do `shad
 - `docs/primyo-deploy/NETLIFY_STAGING_TARGET_CONFIGURATION.md` foi recriado;
 - o runbook local de target Netlify agora existe;
 - isso remove o bloqueio de ausencia documental, mas nao remove o bloqueio de prova operacional da URL/alvo real.
+
+## Leitura LP-010
+
+- o caminho seguinte imediato continua `A`, porque a URL real de staging segue nao comprovada;
+- o caminho `B` ja esta preparado documentalmente para a fase seguinte ao momento em que a URL existir, porque a baseline remota segue defasada.
 
 ## Regra final
 
