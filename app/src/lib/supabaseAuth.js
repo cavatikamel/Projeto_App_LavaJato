@@ -7,7 +7,10 @@ import { createClient } from "@supabase/supabase-js";
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPA_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const authConfigurado = Boolean(SUPA_URL && SUPA_ANON);
+// Só consideramos configurado se a URL for realmente https:// e a anon key existir. Isso evita que uma
+// env ausente/errada no build (que pode virar uma string inválida) chame createClient e quebre a página.
+const urlValida = typeof SUPA_URL === "string" && /^https:\/\/[^ ]+/.test(SUPA_URL);
+export const authConfigurado = Boolean(urlValida && SUPA_ANON);
 
 // Storage exclusivamente em memória — garante que nada seja gravado no navegador.
 const mem = new Map();
@@ -17,9 +20,12 @@ const memoryStorage = {
   removeItem: (k) => { mem.delete(k); },
 };
 
-// Só cria o cliente se houver config (evita erro em build sem env).
-export const supabaseAuth = authConfigurado
-  ? createClient(SUPA_URL, SUPA_ANON, {
+// Cria o cliente só se configurado; em qualquer falha, trata como não-configurado (a página mostra
+// "link inválido" em vez de quebrar em tela branca).
+function criarCliente() {
+  if (!authConfigurado) return null;
+  try {
+    return createClient(SUPA_URL, SUPA_ANON, {
       auth: {
         flowType: "pkce",
         persistSession: false,
@@ -27,8 +33,13 @@ export const supabaseAuth = authConfigurado
         autoRefreshToken: false,
         storage: memoryStorage,
       },
-    })
-  : null;
+    });
+  } catch {
+    return null;
+  }
+}
+
+export const supabaseAuth = criarCliente();
 
 /** Remove code/token/type e demais parâmetros sensíveis da URL, sem recarregar a página. */
 export function limparUrl() {
