@@ -79,6 +79,15 @@ Toda proposta futura devera registrar, no minimo:
 
 ## Resultado de npm.cmd run primyo:gate
 
+## Atualizacao LP-SERVICE-ORDER-004
+
+- `Change ID`: `LP-SERVICE-ORDER-004`
+- `Backlog ID`: `Service Order progressive read adoption`
+- `Area afetada`: `service orders`, `documents`, `diagnostics`
+- `Arquivos afetados`: `app/main.js` e documentacao `docs/primyo-service-orders/**`
+- `Risco`: medio controlado, porque a fonte visual principal de documentos nao foi trocada
+- `Plano de rollback`: `git revert <hash-do-commit-da-fase>`
+
 ## Decisao final
 ```
 
@@ -543,3 +552,107 @@ Os comandos individuais de build, verify e `node --check` continuam validos para
 - Resultado: `Implementado`
 - Observacao principal: a Visao Geral passa a usar uma camada dedicada de metricas em `app/dashboard/dashboardMetrics.js`, com KPIs e 6 graficos responsivos baseados em `patioVehicles`, `cashEntries` e `openPayments`, sem abrir Supabase e sem mudar o bootstrap padrao.
 - Observacao de risco: a base continua majoritariamente `demo/teste`, entao as metricas ficam limitadas ao que existe no runtime atual; publicacao e deploy continuam dependentes de fase propria de homologacao.
+
+### LP-WEB-DASHBOARD-ACCEL-001
+
+- Change record: `docs/primyo-changes/LP-WEB-DASHBOARD-ACCEL-001.md`
+- Closure: `docs/primyo-changes/LP-WEB-DASHBOARD-ACCEL-001-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a area analitica da Visao Geral foi reorganizada diretamente em `app/main.js` e `app/styles.css`, com `Faturamento` e `Lucro estimado` na dupla principal, `Situacao do patio` em linha dedicada e colapso do grid movido para `960px`.
+- Observacao de risco: o warning de chunk acima de `500 kB` permanece nao bloqueante e a homologacao publicada em `staging` continua sendo a evidencia final mais confiavel para viewport repetido.
+
+### LP-SERVICE-ORDER-001
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-001.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-001-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: o runtime passa a montar `Service Order` interna a partir de `patioVehicles`, com numeracao local, lifecycle minimo, vinculos financeiros/documentais derivados e diagnostico tecnico silencioso, sem trocar a UX atual de `Atendimento`.
+- Observacao de risco: a fundacao continua local e derivada, sem persistencia propria, com numeracao nao definitiva e documentos ainda parcialmente ligados por heuristica legacy; a proxima fatia deve consolidar boundary de persistencia e vinculos explicitos sem abrir Supabase.
+
+### LP-SERVICE-ORDER-002
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-002.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-002-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a bridge de `Service Order` passa a resolver identidade explicita, anexar `serviceOrderId` e `serviceOrderNumber` a pagamentos, documentos e eventos derivados, e publicar um snapshot local de persistencia futura sem tocar Supabase.
+- Observacao de risco: a persistencia continua somente preparada, a numeracao ainda e local e os documentos legacy seguem parcialmente dependentes de heuristica; a proxima fatia deve formalizar contrato de storage e plano de migracao antes de qualquer backend real.
+
+### LP-SERVICE-ORDER-003
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-003.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-003-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a `Service Order` passa a ter contrato canonico de storage, validacao local e builder em lote para readiness de backend, com adocao runtime limitada ao diagnostico tecnico.
+- Observacao de risco: o contrato continua local e derivado, ainda sem migration, sem escrita real e sem troca das fontes atuais de dashboard, financeiro ou documentos.
+
+### LP-SERVICE-ORDER-005
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-005.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-005-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a trilha de `Service Order` passa a enriquecer a origem dos documentos derivados com prioridade explicita de vinculo, diagnostico de qualidade documental e desenho local de `shadow write`, sem alterar a fonte visual principal.
+- Observacao de risco: documentos antigos ainda podem cair em fallback por placa e o `shadow write` continua apenas desenhado, sem migration, sem Supabase e sem escrita real.
+
+### LP-SERVICE-ORDER-006
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-006.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-006-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a trilha de `Service Order` passa a ter gate explicito, adapter inerte e validacao local de payload para o futuro `shadow write`, com diagnostico pronto para homologacao controlada.
+- Observacao de risco: o adapter continua totalmente desligado e a ativacao depende de staging, migration, RLS, rollback e autorizacao explicita do usuario.
+
+### LP-SERVICE-ORDER-007
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-007.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-007-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: o `shadow write` passa a ter rehearsal tecnico local, com validacao em lote de payloads e verificacao explicita do bloqueio do adapter.
+- Observacao de risco: a trilha continua sem write real, sem staging real e sem backend ativo; a proxima liberacao depende de revisar pre-requisitos externos antes de qualquer ativacao.
+
+### LP-SERVICE-ORDER-008
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-008.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-008-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase auditou readiness de `staging` para futuro `shadow write` e consolidou a decisao formal `READY_FOR_STAGING_SHADOW_WRITE = false`.
+- Observacao de risco: o adapter esta pronto apenas localmente; URL real de `staging`, Supabase staging, migration aprovada, `RLS`, tenant isolation e smoke remoto continuam bloqueando qualquer ativacao controlada.
+
+### LP-SERVICE-ORDER-009
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-009.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-009-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase comprovou a existencia de `origin/staging`, recriou o runbook de target Netlify e preparou documentalmente o backend staging sem tocar runtime.
+- Observacao de risco: a URL real de `staging` continua nao comprovada e a branch remota ainda nao prova a baseline atual da trilha de `Service Order`.
+
+### LP-SERVICE-ORDER-010
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-010.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-010-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase confirmou que nao existe prova local da URL de `staging` e que `origin/staging` nao contem nenhum commit da trilha atual de `Service Order`.
+- Observacao de risco: o smoke remoto continua bloqueado e o proximo gargalo imediato passou a ser configuracao/prova manual do alvo Netlify.
+
+### LP-DEPLOY-GOV-010
+
+- Change record: `docs/primyo-changes/LP-DEPLOY-GOV-010.md`
+- Closure: `docs/primyo-changes/LP-DEPLOY-GOV-010-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase consolidou o runbook manual para configurar `staging` como branch deploy no Netlify, preservando `main` como producao.
+- Observacao de risco: a URL real de staging ainda depende de acao do usuario no painel e a baseline atual de `Service Order` continua fora de `origin/staging`.
+
+### LP-DEPLOY-GOV-011
+
+- Change record: `docs/primyo-changes/LP-DEPLOY-GOV-011.md`
+- Closure: `docs/primyo-changes/LP-DEPLOY-GOV-011-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase comprovou a URL real de staging, validou o smoke remoto basico e confirmou `staging@cf2eb68` como baseline publicada.
+- Observacao de risco: a homologacao atual ainda nao contem a trilha de `Service Order`, portanto a validacao remota dessa trilha continua bloqueada por baseline antiga.
+
+### LP-SERVICE-ORDER-011
+
+- Change record: `docs/primyo-changes/LP-SERVICE-ORDER-011.md`
+- Closure: `docs/primyo-changes/LP-SERVICE-ORDER-011-CLOSURE.md`
+- Resultado: `Implementado`
+- Observacao principal: a fase auditou a baseline local `a3302df`, confirmou diff limpo de arquivos proibidos e validou que a promocao para `origin/staging` esta tecnicamente pronta.
+- Observacao de risco: nenhum push foi executado porque a governanca continua exigindo autorizacao explicita do usuario para `git push origin HEAD:staging`.

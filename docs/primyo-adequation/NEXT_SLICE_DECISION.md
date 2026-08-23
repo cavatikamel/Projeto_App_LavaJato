@@ -78,6 +78,19 @@ Registrar a proxima trilha oficial apos `LP-DEPLOY-GOV-003`.
 - qualquer ampliacao do `shadow read`:
   - rejeitada enquanto a trilha de cleanup nao estabilizar melhor a diferenca entre ambiente demo e ambiente limpo;
 - qualquer integracao de `idResolver` ao runtime:
+
+## Atualizacao LP-SERVICE-ORDER-004
+
+- a adocao progressiva da `Service Order` foi iniciada apenas em `documents`;
+- o runtime continua com `documentHistory` como fonte principal visual;
+- a OS passa a enriquecer documentos com `serviceOrderReadModel` auxiliar;
+- a migration para Supabase continua apenas desenhada;
+- `visualOutputChanged = false`;
+- `primarySourceChanged = false`;
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-005 - Service Order shadow write design and document source enrichment`
   - continua cedo demais.
 - qualquer tentativa de tratar `LP-WEB-DATA-CLEANUP-013` como obrigacao imediata para fechar o programa:
   - rejeitada, porque o encerramento documental ja esta consolidado.
@@ -161,3 +174,240 @@ Justificativa:
 2. o pacote de metricas ja esta encapsulado e testavel sem depender de backend real;
 3. o proximo passo seguro deixa de ser implementacao funcional local e passa a ser homologacao controlada;
 4. a publicacao continua exigindo push/deploy em fase propria, com rollback e validacao publicados.
+
+## Atualizacao LP-WEB-DASHBOARD-ACCEL-001
+
+- a Visao Geral foi refinada diretamente no runtime principal para corrigir alinhamento, spans dos cards e colapso responsivo do grid analitico;
+- `Faturamento` e `Lucro estimado` passam a liderar a leitura gerencial em desktop, enquanto `Situacao do patio` fica em linha dedicada;
+- a publicacao desta fase fica autorizada apenas em `staging`;
+- a proxima fatia recomendada passa a ser `LP-WEB-DASHBOARD-ACCEL-002 - Validate overview charts on Netlify staging and refine secondary cards`.
+
+Justificativa:
+
+1. a correção foi pequena, reversivel e diretamente ligada ao problema visual reportado;
+2. o runtime local passou em gate, build e verify;
+3. a validacao final de viewport repetido fica mais segura na homologacao publicada do que no browser embutido sob timeout intermitente;
+4. producao e `main` permanecem protegidos.
+
+## Atualizacao LP-SERVICE-ORDER-001
+
+- o runtime passa a ter uma `Service Order` interna derivada do atendimento legado;
+- a origem primaria atual da bridge e `patioVehicles`, com enriquecimento por `clientRegistry`, `vehicleRegistry`, `cashEntries`, `openPayments`, `invoiceLineItems` e `documentHistory`;
+- a interface continua simples e baseada em `Atendimento`;
+- a numeracao atual de OS fica classificada como `foundation/local/demo-compatible`;
+- a proxima fatia recomendada passa a ser `LP-SERVICE-ORDER-002 - Service Order persistence boundary and explicit links`.
+
+Justificativa:
+
+1. a primeira ponte tecnica agora existe e permite auditar a OS sem quebrar a UX atual;
+2. ainda falta separar a bridge do monolito e registrar vinculos explicitos entre atendimento, documento, invoice e pagamento;
+3. a numeracao atual nao pode ser tratada como definitiva enquanto nao houver persistencia controlada;
+4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-002
+
+- a `Service Order` passa a ter identidade explicita e links derivados para pagamentos, documentos e eventos;
+- o runtime agora monta um snapshot local de persistencia futura sem tocar banco ou Supabase;
+- o diagnostico passa a medir cobertura de IDs, numeros, links e snapshots;
+- a proxima fatia recomendada passa a ser `LP-SERVICE-ORDER-003 - Service Order storage contract and runtime adoption`.
+
+Justificativa:
+
+1. a OS deixou de ser apenas um espelho conceitual e ganhou uma fronteira tecnica mais clara;
+2. pagamentos, documentos e eventos agora podem apontar explicitamente para a mesma OS sem quebrar o legado;
+3. ainda falta definir o contrato persistivel oficial antes de qualquer migration;
+4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-003
+
+- a `Service Order` passa a ter contrato canonico local de storage com `schemaVersion = 1`;
+- o runtime agora monta snapshots persistiveis em lote apenas para diagnostico tecnico;
+- a validacao local do contrato separa erros estruturais de warnings de cobertura legacy;
+- o diagnostico da OS passa a expor um bloco `storage` com readiness de design para backend;
+- `readyForSupabaseDesign` pode ficar `true`, mas `readyForSupabaseWrite` continua `false`;
+- a proxima fatia recomendada passa a ser `LP-SERVICE-ORDER-004 - Service Order progressive read adoption and migration design`.
+
+Justificativa:
+
+1. a trilha agora ja sabe qual e o formato persistivel local da OS;
+2. a readiness pode ser medida sem trocar fonte funcional do runtime;
+3. ainda falta escolher um ponto de leitura controlada e desenhar a migration real;
+4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-005
+
+- documentos passam a carregar `documentServiceOrderSource` auxiliar em runtime;
+- a resolucao documental passa a priorizar `serviceOrderId`, `serviceOrderNumber`, `legacyAttendanceId`, links de pagamento e `sourceType/sourceId` antes de placa;
+- recibos novos derivados de atendimento passam a nascer com metadados de OS mais explicitos;
+- o diagnostico da OS passa a medir `documentSourceQuality` e `shadowWrite`;
+- `shadowWrite` fica oficialmente desenhado como `dry-run`, com `enabled = false` e `supabaseTouched = false`;
+- `visualOutputChanged = false`;
+- `primarySourceChanged = false`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-006 - Service Order shadow write adapters and staging activation gate`
+
+Justificativa:
+
+1. a origem documental ficou mais confiavel, mas a escrita futura ainda precisa de payload operacional mais detalhado;
+2. o diagnostico agora ja consegue medir fallback e readiness sem tocar backend;
+3. o proximo passo seguro e preparar a ativacao tecnica em staging, ainda sem gravar;
+4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-006
+
+- o runtime passa a ter gate explicito de `shadow write`;
+- o adapter interno de `shadow write` existe, mas permanece `disabled`;
+- a validacao local de payload passa a separar payload elegivel de write permitido;
+- o diagnostico da OS passa a expor `shadowWriteAdapter`;
+- staging passa a ser pre-condicao formal antes de qualquer write futuro;
+- `shadowWrite.enabled = false`;
+- `readyForSupabaseWrite = false`;
+- `supabaseTouched = false`;
+- `networkWriteAttempted = false`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-007 - Service Order staging shadow write rehearsal`
+
+Justificativa:
+
+1. a porta tecnica do `shadow write` agora existe e esta protegida;
+2. o proximo passo seguro e ensaiar readiness em staging, nao escrever em producao;
+3. a trilha ainda precisa validar ambiente, URL, backend staging e rollback antes de qualquer write;
+4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-007
+
+- o runtime passa a expor `shadowWriteRehearsal`;
+- payloads da OS passam a ser analisados e classificados em lote;
+- o bloqueio do adapter passa a ficar verificado por diagnostico;
+- `readyForStagingActivation` continua `false`;
+- `shadowWrite.enabled` continua `false`;
+- `shadowWriteAdapter.mode` continua `disabled`;
+- `supabaseTouched` continua `false`;
+- `networkWriteAttempted` continua `false`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-008 - Service Order staging activation prerequisites review`
+
+Justificativa:
+
+1. o rehearsal local ja provou a arquitetura e o bloqueio sem tocar rede;
+2. o proximo passo seguro e revisar os pre-requisitos externos reais de staging antes de qualquer tentativa de ativacao;
+3. a trilha ainda depende de branch, URL, backend staging, migrations e rollback;
+4. Supabase continua corretamente fora desta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-008
+
+- a revisao documental confirma que branch `staging` local e `origin/staging` existem, mas isso nao basta para readiness de write;
+- a URL real de staging Netlify continua nao comprovada;
+- o backend Supabase staging continua nao comprovado;
+- migrations, `RLS`, tenant isolation, smoke remoto e limpeza da base demo para backend real continuam pendentes;
+- a decisao formal passa a ser `READY_FOR_STAGING_SHADOW_WRITE = false`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-009 - Service Order staging environment proof and backend staging preparation`
+
+Justificativa:
+
+1. o proximo gargalo e operacional e de ambiente, nao mais de adapter local;
+2. a trilha precisa provar URL real de `staging` e target Netlify antes de qualquer discussao de write;
+3. a trilha precisa comprovar Supabase staging, migrations e seguranca antes de qualquer ativacao;
+4. o runtime continua corretamente fora de escopo nesta etapa.
+
+## Atualizacao LP-SERVICE-ORDER-009
+
+- a existencia de `origin/staging` foi comprovada em `cf2eb68`, mas a URL real de homologacao continua nao comprovada;
+- `NETLIFY_STAGING_TARGET_CONFIGURATION.md` foi recriado e o runbook de target agora existe;
+- a trilha passa a reconhecer um bloqueio novo e mais preciso: a branch remota `staging` ainda nao comprova a baseline atual de `Service Order`;
+- a preparacao de backend staging foi documentada sem abrir Supabase;
+- `READY_FOR_STAGING_SHADOW_WRITE` continua `false`;
+- `NETLIFY_STAGING_URL_PROVEN` continua `false`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-010 - Service Order staging target confirmation and remote smoke proof`
+
+Justificativa:
+
+1. o proximo bloqueio nao e mais documental puro, e sim prova operacional da URL e do alvo real de homologacao;
+2. a branch remota `staging` precisa ser comparada com a baseline atual da trilha antes de qualquer smoke remoto util;
+3. backend staging, migrations e seguranca continuam bloqueados, entao a fase seguinte deve continuar sem write real.
+
+## Atualizacao LP-SERVICE-ORDER-010
+
+- a URL real de `staging` continua nao comprovada;
+- nao existe `.netlify/state.json`, nao existe Netlify CLI disponivel e nenhuma URL `netlify.app` foi encontrada no workspace;
+- `origin/staging` foi confirmado como desatualizado para todos os commits atuais da trilha `Service Order`;
+- o smoke remoto ficou bloqueado por falta de alvo remoto confiavel;
+- `STAGING_CONTAINS_SERVICE_ORDER_CURRENT_BASELINE = false`;
+- `READY_FOR_STAGING_SHADOW_WRITE` continua `false`.
+
+## Proxima fase recomendada
+
+- `LP-DEPLOY-GOV-010 - Netlify Staging Branch Deploy Manual Configuration`
+
+Justificativa:
+
+1. sem URL real comprovada, qualquer smoke remoto seria tecnicamente invalido;
+2. a prova do alvo Netlify precisa vir antes de qualquer promocao da baseline de `Service Order`;
+3. assim que a URL existir, o proximo bloqueio ja documentado sera a defasagem de `origin/staging`, abrindo entao o futuro `LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging`.
+
+## Atualizacao LP-DEPLOY-GOV-010
+
+- o runbook manual do painel Netlify foi criado;
+- `Production branch = main` foi reforcada como regra obrigatoria;
+- `staging` foi documentada apenas como branch deploy de homologacao;
+- o usuario agora precisa trazer a URL real de staging, branch, commit e status do build;
+- a baseline atual de `Service Order` continua fora de `origin/staging`.
+
+## Proxima fase recomendada
+
+- `LP-DEPLOY-GOV-011 - Netlify Staging Remote Smoke Proof`
+
+Justificativa:
+
+1. o proximo passo util ja depende da URL real de staging vinda do painel;
+2. a fase seguinte deve validar branch, commit e carregamento do app publicado;
+3. a promocao da baseline de `Service Order` continua sendo uma trilha separada e posterior.
+
+## Atualizacao LP-DEPLOY-GOV-011
+
+- a URL real de staging foi comprovada;
+- o app remoto carregou corretamente a tela de autenticacao;
+- o staging atual foi confirmado como `staging@cf2eb68`;
+- a baseline atual de `Service Order` continua fora da homologacao publicada;
+- o proximo passo seguro agora e promover controladamente essa baseline para `origin/staging`.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging`
+
+Justificativa:
+
+1. a prova da URL e do staging basico ja foi concluida;
+2. o bloqueio remanescente agora e a defasagem da baseline publicada;
+3. a homologacao de `Service Order` depende de promover a trilha correta para `staging`, ainda sem tocar `main`, producao, Supabase ou DNS.
+
+## Atualizacao LP-SERVICE-ORDER-011
+
+- a baseline local candidata foi confirmada como `a3302df`;
+- o diff contra `origin/staging` foi auditado e ficou restrito ao runtime `Service Order` em `app/main.js` e a documentacao da trilha;
+- o pacote oficial de validacao passou integralmente;
+- o lock historico em `dist/assets` nao reapareceu;
+- `PROMOTION_READY = true`;
+- o push para `origin/staging` nao foi executado por ausencia de autorizacao explicita nesta execucao.
+
+## Proxima fase recomendada
+
+- `LP-SERVICE-ORDER-011 - Controlled Service Order Branch Promotion To Staging (execucao autorizada)`
+
+Justificativa:
+
+1. a preparacao tecnica ja ficou concluida;
+2. o unico bloqueio remanescente para alinhar `origin/staging` agora e de governanca de push;
+3. apos o push autorizado, a proxima validacao util passa a ser o smoke remoto da baseline atual de `Service Order`.

@@ -52,6 +52,35 @@
 - decisao formal de promocao
 - rollback disponivel
 
+## Complemento LP-DEPLOY-GOV-010
+
+Antes do primeiro smoke remoto oficial, o usuario deve copiar do painel Netlify:
+
+- URL real de staging;
+- branch publicada;
+- commit publicado;
+- status do build;
+- data e hora do deploy;
+- erros do build, se houver.
+
+Regra adicional:
+
+- `Production branch` deve continuar `main`;
+- `staging` deve existir apenas como branch deploy de homologacao;
+- `app.lavaprime.com.br` nao pode ser alterado durante a prova de staging.
+
+## Complemento LP-DEPLOY-GOV-011
+
+Resultado da validacao remota atual:
+
+- URL comprovada: `https://staging--lavaprime.netlify.app/`;
+- branch deploy comprovado: `staging`;
+- commit publicado informado: `cf2eb68`;
+- tela de autenticacao carregada corretamente;
+- nenhum erro bloqueante de console foi observado;
+- o login admin nao ficou comprovado nesta automacao;
+- a baseline atual de `Service Order` continua fora do staging remoto.
+
 ## Comandos futuros recomendados
 
 Somente para fase futura autorizada:
@@ -59,3 +88,16 @@ Somente para fase futura autorizada:
 - `git switch --detach <baseline-web-aprovada>`
 - `git switch -c staging`
 - `git push -u origin staging`
+
+## Complemento LP-SERVICE-ORDER-011
+
+Antes de promover a trilha atual de `Service Order` para `origin/staging`, confirmar:
+
+- baseline candidata local identificada;
+- diff `origin/staging..HEAD` auditado;
+- `app/main.js` como unico arquivo runtime incluso;
+- ausencia de `app/styles.css`, `app/demo/**`, `scripts/**`, `package*.json`, `netlify.toml`, `.env*`, Android, FIPE e Supabase;
+- `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build` aprovados;
+- lock em `dist/assets` ausente ou explicitamente documentado;
+- `PROMOTION_READY = true`;
+- autorizacao explicita do usuario antes do `git push origin HEAD:staging`.

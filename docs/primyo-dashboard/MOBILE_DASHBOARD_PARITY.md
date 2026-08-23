@@ -30,13 +30,13 @@ Definir paridade conceitual entre Web e Android sem alterar `LavaPrimeAndroidApp
 ## Ordem mobile recomendada
 
 1. Receita confirmada
-2. Atendimentos
-3. Ticket medio
-4. Patio atual
-5. Evolucao da receita
-6. Entradas x saidas
-7. Servicos mais vendidos
-8. Formas de pagamento
+2. Ticket medio
+3. Patio atual
+4. Recebiveis em aberto, se confiavel
+5. Faturamento
+6. Lucro estimado
+7. Situacao do patio
+8. Graficos opcionais apenas quando habilitados pelo administrador
 
 ## Diferencas permitidas no Android
 
@@ -60,6 +60,7 @@ Definir paridade conceitual entre Web e Android sem alterar `LavaPrimeAndroidApp
 - `390px`
 - `480px`
 - `768px`
+- `1024px` como desktop util de homologacao
 
 ## Restricoes permanentes
 
@@ -67,3 +68,4 @@ Definir paridade conceitual entre Web e Android sem alterar `LavaPrimeAndroidApp
 - sem overflow horizontal
 - sem legenda larga quebrando layout
 - sem tabela horizontal como bloco principal
+- `Faturamento` e `Lucro estimado` permanecem como prioridade visual da fase acelerada

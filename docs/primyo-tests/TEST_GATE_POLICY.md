@@ -114,6 +114,21 @@ Estado oficial apos `LP-WEB-ADAPTER-HELPERS-001`:
 - qualquer mudanca em `adapterHelpers.js` passa a exigir revalidacao conjunta dos tres adapters, do Adapter Gate, do Primyo Gate, do build e do verify;
 - a cobertura continua local e sem runtime: nenhum adapter foi integrado ao produto por causa desta consolidacao.
 
+## Aplicacao em LP-SERVICE-ORDER-004
+
+Como a fase toca runtime Web em `app/main.js`, o pacote completo permanece obrigatorio:
+
+- `git status --short`
+- `git diff --name-only`
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
 Estado oficial apos `LP-WEB-010`:
 
 - `scripts/primyo-adapter-gate.mjs` passa a importar `productAdapter` em Node puro;
@@ -544,3 +559,376 @@ Ela devera avancar por:
 - matriz de impacto;
 - evidencia registrada;
 - decisao final objetiva.
+
+## Complemento aplicado em `LP-WEB-DASHBOARD-ACCEL-001`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- Visao Geral
+- leitura dos 3 graficos principais
+- checagem de overflow em `1024px`, `768px`, `480px`, `390px` e `360px`
+- Patio
+- Financeiro
+- Documentos / Relatorios
+- logout
+- login operador sem quebra de fluxo permitido
+
+## Complemento aplicado em `LP-SERVICE-ORDER-001`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- login operador
+- logout
+- patio com atendimento existente
+- confirmacao de que atendimento continua editavel e sem quebra visual
+- financeiro sem `NaN`, `undefined`, `null` ou `Invalid Date`
+- documentos / relatorios sem quebra
+- consulta manual de `window.__lavaprimeGetServiceOrderDiagnostics?.()`
+
+Regras adicionais:
+
+- a `Service Order` desta fase continua derivada e sem persistencia dedicada;
+- a numeracao local de OS nao pode ser tratada como sequencial definitiva de producao;
+- a fase nao autoriza Supabase, bootstrap novo ou refatoracao ampla de UX.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-002`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- login operador
+- logout
+- patio com atendimento existente e sem quebra visual
+- financeiro sem `NaN`, `undefined`, `null` ou `Invalid Date`
+- documentos / relatorios sem quebra
+- consulta manual de `window.__lavaprimeGetServiceOrderDiagnostics?.()` com os novos campos de links e persistencia
+
+Regras adicionais:
+
+- a `Service Order` continua sem persistencia real em banco;
+- `serviceOrder.persistence` e um snapshot local de readiness, nao gravacao definitiva;
+- Supabase continua fechado;
+- a fase nao autoriza migration, bootstrap novo ou refatoracao ampla de UX.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-003`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- login operador
+- logout
+- patio com atendimento existente e sem quebra visual
+- financeiro sem `NaN`, `undefined`, `null` ou `Invalid Date`
+- documentos / relatorios sem quebra
+- consulta manual de `window.__lavaprimeGetServiceOrderDiagnostics?.()` com bloco `storage`
+
+Regras adicionais:
+
+- o contrato de storage continua local e derivado;
+- `readyForSupabaseDesign` pode ficar `true`, mas `readyForSupabaseWrite` deve permanecer `false`;
+- a fase nao autoriza migration, Supabase, bootstrap novo ou refatoracao ampla de UX.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-005`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- login operador
+- logout
+- documentos / recibos / relatorios sem quebra visual
+- ausencia de `NaN`, `undefined`, `null` ou `Invalid Date`
+- consulta manual de `window.__lavaprimeGetServiceOrderDiagnostics?.()` com `documentSourceQuality` e `shadowWrite`
+
+Regras adicionais:
+
+- `documentHistory` continua sendo a fonte visual principal;
+- fallback por placa continua permitido apenas como fallback;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `supabaseTouched` deve permanecer `false`;
+- a fase nao autoriza migration, Supabase, bootstrap novo ou refatoracao ampla de UX.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-006`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- login operador
+- logout
+- documentos / recibos / relatorios sem quebra visual
+- ausencia de `NaN`, `undefined`, `null` ou `Invalid Date`
+- consulta manual de `window.__lavaprimeGetServiceOrderDiagnostics?.()` com `shadowWriteAdapter`
+
+Regras adicionais:
+
+- o adapter de `shadow write` deve permanecer inerte;
+- `shadowWriteAdapter.mode` deve permanecer `disabled`;
+- `shadowWriteAdapter.canActivate` deve permanecer `false`;
+- `shadowWriteAdapter.supabaseTouched` deve permanecer `false`;
+- `shadowWriteAdapter.networkWriteAttempted` deve permanecer `false`;
+- a fase nao autoriza migration, Supabase, bootstrap novo ou refatoracao ampla de UX.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-007`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- login admin
+- login operador
+- logout
+- documentos / recibos / relatorios sem quebra visual
+- ausencia de `NaN`, `undefined`, `null` ou `Invalid Date`
+- consulta manual de `window.__lavaprimeGetServiceOrderDiagnostics?.()` com `shadowWriteRehearsal`
+
+Regras adicionais:
+
+- o rehearsal pode ficar `enabled`, mas apenas como ensaio tecnico;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `shadowWriteAdapter.mode` deve permanecer `disabled`;
+- `shadowWriteRehearsal.gateCanActivate` deve permanecer `false`;
+- `shadowWriteRehearsal.supabaseTouched` deve permanecer `false`;
+- `shadowWriteRehearsal.networkWriteAttempted` deve permanecer `false`;
+- a fase nao autoriza migration, Supabase, bootstrap novo ou refatoracao ampla de UX.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-008`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- leitura documental da matriz de readiness;
+- confirmacao de que nao houve alteracao de runtime;
+- confirmacao de que `READY_FOR_STAGING_SHADOW_WRITE = false`;
+- confirmacao de que `shadowWrite.enabled` continua `false`;
+- confirmacao de que `shadowWriteAdapter.mode` continua `disabled`;
+- confirmacao de que `readyForSupabaseWrite` continua `false`.
+
+Regras adicionais:
+
+- a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
+- readiness externa so pode ser marcada como `READY` com evidencia comprovada, nunca por inferencia;
+- ausencia de URL real de staging, backend staging, migration aprovada ou `RLS` deve bloquear a liberacao.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-009`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- leitura documental da prova de `staging`;
+- confirmacao de que nao houve alteracao de runtime;
+- confirmacao de que `NETLIFY_STAGING_URL_PROVEN = false` enquanto nao houver URL real;
+- confirmacao de que `READY_FOR_STAGING_SHADOW_WRITE = false`;
+- confirmacao de que Supabase, Netlify, env e producao nao foram alterados.
+
+Regras adicionais:
+
+- a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
+- a existencia de `origin/staging` nao basta como prova de homologacao publicada;
+- a baseline atual da trilha de `Service Order` em `staging` precisa ser comprovada antes de qualquer smoke remoto util;
+- backend staging continua proibido sem projeto, migration, `RLS` e tenant isolation aprovados.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-010`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- leitura documental da prova do target `staging`;
+- validacao da ausencia ou presenca de URL real;
+- validacao commit a commit da baseline OS em `origin/staging`;
+- se nao houver URL real, registrar `smoke remoto bloqueado`;
+- confirmacao de que runtime, Supabase, Netlify, env e producao nao foram alterados.
+
+Regras adicionais:
+
+- a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
+- o smoke remoto so pode acontecer com URL real comprovada;
+- a existencia de branch remota sem URL nao serve como evidencia de homologacao;
+- a defasagem de `origin/staging` deve ser documentada sem promocao tecnica nesta etapa.
+
+## Complemento aplicado em `LP-DEPLOY-GOV-010`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- leitura documental do runbook manual de `staging`;
+- confirmacao de que `Production branch = main` continua protegida;
+- confirmacao de que `staging` foi documentada apenas como branch deploy de homologacao;
+- confirmacao de que runtime, Netlify, Supabase, env e producao nao foram alterados.
+
+Regras adicionais:
+
+- a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
+- o usuario deve trazer URL real, branch, commit, status e horario do build antes da fase de smoke remoto;
+- a baseline atual de `Service Order` fora de `origin/staging` continua bloqueio separado, nao resolvido por esta fase.
+
+## Complemento aplicado em `LP-DEPLOY-GOV-011`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- abrir a URL real de staging;
+- confirmar commit e branch publicados;
+- validar tela de autenticacao / carregamento basico;
+- verificar ausencia de erro bloqueante no console;
+- confirmar ausencia de redireciono para producao;
+- classificar a disponibilidade remota da baseline `Service Order`.
+
+Regras adicionais:
+
+- a fase nao autoriza `app/main.js`, Netlify, Supabase, migration, env ou push;
+- se o login remoto nao ficar comprovado, o smoke pode ser `partial`, desde que a URL e a baseline publicada tenham sido validadas;
+- a ausencia de diagnostico `Service Order` no staging antigo deve ser registrada como `blocked-by-outdated-staging`.
+
+## Complemento aplicado em `LP-SERVICE-ORDER-011`
+
+Pacote obrigatorio da fase:
+
+- `node --check app/main.js`
+- `node --check app/demo/lavaprimeDemoData.js`
+- `node --check app/demo/lavaprimeBootstrapMode.js`
+- `node --check app/demo/lavaprimeCleanBootstrap.js`
+- `node scripts/primyo-adapter-gate.mjs`
+- `npm.cmd run primyo:gate`
+- `npm.cmd run build`
+- `npm.cmd run verify:build`
+
+Smoke minimo da fase:
+
+- confirmar `origin/staging = cf2eb68` antes da promocao;
+- auditar `origin/staging..HEAD`;
+- confirmar que o delta runtime fica restrito a `app/main.js`;
+- confirmar ausencia de arquivos proibidos no diff;
+- registrar se o lock em `dist/assets` reapareceu ou nao;
+- bloquear push sem autorizacao explicita do usuario.
+
+Regras adicionais:
+
+- a fase nao autoriza alterar runtime, Netlify, Supabase, migration, env ou producao;
+- `PROMOTION_READY` depende de validacao local limpa;
+- se o push nao for autorizado, a fase deve parar em modo `ready-but-not-pushed`.

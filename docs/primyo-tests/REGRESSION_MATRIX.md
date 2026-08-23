@@ -40,6 +40,13 @@ Esta matriz serve para reduzir subjetividade e impedir que uma fatia avance sem 
 | LP-WEB-011 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-ID-RESOLVER-002 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-ADAPTER-HELPERS-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-002 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-003 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-005 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-006 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
+| LP-SERVICE-ORDER-007 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-TEST-AUTO-003 | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional | Opcional |
 | LP-PERM-001 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
 | LP-WEB-004 | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio | Obrigatorio |
@@ -377,3 +384,171 @@ Antes de iniciar qualquer mudanca:
 - Agendamentos precisa manter calendario dominante, cards em no maximo uma linha no desktop e acoes de `Entrar no patio`, `Alterar / editar` e `Cancelar agendamento`;
 - o Patio precisa manter o icone de carro frontal correto e os cuidados especiais em lista compacta com selecao multipla;
 - o console do browser deve permanecer sem erro bloqueante.
+
+## Regra aplicada em `LP-WEB-DASHBOARD-ACCEL-001`
+
+- revalidar `LA`, `LO`, `LG`, `AD`, `PA`, `FN` e `RL`;
+- a Visao Geral deve manter `Faturamento`, `Lucro estimado` e `Situacao do patio` sem desalinhamento estrutural;
+- em `1024px`, a dupla principal deve permanecer em leitura desktop util;
+- em `768px`, `480px`, `390px` e `360px`, a area analitica deve colapsar para uma coluna sem overflow horizontal;
+- nenhum grafico pode expor `NaN`, `undefined`, `null` ou `Invalid Date`;
+- a publicacao deve ocorrer somente em `staging`, sem alterar `main`.
+
+## Regra aplicada em `LP-SERVICE-ORDER-001`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- o patio precisa continuar abrindo e atualizando o atendimento sem alterar a UX principal;
+- pagamentos vinculados ao atendimento nao podem exibir `NaN`, `undefined`, `null` ou `Invalid Date`;
+- documentos e recibos precisam continuar renderizando sem quebra;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` deve retornar objeto valido;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido.
+
+## Regra aplicada em `LP-SERVICE-ORDER-002`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- a montagem da `Service Order` nao pode quebrar patio ou detalhes de atendimento;
+- pagamentos derivados precisam continuar sem `NaN`, `undefined`, `null` ou `Invalid Date`;
+- documentos e recibos precisam continuar renderizando sem quebra enquanto carregam `serviceOrderId` e `serviceOrderNumber` derivados;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor os novos campos de links e persistencia;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-003`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- a criacao do contrato de storage nao pode quebrar o patio nem a abertura do atendimento;
+- financeiro deve continuar sem `NaN`, `undefined`, `null` ou `Invalid Date`;
+- documentos e recibos devem continuar renderizando sem quebra;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor o bloco `storage`;
+- `readyForSupabaseWrite` deve permanecer `false`;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-005`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- documentos, recibos e relatorios devem continuar renderizando igual, sem troca de fonte visual principal;
+- a resolucao documental deve priorizar IDs explicitos e manter placa apenas como fallback;
+- financeiro deve continuar sem `NaN`, `undefined`, `null` ou `Invalid Date`;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor `documentSourceQuality` e `shadowWrite`;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `supabaseTouched` deve permanecer `false`;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-006`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- documentos, recibos e relatorios devem continuar renderizando igual;
+- o adapter de `shadow write` nao pode alterar fonte visual principal nem tentar rede;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor `shadowWriteAdapter`;
+- `shadowWriteAdapter.mode` deve permanecer `disabled`;
+- `shadowWriteAdapter.canActivate` deve permanecer `false`;
+- `shadowWriteAdapter.supabaseTouched` deve permanecer `false`;
+- `shadowWriteAdapter.networkWriteAttempted` deve permanecer `false`;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `readyForSupabaseWrite` deve permanecer `false`;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-007`
+
+- revalidar `LA`, `LO`, `LG`, `PA`, `AD`, `NV`, `CD`, `FN` e `RL`;
+- documentos, recibos e relatorios devem continuar renderizando igual;
+- o rehearsal nao pode alterar fonte visual principal nem tentar rede;
+- `window.__lavaprimeGetServiceOrderDiagnostics?.()` precisa expor `shadowWriteRehearsal`;
+- `shadowWriteRehearsal.mode` deve permanecer `dry-run-rehearsal`;
+- `shadowWriteRehearsal.gateCanActivate` deve permanecer `false`;
+- `shadowWriteRehearsal.supabaseTouched` deve permanecer `false`;
+- `shadowWriteRehearsal.networkWriteAttempted` deve permanecer `false`;
+- `shadowWriteAdapter.mode` deve permanecer `disabled`;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `readyForSupabaseWrite` deve permanecer `false`;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-008`
+
+- a fase deve permanecer documental e sem alteracao de runtime;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- `READY_FOR_STAGING_SHADOW_WRITE` deve permanecer `false`;
+- `shadowWrite.enabled` deve permanecer `false`;
+- `shadowWriteAdapter.mode` deve permanecer `disabled`;
+- `readyForSupabaseWrite` deve permanecer `false`;
+- nenhuma prova de staging pode ser assumida sem URL real confirmada;
+- nenhuma prova de backend pode ser assumida sem Supabase staging confirmado;
+- nenhuma readiness de seguranca pode ser assumida sem `RLS` e tenant isolation implementados;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-009`
+
+- a fase deve permanecer documental e sem alteracao de runtime;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- `NETLIFY_STAGING_URL_PROVEN` deve permanecer `false` enquanto a URL real nao for comprovada;
+- `READY_FOR_STAGING_SHADOW_WRITE` deve permanecer `false`;
+- nenhuma prova de homologacao pode ser assumida apenas pela existencia de `origin/staging`;
+- a baseline atual da trilha de `Service Order` em `staging` precisa ser comprovada separadamente da existencia da branch;
+- nenhuma prova de backend pode ser assumida sem Supabase staging confirmado;
+- nenhuma readiness de seguranca pode ser assumida sem `RLS` e tenant isolation implementados;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-010`
+
+- a fase deve permanecer documental e sem alteracao de runtime;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- `NETLIFY_STAGING_URL_PROVEN` deve ser avaliado com evidencia, nunca por convencao;
+- `STAGING_CONTAINS_SERVICE_ORDER_CURRENT_BASELINE` deve ser avaliado commit a commit;
+- sem URL real comprovada, o smoke remoto deve ser marcado como `blocked`, nao improvisado;
+- sem baseline atual em `origin/staging`, a fase deve documentar a defasagem sem corrigi-la;
+- `READY_FOR_STAGING_SHADOW_WRITE` deve permanecer `false`;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-DEPLOY-GOV-010`
+
+- a fase deve permanecer documental e operacional, sem alteracao de runtime;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- o guia manual precisa reforcar `Production branch = main`;
+- o guia manual precisa reforcar `Build command = npm run build` e `Publish directory = dist`;
+- a captura da URL real, branch, commit, horario e status do build deve ficar explicita;
+- `staging` deve ser documentada apenas como branch deploy de homologacao;
+- a baseline atual de `Service Order` em `origin/staging` deve continuar tratada como bloqueio separado;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-DEPLOY-GOV-011`
+
+- a fase deve permanecer documental e de validacao remota, sem alteracao de runtime;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- a URL real de staging precisa ser aberta e classificada com evidencia;
+- o smoke remoto deve registrar se a tela de autenticacao carrega, se ha redireciono para producao e se existem erros bloqueantes de console;
+- a baseline atual de `Service Order` em `origin/staging` deve continuar tratada commit a commit;
+- a indisponibilidade do diagnostico de `Service Order` em staging antigo deve ser tratada como evidencia de baseline desatualizada, nao como falha do staging basico;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.
+
+## Regra aplicada em `LP-SERVICE-ORDER-011`
+
+- a fase pode ler `app/main.js`, mas nao pode altera-lo;
+- revalidar `node --check`, Adapter Gate, `primyo:gate`, `build` e `verify:build`;
+- auditar `origin/staging..HEAD` antes de qualquer decisao de promocao;
+- confirmar ausencia de `app/styles.css`, `app/demo/**`, `scripts/**`, `package*.json`, `netlify.toml`, `.env*`, Android, FIPE e Supabase no diff;
+- tratar lock em `dist/assets` apenas como triagem operacional, sem alterar codigo;
+- `PROMOTION_READY` so pode ser `true` se todas as validacoes passarem;
+- `git push origin HEAD:staging` permanece proibido sem autorizacao explicita do usuario;
+- `DEMO_BOOTSTRAP` continua padrao;
+- `CLEAN_BOOTSTRAP` continua protegido;
+- Supabase permanece fechado.

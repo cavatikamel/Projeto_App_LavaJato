@@ -211,6 +211,20 @@ const CLEAN_BOOTSTRAP_TRIAL_EXECUTION_ROLLBACK_PATH = Object.freeze([
   "remove clean bootstrap trial execution baseline export from app/demo/lavaprimeCleanBootstrap.js",
   "rerun node --check app/main.js, node --check app/demo/lavaprimeCleanBootstrap.js, adapter gate, primyo:gate, build, verify and cleanup smoke"
 ]);
+const SERVICE_ORDER_BRIDGE_VERSION = 1;
+const SERVICE_ORDER_NUMBER_PREFIX = "OS";
+const SERVICE_ORDER_NUMBER_PAD_SIZE = 6;
+const SERVICE_ORDER_DIAGNOSTIC_SAMPLE_LIMIT = 5;
+const SERVICE_ORDER_STORAGE_SCHEMA_VERSION = 1;
+const SERVICE_ORDER_PERSISTENCE_BOUNDARY_MODE = "local-derived-boundary";
+const SERVICE_ORDER_RUNTIME_ADOPTION_MODE = "documents-auxiliary-read";
+const SERVICE_ORDER_ROLLBACK_PATH = Object.freeze([
+  "remove service order foundation constants and diagnostics state from app/main.js",
+  "remove service order bridge helpers from app/main.js",
+  "remove __lavaprimeGetServiceOrderDiagnostics exposure from app/main.js",
+  "remove LP-SERVICE-ORDER-001 technical documents from docs/primyo-service-orders/",
+  "rerun node --check app/main.js, adapter gate, primyo:gate, build, verify and operational smoke"
+]);
 const TEMPORARY_LOGIN_GATE = Object.freeze({
   username: "Kamel",
   normalizedUsername: "kamel",
@@ -264,7 +278,16 @@ const cleanBootstrapTrialExecution = {
   legacySourceActive: true,
   defaultMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
 };
+const serviceOrderDiagnostics = {
+  latest: null,
+  enabled: true,
+  source: "legacy-attendance-bridge",
+  version: SERVICE_ORDER_BRIDGE_VERSION,
+  legacySourceActive: true,
+  rollbackPath: [...SERVICE_ORDER_ROLLBACK_PATH]
+};
 const LAVAPRIME_DIAGNOSTICS_SCRIPT_ID = "lavaprime-clean-bootstrap-diagnostics";
+const SERVICE_ORDER_DIAGNOSTICS_SCRIPT_ID = "lavaprime-service-order-diagnostics";
 const lavaprimeDiagnosticsHost = typeof window !== "undefined" ? window : globalThis;
 
 lavaprimeDiagnosticsHost.__lavaprimeSessionBoundary = sessionBoundary;
@@ -281,10 +304,12 @@ lavaprimeDiagnosticsHost.__lavaprimeCustomerLegacyDataValidation = customerLegac
 lavaprimeDiagnosticsHost.__lavaprimeCleanBootstrapReadiness = cleanBootstrapReadiness;
 lavaprimeDiagnosticsHost.__lavaprimeCleanBootstrapTrialReadiness = cleanBootstrapTrialReadiness;
 lavaprimeDiagnosticsHost.__lavaprimeCleanBootstrapTrialExecution = cleanBootstrapTrialExecution;
+lavaprimeDiagnosticsHost.__lavaprimeServiceOrderDiagnostics = serviceOrderDiagnostics;
 lavaprimeDiagnosticsHost.__lavaprimeBootstrapMode = {
   ...lavaprimeBootstrapModeState,
   activeMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE
 };
+lavaprimeDiagnosticsHost.__lavaprimeGetServiceOrderDiagnostics = () => getServiceOrderDiagnosticsSnapshot();
 publishCleanBootstrapDiagnostics();
 const vehicleOwnerTransferSearchModes = [
   { value: "name", label: "Nome / Razao social", placeholder: "Digite o nome ou a razao social" },
@@ -567,6 +592,7 @@ let vehicleSpecialCareRecords = normalizeVehicleSpecialCareRecords(
     loadBusinessStorageItem(businessStorageKeys.vehicleSpecialCare, getDefaultVehicleSpecialCareRecords())
   )
 );
+refreshServiceOrderDiagnostics();
 
 function getDefaultMessageTemplates() {
   return [
@@ -5213,6 +5239,32 @@ function normalizeDocumentHistory(items = []) {
       reportTarget: String(item.reportTarget || "documents").trim(),
       sourceType: String(item.sourceType || "").trim(),
       sourceId: String(item.sourceId || "").trim(),
+      serviceOrderId: String(item.serviceOrderId || item.documentServiceOrderSource?.serviceOrderId || "").trim(),
+      serviceOrderNumber: String(item.serviceOrderNumber || item.documentServiceOrderSource?.serviceOrderNumber || "").trim(),
+      legacyAttendanceId: String(item.legacyAttendanceId || item.documentServiceOrderSource?.legacyAttendanceId || "").trim(),
+      paymentSourceType: String(
+        item.paymentSourceType || item.documentServiceOrderSource?.paymentSourceType || ""
+      ).trim(),
+      paymentSourceId: String(item.paymentSourceId || item.documentServiceOrderSource?.paymentSourceId || "").trim(),
+      documentServiceOrderSource: {
+        sourceType: String(item.documentServiceOrderSource?.sourceType || item.sourceType || "").trim(),
+        sourceId: String(item.documentServiceOrderSource?.sourceId || item.sourceId || "").trim(),
+        legacyAttendanceId: String(
+          item.documentServiceOrderSource?.legacyAttendanceId || item.legacyAttendanceId || ""
+        ).trim(),
+        serviceOrderId: String(item.documentServiceOrderSource?.serviceOrderId || item.serviceOrderId || "").trim(),
+        serviceOrderNumber: String(
+          item.documentServiceOrderSource?.serviceOrderNumber || item.serviceOrderNumber || ""
+        ).trim(),
+        paymentSourceType: String(
+          item.documentServiceOrderSource?.paymentSourceType || item.paymentSourceType || ""
+        ).trim(),
+        paymentSourceId: String(item.documentServiceOrderSource?.paymentSourceId || item.paymentSourceId || "").trim(),
+        matchedBy: String(item.documentServiceOrderSource?.matchedBy || "").trim(),
+        confidence: String(item.documentServiceOrderSource?.confidence || "").trim(),
+        fallbackUsed: Boolean(item.documentServiceOrderSource?.fallbackUsed),
+        fallbackReason: String(item.documentServiceOrderSource?.fallbackReason || "").trim()
+      },
       createdAt: String(item.createdAt || `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`).trim(),
       responsible: String(item.responsible || activeSessionUser || "Sistema LavaPrime").trim()
     }))
@@ -5334,6 +5386,10 @@ function getInventoryMovementLabel(type) {
 }
 
 function recordGeneratedDocument(payload) {
+  const normalizedServiceOrderSource = normalizeDocumentServiceOrderSource(payload, {
+    runtimeContext: payload?.runtimeContext,
+    serviceOrder: payload?.serviceOrder
+  });
   documentHistory.unshift({
     id: getNextDocumentHistoryId(),
     fileName: payload.fileName,
@@ -5345,6 +5401,12 @@ function recordGeneratedDocument(payload) {
     reportTarget: payload.reportTarget || "documents",
     sourceType: payload.sourceType || "",
     sourceId: payload.sourceId || "",
+    serviceOrderId: normalizedServiceOrderSource.serviceOrderId,
+    serviceOrderNumber: normalizedServiceOrderSource.serviceOrderNumber,
+    legacyAttendanceId: normalizedServiceOrderSource.legacyAttendanceId,
+    paymentSourceType: normalizedServiceOrderSource.paymentSourceType,
+    paymentSourceId: normalizedServiceOrderSource.paymentSourceId,
+    documentServiceOrderSource: normalizedServiceOrderSource,
     createdAt: `${formatDateBR(getTodayISO())} ${getCurrentShortTime()}`,
     responsible: payload.responsible || activeSessionUser || "Sistema LavaPrime"
   });
@@ -8082,7 +8144,7 @@ function renderResponsiveDashboardCharts(dashboardMetrics) {
       </div>
       <p class="dashboard-filter-copy">Período ativo: ${escapeHtml(periodLabel)}</p>
     </section>
-    <section class="admin-trend-grid" id="adminDashboardCharts" aria-label="Gráficos gerenciais responsivos">
+    <section class="dashboard-chart-grid" id="adminDashboardCharts" aria-label="Gráficos gerenciais responsivos">
       ${cards.join("")}
     </section>
   `;
@@ -8092,54 +8154,54 @@ function getDashboardOptionalChartDefinitionsSafe(dashboardMetrics, periodLabel)
   return [
     {
       id: "cashflowBreakdown",
-      title: "Entradas x saidas",
-      subtitle: "Barras agrupadas",
-      metricLabel: "Caixa liquido",
+      title: "Entradas x saídas",
+      subtitle: "Resultado do caixa",
+      metricLabel: "Caixa líquido",
       metricValue: formatCurrency(dashboardMetrics.kpis.netCash.value),
-      metricDetail: `${periodLabel} · resultado do periodo`,
-      description: "Movimento financeiro consolidado sem depender de runtime externo.",
-      summary: `${formatCurrency(dashboardMetrics.kpis.netCash.value)} de saldo liquido no recorte atual`,
+      metricDetail: `${periodLabel} · resultado do período`,
+      description: "Movimento financeiro consolidado do período.",
+      summary: `${formatCurrency(dashboardMetrics.kpis.netCash.value)} de saldo líquido no recorte atual`,
       visual: renderDashboardGroupedBarChart(dashboardMetrics.charts.cashflowBreakdown, formatCompactCurrency, formatCompactCurrency),
-      footer: `${periodLabel} · origem principal: cashEntries`,
+      footer: `${periodLabel} · lançamentos de caixa`,
       dismissible: true
     },
     {
       id: "attendanceTrend",
-      title: "Atendimentos por periodo",
-      subtitle: "Colunas",
+      title: "Atendimentos por período",
+      subtitle: "Volume operacional",
       metricLabel: "Atendimentos",
       metricValue: String(dashboardMetrics.kpis.attendances.value),
-      metricDetail: `${periodLabel} · nao cancelados`,
-      description: "Volume operacional do patio dentro do intervalo selecionado.",
-      summary: `${dashboardMetrics.kpis.attendances.value} atendimento(s) lidos no periodo`,
+      metricDetail: `${periodLabel} · não cancelados`,
+      description: "Volume operacional do pátio dentro do intervalo selecionado.",
+      summary: `${dashboardMetrics.kpis.attendances.value} atendimento(s) lidos no período`,
       visual: renderDashboardColumnChart(dashboardMetrics.charts.attendanceTrend),
-      footer: `${periodLabel} · origem principal: patioVehicles`,
+      footer: `${periodLabel} · movimentação do pátio`,
       dismissible: true
     },
     {
       id: "topServices",
-      title: "Servicos mais vendidos",
-      subtitle: "Barras horizontais",
+      title: "Serviços mais vendidos",
+      subtitle: "Ranking",
       metricLabel: "Categorias monitoradas",
       metricValue: String(dashboardMetrics.charts.topServices.data.length || 0),
       metricDetail: `${periodLabel} · ranking operacional`,
-      description: "Ranking dos servicos com maior recorrencia no recorte atual.",
+      description: "Ranking dos serviços com maior recorrência no recorte atual.",
       summary: `${dashboardMetrics.charts.topServices.data.length || 0} categoria(s) com leitura ativa`,
       visual: renderDashboardHorizontalBarChart(dashboardMetrics.charts.topServices, (value) => `${value} venda(s)`),
-      footer: `${periodLabel} · origem principal: patioVehicles`,
+      footer: `${periodLabel} · movimentação do pátio`,
       dismissible: true
     },
     {
       id: "paymentMethods",
       title: "Formas de pagamento",
-      subtitle: "Donut",
+      subtitle: "Distribuição",
       metricLabel: "Entradas confirmadas",
       metricValue: formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value),
       metricDetail: `${periodLabel} · meios confirmados`,
-      description: "Distribuicao das entradas confirmadas por forma de pagamento.",
+      description: "Distribuição das entradas confirmadas por forma de pagamento.",
       summary: `${formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value)} em entradas classificadas`,
       visual: renderDashboardDonutChart(dashboardMetrics.charts.paymentMethods),
-      footer: `${periodLabel} · origem principal: cashEntries`,
+      footer: `${periodLabel} · lançamentos de caixa`,
       dismissible: true
     }
   ];
@@ -8163,40 +8225,39 @@ function renderResponsiveDashboardChartsV2(dashboardMetrics) {
     renderDashboardChartCard({
       chartId: "revenueTrend",
       title: "Faturamento",
-      subtitle: "Linha / area",
+      subtitle: "Tendência do período",
       metricLabel: "Faturamento confirmado",
       metricValue: formatCurrency(dashboardMetrics.kpis.revenueConfirmed.value),
       metricDetail: `${periodLabel} · receita confirmada`,
-      description: "Receita confirmada em caixa ao longo do periodo selecionado.",
-      summary: `${revenueDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(revenueDelta))} em relacao ao ponto anterior do filtro`,
+      description: "Receita confirmada em caixa ao longo do período selecionado.",
+      summary: `${revenueDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(revenueDelta))} em relação ao ponto anterior do filtro`,
       visual: renderDashboardLineChart(dashboardMetrics.charts.revenueTrend, formatCompactCurrency),
-      footer: `${periodLabel} · origem principal: cashEntries confirmados`,
-      span: "dashboard-chart-card--wide"
+      footer: `${periodLabel} · recebimentos confirmados`
     }),
     renderDashboardChartCard({
       chartId: "estimatedProfitTrend",
       title: "Lucro estimado",
-      subtitle: "Linha / area",
+      subtitle: "Tendência do período",
       metricLabel: "Lucro estimado",
       metricValue: formatCurrency(dashboardMetrics.kpis.estimatedProfit.value),
-      metricDetail: `${periodLabel} · taxas e saidas consideradas`,
-      description: "Estimativa liquida do periodo considerando entradas confirmadas, taxas e saidas.",
-      summary: `${estimatedProfitDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(estimatedProfitDelta))} em relacao ao ponto anterior do filtro`,
+      metricDetail: `${periodLabel} · taxas e saídas consideradas`,
+      description: "Estimativa líquida do período considerando entradas confirmadas, taxas e saídas.",
+      summary: `${estimatedProfitDelta >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(estimatedProfitDelta))} em relação ao ponto anterior do filtro`,
       visual: renderDashboardLineChart(dashboardMetrics.charts.estimatedProfitTrend, formatCompactCurrency),
-      footer: `${periodLabel} · origem principal: cashEntries + netAmount`,
-      span: "dashboard-chart-card--wide"
+      footer: `${periodLabel} · caixa e taxas`
     }),
     renderDashboardChartCard({
       chartId: "patioStatus",
-      title: "Situacao do patio",
-      subtitle: "Barra empilhada",
-      metricLabel: "Veiculos ativos",
+      title: "Situação do pátio",
+      subtitle: "Operação agora",
+      metricLabel: "Veículos ativos",
       metricValue: String(dashboardMetrics.kpis.activePatio.value),
-      metricDetail: "Snapshot operacional atual",
-      description: "Leitura atual dos veiculos por etapa operacional.",
-      summary: `${dashboardMetrics.kpis.activePatio.value} veiculo(s) em operacao neste momento`,
+      metricDetail: "Situação operacional atual",
+      description: "Leitura atual dos veículos por etapa operacional.",
+      summary: `${dashboardMetrics.kpis.activePatio.value} veículo(s) em operação neste momento`,
       visual: renderDashboardStackedStatusChart(dashboardMetrics.charts.patioStatus),
-      footer: "Snapshot atual · origem principal: patioVehicles"
+      footer: "Situação atual · movimentação do pátio",
+      span: "dashboard-chart-card--full-row"
     }),
     ...visibleOptionalCharts.map((chart) => renderDashboardChartCard(chart))
   ];
@@ -8212,12 +8273,12 @@ function renderResponsiveDashboardChartsV2(dashboardMetrics) {
           `
         ).join("")}
       </div>
-      <p class="dashboard-filter-copy">Periodo ativo: ${escapeHtml(periodLabel)}</p>
+      <p class="dashboard-filter-copy">Período ativo: ${escapeHtml(periodLabel)}</p>
     </section>
-    <section class="dashboard-optional-controls" aria-label="Gerenciar graficos opcionais">
+    <section class="dashboard-optional-controls" aria-label="Gerenciar gráficos opcionais">
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">Graficos adicionais</p>
+          <p class="eyebrow">Gráficos adicionais</p>
           <h2>Escolha do administrador</h2>
         </div>
       </div>
@@ -8233,11 +8294,11 @@ function renderResponsiveDashboardChartsV2(dashboardMetrics) {
                   `
                 )
                 .join("")
-            : '<p class="dashboard-filter-copy">Todos os graficos opcionais ja estao visiveis.</p>'
+            : '<p class="dashboard-filter-copy">Todos os gráficos opcionais já estão visíveis.</p>'
         }
       </div>
     </section>
-    <section class="admin-trend-grid" id="adminDashboardCharts" aria-label="Graficos gerenciais responsivos">
+    <section class="dashboard-chart-grid" id="adminDashboardCharts" aria-label="Gráficos gerenciais responsivos">
       ${cards.join("")}
     </section>
   `;
@@ -12450,6 +12511,2116 @@ function publishCleanBootstrapDiagnostics() {
   diagnosticsNode.textContent = JSON.stringify(snapshot, null, 2);
 }
 
+function refreshServiceOrderDiagnostics() {
+  const analyzedAt = new Date().toISOString();
+  const snapshot = createServiceOrderDiagnosticsSnapshot(analyzedAt);
+  recordServiceOrderDiagnosticsSnapshot(snapshot);
+}
+
+function recordServiceOrderDiagnosticsSnapshot(snapshot) {
+  serviceOrderDiagnostics.latest = cloneServiceOrderDiagnosticsSnapshot(snapshot);
+  serviceOrderDiagnostics.enabled = true;
+  serviceOrderDiagnostics.source = "legacy-attendance-bridge";
+  serviceOrderDiagnostics.version = SERVICE_ORDER_BRIDGE_VERSION;
+  serviceOrderDiagnostics.legacySourceActive = true;
+  serviceOrderDiagnostics.rollbackPath = [...SERVICE_ORDER_ROLLBACK_PATH];
+  publishServiceOrderDiagnostics(cloneServiceOrderDiagnosticsSnapshot(snapshot));
+}
+
+function publishServiceOrderDiagnostics(snapshot = getServiceOrderDiagnosticsSnapshot()) {
+  lavaprimeDiagnosticsHost.__lavaprimeServiceOrderDiagnostics = snapshot;
+  lavaprimeDiagnosticsHost.__lavaprimeGetServiceOrderDiagnostics = () => getServiceOrderDiagnosticsSnapshot();
+
+  const diagnosticsDocument = lavaprimeDiagnosticsHost.document;
+  if (!diagnosticsDocument?.documentElement?.dataset) return;
+
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDiagnosticsAvailable = "true";
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderTotal = String(snapshot.totalServiceOrdersBuilt ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderWithExplicitId = String(snapshot.withExplicitId ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderWithOrderNumber = String(snapshot.withOrderNumber ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderMissingCustomer = String(snapshot.missingCustomer ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderMissingVehicle = String(snapshot.missingVehicle ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderInvalidTotals = String(snapshot.invalidTotals ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDuplicateIds = String(snapshot.duplicateServiceOrderIds ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDuplicateNumbers = String(
+    snapshot.duplicateOrderNumbers ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderPaymentsLinked = String(snapshot.paymentsLinked ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderPaymentsMissingLink = String(
+    snapshot.paymentsMissingLink ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDocumentsLinked = String(snapshot.documentsLinked ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDocumentsMissingLink = String(
+    snapshot.documentsMissingLink ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderEventsBuilt = String(snapshot.eventsBuilt ?? 0);
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderEventsWithId = String(
+    snapshot.eventsWithServiceOrderId ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderPersistenceSnapshots = String(
+    snapshot.persistenceSnapshotsBuilt ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderStorageContracts = String(
+    snapshot.storage?.contractsBuilt ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderStorageValidContracts = String(
+    snapshot.storage?.validContracts ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderStorageInvalidContracts = String(
+    snapshot.storage?.invalidContracts ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderReadyForSupabaseDesign = String(
+    snapshot.storage?.readyForSupabaseDesign ?? false
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderReadyForSupabaseWrite = String(
+    snapshot.storage?.readyForSupabaseWrite ?? false
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderSupabaseTouched = String(
+    snapshot.supabaseTouched ?? false
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderProgressiveReadArea = String(
+    snapshot.progressiveRead?.area || ""
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderProgressiveReadModels = String(
+    snapshot.progressiveRead?.readModelsBuilt ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderProgressiveReadWithFallback = String(
+    snapshot.progressiveRead?.readModelsWithFallback ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderProgressiveReadWithoutServiceOrder = String(
+    snapshot.progressiveRead?.readModelsWithoutServiceOrder ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDocumentQualityAnalyzed = String(
+    snapshot.documentSourceQuality?.documentsAnalyzed ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderDocumentQualityFallbackRate = String(
+    snapshot.documentSourceQuality?.fallbackRate ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteDesigned = String(
+    snapshot.shadowWrite?.designed ?? false
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteEnabled = String(
+    snapshot.shadowWrite?.enabled ?? false
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteRecordsPlanned = String(
+    snapshot.shadowWrite?.recordsPlanned ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterMode = String(
+    snapshot.shadowWriteAdapter?.mode || "disabled"
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterCanActivate = String(
+    snapshot.shadowWriteAdapter?.canActivate ?? false
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterPayloadsEligible = String(
+    snapshot.shadowWriteAdapter?.payloadsEligible ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteAdapterWritesBlocked = String(
+    snapshot.shadowWriteAdapter?.writesBlocked ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalMode = String(
+    snapshot.shadowWriteRehearsal?.mode || ""
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalEligible = String(
+    snapshot.shadowWriteRehearsal?.payloadsEligibleLocalOnly ?? 0
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalBlockedVerified = String(
+    snapshot.shadowWriteRehearsal?.blockedWriteVerified ?? false
+  );
+  diagnosticsDocument.documentElement.dataset.lavaprimeServiceOrderShadowWriteRehearsalReadyForStaging = String(
+    snapshot.shadowWriteRehearsal?.readyForStagingActivation ?? false
+  );
+
+  let diagnosticsNode = diagnosticsDocument.getElementById(SERVICE_ORDER_DIAGNOSTICS_SCRIPT_ID);
+  if (!diagnosticsNode) {
+    diagnosticsNode = diagnosticsDocument.createElement("script");
+    diagnosticsNode.id = SERVICE_ORDER_DIAGNOSTICS_SCRIPT_ID;
+    diagnosticsNode.type = "application/json";
+    diagnosticsNode.setAttribute("data-lavaprime-diagnostics", "service-order");
+    diagnosticsDocument.body?.appendChild(diagnosticsNode);
+  }
+  diagnosticsNode.textContent = JSON.stringify(snapshot, null, 2);
+}
+
+function cloneServiceOrderDiagnosticsSnapshot(snapshot) {
+  return {
+    ...snapshot,
+    rollbackPath: [...(snapshot?.rollbackPath || [])],
+    unsupportedStatuses: [...(snapshot?.unsupportedStatuses || [])],
+    unknownStatuses: [...(snapshot?.unknownStatuses || [])],
+    storage: snapshot?.storage
+      ? {
+          ...snapshot.storage,
+          warnings: [...(snapshot.storage?.warnings || [])],
+          invalidExamples: Array.isArray(snapshot.storage?.invalidExamples)
+            ? snapshot.storage.invalidExamples.map((example) => ({
+                ...example,
+                errors: [...(example?.errors || [])],
+                warnings: [...(example?.warnings || [])],
+                missingRequiredFields: [...(example?.missingRequiredFields || [])]
+              }))
+            : []
+        }
+      : null,
+    progressiveRead: snapshot?.progressiveRead
+      ? {
+          ...snapshot.progressiveRead
+        }
+      : null,
+    documentSourceQuality: snapshot?.documentSourceQuality
+      ? {
+          ...snapshot.documentSourceQuality
+        }
+      : null,
+    shadowWrite: snapshot?.shadowWrite
+      ? {
+          ...snapshot.shadowWrite,
+          blockers: [...(snapshot.shadowWrite?.blockers || [])],
+          activationCriteria: [...(snapshot.shadowWrite?.activationCriteria || [])],
+          tables: [...(snapshot.shadowWrite?.tables || [])]
+        }
+      : null,
+    shadowWriteAdapter: snapshot?.shadowWriteAdapter
+      ? {
+          ...snapshot.shadowWriteAdapter,
+          blockers: [...(snapshot.shadowWriteAdapter?.blockers || [])]
+        }
+      : null,
+    shadowWriteRehearsal: snapshot?.shadowWriteRehearsal
+      ? {
+          ...snapshot.shadowWriteRehearsal,
+          blockers: [...(snapshot.shadowWriteRehearsal?.blockers || [])],
+          warnings: [...(snapshot.shadowWriteRehearsal?.warnings || [])]
+        }
+      : null,
+    issueExamples: Array.isArray(snapshot?.issueExamples)
+      ? snapshot.issueExamples.map((example) => ({
+          ...example,
+          missingFields: [...(example?.missingFields || [])],
+          invalidTotals: [...(example?.invalidTotals || [])]
+        }))
+      : []
+  };
+}
+
+function getServiceOrderDiagnosticsSnapshot() {
+  const analyzedAt = new Date().toISOString();
+  const snapshot = createServiceOrderDiagnosticsSnapshot(analyzedAt);
+  recordServiceOrderDiagnosticsSnapshot(snapshot);
+  return cloneServiceOrderDiagnosticsSnapshot(snapshot);
+}
+
+function createServiceOrderDiagnosticsSnapshot(analyzedAt) {
+  const usedOrderNumbers = new Map();
+  const usedServiceOrderIds = new Map();
+  const serviceOrders = patioVehicles.map((attendance) =>
+    buildServiceOrderFromLegacyAttendance(attendance, { analyzedAt, usedOrderNumbers, usedServiceOrderIds })
+  );
+  const storageSnapshots = buildServiceOrderStorageSnapshots({ analyzedAt, serviceOrders });
+  const runtimeContext = buildServiceOrderReadRuntimeContext({ analyzedAt, serviceOrders, storageSnapshots });
+  const documentReadModels = buildDocumentServiceOrderReadModels({ runtimeContext });
+  const documentSourceQuality = buildDocumentSourceQualityMetrics({ documentReadModels });
+  const shadowWrite = buildServiceOrderShadowWritePlan({ storageSnapshots, documentSourceQuality });
+  const shadowWriteGate = evaluateServiceOrderShadowWriteGate({ analyzedAt, plan: shadowWrite });
+  const shadowWriteAdapterInstance = createServiceOrderShadowWriteAdapter({
+    analyzedAt,
+    serviceOrders,
+    storageSnapshots,
+    documentSourceQuality,
+    plan: shadowWrite,
+    gate: shadowWriteGate
+  });
+  const shadowWriteAdapter = buildServiceOrderShadowWriteAdapterDiagnostics({
+    adapter: shadowWriteAdapterInstance
+  });
+  const shadowWriteRehearsal = buildServiceOrderShadowWriteRehearsal({
+    analyzedAt,
+    storageSnapshots,
+    plan: shadowWrite,
+    gate: shadowWriteGate,
+    adapter: shadowWriteAdapterInstance
+  });
+  const unsupportedStatuses = [
+    ...new Set(
+      serviceOrders
+        .filter((serviceOrder) => serviceOrder.bridgeIssues.unsupportedStatus)
+        .map((serviceOrder) => serviceOrder.source.legacyStatus)
+        .filter(Boolean)
+    )
+  ];
+  const issueExamples = serviceOrders
+    .filter(
+      (serviceOrder) =>
+        serviceOrder.bridgeIssues.missingCustomer ||
+        serviceOrder.bridgeIssues.missingVehicle ||
+        serviceOrder.bridgeIssues.invalidTotals.length ||
+        serviceOrder.bridgeIssues.unsupportedStatus
+    )
+    .slice(0, SERVICE_ORDER_DIAGNOSTIC_SAMPLE_LIMIT)
+    .map((serviceOrder) => ({
+      serviceOrderId: serviceOrder.id,
+      orderNumber: serviceOrder.orderNumber,
+      legacyAttendanceId: serviceOrder.legacyAttendanceId,
+      plate: serviceOrder.vehiclePlate,
+      status: serviceOrder.status,
+      legacyStatus: serviceOrder.source.legacyStatus,
+      missingFields: [
+        ...(serviceOrder.bridgeIssues.missingCustomer ? ["customerId"] : []),
+        ...(serviceOrder.bridgeIssues.missingVehicle ? ["vehicleId"] : [])
+      ],
+      invalidTotals: [...serviceOrder.bridgeIssues.invalidTotals]
+    }));
+  const storageWarnings = [...new Set(storageSnapshots.flatMap((snapshot) => snapshot.validation.warnings || []))];
+  const invalidStorageExamples = storageSnapshots
+    .filter((snapshot) => !snapshot.validation.valid)
+    .slice(0, SERVICE_ORDER_DIAGNOSTIC_SAMPLE_LIMIT)
+    .map((snapshot) => ({
+      serviceOrderId: snapshot.contract?.serviceOrder?.id || "",
+      orderNumber: snapshot.contract?.serviceOrder?.orderNumber || "",
+      errors: [...(snapshot.validation.errors || [])],
+      warnings: [...(snapshot.validation.warnings || [])],
+      missingRequiredFields: [...(snapshot.validation.missingRequiredFields || [])]
+    }));
+  const storageContractsBuilt = storageSnapshots.length;
+  const validStorageContracts = storageSnapshots.filter((snapshot) => snapshot.validation.valid).length;
+  const invalidStorageContracts = storageContractsBuilt - validStorageContracts;
+  const contractsWithRequiredFields = storageSnapshots.filter(
+    (snapshot) => (snapshot.validation.missingRequiredFields || []).length === 0
+  ).length;
+  const contractsMissingCustomerSnapshot = storageSnapshots.filter(
+    (snapshot) =>
+      !snapshot.contract?.customerSnapshot?.customerId && !snapshot.contract?.customerSnapshot?.customerName
+  ).length;
+  const contractsMissingVehicleSnapshot = storageSnapshots.filter(
+    (snapshot) =>
+      !snapshot.contract?.vehicleSnapshot?.vehicleId && !snapshot.contract?.vehicleSnapshot?.plate
+  ).length;
+  const contractsWithLinkedPayments = storageSnapshots.filter((snapshot) => (snapshot.contract?.payments || []).length > 0).length;
+  const contractsWithLinkedDocuments = storageSnapshots.filter((snapshot) => (snapshot.contract?.documents || []).length > 0).length;
+  const contractsWithEvents = storageSnapshots.filter((snapshot) => (snapshot.contract?.events || []).length > 0).length;
+  const readyForSupabaseDesign = storageContractsBuilt > 0 && invalidStorageContracts === 0;
+  const progressiveReadWithFallback = documentReadModels.filter(
+    (entry) => entry?.serviceOrderReadModel?.fallbackActive
+  ).length;
+  const progressiveReadWithoutServiceOrder = documentReadModels.filter(
+    (entry) => !String(entry?.serviceOrderReadModel?.serviceOrderId || "").trim()
+  ).length;
+
+  return {
+    analyzedAt,
+    enabled: true,
+    source: "legacy-attendance-bridge",
+    version: SERVICE_ORDER_BRIDGE_VERSION,
+    activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+    totalLegacyAttendances: patioVehicles.length,
+    totalServiceOrdersBuilt: serviceOrders.length,
+    withExplicitId: serviceOrders.filter((serviceOrder) => Boolean(serviceOrder.id)).length,
+    withOrderNumber: serviceOrders.filter((serviceOrder) => Boolean(serviceOrder.orderNumber)).length,
+    missingCustomer: serviceOrders.filter((serviceOrder) => serviceOrder.bridgeIssues.missingCustomer).length,
+    missingVehicle: serviceOrders.filter((serviceOrder) => serviceOrder.bridgeIssues.missingVehicle).length,
+    invalidTotals: serviceOrders.filter((serviceOrder) => serviceOrder.bridgeIssues.invalidTotals.length > 0).length,
+    paymentsLinked: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.payments.filter((entry) => Boolean(entry.serviceOrderId)).length,
+      0
+    ),
+    paymentsMissingLink: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.payments.filter((entry) => !entry.serviceOrderId).length,
+      0
+    ),
+    documentsLinked: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.documents.filter((entry) => Boolean(entry.serviceOrderId)).length,
+      0
+    ),
+    documentsMissingLink: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.documents.filter((entry) => !entry.serviceOrderId).length,
+      0
+    ),
+    eventsBuilt: serviceOrders.reduce((total, serviceOrder) => total + serviceOrder.events.length, 0),
+    eventsWithServiceOrderId: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.events.filter((entry) => Boolean(entry.serviceOrderId)).length,
+      0
+    ),
+    persistenceSnapshotsBuilt: serviceOrders.filter((serviceOrder) => Boolean(serviceOrder.persistence?.ready)).length,
+    storageContractsBuilt,
+    storageContractsValid: validStorageContracts,
+    storageContractsInvalid: invalidStorageContracts,
+    contractsWithRequiredFields,
+    contractsMissingCustomerSnapshot,
+    contractsMissingVehicleSnapshot,
+    contractsWithLinkedPayments,
+    contractsWithLinkedDocuments,
+    contractsWithEvents,
+    duplicateServiceOrderIds: [...usedServiceOrderIds.values()].filter((count) => count > 1).length,
+    duplicateOrderNumbers: [...usedOrderNumbers.values()].filter((count) => count > 1).length,
+    unsupportedStatuses,
+    unknownStatuses: [...unsupportedStatuses],
+    totalCashEntriesLinked: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.source.linkedCashEntryIds.length,
+      0
+    ),
+    totalOpenPaymentsLinked: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.source.linkedOpenPaymentIds.length,
+      0
+    ),
+    totalDocumentsLinked: serviceOrders.reduce(
+      (total, serviceOrder) => total + serviceOrder.source.linkedDocumentIds.length,
+      0
+    ),
+    backendRequired: true,
+    supabaseTouched: false,
+    runtimeAdoptionMode: SERVICE_ORDER_RUNTIME_ADOPTION_MODE,
+    progressiveRead: {
+      enabled: true,
+      area: "documents",
+      readModelsBuilt: documentReadModels.length,
+      readModelsWithFallback: progressiveReadWithFallback,
+      readModelsWithoutServiceOrder: progressiveReadWithoutServiceOrder,
+      legacyFallbackActive: true,
+      visualOutputChanged: false,
+      primarySourceChanged: false
+    },
+    documentSourceQuality,
+    shadowWrite,
+    shadowWriteAdapter,
+    shadowWriteRehearsal,
+    storage: {
+      schemaVersion: SERVICE_ORDER_STORAGE_SCHEMA_VERSION,
+      contractsBuilt: storageContractsBuilt,
+      validContracts: validStorageContracts,
+      invalidContracts: invalidStorageContracts,
+      warnings: [...storageWarnings],
+      invalidExamples: invalidStorageExamples,
+      contractsWithRequiredFields,
+      contractsMissingCustomerSnapshot,
+      contractsMissingVehicleSnapshot,
+      contractsWithLinkedPayments,
+      contractsWithLinkedDocuments,
+      contractsWithEvents,
+      backendRequired: true,
+      supabaseTouched: false,
+      migrationRequired: true,
+      readyForSupabaseDesign,
+      readyForSupabaseWrite: false
+    },
+    issueExamples,
+    rollbackPath: [...SERVICE_ORDER_ROLLBACK_PATH]
+  };
+}
+
+function resolveServiceOrderIdentityFromLegacy(legacyAttendance, vehiclePlate = "", context = {}) {
+  const canonicalId = buildServiceOrderCanonicalId(legacyAttendance, vehiclePlate, context);
+  const orderNumber = buildLocalServiceOrderNumber(legacyAttendance, context);
+  const legacyAttendanceId = String(legacyAttendance?.id ?? vehiclePlate ?? "").trim();
+
+  return {
+    id: canonicalId,
+    orderNumber,
+    legacyAttendanceId,
+    idMode: String(legacyAttendance?.id ?? "").trim() ? "legacy-id" : vehiclePlate ? "plate-fallback" : "untracked-fallback",
+    orderNumberMode: String(legacyAttendance?.id ?? "").trim() ? "seeded-legacy-id" : vehiclePlate ? "seeded-plate" : "seeded-hash"
+  };
+}
+
+function createServiceOrderLink(serviceOrder) {
+  return {
+    serviceOrderId: String(serviceOrder?.id || "").trim(),
+    serviceOrderNumber: String(serviceOrder?.orderNumber || "").trim(),
+    legacyAttendanceId: String(serviceOrder?.legacyAttendanceId || "").trim()
+  };
+}
+
+function attachServiceOrderLink(record, serviceOrder, extraFields = {}) {
+  return {
+    ...record,
+    ...createServiceOrderLink(serviceOrder),
+    ...extraFields
+  };
+}
+
+function buildServiceOrderPersistenceSnapshot(serviceOrder, context = {}) {
+  return {
+    ready: Boolean(serviceOrder?.id && serviceOrder?.orderNumber),
+    mode: SERVICE_ORDER_PERSISTENCE_BOUNDARY_MODE,
+    requiresBackend: true,
+    supabaseTouched: false,
+    legacyBridgeVersion: SERVICE_ORDER_BRIDGE_VERSION,
+    serviceOrderId: String(serviceOrder?.id || "").trim(),
+    orderNumber: String(serviceOrder?.orderNumber || "").trim(),
+    linkCounts: {
+      payments: Array.isArray(serviceOrder?.payments) ? serviceOrder.payments.length : 0,
+      documents: Array.isArray(serviceOrder?.documents) ? serviceOrder.documents.length : 0,
+      events: Array.isArray(serviceOrder?.events) ? serviceOrder.events.length : 0,
+      linkedInvoiceLineItems: Array.isArray(context?.linkedInvoiceLineItems) ? context.linkedInvoiceLineItems.length : 0,
+      linkedCashEntries: Array.isArray(context?.linkedCashEntries) ? context.linkedCashEntries.length : 0,
+      linkedOpenPayments: Array.isArray(context?.linkedOpenPayments) ? context.linkedOpenPayments.length : 0,
+      linkedDocuments: Array.isArray(context?.linkedDocuments) ? context.linkedDocuments.length : 0
+    },
+    gaps: {
+      missingCustomer: Boolean(serviceOrder?.bridgeIssues?.missingCustomer),
+      missingVehicle: Boolean(serviceOrder?.bridgeIssues?.missingVehicle),
+      invalidTotals: [...(serviceOrder?.bridgeIssues?.invalidTotals || [])],
+      unsupportedStatus: Boolean(serviceOrder?.bridgeIssues?.unsupportedStatus)
+    }
+  };
+}
+
+function buildServiceOrderStorageContract(serviceOrder, context = {}) {
+  const legacyAttendance = context?.legacyAttendance && typeof context.legacyAttendance === "object" ? context.legacyAttendance : null;
+  const linkedVehicle =
+    context?.linkedVehicle ||
+    getAnyVehicleRecord(serviceOrder?.vehicleId || legacyAttendance?.vehicleId || legacyAttendance?.id || null, serviceOrder?.vehiclePlate);
+  const linkedClient =
+    context?.linkedClient ||
+    getLinkedClientForVehicleContext({
+      ...legacyAttendance,
+      plate: serviceOrder?.vehiclePlate || legacyAttendance?.plate || "",
+      currentClientId: serviceOrder?.customerId || linkedVehicle?.currentClientId || legacyAttendance?.currentClientId || null,
+      owner: serviceOrder?.customerName || legacyAttendance?.owner || "",
+      phone: legacyAttendance?.phone || ""
+    }) ||
+    (serviceOrder?.customerId ? getClientById(serviceOrder.customerId) : null);
+  const missingRequiredFields = [];
+
+  if (!String(serviceOrder?.id || "").trim()) missingRequiredFields.push("serviceOrder.id");
+  if (!String(serviceOrder?.orderNumber || "").trim()) missingRequiredFields.push("serviceOrder.orderNumber");
+  if (!String(serviceOrder?.status || "").trim()) missingRequiredFields.push("serviceOrder.status");
+  if (!String(serviceOrder?.createdAt || "").trim()) missingRequiredFields.push("serviceOrder.createdAt");
+  if (!String(serviceOrder?.legacyAttendanceId || "").trim()) missingRequiredFields.push("legacy.legacyAttendanceId");
+
+  return {
+    schemaVersion: SERVICE_ORDER_STORAGE_SCHEMA_VERSION,
+    serviceOrder: {
+      id: normalizeServiceOrderText(serviceOrder?.id),
+      orderNumber: normalizeServiceOrderText(serviceOrder?.orderNumber),
+      legacyAttendanceId: normalizeServiceOrderText(serviceOrder?.legacyAttendanceId),
+      customerId: normalizeServiceOrderText(serviceOrder?.customerId),
+      vehicleId: normalizeServiceOrderText(serviceOrder?.vehicleId),
+      status: normalizeServiceOrderText(serviceOrder?.status, "unknown"),
+      createdAt: normalizeServiceOrderTimestamp(serviceOrder?.createdAt),
+      startedAt: normalizeServiceOrderTimestamp(serviceOrder?.startedAt),
+      completedAt: normalizeServiceOrderTimestamp(serviceOrder?.completedAt),
+      deliveredAt: normalizeServiceOrderTimestamp(serviceOrder?.deliveredAt),
+      operator: normalizeServiceOrderText(serviceOrder?.operator, "Operador"),
+      activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+      runtimeAdoptionMode: SERVICE_ORDER_RUNTIME_ADOPTION_MODE
+    },
+    customerSnapshot: {
+      customerId: normalizeServiceOrderText(serviceOrder?.customerId || linkedClient?.id),
+      customerName: normalizeServiceOrderText(serviceOrder?.customerName || getClientDisplayName(linkedClient)),
+      personType: normalizeServiceOrderText(linkedClient?.personType),
+      document: normalizeServiceOrderText(linkedClient?.document),
+      phone: normalizeServiceOrderText(linkedClient?.phone || legacyAttendance?.phone),
+      email: normalizeServiceOrderText(linkedClient?.email),
+      billing: Boolean(linkedClient?.billing),
+      billingApproved: Boolean(linkedClient?.billingApproved),
+      billingClientId: normalizeServiceOrderText(linkedClient?.billingClientId)
+    },
+    vehicleSnapshot: {
+      vehicleId: normalizeServiceOrderText(serviceOrder?.vehicleId || linkedVehicle?.id),
+      plate: normalizeServiceOrderText(serviceOrder?.vehiclePlate || linkedVehicle?.plate),
+      brand: normalizeServiceOrderText(linkedVehicle?.brand || legacyAttendance?.brand),
+      model: normalizeServiceOrderText(linkedVehicle?.model || legacyAttendance?.model),
+      year: normalizeServiceOrderText(linkedVehicle?.year || legacyAttendance?.year),
+      color: normalizeServiceOrderText(linkedVehicle?.color || legacyAttendance?.color),
+      type: normalizeServiceOrderText(linkedVehicle?.type || legacyAttendance?.type),
+      category: normalizeServiceOrderText(linkedVehicle?.category || legacyAttendance?.category),
+      fuel: normalizeServiceOrderText(linkedVehicle?.fuel),
+      currentClientId: normalizeServiceOrderText(linkedVehicle?.currentClientId || linkedClient?.id)
+    },
+    items: [
+      ...(Array.isArray(serviceOrder?.services)
+        ? serviceOrder.services.map((entry) => ({
+            id: normalizeServiceOrderText(entry?.id),
+            kind: "service",
+            sourceType: normalizeServiceOrderText(entry?.sourceType, "serviceCatalog"),
+            sourceId: normalizeServiceOrderText(entry?.id),
+            description: normalizeServiceOrderText(entry?.name, "Servico"),
+            quantity: 1,
+            unitLabel: "servico",
+            unitPrice: Math.max(0, toFiniteNumber(entry?.price)),
+            totalAmount: Math.max(0, toFiniteNumber(entry?.price)),
+            estimatedMinutes: Math.max(0, toFiniteNumber(entry?.estimatedMinutes)),
+            relatedVehicleType: normalizeServiceOrderText(entry?.vehicleType),
+            relatedVehicleCategory: normalizeServiceOrderText(entry?.vehicleCategory)
+          }))
+        : []),
+      ...(Array.isArray(serviceOrder?.products)
+        ? serviceOrder.products.map((entry) => ({
+            id: normalizeServiceOrderText(entry?.id),
+            kind: "product",
+            sourceType: normalizeServiceOrderText(entry?.sourceType, "attendance-product-sale"),
+            sourceId: normalizeServiceOrderText(entry?.productId || entry?.id),
+            description: normalizeServiceOrderText(entry?.name, "Produto"),
+            quantity: Math.max(0, toFiniteNumber(entry?.quantity)),
+            unitLabel: "un",
+            unitPrice: Math.max(0, toFiniteNumber(entry?.unitPrice)),
+            totalAmount: Math.max(0, toFiniteNumber(entry?.total)),
+            totalCost: Math.max(0, toFiniteNumber(entry?.totalCost))
+          }))
+        : []),
+      ...(Array.isArray(serviceOrder?.supplies)
+        ? serviceOrder.supplies.map((entry) => ({
+            id: normalizeServiceOrderText(entry?.id),
+            kind: "supply",
+            sourceType: "service-supply-profile",
+            sourceId: normalizeServiceOrderText(entry?.supplyId || entry?.id),
+            description: normalizeServiceOrderText(entry?.supplyName, "Insumo"),
+            quantity: Math.max(0, toFiniteNumber(entry?.quantity)),
+            unitLabel: normalizeServiceOrderText(entry?.unit, "un"),
+            unitPrice: Math.max(0, toFiniteNumber(entry?.estimatedUnitCost)),
+            totalAmount: Math.max(0, toFiniteNumber(entry?.estimatedTotalCost)),
+            relatedServiceName: normalizeServiceOrderText(entry?.serviceName),
+            notes: normalizeServiceOrderText(entry?.notes)
+          }))
+        : [])
+    ],
+    payments: (Array.isArray(serviceOrder?.payments) ? serviceOrder.payments : []).map((entry) => ({
+      id: normalizeServiceOrderText(entry?.id),
+      serviceOrderId: normalizeServiceOrderText(entry?.serviceOrderId || serviceOrder?.id),
+      serviceOrderNumber: normalizeServiceOrderText(entry?.serviceOrderNumber || serviceOrder?.orderNumber),
+      legacyAttendanceId: normalizeServiceOrderText(entry?.legacyAttendanceId || serviceOrder?.legacyAttendanceId),
+      sourceType: normalizeServiceOrderText(entry?.sourceType, "payment"),
+      sourceId: normalizeServiceOrderText(entry?.sourceId),
+      status: normalizeServiceOrderText(entry?.status, "Aberto"),
+      method: normalizeServiceOrderText(entry?.method, "Nao informado"),
+      grossAmount: Math.max(0, toFiniteNumber(entry?.grossAmount)),
+      netAmount: Math.max(0, toFiniteNumber(entry?.netAmount)),
+      feeAmount: Math.max(0, toFiniteNumber(entry?.feeAmount)),
+      partialPayment: Boolean(entry?.partialPayment),
+      openPayment: Boolean(entry?.openPayment),
+      effectiveAt: normalizeServiceOrderTimestamp(entry?.effectiveAt),
+      legacyReference: {
+        collection: normalizeServiceOrderText(entry?.legacyReference?.collection),
+        id: normalizeServiceOrderText(entry?.legacyReference?.id)
+      }
+    })),
+    documents: (Array.isArray(serviceOrder?.documents) ? serviceOrder.documents : []).map((entry) => ({
+      id: normalizeServiceOrderText(entry?.id),
+      serviceOrderId: normalizeServiceOrderText(entry?.serviceOrderId || serviceOrder?.id),
+      serviceOrderNumber: normalizeServiceOrderText(entry?.serviceOrderNumber || serviceOrder?.orderNumber),
+      legacyAttendanceId: normalizeServiceOrderText(entry?.legacyAttendanceId || serviceOrder?.legacyAttendanceId),
+      title: normalizeServiceOrderText(entry?.title, "Documento"),
+      category: normalizeServiceOrderText(entry?.category, "Documento"),
+      documentNumber: normalizeServiceOrderText(entry?.documentNumber),
+      fileName: normalizeServiceOrderText(entry?.fileName),
+      createdAt: normalizeServiceOrderTimestamp(entry?.createdAt),
+      sourceType: normalizeServiceOrderText(entry?.sourceType),
+      sourceId: normalizeServiceOrderText(entry?.sourceId),
+      legacyReference: {
+        collection: normalizeServiceOrderText(entry?.legacyReference?.collection),
+        id: normalizeServiceOrderText(entry?.legacyReference?.id)
+      }
+    })),
+    events: (Array.isArray(serviceOrder?.events) ? serviceOrder.events : []).map((entry) => ({
+      id: normalizeServiceOrderText(entry?.id),
+      serviceOrderId: normalizeServiceOrderText(entry?.serviceOrderId || serviceOrder?.id),
+      serviceOrderNumber: normalizeServiceOrderText(entry?.serviceOrderNumber || serviceOrder?.orderNumber),
+      legacyAttendanceId: normalizeServiceOrderText(entry?.legacyAttendanceId || serviceOrder?.legacyAttendanceId),
+      type: normalizeServiceOrderText(entry?.type, "note"),
+      description: normalizeServiceOrderText(entry?.description, "Evento de atendimento"),
+      occurredAt: normalizeServiceOrderTimestamp(entry?.occurredAt || entry?.createdAt),
+      createdAt: normalizeServiceOrderTimestamp(entry?.createdAt || entry?.occurredAt),
+      author: normalizeServiceOrderText(entry?.author, "Sistema LavaPrime"),
+      source: normalizeServiceOrderText(entry?.source),
+      sourceType: normalizeServiceOrderText(entry?.sourceType),
+      legacyReference: {
+        collection: normalizeServiceOrderText(entry?.legacyReference?.collection),
+        id: normalizeServiceOrderText(entry?.legacyReference?.id)
+      }
+    })),
+    totals: {
+      serviceAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.serviceAmount)),
+      productAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.productAmount)),
+      extraAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.extraAmount)),
+      grossAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.grossAmount)),
+      discountAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.discountAmount)),
+      netAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.netAmount)),
+      paidAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.paidAmount)),
+      pendingAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.pendingAmount)),
+      feeAmount: Math.max(0, toFiniteNumber(serviceOrder?.totals?.feeAmount)),
+      estimatedCost: Math.max(0, toFiniteNumber(serviceOrder?.totals?.estimatedCost)),
+      estimatedProfit: Math.max(0, toFiniteNumber(serviceOrder?.totals?.estimatedProfit))
+    },
+    audit: {
+      generatedAt: normalizeServiceOrderTimestamp(context?.analyzedAt || new Date().toISOString()),
+      bridgeVersion: SERVICE_ORDER_BRIDGE_VERSION,
+      storageSchemaVersion: SERVICE_ORDER_STORAGE_SCHEMA_VERSION,
+      activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+      runtimeAdoptionMode: SERVICE_ORDER_RUNTIME_ADOPTION_MODE,
+      source: "service-order-storage-contract"
+    },
+    legacy: {
+      sourceType: normalizeServiceOrderText(serviceOrder?.source?.type, "legacy-attendance-bridge"),
+      legacyCollection: normalizeServiceOrderText(serviceOrder?.source?.legacyCollection, "patioVehicles"),
+      legacyAttendanceId: normalizeServiceOrderText(serviceOrder?.legacyAttendanceId),
+      legacyStatus: normalizeServiceOrderText(serviceOrder?.source?.legacyStatus),
+      identityMode: normalizeServiceOrderText(serviceOrder?.source?.identityMode),
+      orderNumberMode: normalizeServiceOrderText(serviceOrder?.source?.orderNumberMode),
+      linkedCashEntryIds: [...(serviceOrder?.source?.linkedCashEntryIds || [])].map((value) => String(value)),
+      linkedOpenPaymentIds: [...(serviceOrder?.source?.linkedOpenPaymentIds || [])].map((value) => String(value)),
+      linkedInvoiceIds: [...(serviceOrder?.source?.linkedInvoiceIds || [])].map((value) => String(value)),
+      linkedDocumentIds: [...(serviceOrder?.source?.linkedDocumentIds || [])].map((value) => String(value)),
+      linkedVehicleRegistryId: normalizeServiceOrderText(serviceOrder?.source?.linkedVehicleRegistryId),
+      linkedClientRegistryId: normalizeServiceOrderText(serviceOrder?.source?.linkedClientRegistryId)
+    },
+    readiness: {
+      missingRequiredFields,
+      hasCustomerSnapshot: Boolean(serviceOrder?.customerId || linkedClient?.id || serviceOrder?.customerName),
+      hasVehicleSnapshot: Boolean(serviceOrder?.vehicleId || linkedVehicle?.id || serviceOrder?.vehiclePlate),
+      hasLinkedPayments: Array.isArray(serviceOrder?.payments) && serviceOrder.payments.length > 0,
+      hasLinkedDocuments: Array.isArray(serviceOrder?.documents) && serviceOrder.documents.length > 0,
+      hasEvents: Array.isArray(serviceOrder?.events) && serviceOrder.events.length > 0,
+      backendRequired: true,
+      migrationRequired: true,
+      readyForSupabaseDesign: missingRequiredFields.length === 0,
+      readyForSupabaseWrite: false,
+      derivedFields: ["customerSnapshot", "vehicleSnapshot", "items", "payments", "documents", "events"]
+    }
+  };
+}
+
+function validateServiceOrderStorageContract(contract) {
+  const errors = [];
+  const warnings = [];
+  const missingRequiredFields = [];
+  if (Number(contract?.schemaVersion) !== SERVICE_ORDER_STORAGE_SCHEMA_VERSION) {
+    errors.push(`schemaVersion must be ${SERVICE_ORDER_STORAGE_SCHEMA_VERSION}`);
+  }
+  if (!String(contract?.serviceOrder?.id || "").trim()) missingRequiredFields.push("serviceOrder.id");
+  if (!String(contract?.serviceOrder?.orderNumber || "").trim()) missingRequiredFields.push("serviceOrder.orderNumber");
+  if (!String(contract?.serviceOrder?.status || "").trim()) missingRequiredFields.push("serviceOrder.status");
+  if (!String(contract?.serviceOrder?.createdAt || "").trim()) missingRequiredFields.push("serviceOrder.createdAt");
+  if (!String(contract?.legacy?.legacyAttendanceId || "").trim()) missingRequiredFields.push("legacy.legacyAttendanceId");
+  if (missingRequiredFields.length) {
+    errors.push(`Missing required fields: ${missingRequiredFields.join(", ")}`);
+  }
+  if (!String(contract?.customerSnapshot?.customerId || "").trim() && !String(contract?.customerSnapshot?.customerName || "").trim()) {
+    warnings.push("Customer snapshot is still missing or empty.");
+  }
+  if (!String(contract?.vehicleSnapshot?.vehicleId || "").trim() && !String(contract?.vehicleSnapshot?.plate || "").trim()) {
+    warnings.push("Vehicle snapshot is still missing or empty.");
+  }
+  const numericTotals = [
+    "serviceAmount",
+    "productAmount",
+    "extraAmount",
+    "grossAmount",
+    "discountAmount",
+    "netAmount",
+    "paidAmount",
+    "pendingAmount",
+    "feeAmount",
+    "estimatedCost",
+    "estimatedProfit"
+  ];
+  numericTotals.forEach((field) => {
+    const value = Number(contract?.totals?.[field]);
+    if (!Number.isFinite(value) || value < 0) errors.push(`Invalid total field: ${field}`);
+  });
+  (contract?.payments || []).forEach((entry, index) => {
+    if (!String(entry?.serviceOrderId || "").trim()) errors.push(`Payment ${index + 1} is missing serviceOrderId`);
+  });
+  (contract?.documents || []).forEach((entry, index) => {
+    if (!String(entry?.serviceOrderId || "").trim()) errors.push(`Document ${index + 1} is missing serviceOrderId`);
+  });
+  (contract?.events || []).forEach((entry, index) => {
+    if (!String(entry?.serviceOrderId || "").trim()) errors.push(`Event ${index + 1} is missing serviceOrderId`);
+  });
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+    missingRequiredFields,
+    backendRequired: true,
+    migrationRequired: true,
+    readyForSupabaseDesign: errors.length === 0,
+    readyForSupabaseWrite: false
+  };
+}
+
+function buildServiceOrderStorageSnapshots(context = {}) {
+  const analyzedAt = context?.analyzedAt || new Date().toISOString();
+  const serviceOrders = Array.isArray(context?.serviceOrders)
+    ? context.serviceOrders
+    : patioVehicles.map((attendance) => buildServiceOrderFromLegacyAttendance(attendance, { analyzedAt }));
+  return serviceOrders.map((serviceOrder) => {
+    const legacyAttendance =
+      patioVehicles.find((attendance) => String(attendance?.id ?? "") === String(serviceOrder?.legacyAttendanceId || "")) ||
+      patioVehicles.find((attendance) => formatPlate(attendance?.plate || "") === formatPlate(serviceOrder?.vehiclePlate || "")) ||
+      null;
+    const linkedVehicle = getAnyVehicleRecord(
+      serviceOrder?.vehicleId || legacyAttendance?.vehicleId || legacyAttendance?.id || null,
+      serviceOrder?.vehiclePlate || legacyAttendance?.plate || ""
+    );
+    const linkedClient =
+      getLinkedClientForVehicleContext({
+        ...legacyAttendance,
+        plate: serviceOrder?.vehiclePlate || legacyAttendance?.plate || "",
+        currentClientId: serviceOrder?.customerId || linkedVehicle?.currentClientId || legacyAttendance?.currentClientId || null,
+        owner: serviceOrder?.customerName || legacyAttendance?.owner || "",
+        phone: legacyAttendance?.phone || ""
+      }) || (serviceOrder?.customerId ? getClientById(serviceOrder.customerId) : null);
+    const contract = buildServiceOrderStorageContract(serviceOrder, {
+      analyzedAt,
+      legacyAttendance,
+      linkedVehicle,
+      linkedClient
+    });
+    const validation = validateServiceOrderStorageContract(contract);
+    return {
+      serviceOrderId: contract?.serviceOrder?.id || "",
+      orderNumber: contract?.serviceOrder?.orderNumber || "",
+      contract,
+      validation
+    };
+  });
+}
+
+function buildServiceOrderSourceLinkKey(sourceType, sourceId) {
+  const normalizedType = normalizeText(sourceType || "");
+  const normalizedId = String(sourceId || "").trim();
+  return normalizedType && normalizedId ? `${normalizedType}::${normalizedId}` : "";
+}
+
+function createEmptyDocumentServiceOrderSource() {
+  return {
+    sourceType: "",
+    sourceId: "",
+    legacyAttendanceId: "",
+    serviceOrderId: "",
+    serviceOrderNumber: "",
+    paymentSourceType: "",
+    paymentSourceId: "",
+    matchedBy: "",
+    confidence: "low",
+    fallbackUsed: true,
+    fallbackReason: "service-order-unavailable"
+  };
+}
+
+function getDocumentServiceOrderCandidatePlate(documentRecord) {
+  return (
+    formatPlate(documentRecord?.plate || "") ||
+    formatPlate(documentRecord?.sourcePlate || "") ||
+    extractServiceOrderCandidatePlate(documentRecord)
+  );
+}
+
+function buildDocumentServiceOrderSourceResult(base = {}, overrides = {}) {
+  return {
+    ...createEmptyDocumentServiceOrderSource(),
+    ...base,
+    ...overrides
+  };
+}
+
+function buildServiceOrderReadRuntimeContext(context = {}) {
+  const analyzedAt = context?.analyzedAt || new Date().toISOString();
+  const storageSnapshots = Array.isArray(context?.storageSnapshots)
+    ? context.storageSnapshots
+    : buildServiceOrderStorageSnapshots({
+        analyzedAt,
+        serviceOrders: Array.isArray(context?.serviceOrders) ? context.serviceOrders : undefined
+      });
+  const runtimeContext = {
+    analyzedAt,
+    storageSnapshots,
+    byLegacyAttendanceId: new Map(),
+    byPlate: new Map(),
+    byDocumentSourceKey: new Map(),
+    byPaymentSourceKey: new Map(),
+    byServiceOrderId: new Map(),
+    byOrderNumber: new Map()
+  };
+
+  storageSnapshots.forEach((snapshot) => {
+    const contract = snapshot?.contract || null;
+    const serviceOrderId = String(contract?.serviceOrder?.id || "").trim();
+    const orderNumber = String(contract?.serviceOrder?.orderNumber || "").trim();
+    const legacyAttendanceId = String(contract?.legacy?.legacyAttendanceId || "").trim();
+    const plate = formatPlate(contract?.vehicleSnapshot?.plate || contract?.serviceOrder?.vehiclePlate || "");
+    if (serviceOrderId) runtimeContext.byServiceOrderId.set(serviceOrderId, snapshot);
+    if (orderNumber) runtimeContext.byOrderNumber.set(orderNumber, snapshot);
+    if (legacyAttendanceId) runtimeContext.byLegacyAttendanceId.set(legacyAttendanceId, snapshot);
+    if (plate) runtimeContext.byPlate.set(plate, snapshot);
+    (contract?.documents || []).forEach((entry) => {
+      const sourceKey = buildServiceOrderSourceLinkKey(entry?.sourceType, entry?.sourceId);
+      if (sourceKey) runtimeContext.byDocumentSourceKey.set(sourceKey, snapshot);
+    });
+    (contract?.payments || []).forEach((entry) => {
+      const sourceKey = buildServiceOrderSourceLinkKey(entry?.sourceType, entry?.sourceId);
+      if (sourceKey) runtimeContext.byPaymentSourceKey.set(sourceKey, snapshot);
+    });
+  });
+
+  return runtimeContext;
+}
+
+function findServiceOrderByLegacyReference(legacyAttendanceId, context = {}) {
+  const normalizedLegacyAttendanceId = String(legacyAttendanceId || "").trim();
+  if (!normalizedLegacyAttendanceId) return null;
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  return runtimeContext.byLegacyAttendanceId.get(normalizedLegacyAttendanceId) || null;
+}
+
+function findServiceOrderByExplicitId(serviceOrderId, context = {}) {
+  const normalizedServiceOrderId = String(serviceOrderId || "").trim();
+  if (!normalizedServiceOrderId) return null;
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  return runtimeContext.byServiceOrderId.get(normalizedServiceOrderId) || null;
+}
+
+function findServiceOrderByOrderNumber(serviceOrderNumber, context = {}) {
+  const normalizedOrderNumber = String(serviceOrderNumber || "").trim();
+  if (!normalizedOrderNumber) return null;
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  return runtimeContext.byOrderNumber.get(normalizedOrderNumber) || null;
+}
+
+function extractServiceOrderCandidatePlate(documentItem) {
+  const candidates = [documentItem?.fileName, documentItem?.documentNumber, documentItem?.summary, documentItem?.title];
+  for (const candidate of candidates) {
+    const raw = String(candidate || "").toUpperCase();
+    if (!raw) continue;
+    const match = raw.match(/\b([A-Z]{3}-?\d{4}|[A-Z]{3}\d[A-Z0-9]\d{2})\b/);
+    if (!match?.[1]) continue;
+    const formattedPlate = formatPlate(match[1]);
+    if (formattedPlate) return formattedPlate;
+  }
+  return "";
+}
+
+function normalizeDocumentServiceOrderSource(documentRecord, context = {}) {
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  const explicitServiceOrderId = String(
+    context?.serviceOrder?.id ||
+      documentRecord?.serviceOrderId ||
+      documentRecord?.documentServiceOrderSource?.serviceOrderId ||
+      ""
+  ).trim();
+  const explicitServiceOrderNumber = String(
+    context?.serviceOrder?.orderNumber ||
+      documentRecord?.serviceOrderNumber ||
+      documentRecord?.documentServiceOrderSource?.serviceOrderNumber ||
+      ""
+  ).trim();
+  const explicitLegacyAttendanceId = String(
+    context?.serviceOrder?.legacyAttendanceId ||
+      documentRecord?.legacyAttendanceId ||
+      documentRecord?.documentServiceOrderSource?.legacyAttendanceId ||
+      ""
+  ).trim();
+  const sourceType = String(documentRecord?.sourceType || documentRecord?.documentServiceOrderSource?.sourceType || "").trim();
+  const sourceId = String(documentRecord?.sourceId || documentRecord?.documentServiceOrderSource?.sourceId || "").trim();
+  const paymentSourceType = String(
+    documentRecord?.paymentSourceType || documentRecord?.documentServiceOrderSource?.paymentSourceType || ""
+  ).trim();
+  const paymentSourceId = String(
+    documentRecord?.paymentSourceId || documentRecord?.documentServiceOrderSource?.paymentSourceId || ""
+  ).trim();
+  const baseResult = {
+    sourceType,
+    sourceId,
+    legacyAttendanceId: explicitLegacyAttendanceId,
+    serviceOrderId: explicitServiceOrderId,
+    serviceOrderNumber: explicitServiceOrderNumber,
+    paymentSourceType,
+    paymentSourceId
+  };
+
+  const explicitIdMatch = findServiceOrderByExplicitId(explicitServiceOrderId, { runtimeContext });
+  if (explicitIdMatch) {
+    return buildDocumentServiceOrderSourceResult(baseResult, {
+      serviceOrderId: explicitServiceOrderId,
+      serviceOrderNumber: explicitServiceOrderNumber || explicitIdMatch.contract?.serviceOrder?.orderNumber || "",
+      legacyAttendanceId: explicitLegacyAttendanceId || explicitIdMatch.contract?.legacy?.legacyAttendanceId || "",
+      matchedBy: "service-order-id",
+      confidence: "high",
+      fallbackUsed: false,
+      fallbackReason: ""
+    });
+  }
+
+  const explicitNumberMatch = findServiceOrderByOrderNumber(explicitServiceOrderNumber, { runtimeContext });
+  if (explicitNumberMatch) {
+    return buildDocumentServiceOrderSourceResult(baseResult, {
+      serviceOrderId: explicitServiceOrderId || explicitNumberMatch.contract?.serviceOrder?.id || "",
+      serviceOrderNumber: explicitServiceOrderNumber,
+      legacyAttendanceId: explicitLegacyAttendanceId || explicitNumberMatch.contract?.legacy?.legacyAttendanceId || "",
+      matchedBy: "service-order-number",
+      confidence: "high",
+      fallbackUsed: false,
+      fallbackReason: ""
+    });
+  }
+
+  const legacyMatch = findServiceOrderByLegacyReference(explicitLegacyAttendanceId || sourceId, { runtimeContext });
+  if (legacyMatch) {
+    return buildDocumentServiceOrderSourceResult(baseResult, {
+      serviceOrderId: explicitServiceOrderId || legacyMatch.contract?.serviceOrder?.id || "",
+      serviceOrderNumber: explicitServiceOrderNumber || legacyMatch.contract?.serviceOrder?.orderNumber || "",
+      legacyAttendanceId: explicitLegacyAttendanceId || legacyMatch.contract?.legacy?.legacyAttendanceId || "",
+      matchedBy: "legacy-attendance-id",
+      confidence: "high",
+      fallbackUsed: false,
+      fallbackReason: ""
+    });
+  }
+
+  const paymentSourceKey = buildServiceOrderSourceLinkKey(paymentSourceType, paymentSourceId);
+  const paymentMatch = paymentSourceKey ? runtimeContext.byPaymentSourceKey.get(paymentSourceKey) : null;
+  if (paymentMatch) {
+    return buildDocumentServiceOrderSourceResult(baseResult, {
+      serviceOrderId: explicitServiceOrderId || paymentMatch.contract?.serviceOrder?.id || "",
+      serviceOrderNumber: explicitServiceOrderNumber || paymentMatch.contract?.serviceOrder?.orderNumber || "",
+      legacyAttendanceId: explicitLegacyAttendanceId || paymentMatch.contract?.legacy?.legacyAttendanceId || "",
+      matchedBy: "payment-source-link",
+      confidence: "medium",
+      fallbackUsed: false,
+      fallbackReason: ""
+    });
+  }
+
+  const documentSourceKey = buildServiceOrderSourceLinkKey(sourceType, sourceId);
+  const sourceMatch = documentSourceKey ? runtimeContext.byDocumentSourceKey.get(documentSourceKey) : null;
+  if (sourceMatch) {
+    return buildDocumentServiceOrderSourceResult(baseResult, {
+      serviceOrderId: explicitServiceOrderId || sourceMatch.contract?.serviceOrder?.id || "",
+      serviceOrderNumber: explicitServiceOrderNumber || sourceMatch.contract?.serviceOrder?.orderNumber || "",
+      legacyAttendanceId: explicitLegacyAttendanceId || sourceMatch.contract?.legacy?.legacyAttendanceId || "",
+      matchedBy: "document-source-link",
+      confidence: "medium",
+      fallbackUsed: false,
+      fallbackReason: ""
+    });
+  }
+
+  const candidatePlate = getDocumentServiceOrderCandidatePlate(documentRecord);
+  if (candidatePlate && runtimeContext.byPlate.has(candidatePlate)) {
+    const plateMatch = runtimeContext.byPlate.get(candidatePlate);
+    return buildDocumentServiceOrderSourceResult(baseResult, {
+      serviceOrderId: explicitServiceOrderId || plateMatch.contract?.serviceOrder?.id || "",
+      serviceOrderNumber: explicitServiceOrderNumber || plateMatch.contract?.serviceOrder?.orderNumber || "",
+      legacyAttendanceId: explicitLegacyAttendanceId || plateMatch.contract?.legacy?.legacyAttendanceId || "",
+      matchedBy: "vehicle-plate",
+      confidence: "low",
+      fallbackUsed: true,
+      fallbackReason: "plate-fallback"
+    });
+  }
+
+  return buildDocumentServiceOrderSourceResult(baseResult, {
+    matchedBy: "",
+    confidence: "low",
+    fallbackUsed: true,
+    fallbackReason: "service-order-unavailable"
+  });
+}
+
+function buildServiceOrderReadModel(serviceOrderSnapshot, options = {}) {
+  const contract = serviceOrderSnapshot?.contract || serviceOrderSnapshot || {};
+  const validation = serviceOrderSnapshot?.validation || validateServiceOrderStorageContract(contract);
+  return {
+    serviceOrderId: String(contract?.serviceOrder?.id || "").trim(),
+    serviceOrderNumber: String(contract?.serviceOrder?.orderNumber || "").trim(),
+    legacyAttendanceId: String(contract?.legacy?.legacyAttendanceId || "").trim(),
+    status: normalizeServiceOrderText(contract?.serviceOrder?.status, "unknown"),
+    customerName: normalizeServiceOrderText(contract?.customerSnapshot?.customerName, "Cliente avulso"),
+    vehicleLabel: normalizeServiceOrderText(
+      contract?.vehicleSnapshot?.displayLabel ||
+        contract?.vehicleSnapshot?.plate ||
+        contract?.serviceOrder?.vehiclePlate,
+      "Veiculo nao identificado"
+    ),
+    totalAmount: Math.max(0, toFiniteNumber(contract?.totals?.netAmount)),
+    paidAmount: Math.max(0, toFiniteNumber(contract?.totals?.paidAmount)),
+    pendingAmount: Math.max(0, toFiniteNumber(contract?.totals?.pendingAmount)),
+    documentRefs: Array.isArray(contract?.documents)
+      ? contract.documents.map((entry) => ({
+          id: String(entry?.documentId || entry?.sourceId || "").trim(),
+          type: normalizeServiceOrderText(entry?.documentType || entry?.category, "documento")
+        }))
+      : [],
+    paymentRefs: Array.isArray(contract?.payments)
+      ? contract.payments.map((entry) => ({
+          id: String(entry?.paymentId || entry?.sourceId || "").trim(),
+          type: normalizeServiceOrderText(entry?.paymentType || entry?.sourceType, "payment")
+        }))
+      : [],
+    ready: Boolean(validation?.valid),
+    source: "service-order-storage-contract",
+    fallbackActive: Boolean(options?.fallbackActive),
+    fallbackReason: normalizeServiceOrderText(options?.fallbackReason),
+    matchedBy: normalizeServiceOrderText(options?.matchedBy)
+  };
+}
+
+function resolveDocumentServiceOrderReadModel(documentItem, context = {}) {
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  const normalizedSource = normalizeDocumentServiceOrderSource(documentItem, { runtimeContext });
+  const resolvedSnapshot =
+    findServiceOrderByExplicitId(normalizedSource.serviceOrderId, { runtimeContext }) ||
+    findServiceOrderByOrderNumber(normalizedSource.serviceOrderNumber, { runtimeContext }) ||
+    findServiceOrderByLegacyReference(normalizedSource.legacyAttendanceId, { runtimeContext }) ||
+    (normalizedSource.paymentSourceType && normalizedSource.paymentSourceId
+      ? runtimeContext.byPaymentSourceKey.get(
+          buildServiceOrderSourceLinkKey(normalizedSource.paymentSourceType, normalizedSource.paymentSourceId)
+        ) || null
+      : null) ||
+    (normalizedSource.sourceType && normalizedSource.sourceId
+      ? runtimeContext.byDocumentSourceKey.get(
+          buildServiceOrderSourceLinkKey(normalizedSource.sourceType, normalizedSource.sourceId)
+        ) || null
+      : null) ||
+    (normalizedSource.matchedBy === "vehicle-plate" && getDocumentServiceOrderCandidatePlate(documentItem)
+      ? runtimeContext.byPlate.get(getDocumentServiceOrderCandidatePlate(documentItem)) || null
+      : null);
+
+  if (resolvedSnapshot) {
+    return buildServiceOrderReadModel(resolvedSnapshot, {
+      fallbackActive: normalizedSource.fallbackUsed,
+      fallbackReason: normalizedSource.fallbackReason,
+      matchedBy: normalizedSource.matchedBy
+    });
+  }
+
+  return {
+    serviceOrderId: "",
+    serviceOrderNumber: "",
+    legacyAttendanceId: "",
+    status: "unknown",
+    customerName: "",
+    vehicleLabel: getDocumentServiceOrderCandidatePlate(documentItem) || "",
+    totalAmount: 0,
+    paidAmount: 0,
+    pendingAmount: 0,
+    documentRefs: [],
+    paymentRefs: [],
+    ready: false,
+    source: "legacy-document-fallback",
+    fallbackActive: normalizedSource.fallbackUsed,
+    fallbackReason: normalizedSource.fallbackReason,
+    matchedBy: normalizedSource.matchedBy
+  };
+}
+
+function getDocumentHistoryRuntimeItems(context = {}) {
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  return documentHistory.map((item) => ({
+    ...item,
+    documentServiceOrderSource: normalizeDocumentServiceOrderSource(item, { runtimeContext }),
+    serviceOrderReadModel: resolveDocumentServiceOrderReadModel(item, { runtimeContext })
+  }));
+}
+
+function buildDocumentServiceOrderReadModels(context = {}) {
+  const runtimeContext = context?.runtimeContext || buildServiceOrderReadRuntimeContext(context);
+  return documentHistory.map((item) => ({
+    documentId: Number(item?.id || 0),
+    documentServiceOrderSource: normalizeDocumentServiceOrderSource(item, { runtimeContext }),
+    serviceOrderReadModel: resolveDocumentServiceOrderReadModel(item, { runtimeContext })
+  }));
+}
+
+function buildDocumentSourceQualityMetrics(context = {}) {
+  const documentReadModels = Array.isArray(context?.documentReadModels)
+    ? context.documentReadModels
+    : buildDocumentServiceOrderReadModels(context);
+  const documentsAnalyzed = documentReadModels.length;
+  const documentsWithExplicitServiceOrderId = documentReadModels.filter((entry) =>
+    Boolean(entry?.documentServiceOrderSource?.serviceOrderId)
+  ).length;
+  const documentsWithServiceOrderNumber = documentReadModels.filter((entry) =>
+    Boolean(entry?.documentServiceOrderSource?.serviceOrderNumber)
+  ).length;
+  const documentsMatchedByLegacyId = documentReadModels.filter(
+    (entry) => entry?.documentServiceOrderSource?.matchedBy === "legacy-attendance-id"
+  ).length;
+  const documentsMatchedByPaymentLink = documentReadModels.filter(
+    (entry) => entry?.documentServiceOrderSource?.matchedBy === "payment-source-link"
+  ).length;
+  const documentsMatchedByDocumentLink = documentReadModels.filter(
+    (entry) => entry?.documentServiceOrderSource?.matchedBy === "document-source-link"
+  ).length;
+  const documentsMatchedByPlateFallback = documentReadModels.filter(
+    (entry) => entry?.documentServiceOrderSource?.matchedBy === "vehicle-plate"
+  ).length;
+  const documentsUsingFallback = documentReadModels.filter(
+    (entry) => entry?.documentServiceOrderSource?.fallbackUsed
+  ).length;
+  const documentsWithoutServiceOrder = documentReadModels.filter(
+    (entry) => !String(entry?.serviceOrderReadModel?.serviceOrderId || "").trim()
+  ).length;
+  const highConfidenceMatches = documentReadModels.filter(
+    (entry) => entry?.documentServiceOrderSource?.confidence === "high"
+  ).length;
+  const mediumConfidenceMatches = documentReadModels.filter(
+    (entry) => entry?.documentServiceOrderSource?.confidence === "medium"
+  ).length;
+  const lowConfidenceMatches = documentReadModels.filter(
+    (entry) => entry?.documentServiceOrderSource?.confidence === "low"
+  ).length;
+  return {
+    documentsAnalyzed,
+    documentsWithExplicitServiceOrderId,
+    documentsWithServiceOrderNumber,
+    documentsMatchedByLegacyId,
+    documentsMatchedByPaymentLink,
+    documentsMatchedByDocumentLink,
+    documentsMatchedByPlateFallback,
+    documentsWithoutServiceOrder,
+    highConfidenceMatches,
+    mediumConfidenceMatches,
+    lowConfidenceMatches,
+    fallbackRate: documentsAnalyzed ? Number((documentsUsingFallback / documentsAnalyzed).toFixed(4)) : 0
+  };
+}
+
+function buildServiceOrderShadowWritePlan(context = {}) {
+  const storageSnapshots = Array.isArray(context?.storageSnapshots)
+    ? context.storageSnapshots
+    : buildServiceOrderStorageSnapshots(context);
+  const documentSourceQuality = context?.documentSourceQuality || buildDocumentSourceQualityMetrics(context);
+  const invalidContracts = storageSnapshots.filter((snapshot) => !snapshot?.validation?.valid).length;
+  const blockers = [];
+  if (!storageSnapshots.length) blockers.push("no-service-orders-derived");
+  if (invalidContracts > 0) blockers.push("invalid-storage-contracts");
+  if (documentSourceQuality.documentsWithoutServiceOrder > 0) blockers.push("documents-without-service-order-link");
+  if (documentSourceQuality.documentsMatchedByPlateFallback > 0) blockers.push("documents-still-using-plate-fallback");
+
+  return {
+    designed: true,
+    dryRunAvailable: true,
+    enabled: false,
+    mode: "dry-run",
+    recordsPlanned: storageSnapshots.length,
+    tables: [
+      "service_orders",
+      "service_order_customer_snapshots",
+      "service_order_vehicle_snapshots",
+      "service_order_items",
+      "service_order_payments",
+      "service_order_documents",
+      "service_order_events",
+      "service_order_totals",
+      "service_order_legacy_references"
+    ],
+    blockers,
+    activationCriteria: [
+      "supabase-staging-ready",
+      "schema-and-migrations-approved",
+      "tenant-isolation-defined",
+      "environment-separation-approved",
+      "rollback-documented",
+      "auditable-logs-available",
+      "dual-read-plan-approved",
+      "demo-data-cleaned-for-write-tests",
+      "staging-write-tests-approved",
+      "production-protection-confirmed"
+    ],
+    supabaseTouched: false,
+    migrationRequired: true
+  };
+}
+
+function evaluateServiceOrderShadowWriteGate(context = {}) {
+  const environment = normalizeServiceOrderText(context?.environment, "local");
+  const allowedEnvironment = environment === "staging";
+  const hasValidatedStagingBranch = Boolean(context?.hasValidatedStagingBranch);
+  const hasStagingUrl = Boolean(context?.hasStagingUrl);
+  const hasSupabaseConfig = Boolean(context?.hasSupabaseConfig);
+  const hasApprovedMigration = Boolean(context?.hasApprovedMigration);
+  const hasRlsDesign = Boolean(context?.hasRlsDesign);
+  const hasRollbackPlan = Boolean(context?.hasRollbackPlan);
+  const hasExplicitUserApproval = Boolean(context?.hasExplicitUserApproval);
+  const blockers = [];
+
+  if (!allowedEnvironment) blockers.push("environment-not-staging");
+  if (!hasValidatedStagingBranch) blockers.push("staging-branch-not-validated");
+  if (!hasStagingUrl) blockers.push("staging-url-unavailable");
+  if (!hasSupabaseConfig) blockers.push("supabase-staging-config-unavailable");
+  if (!hasApprovedMigration) blockers.push("approved-migration-unavailable");
+  if (!hasRlsDesign) blockers.push("rls-design-unavailable");
+  if (!hasRollbackPlan) blockers.push("rollback-plan-unavailable");
+  if (!hasExplicitUserApproval) blockers.push("explicit-user-approval-missing");
+  blockers.push("phase-keeps-shadow-write-disabled");
+
+  return {
+    enabled: false,
+    environment,
+    allowedEnvironment,
+    hasValidatedStagingBranch,
+    hasStagingUrl,
+    hasSupabaseConfig,
+    hasApprovedMigration,
+    hasRlsDesign,
+    hasRollbackPlan,
+    hasExplicitUserApproval,
+    canActivate: false,
+    blockers: [...new Set(blockers)],
+    supabaseTouched: false,
+    networkWriteAttempted: false
+  };
+}
+
+function validateServiceOrderShadowWritePayload(contract) {
+  const normalizedContract = contract && typeof contract === "object" ? contract : {};
+  const storageValidation = validateServiceOrderStorageContract(normalizedContract);
+  const errors = [...(storageValidation?.errors || [])];
+  const warnings = [...(storageValidation?.warnings || [])];
+  const missingRequiredFields = [...(storageValidation?.missingRequiredFields || [])];
+  const schemaVersion = toFiniteNumber(normalizedContract?.schemaVersion);
+  const serviceOrderId = String(normalizedContract?.serviceOrder?.id || "").trim();
+  const orderNumber = String(normalizedContract?.serviceOrder?.orderNumber || "").trim();
+  const status = String(normalizedContract?.serviceOrder?.status || "").trim();
+  const legacyAttendanceId = String(normalizedContract?.legacy?.legacyAttendanceId || "").trim();
+  const payments = Array.isArray(normalizedContract?.payments) ? normalizedContract.payments : [];
+  const documents = Array.isArray(normalizedContract?.documents) ? normalizedContract.documents : [];
+  const events = Array.isArray(normalizedContract?.events) ? normalizedContract.events : [];
+  const totals = normalizedContract?.totals || {};
+  const hasFiniteNumericValue = (value) => value !== null && value !== undefined && String(value).trim() !== "" && Number.isFinite(Number(value));
+
+  if (!schemaVersion) errors.push("missing-shadow-write-schema-version");
+  if (!serviceOrderId) errors.push("missing-shadow-write-service-order-id");
+  if (!orderNumber) errors.push("missing-shadow-write-order-number");
+  if (!status) errors.push("missing-shadow-write-status");
+  if (!legacyAttendanceId) errors.push("missing-shadow-write-legacy-attendance-id");
+
+  [
+    ["grossAmount", totals.grossAmount],
+    ["netAmount", totals.netAmount],
+    ["paidAmount", totals.paidAmount],
+    ["pendingAmount", totals.pendingAmount]
+  ].forEach(([fieldName, value]) => {
+    if (!hasFiniteNumericValue(value)) errors.push(`invalid-shadow-write-total-${fieldName}`);
+  });
+
+  if (payments.some((entry) => !String(entry?.serviceOrderId || "").trim())) errors.push("payments-missing-service-order-id");
+  if (documents.some((entry) => !String(entry?.serviceOrderId || "").trim())) errors.push("documents-missing-service-order-id");
+  if (events.some((entry) => !String(entry?.serviceOrderId || "").trim())) errors.push("events-missing-service-order-id");
+
+  const uniqueErrors = [...new Set(errors)];
+  const uniqueWarnings = [...new Set(warnings)];
+  const uniqueMissingRequiredFields = [...new Set(missingRequiredFields)];
+  const valid = uniqueErrors.length === 0;
+
+  return {
+    valid,
+    errors: uniqueErrors,
+    warnings: uniqueWarnings,
+    missingRequiredFields: uniqueMissingRequiredFields,
+    eligibleForShadowWrite: valid,
+    backendRequired: true,
+    readyForSupabaseWrite: false,
+    supabaseTouched: false,
+    networkWriteAttempted: false,
+    serviceOrderId,
+    orderNumber
+  };
+}
+
+function createServiceOrderShadowWriteAdapter(context = {}) {
+  const storageSnapshots = Array.isArray(context?.storageSnapshots)
+    ? context.storageSnapshots
+    : buildServiceOrderStorageSnapshots(context);
+  const plan = context?.plan || buildServiceOrderShadowWritePlan({ ...context, storageSnapshots });
+  const gate = context?.gate || evaluateServiceOrderShadowWriteGate({ ...context, plan });
+  const payloadValidations = storageSnapshots.map((snapshot) => ({
+    serviceOrderId: String(snapshot?.contract?.serviceOrder?.id || "").trim(),
+    orderNumber: String(snapshot?.contract?.serviceOrder?.orderNumber || "").trim(),
+    validation: validateServiceOrderShadowWritePayload(snapshot?.contract || {})
+  }));
+
+  return {
+    mode: "disabled",
+    gate,
+    plan,
+    payloadValidations,
+    dryRun() {
+      return {
+        designed: true,
+        mode: "disabled",
+        canActivate: false,
+        payloadsValidated: payloadValidations.length,
+        payloadsEligible: payloadValidations.filter((entry) => entry?.validation?.eligibleForShadowWrite).length,
+        writesAttempted: 0,
+        writesBlocked: 0,
+        supabaseTouched: false,
+        networkWriteAttempted: false,
+        blockers: [...(gate?.blockers || [])],
+        recordsPlanned: plan?.recordsPlanned ?? storageSnapshots.length
+      };
+    },
+    write(contract) {
+      const validation = validateServiceOrderShadowWritePayload(contract);
+      return {
+        attempted: false,
+        blocked: true,
+        reason: "shadow-write-disabled",
+        payloadValidation: validation,
+        supabaseTouched: false,
+        networkWriteAttempted: false
+      };
+    }
+  };
+}
+
+function buildServiceOrderShadowWriteAdapterDiagnostics(context = {}) {
+  const adapter = context?.adapter || createServiceOrderShadowWriteAdapter(context);
+  const dryRun = adapter.dryRun();
+  return {
+    exists: true,
+    mode: normalizeServiceOrderText(adapter?.mode, "disabled"),
+    gateEnabled: Boolean(adapter?.gate?.enabled),
+    canActivate: Boolean(adapter?.gate?.canActivate),
+    allowedEnvironment: Boolean(adapter?.gate?.allowedEnvironment),
+    payloadsValidated: dryRun.payloadsValidated ?? 0,
+    payloadsEligible: dryRun.payloadsEligible ?? 0,
+    writesAttempted: dryRun.writesAttempted ?? 0,
+    writesBlocked: dryRun.writesBlocked ?? 0,
+    supabaseTouched: Boolean(adapter?.gate?.supabaseTouched),
+    networkWriteAttempted: Boolean(adapter?.gate?.networkWriteAttempted),
+    blockers: [...(adapter?.gate?.blockers || [])]
+  };
+}
+
+function buildServiceOrderShadowWriteRehearsal(context = {}) {
+  const storageSnapshots = Array.isArray(context?.storageSnapshots)
+    ? context.storageSnapshots
+    : buildServiceOrderStorageSnapshots(context);
+  const plan = context?.plan || buildServiceOrderShadowWritePlan({ ...context, storageSnapshots });
+  const gate = context?.gate || evaluateServiceOrderShadowWriteGate({ ...context, plan });
+  const adapter = context?.adapter || createServiceOrderShadowWriteAdapter({ ...context, storageSnapshots, plan, gate });
+  const payloadValidations = Array.isArray(adapter?.payloadValidations)
+    ? adapter.payloadValidations
+    : storageSnapshots.map((snapshot) => ({
+        serviceOrderId: String(snapshot?.contract?.serviceOrder?.id || "").trim(),
+        orderNumber: String(snapshot?.contract?.serviceOrder?.orderNumber || "").trim(),
+        validation: validateServiceOrderShadowWritePayload(snapshot?.contract || {})
+      }));
+  const payloadsValidated = payloadValidations.length;
+  const payloadsEligibleLocalOnly = payloadValidations.filter((entry) => entry?.validation?.eligibleForShadowWrite).length;
+  const payloadsRejected = payloadsValidated - payloadsEligibleLocalOnly;
+  const warnings = [...new Set(payloadValidations.flatMap((entry) => entry?.validation?.warnings || []))];
+  const blockers = [
+    ...new Set([
+      ...(gate?.blockers || []),
+      ...(plan?.blockers || []),
+      ...(payloadsRejected > 0 ? ["shadow-write-payloads-rejected"] : [])
+    ])
+  ];
+  const firstEligibleSnapshot = storageSnapshots.find((snapshot) => {
+    const serviceOrderId = String(snapshot?.contract?.serviceOrder?.id || "").trim();
+    return payloadValidations.some(
+      (entry) => entry?.serviceOrderId === serviceOrderId && entry?.validation?.eligibleForShadowWrite
+    );
+  });
+  const blockedWriteProbe = firstEligibleSnapshot ? adapter.write(firstEligibleSnapshot.contract) : null;
+  const blockedWriteVerified = blockedWriteProbe
+    ? blockedWriteProbe?.blocked === true &&
+      blockedWriteProbe?.supabaseTouched === false &&
+      blockedWriteProbe?.networkWriteAttempted === false
+    : true;
+  const blockedWriteVerificationMethod = firstEligibleSnapshot
+    ? "adapter-write-blocked"
+    : "gate-only";
+
+  return {
+    enabled: true,
+    mode: "dry-run-rehearsal",
+    contractsAnalyzed: storageSnapshots.length,
+    payloadsValidated,
+    payloadsEligibleLocalOnly,
+    payloadsRejected,
+    adapterMode: normalizeServiceOrderText(adapter?.mode, "disabled"),
+    gateCanActivate: Boolean(gate?.canActivate),
+    writeAttempted: Boolean(blockedWriteProbe?.attempted),
+    writeBlocked: Boolean(blockedWriteProbe?.blocked ?? true),
+    blockedWriteVerified,
+    blockedWriteVerificationMethod,
+    supabaseTouched: Boolean(blockedWriteProbe?.supabaseTouched ?? gate?.supabaseTouched),
+    networkWriteAttempted: Boolean(blockedWriteProbe?.networkWriteAttempted ?? gate?.networkWriteAttempted),
+    readyForStagingActivation: false,
+    blockers,
+    warnings,
+    generatedAt: context?.analyzedAt || new Date().toISOString()
+  };
+}
+
+function buildServiceOrderFromLegacyAttendance(legacyAttendance, context = {}) {
+  const attendance = legacyAttendance && typeof legacyAttendance === "object" ? legacyAttendance : {};
+  const vehiclePlate = formatPlate(attendance.plate || "");
+  const linkedVehicle = getAnyVehicleRecord(attendance.vehicleId || attendance.id || null, vehiclePlate);
+  const linkedClient = getLinkedClientForVehicleContext({
+    ...attendance,
+    plate: vehiclePlate || attendance.plate || "",
+    currentClientId: linkedVehicle?.currentClientId || attendance.currentClientId || null
+  });
+  const serviceDefinitions = getVehicleServiceDefinitions(attendance);
+  const serviceEntries = buildServiceOrderServiceEntries(attendance, serviceDefinitions);
+  const productEntries = buildServiceOrderProductEntries(attendance);
+  const supplyEntries = buildServiceOrderSupplyEntries(serviceDefinitions);
+  const linkedCashEntries = getServiceOrderLinkedCashEntries(attendance, vehiclePlate);
+  const linkedOpenPayments = getServiceOrderLinkedOpenPayments(attendance, vehiclePlate);
+  const linkedInvoiceLineItems = getServiceOrderLinkedInvoiceLineItems(attendance, vehiclePlate);
+  const linkedDocuments = getServiceOrderLinkedDocuments(attendance, vehiclePlate);
+  const bridgeIssues = {
+    missingCustomer: !linkedClient?.id,
+    missingVehicle: !linkedVehicle?.id,
+    invalidTotals: [],
+    unsupportedStatus: false
+  };
+  const status = mapLegacyStatusToServiceOrderStatus(attendance.status);
+  if (status === "unknown") bridgeIssues.unsupportedStatus = true;
+
+  const serviceTotal = toFiniteNumber(getServicePrice(attendance));
+  const productTotal = toFiniteNumber(getVehicleProductsTotal(attendance));
+  const extras = toFiniteNumber(attendance.extraCharges);
+  const discount = Math.max(0, toFiniteNumber(attendance.discount));
+  const grossAmount = Math.max(0, serviceTotal + productTotal + extras);
+  const netAmount = Math.max(0, grossAmount - discount);
+  const estimatedSupplyCost = supplyEntries.reduce((total, item) => total + toFiniteNumber(item.estimatedTotalCost), 0);
+  const estimatedProductCost = toFiniteNumber(getVehicleProductsCostTotal(attendance));
+  const estimatedCost = Math.max(0, estimatedSupplyCost + estimatedProductCost);
+  const feeAmount = linkedCashEntries.reduce((total, entry) => total + Math.max(0, toFiniteNumber(entry.feeAmount)), 0);
+  const paidAmount = linkedCashEntries
+    .filter((entry) => normalizeText(entry.status) === normalizeText("Confirmado"))
+    .reduce((total, entry) => total + Math.max(0, toFiniteNumber(entry.value)), 0);
+  const pendingFromOpenPayments = linkedOpenPayments
+    .filter((entry) => normalizeText(entry.status) !== normalizeText("Baixado"))
+    .reduce((total, entry) => total + Math.max(0, toFiniteNumber(entry.value)), 0);
+  const pendingAmount = Math.max(
+    0,
+    attendance.partialPaymentOpen
+      ? toFiniteNumber(attendance.partialBalance)
+      : attendance.paymentOpen
+        ? pendingFromOpenPayments || Math.max(0, netAmount - paidAmount)
+        : Math.max(0, netAmount - paidAmount)
+  );
+  const estimatedProfit = Math.max(0, netAmount - estimatedCost - feeAmount);
+
+  const totals = {
+    serviceAmount: serviceTotal,
+    productAmount: productTotal,
+    extraAmount: extras,
+    grossAmount,
+    discountAmount: discount,
+    netAmount,
+    paidAmount,
+    pendingAmount,
+    feeAmount,
+    estimatedCost,
+    estimatedProfit
+  };
+
+  Object.entries(totals).forEach(([key, value]) => {
+    if (!Number.isFinite(Number(value)) || Number(value) < 0) bridgeIssues.invalidTotals.push(key);
+  });
+
+  const serviceOrderIdentity = resolveServiceOrderIdentityFromLegacy(attendance, vehiclePlate, context);
+  const createdAt =
+    normalizeServiceOrderTimestamp(attendance.createdAt) ||
+    getOldestAttendanceHistoryTimestamp(attendance) ||
+    buildServiceOrderDateTime(attendance.scheduledDate, attendance.scheduledTime) ||
+    buildServiceOrderDateTime(getTodayISO(), attendance.entry);
+  const completedAt =
+    normalizeServiceOrderTimestamp(attendance.finishedAt) ||
+    normalizeServiceOrderTimestamp(attendance.paymentConfirmedAt) ||
+    "";
+  const startedAt =
+    normalizeServiceOrderTimestamp(attendance.startedAt) ||
+    (["in_progress", "ready", "completed"].includes(status) ? buildServiceOrderDateTime(getTodayISO(), attendance.entry) : "");
+
+  const serviceOrder = {
+    id: serviceOrderIdentity.id,
+    orderNumber: serviceOrderIdentity.orderNumber,
+    legacyAttendanceId: serviceOrderIdentity.legacyAttendanceId,
+    customerId: linkedClient?.id ? String(linkedClient.id) : "",
+    customerName: linkedClient ? getClientDisplayName(linkedClient) : normalizeServiceOrderText(attendance.owner, "Cliente avulso"),
+    vehicleId: linkedVehicle?.id ? String(linkedVehicle.id) : "",
+    vehiclePlate,
+    status,
+    createdAt,
+    startedAt,
+    completedAt,
+    deliveredAt: status === "completed" ? completedAt : "",
+    operator: normalizeServiceOrderOperator(attendance, linkedCashEntries),
+    services: serviceEntries,
+    products: productEntries,
+    supplies: supplyEntries,
+    payments: [],
+    totals,
+    notes: buildServiceOrderNotes(attendance, linkedVehicle),
+    documents: [],
+    events: [],
+    source: {
+      type: "legacy-attendance-bridge",
+      version: SERVICE_ORDER_BRIDGE_VERSION,
+      legacyCollection: "patioVehicles",
+      activeBootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
+      identityMode: serviceOrderIdentity.idMode,
+      orderNumberMode: serviceOrderIdentity.orderNumberMode,
+      legacyStatus: normalizeServiceOrderText(attendance.status),
+      linkedCashEntryIds: linkedCashEntries.map((entry) => String(entry.id)),
+      linkedOpenPaymentIds: linkedOpenPayments.map((entry) => String(entry.id)),
+      linkedInvoiceIds: [...new Set(linkedInvoiceLineItems.map((entry) => String(entry.invoiceId)).filter(Boolean))],
+      linkedDocumentIds: linkedDocuments.map((entry) => String(entry.id)),
+      linkedVehicleRegistryId: linkedVehicle?.id ? String(linkedVehicle.id) : "",
+      linkedClientRegistryId: linkedClient?.id ? String(linkedClient.id) : ""
+    },
+    bridgeIssues
+  };
+
+  serviceOrder.payments = buildServiceOrderPaymentEntries(linkedCashEntries, linkedOpenPayments, serviceOrder);
+  serviceOrder.documents = buildServiceOrderDocumentEntries(linkedDocuments, serviceOrder);
+  serviceOrder.events = buildServiceOrderEvents(
+    attendance,
+    linkedCashEntries,
+    linkedOpenPayments,
+    linkedDocuments,
+    status,
+    serviceOrder
+  );
+  serviceOrder.persistence = buildServiceOrderPersistenceSnapshot(serviceOrder, {
+    linkedInvoiceLineItems,
+    linkedCashEntries,
+    linkedOpenPayments,
+    linkedDocuments
+  });
+
+  return serviceOrder;
+}
+
+function buildServiceOrderCanonicalId(legacyAttendance, vehiclePlate, context = {}) {
+  const sourceIdentity = String(legacyAttendance?.id ?? vehiclePlate ?? "untracked").trim() || "untracked";
+  const canonicalId = `service-order:legacy:${sourceIdentity}`;
+
+  if (context.usedServiceOrderIds instanceof Map) {
+    const duplicateCount = (context.usedServiceOrderIds.get(canonicalId) || 0) + 1;
+    context.usedServiceOrderIds.set(canonicalId, duplicateCount);
+  }
+
+  return canonicalId;
+}
+
+function buildLocalServiceOrderNumber(legacyAttendance, context = {}) {
+  const year = getServiceOrderNumberYear(legacyAttendance, context.analyzedAt);
+  const baseSeed = getServiceOrderNumberSeed(legacyAttendance);
+  const baseNumber = `${SERVICE_ORDER_NUMBER_PREFIX}-${year}-${String(baseSeed).padStart(SERVICE_ORDER_NUMBER_PAD_SIZE, "0")}`;
+
+  if (!(context.usedOrderNumbers instanceof Map)) return baseNumber;
+
+  const duplicateCount = (context.usedOrderNumbers.get(baseNumber) || 0) + 1;
+  context.usedOrderNumbers.set(baseNumber, duplicateCount);
+  if (duplicateCount === 1) return baseNumber;
+  return `${baseNumber}-${duplicateCount}`;
+}
+
+function getServiceOrderNumberYear(legacyAttendance, analyzedAt = new Date().toISOString()) {
+  const candidates = [
+    normalizeServiceOrderTimestamp(legacyAttendance?.createdAt),
+    buildServiceOrderDateTime(legacyAttendance?.scheduledDate, legacyAttendance?.scheduledTime),
+    buildServiceOrderDateTime(getTodayISO(), legacyAttendance?.entry),
+    analyzedAt
+  ];
+  const selected = candidates.find((value) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) || analyzedAt;
+  return selected.slice(0, 4);
+}
+
+function getServiceOrderNumberSeed(legacyAttendance) {
+  const numericSource = onlyDigits(String(legacyAttendance?.id ?? "")) || onlyDigits(String(legacyAttendance?.plate ?? ""));
+  if (numericSource) return Number(numericSource.slice(-SERVICE_ORDER_NUMBER_PAD_SIZE));
+  return hashServiceOrderValue(String(legacyAttendance?.plate || legacyAttendance?.service || "service-order")) % 1000000;
+}
+
+function hashServiceOrderValue(value) {
+  let hash = 0;
+  for (const char of String(value)) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+  return hash;
+}
+
+function mapLegacyStatusToServiceOrderStatus(status) {
+  const normalizedStatus = normalizeText(status);
+  if (normalizedStatus === normalizeText("agendado")) return "scheduled";
+  if (normalizedStatus === normalizeText("aguardando")) return "waiting";
+  if (normalizedStatus === normalizeText("lavando")) return "in_progress";
+  if (normalizedStatus === normalizeText("pronto")) return "ready";
+  if (normalizedStatus === normalizeText("finalizado")) return "completed";
+  if (normalizedStatus === normalizeText("cancelado")) return "cancelled";
+  return "unknown";
+}
+
+function buildServiceOrderServiceEntries(attendance, serviceDefinitions) {
+  return getVehicleServices(attendance).map((serviceName, index) => {
+    const definition =
+      serviceDefinitions.find((item) => normalizeText(item.name) === normalizeText(serviceName)) ||
+      findServiceDefinition(serviceName);
+    return {
+      id: `${attendance?.id ?? formatPlate(attendance?.plate || "service")}-service-${index + 1}`,
+      name: normalizeServiceOrderText(serviceName, "Servico nao identificado"),
+      price: Math.max(0, toFiniteNumber(definition?.price)),
+      vehicleType: normalizeServiceOrderText(definition?.vehicleType || attendance?.type),
+      vehicleCategory: normalizeServiceOrderText(definition?.vehicleCategory || attendance?.category),
+      estimatedMinutes: Math.max(0, toFiniteNumber(definition?.durationMinutes || definition?.duration || 0)),
+      sourceType: definition ? "serviceCatalog" : "legacy-attendance"
+    };
+  });
+}
+
+function buildServiceOrderProductEntries(attendance) {
+  return getVehicleSoldProducts(attendance).map((product, index) => {
+    const catalogProduct = getProductById(product.productId);
+    const quantity = Math.max(0, toFiniteNumber(product.quantity));
+    const lineTotal = Math.max(0, toFiniteNumber(product.total || product.lineTotal));
+    const unitPrice = quantity > 0 ? lineTotal / quantity : Math.max(0, toFiniteNumber(product.unitPrice));
+    return {
+      id: `${attendance?.id ?? formatPlate(attendance?.plate || "product")}-product-${index + 1}`,
+      productId: product.productId ? String(product.productId) : "",
+      name: normalizeServiceOrderText(product.productName || product.name || catalogProduct?.name, "Produto"),
+      quantity,
+      unitPrice,
+      total: lineTotal,
+      totalCost: Math.max(0, toFiniteNumber(product.totalCost || catalogProduct?.cost * quantity || 0)),
+      sourceType: product.productId ? "attendance-product-sale" : "legacy-attendance"
+    };
+  });
+}
+
+function buildServiceOrderSupplyEntries(serviceDefinitions) {
+  return serviceDefinitions.flatMap((service, serviceIndex) =>
+    getServiceSupplyProfile(service).map((profile, profileIndex) => {
+      const supply = getSupplyById(profile.supplyId);
+      const quantity = Math.max(0, toFiniteNumber(profile.quantity));
+      const estimatedUnitCost = Math.max(0, toFiniteNumber(supply?.cost || supply?.costPrice));
+      return {
+        id: `${service?.id || normalizeText(service?.name || `service-${serviceIndex + 1}`)}-supply-${profileIndex + 1}`,
+        serviceName: normalizeServiceOrderText(service?.name),
+        supplyId: profile.supplyId ? String(profile.supplyId) : "",
+        supplyName: normalizeServiceOrderText(supply?.name, "Insumo"),
+        quantity,
+        unit: normalizeServiceOrderText(supply?.unit, "un"),
+        estimatedUnitCost,
+        estimatedTotalCost: Math.max(0, quantity * estimatedUnitCost),
+        notes: normalizeServiceOrderText(profile.notes)
+      };
+    })
+  );
+}
+
+function buildServiceOrderPaymentEntries(linkedCashEntries, linkedOpenPayments, serviceOrder) {
+  const cashPaymentEntries = linkedCashEntries.map((entry) =>
+    attachServiceOrderLink(
+      {
+        id: `cash-entry-${entry.id}`,
+        sourceType: "cashEntry",
+        sourceId: String(entry.id),
+        status: normalizeServiceOrderText(entry.status, "Pendente"),
+        method: normalizeServiceOrderText(entry.method, "Nao informado"),
+        grossAmount: Math.max(0, toFiniteNumber(entry.value)),
+        netAmount: Math.max(0, toFiniteNumber(entry.netAmount, toFiniteNumber(entry.value))),
+        feeAmount: Math.max(0, toFiniteNumber(entry.feeAmount)),
+        partialPayment: Boolean(entry.partialPayment),
+        openPayment: Boolean(entry.openPayment),
+        effectiveAt: buildServiceOrderDateTime(entry.date, entry.time),
+        legacyReference: {
+          collection: "cashEntries",
+          id: String(entry.id)
+        }
+      },
+      serviceOrder
+    )
+  );
+  const openPaymentEntries = linkedOpenPayments.map((entry) =>
+    attachServiceOrderLink(
+      {
+        id: `open-payment-${entry.id}`,
+        sourceType: "openPayment",
+        sourceId: String(entry.id),
+        status: normalizeServiceOrderText(entry.status, "Aberto"),
+        method: normalizeServiceOrderText(entry.paymentMethod, "Nao informado"),
+        grossAmount: Math.max(0, toFiniteNumber(entry.value)),
+        netAmount: Math.max(0, toFiniteNumber(entry.value)),
+        feeAmount: 0,
+        partialPayment: Boolean(entry.partialPayment),
+        openPayment: true,
+        effectiveAt: normalizeServiceOrderTimestamp(entry.createdAt),
+        legacyReference: {
+          collection: "openPayments",
+          id: String(entry.id)
+        }
+      },
+      serviceOrder
+    )
+  );
+  return [...cashPaymentEntries, ...openPaymentEntries];
+}
+
+function buildServiceOrderNotes(attendance, linkedVehicle) {
+  return [
+    normalizeServiceOrderText(attendance?.notes),
+    normalizeServiceOrderText(linkedVehicle?.notes),
+    normalizeServiceOrderText(attendance?.extraDescription),
+    normalizeServiceOrderText(attendance?.discountDescription)
+  ].filter(Boolean);
+}
+
+function buildServiceOrderDocumentEntries(linkedDocuments, serviceOrder) {
+  return linkedDocuments.map((documentItem) =>
+    attachServiceOrderLink(
+      {
+        id: String(documentItem.id),
+        title: normalizeServiceOrderText(documentItem.title, "Documento"),
+        category: normalizeServiceOrderText(documentItem.category, "Documento"),
+        documentNumber: normalizeServiceOrderText(documentItem.documentNumber),
+        fileName: normalizeServiceOrderText(documentItem.fileName),
+        createdAt: normalizeServiceOrderTimestamp(documentItem.createdAt),
+        sourceType: normalizeServiceOrderText(documentItem.sourceType),
+        sourceId: normalizeServiceOrderText(documentItem.sourceId),
+        legacyReference: {
+          collection: "documentHistory",
+          id: String(documentItem.id)
+        }
+      },
+      serviceOrder
+    )
+  );
+}
+
+function buildServiceOrderEventsLegacyBridge(attendance, linkedCashEntries, linkedOpenPayments, linkedDocuments, status, serviceOrder) {
+  const historyEvents = (Array.isArray(attendance?.attendanceHistory) ? attendance.attendanceHistory : []).map((event) =>
+    attachServiceOrderLink(
+      {
+        id: String(event.id || ""),
+        type: normalizeServiceOrderText(event.type, "note"),
+        description: normalizeServiceOrderText(event.description, "Evento de atendimento"),
+        occurredAt: normalizeServiceOrderTimestamp(event.createdAt),
+        createdAt: normalizeServiceOrderTimestamp(event.createdAt),
+        author: normalizeServiceOrderText(event.author, "Operador"),
+        source: "attendanceHistory",
+        sourceType: "attendanceHistory",
+        legacyReference: {
+          collection: "attendanceHistory",
+          id: String(event.id || "")
+        }
+      },
+      serviceOrder
+    )
+  );
+  const syntheticEvents = [
+    {
+      id: `service-order-created-${attendance?.id ?? formatPlate(attendance?.plate || "legacy")}`,
+      type: "created",
+      description: `Ordem de serviço derivada do atendimento legado ${formatPlate(attendance?.plate || "") || attendance?.id || ""}.`,
+      createdAt:
+        normalizeServiceOrderTimestamp(attendance?.createdAt) ||
+        buildServiceOrderDateTime(attendance?.scheduledDate, attendance?.scheduledTime) ||
+        buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+      author: normalizeServiceOrderOperator(attendance, linkedCashEntries),
+      sourceType: "legacy-attendance-bridge"
+    },
+    {
+      id: `service-order-status-${attendance?.id ?? formatPlate(attendance?.plate || "legacy")}`,
+      type: "status_changed",
+      description: `Status atual normalizado para ${status}.`,
+      createdAt:
+        normalizeServiceOrderTimestamp(attendance?.finishedAt) ||
+        normalizeServiceOrderTimestamp(attendance?.paymentConfirmedAt) ||
+        buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+      author: normalizeServiceOrderOperator(attendance, linkedCashEntries),
+      sourceType: "legacy-attendance-bridge"
+    },
+    ...linkedCashEntries.map((entry) => ({
+      id: `service-order-payment-${entry.id}`,
+      type: "payment_registered",
+      description: `${normalizeServiceOrderText(entry.method, "Pagamento")} registrado com status ${normalizeServiceOrderText(entry.status, "Pendente")}.`,
+      createdAt: buildServiceOrderDateTime(entry.date, entry.time),
+      author: normalizeServiceOrderText(entry.operator, "Operador"),
+      sourceType: "cashEntry"
+    })),
+    ...linkedOpenPayments.map((entry) => ({
+      id: `service-order-open-payment-${entry.id}`,
+      type: "payment_registered",
+      description: `Pagamento em aberto registrado com status ${normalizeServiceOrderText(entry.status, "Aberto")}.`,
+      createdAt: normalizeServiceOrderTimestamp(entry.createdAt),
+      author: normalizeServiceOrderText(entry.operator, "Operador"),
+      sourceType: "openPayment"
+    })),
+    ...linkedDocuments.map((documentItem) => ({
+      id: `service-order-document-${documentItem.id}`,
+      type: "document_generated",
+      description: `${normalizeServiceOrderText(documentItem.title, "Documento")} registrado para a OS.`,
+      createdAt: normalizeServiceOrderTimestamp(documentItem.createdAt),
+      author: normalizeServiceOrderText(documentItem.responsible, "Sistema LavaPrime"),
+      sourceType: "documentHistory"
+    }))
+  ];
+
+  return [...historyEvents, ...syntheticEvents].filter((event) => event.description);
+}
+
+function buildServiceOrderEvents(attendance, linkedCashEntries, linkedOpenPayments, linkedDocuments, status, serviceOrder) {
+  const historyEvents = (Array.isArray(attendance?.attendanceHistory) ? attendance.attendanceHistory : []).map((event) =>
+    attachServiceOrderLink(
+      {
+        id: String(event.id || ""),
+        type: normalizeServiceOrderText(event.type, "note"),
+        description: normalizeServiceOrderText(event.description, "Evento de atendimento"),
+        occurredAt: normalizeServiceOrderTimestamp(event.createdAt),
+        createdAt: normalizeServiceOrderTimestamp(event.createdAt),
+        author: normalizeServiceOrderText(event.author, "Operador"),
+        source: "attendanceHistory",
+        sourceType: "attendanceHistory",
+        legacyReference: {
+          collection: "attendanceHistory",
+          id: String(event.id || "")
+        }
+      },
+      serviceOrder
+    )
+  );
+  const syntheticEvents = [
+    attachServiceOrderLink(
+      {
+        id: `service-order-created-${attendance?.id ?? formatPlate(attendance?.plate || "legacy")}`,
+        type: "created",
+        description: `Ordem de servico derivada do atendimento legado ${formatPlate(attendance?.plate || "") || attendance?.id || ""}.`,
+        occurredAt:
+          normalizeServiceOrderTimestamp(attendance?.createdAt) ||
+          buildServiceOrderDateTime(attendance?.scheduledDate, attendance?.scheduledTime) ||
+          buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+        createdAt:
+          normalizeServiceOrderTimestamp(attendance?.createdAt) ||
+          buildServiceOrderDateTime(attendance?.scheduledDate, attendance?.scheduledTime) ||
+          buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+        author: normalizeServiceOrderOperator(attendance, linkedCashEntries),
+        source: "legacy-attendance-bridge",
+        sourceType: "legacy-attendance-bridge",
+        legacyReference: {
+          collection: "patioVehicles",
+          id: String(attendance?.id ?? "")
+        }
+      },
+      serviceOrder
+    ),
+    attachServiceOrderLink(
+      {
+        id: `service-order-status-${attendance?.id ?? formatPlate(attendance?.plate || "legacy")}`,
+        type: "status_mapped",
+        description: `Status atual normalizado para ${status}.`,
+        occurredAt:
+          normalizeServiceOrderTimestamp(attendance?.finishedAt) ||
+          normalizeServiceOrderTimestamp(attendance?.paymentConfirmedAt) ||
+          buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+        createdAt:
+          normalizeServiceOrderTimestamp(attendance?.finishedAt) ||
+          normalizeServiceOrderTimestamp(attendance?.paymentConfirmedAt) ||
+          buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+        author: normalizeServiceOrderOperator(attendance, linkedCashEntries),
+        source: "legacy-attendance-bridge",
+        sourceType: "legacy-attendance-bridge",
+        legacyReference: {
+          collection: "patioVehicles",
+          id: String(attendance?.id ?? "")
+        }
+      },
+      serviceOrder
+    ),
+    ...linkedCashEntries.map((entry) =>
+      attachServiceOrderLink(
+        {
+          id: `service-order-payment-${entry.id}`,
+          type: "payment_linked",
+          description: `${normalizeServiceOrderText(entry.method, "Pagamento")} registrado com status ${normalizeServiceOrderText(entry.status, "Pendente")}.`,
+          occurredAt: buildServiceOrderDateTime(entry.date, entry.time),
+          createdAt: buildServiceOrderDateTime(entry.date, entry.time),
+          author: normalizeServiceOrderText(entry.operator, "Operador"),
+          source: "cashEntries",
+          sourceType: "cashEntry",
+          legacyReference: {
+            collection: "cashEntries",
+            id: String(entry.id)
+          }
+        },
+        serviceOrder
+      )
+    ),
+    ...linkedOpenPayments.map((entry) =>
+      attachServiceOrderLink(
+        {
+          id: `service-order-open-payment-${entry.id}`,
+          type: "payment_linked",
+          description: `Pagamento em aberto registrado com status ${normalizeServiceOrderText(entry.status, "Aberto")}.`,
+          occurredAt: normalizeServiceOrderTimestamp(entry.createdAt),
+          createdAt: normalizeServiceOrderTimestamp(entry.createdAt),
+          author: normalizeServiceOrderText(entry.operator, "Operador"),
+          source: "openPayments",
+          sourceType: "openPayment",
+          legacyReference: {
+            collection: "openPayments",
+            id: String(entry.id)
+          }
+        },
+        serviceOrder
+      )
+    ),
+    ...linkedDocuments.map((documentItem) =>
+      attachServiceOrderLink(
+        {
+          id: `service-order-document-${documentItem.id}`,
+          type: "document_linked",
+          description: `${normalizeServiceOrderText(documentItem.title, "Documento")} registrado para a OS.`,
+          occurredAt: normalizeServiceOrderTimestamp(documentItem.createdAt),
+          createdAt: normalizeServiceOrderTimestamp(documentItem.createdAt),
+          author: normalizeServiceOrderText(documentItem.responsible, "Sistema LavaPrime"),
+          source: "documentHistory",
+          sourceType: "documentHistory",
+          legacyReference: {
+            collection: "documentHistory",
+            id: String(documentItem.id)
+          }
+        },
+        serviceOrder
+      )
+    ),
+    ...(status === "completed"
+      ? [
+          attachServiceOrderLink(
+            {
+              id: `service-order-completed-${attendance?.id ?? formatPlate(attendance?.plate || "legacy")}`,
+              type: "completed",
+              description: "Atendimento legado marcado como concluido para a OS.",
+              occurredAt:
+                normalizeServiceOrderTimestamp(attendance?.finishedAt) ||
+                normalizeServiceOrderTimestamp(attendance?.paymentConfirmedAt) ||
+                buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+              createdAt:
+                normalizeServiceOrderTimestamp(attendance?.finishedAt) ||
+                normalizeServiceOrderTimestamp(attendance?.paymentConfirmedAt) ||
+                buildServiceOrderDateTime(getTodayISO(), attendance?.entry),
+              author: normalizeServiceOrderOperator(attendance, linkedCashEntries),
+              source: "legacy-attendance-bridge",
+              sourceType: "legacy-attendance-bridge",
+              legacyReference: {
+                collection: "patioVehicles",
+                id: String(attendance?.id ?? "")
+              }
+            },
+            serviceOrder
+          )
+        ]
+      : [])
+  ];
+
+  return [...historyEvents, ...syntheticEvents].filter((event) => event.description);
+}
+
+function getServiceOrderLinkedCashEntries(attendance, vehiclePlate) {
+  const attendanceId = Number(attendance?.id || 0) || null;
+  return cashEntries.filter((entry) => {
+    if (entry?.deleted) return false;
+    if (attendanceId && Number(entry.vehicleId || 0) === attendanceId) return true;
+    return Boolean(vehiclePlate) && formatPlate(entry?.plate || "") === vehiclePlate;
+  });
+}
+
+function getServiceOrderLinkedOpenPayments(attendance, vehiclePlate) {
+  const attendanceId = Number(attendance?.id || 0) || null;
+  return openPayments.filter((entry) => {
+    if (attendanceId && Number(entry.vehicleId || 0) === attendanceId) return true;
+    return Boolean(vehiclePlate) && formatPlate(entry?.plate || "") === vehiclePlate;
+  });
+}
+
+function getServiceOrderLinkedInvoiceLineItems(attendance, vehiclePlate) {
+  const attendanceId = Number(attendance?.id || 0) || null;
+  return invoiceLineItems.filter((entry) => {
+    if (attendanceId && Number(entry.vehicleId || 0) === attendanceId) return true;
+    return Boolean(vehiclePlate) && formatPlate(entry?.plate || "") === vehiclePlate;
+  });
+}
+
+function getServiceOrderLinkedDocuments(attendance, vehiclePlate) {
+  const legacyAttendanceId = String(attendance?.id ?? "").trim();
+  const serviceOrderId = buildServiceOrderCanonicalId(attendance, vehiclePlate, {});
+  const cashEntryIds = getServiceOrderLinkedCashEntries(attendance, vehiclePlate).map((entry) => String(entry.id));
+  const openPaymentIds = getServiceOrderLinkedOpenPayments(attendance, vehiclePlate).map((entry) => String(entry.id));
+  return documentHistory.filter((documentItem) => {
+    const rawDocumentSource = documentItem?.documentServiceOrderSource || {};
+    const sourceId = String(documentItem?.sourceId || "").trim();
+    const fileName = normalizeText(documentItem?.fileName || "");
+    const summary = normalizeText(documentItem?.summary || "");
+    const title = normalizeText(documentItem?.title || "");
+    const documentServiceOrderId = String(documentItem?.serviceOrderId || rawDocumentSource.serviceOrderId || "").trim();
+    const documentLegacyAttendanceId = String(
+      documentItem?.legacyAttendanceId || rawDocumentSource.legacyAttendanceId || ""
+    ).trim();
+    const paymentSourceType = normalizeText(
+      documentItem?.paymentSourceType || rawDocumentSource.paymentSourceType || ""
+    );
+    const paymentSourceId = String(documentItem?.paymentSourceId || rawDocumentSource.paymentSourceId || "").trim();
+
+    if (serviceOrderId && documentServiceOrderId === serviceOrderId) return true;
+    if (legacyAttendanceId && documentLegacyAttendanceId === legacyAttendanceId) return true;
+    if (paymentSourceType && paymentSourceId) {
+      if (
+        (paymentSourceType === normalizeText("cashEntry") && cashEntryIds.includes(paymentSourceId)) ||
+        (paymentSourceType === normalizeText("openPayment") && openPaymentIds.includes(paymentSourceId))
+      ) {
+        return true;
+      }
+    }
+    if (legacyAttendanceId && sourceId === legacyAttendanceId) return true;
+    if (vehiclePlate && sourceId === vehiclePlate) return true;
+    if (vehiclePlate && fileName.includes(normalizeText(vehiclePlate))) return true;
+    if (vehiclePlate && summary.includes(normalizeText(vehiclePlate))) return true;
+    return vehiclePlate ? title.includes(normalizeText(vehiclePlate)) : false;
+  });
+}
+
+function normalizeServiceOrderOperator(attendance, linkedCashEntries) {
+  return (
+    normalizeServiceOrderText(attendance?.operator) ||
+    normalizeServiceOrderText(linkedCashEntries.find((entry) => normalizeServiceOrderText(entry.operator))?.operator) ||
+    normalizeServiceOrderText(activeSessionUser, "Operador")
+  );
+}
+
+function getOldestAttendanceHistoryTimestamp(attendance) {
+  if (!Array.isArray(attendance?.attendanceHistory) || !attendance.attendanceHistory.length) return "";
+  const normalized = attendance.attendanceHistory
+    .map((item) => normalizeServiceOrderTimestamp(item?.createdAt))
+    .filter(Boolean)
+    .sort();
+  return normalized[0] || "";
+}
+
+function normalizeServiceOrderTimestamp(value) {
+  if (!value) return "";
+  const normalizedValue = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$/.test(normalizedValue)) return normalizedValue;
+  const brDateTimeMatch = normalizedValue.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?$/);
+  if (brDateTimeMatch) {
+    const [, day, month, year, hours = "00", minutes = "00"] = brDateTimeMatch;
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  }
+  if (/^\d{2}:\d{2}$/.test(normalizedValue)) return buildServiceOrderDateTime(getTodayISO(), normalizedValue);
+  return "";
+}
+
+function buildServiceOrderDateTime(dateValue, timeValue = "") {
+  const normalizedDate = String(dateValue || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedDate)) return "";
+  const normalizedTime = String(timeValue || "").trim();
+  if (/^\d{2}:\d{2}$/.test(normalizedTime)) return `${normalizedDate} ${normalizedTime}`;
+  return normalizedDate;
+}
+
+function normalizeServiceOrderText(value, fallback = "") {
+  const normalized = String(value || "").trim();
+  return normalized || fallback;
+}
+
 function createCustomerLegacyCleanupImpact() {
   return {
     bootstrapMode: ACTIVE_LAVAPRIME_BOOTSTRAP_MODE,
@@ -15736,7 +17907,13 @@ function normalizeDurationToMinutesLabel(value) {
 }
 
 function getDocumentHistoryItemById(documentId) {
-  return documentHistory.find((item) => Number(item.id) === Number(documentId)) || null;
+  const runtimeContext = buildServiceOrderReadRuntimeContext();
+  const item = documentHistory.find((item) => Number(item.id) === Number(documentId)) || null;
+  if (!item) return null;
+  return {
+    ...item,
+    serviceOrderReadModel: resolveDocumentServiceOrderReadModel(item, { runtimeContext })
+  };
 }
 
 function buildDocumentHistoryPdfLines(item) {
@@ -15809,7 +17986,8 @@ function sendDocumentHistoryWhatsapp(documentId) {
 }
 
 function getDocumentHistoryByCategory(category = "Todos") {
-  return documentHistory.filter((item) => category === "Todos" || normalizeText(item.category) === normalizeText(category));
+  const runtimeItems = getDocumentHistoryRuntimeItems();
+  return runtimeItems.filter((item) => category === "Todos" || normalizeText(item.category) === normalizeText(category));
 }
 
 function renderServiceEntryScreen(container) {
@@ -16236,6 +18414,7 @@ function renderProductSalesScreen(container) {
 }
 
 function renderDocumentsScreen(container) {
+  const documentItems = getDocumentHistoryRuntimeItems();
   container.innerHTML = `
     <section class="screen-toolbar inventory-toolbar" aria-label="Filtros dos documentos">
       <label class="screen-search">
@@ -16271,8 +18450,8 @@ function renderDocumentsScreen(container) {
             </thead>
             <tbody>
               ${
-                documentHistory.length
-                  ? documentHistory
+                documentItems.length
+                  ? documentItems
                       .map(
                         (item) => `
                           <tr data-document-row data-document-filter-value="${escapeHtml(normalizeText(item.category).includes("recibo") ? "Recibo" : normalizeText(item.category).includes("relatorio") ? "Relatório" : "Documento")}">
@@ -19116,7 +21295,15 @@ function downloadPdfFile(fileName, title, lines, options = {}) {
     summary: options.summary || getPdfDocumentSummary(title, normalizedLines),
     reportTarget: options.reportTarget || getPdfDocumentReportTarget({ fileName, title, subtitle: options.subtitle, category: options.category }),
     sourceType: options.sourceType || "",
-    sourceId: options.sourceId || ""
+    sourceId: options.sourceId || "",
+    serviceOrderId: options.serviceOrderId || options.serviceOrder?.id || "",
+    serviceOrderNumber: options.serviceOrderNumber || options.serviceOrder?.orderNumber || "",
+    legacyAttendanceId: options.legacyAttendanceId || options.serviceOrder?.legacyAttendanceId || "",
+    paymentSourceType: options.paymentSourceType || "",
+    paymentSourceId: options.paymentSourceId || "",
+    sourcePlate: options.sourcePlate || "",
+    runtimeContext: options.runtimeContext,
+    serviceOrder: options.serviceOrder || null
   };
   if (options.reportLayout === "operatorProduction") {
     const pdf = createOperatorProductionPdfDocument({
@@ -22117,6 +24304,7 @@ function renderReceiptPanel(vehicle) {
 }
 
 function generateReceiptPdf(vehicle) {
+  const serviceOrder = buildServiceOrderFromLegacyAttendance(vehicle, { analyzedAt: new Date().toISOString() });
   const linkedClient = getLinkedClientForVehicleContext(vehicle);
   const receiptClientName = vehicle.owner || getClientDisplayName(linkedClient);
   const receiptClientPhone = vehicle.phone || linkedClient?.phone || "-";
@@ -22181,7 +24369,12 @@ function generateReceiptPdf(vehicle) {
     subtitle: `Recibo ${receiptNumber}`,
     documentNumber: receiptNumber,
     category: "Recibo",
-    summary: `Atendimento ${vehicle.plate} - ${formatCurrency(getVehiclePaymentTotal(vehicle))}.`
+    summary: `Atendimento ${vehicle.plate} - ${formatCurrency(getVehiclePaymentTotal(vehicle))}.`,
+    sourceType: "legacyAttendance",
+    sourceId: String(vehicle.id || ""),
+    legacyAttendanceId: String(vehicle.id || ""),
+    sourcePlate: vehicle.plate || "",
+    serviceOrder
   });
   showToast("Recibo em PDF gerado.");
 }
@@ -23429,6 +25622,7 @@ initIcons();
 preloadPdfLogoImage();
 startSplashScreen();
 bindEvents();
+refreshServiceOrderDiagnostics();
 
 
 
