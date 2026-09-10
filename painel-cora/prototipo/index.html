@@ -7,13 +7,11 @@
     --textoSuave:#6B7A8D; --borda:#E4EAF1; --bordaForte:#D3DDE9;
     --sombra:0 1px 2px rgba(45,64,90,.06), 0 6px 18px rgba(45,64,90,.06);
     --sombraModal:0 12px 48px rgba(30,45,70,.22);
-    /* farol (acento por status; pastel derivado via color-mix) */
     --st-wait:#8A97A8; --st-liberada:#4A78B0; --st-exec:#C79A1E;
     --st-validacao:#9B6FB8; --st-encerrada:#4FA05B; --st-rejeitada:#C56B7A;
     --raio:12px; --raioSm:9px;
     --fonte:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,Roboto,sans-serif;
   }
-  :root:not([data-theme="light"]){ }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --fundo:#0F141B; --cartao:#19212C; --azulGelo:#233246; --azul:#7DA6D6;
@@ -43,7 +41,6 @@
   select,input,textarea{font-family:inherit; color:inherit}
   ::selection{background:var(--azulGelo)}
 
-  /* ---------- App bar ---------- */
   .topbar{position:sticky; top:0; z-index:20; background:color-mix(in srgb,var(--cartao) 88%, transparent);
     backdrop-filter:saturate(1.4) blur(8px); border-bottom:1px solid var(--borda);
     padding:12px clamp(16px,4vw,28px); display:flex; align-items:center; gap:16px; flex-wrap:wrap}
@@ -53,7 +50,6 @@
     box-shadow:inset 0 0 0 1px var(--borda)}
   .brand h1{font-size:16px; letter-spacing:.2px}
   .brand .sub{font-size:11.5px; color:var(--textoSuave); letter-spacing:.3px}
-  .spacer{flex:1}
   .ctl{display:flex; align-items:center; gap:8px}
   .ctl label{font-size:11px; color:var(--textoSuave); text-transform:uppercase; letter-spacing:.6px}
   select.field{background:var(--cartao); border:1px solid var(--bordaForte); color:var(--texto);
@@ -76,9 +72,9 @@
   .btn.danger{background:color-mix(in srgb,var(--st-rejeitada) 16%,var(--cartao)); color:var(--st-rejeitada);
     border-color:color-mix(in srgb,var(--st-rejeitada) 40%,transparent)}
   .btn.danger:hover{background:color-mix(in srgb,var(--st-rejeitada) 26%,var(--cartao))}
+  .btn.sm{padding:5px 10px; font-size:12px}
   .btn:disabled{opacity:.45; cursor:not-allowed}
 
-  /* ---------- Layout ---------- */
   main{padding:clamp(16px,3vw,26px); max-width:1400px; margin:0 auto}
   .board-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:14px; flex-wrap:wrap}
   .board-head h2{font-size:19px}
@@ -86,7 +82,6 @@
   .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--textoSuave)}
   .legend span{display:inline-flex; align-items:center; gap:5px}
 
-  /* ---------- Matrix ---------- */
   .matrix-wrap{overflow-x:auto; border:1px solid var(--borda); border-radius:var(--raio);
     background:var(--cartao); box-shadow:var(--sombra)}
   table.matrix{border-collapse:separate; border-spacing:0; width:100%; min-width:760px}
@@ -95,19 +90,20 @@
   table.matrix thead th{position:sticky; top:0; z-index:5; background:var(--azulGelo); color:var(--texto);
     padding:11px 12px; font-size:12.5px; font-weight:600}
   table.matrix thead th .fx{font-size:11px; color:var(--textoSuave); font-weight:500; display:block}
-  th.corner, td.rowhead{position:sticky; left:0; z-index:6; background:var(--cartao); min-width:172px; max-width:200px}
+  th.corner, td.rowhead{position:sticky; left:0; z-index:6; background:var(--cartao); min-width:180px; max-width:210px}
   thead th.corner{z-index:8; background:var(--azulGelo)}
-  td.rowhead{padding:12px; box-shadow:1px 0 0 var(--borda)}
+  td.rowhead{padding:0; box-shadow:1px 0 0 var(--borda)}
+  td.rowhead button.rowbtn{display:block; width:100%; text-align:left; background:none; border:none; color:inherit; padding:12px}
+  td.rowhead button.rowbtn:hover{background:var(--fundo)}
   td.rowhead .tname{font-weight:600; font-size:13.5px; line-height:1.3}
   td.rowhead .tmeta{font-size:11.5px; color:var(--textoSuave); margin-top:4px; display:flex; gap:6px; flex-wrap:wrap; align-items:center}
   .pill{display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:2px 8px; border-radius:20px;
     background:var(--azulGelo); color:var(--texto); white-space:nowrap}
-  .pill.warn{background:color-mix(in srgb,var(--st-exec) 20%,var(--cartao)); color:color-mix(in srgb,var(--st-exec) 65%,var(--texto))}
+  .pill.rec{background:color-mix(in srgb,var(--rosaPo) 70%,var(--cartao)); color:var(--rosa)}
   td.cell{padding:8px; min-width:150px}
   td.cell.empty{background:repeating-linear-gradient(135deg,transparent,transparent 9px,color-mix(in srgb,var(--borda) 40%,transparent) 9px,color-mix(in srgb,var(--borda) 40%,transparent) 10px)}
   .cardstack{display:flex; flex-direction:column; gap:7px}
 
-  /* action card */
   .acard{--st:var(--st-wait); text-align:left; width:100%; border:1px solid var(--borda);
     border-left:4px solid var(--st); border-radius:var(--raioSm);
     background:color-mix(in srgb,var(--st) 12%, var(--cartao)); padding:9px 10px; display:block;
@@ -117,20 +113,22 @@
   .acard .farol{font-size:12px; line-height:1}
   .acard .st{font-size:10.5px; color:color-mix(in srgb,var(--st) 60%,var(--texto)); font-weight:600;
     text-transform:uppercase; letter-spacing:.4px}
+  .acard .tg{margin-left:auto; font-size:11px; opacity:.8}
   .acard .nm{font-size:12.5px; font-weight:500; line-height:1.3; color:var(--texto)}
   .acard .due{font-size:11px; color:var(--textoSuave); margin-top:5px; display:flex; align-items:center; gap:5px;
     font-variant-numeric:tabular-nums}
   .acard.overdue .due{color:var(--st-rejeitada); font-weight:600}
   .acard .wait{font-size:11px; color:var(--textoSuave); font-style:italic; margin-top:4px}
 
-  .empty-note{padding:40px 20px; text-align:center; color:var(--textoSuave)}
+  .empty-note{padding:44px 20px; text-align:center; color:var(--textoSuave)}
+  .empty-note h3{font-size:16px; color:var(--texto); margin-bottom:6px}
+  .empty-note p{margin:0 auto 16px; max-width:420px}
 
-  /* ---------- Modal ---------- */
   .overlay{position:fixed; inset:0; z-index:50; background:rgba(24,36,54,.4); backdrop-filter:blur(2px);
     display:grid; place-items:center; padding:16px}
   .modal{background:var(--cartao); border:1px solid var(--borda); border-radius:var(--raio);
     box-shadow:var(--sombraModal); width:min(680px,100%); max-height:92vh; display:flex; flex-direction:column}
-  .modal.wide{width:min(760px,100%)}
+  .modal.wide{width:min(820px,100%)}
   .modal-head{padding:18px 20px 14px; border-bottom:1px solid var(--borda); display:flex; gap:12px; align-items:flex-start}
   .modal-head .titwrap{flex:1; min-width:0}
   .modal-head h3{font-size:17px; line-height:1.25}
@@ -144,6 +142,7 @@
   .chip{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:4px 11px;
     border-radius:20px; --st:var(--st-wait); background:color-mix(in srgb,var(--st) 16%,var(--cartao));
     color:color-mix(in srgb,var(--st) 62%,var(--texto)); border:1px solid color-mix(in srgb,var(--st) 34%,transparent)}
+  .chip.neutral{--st:var(--azul)}
 
   .sec h4{font-size:11.5px; text-transform:uppercase; letter-spacing:.7px; color:var(--textoSuave); margin-bottom:8px}
   .metagrid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px 16px}
@@ -152,22 +151,20 @@
   .banner{border-radius:var(--raioSm); padding:10px 12px; font-size:12.5px; display:flex; gap:8px; align-items:center}
   .banner.wait{background:color-mix(in srgb,var(--st-wait) 14%,var(--cartao)); color:var(--texto)}
   .banner.rej{background:color-mix(in srgb,var(--st-rejeitada) 14%,var(--cartao)); color:var(--texto)}
+  .banner.info{background:color-mix(in srgb,var(--azulGelo) 60%,var(--cartao)); color:var(--texto)}
 
   .dados{display:grid; grid-template-columns:repeat(2,1fr); gap:8px}
   .dados .item{background:var(--fundo); border:1px solid var(--borda); border-radius:var(--raioSm); padding:8px 10px}
-  .dados .item .k{font-size:10.5px; color:var(--textoSuave); text-transform:uppercase; letter-spacing:.4px}
+  .dados .item .k{font-size:10.5px; color:var(--textoSuave); text-transform:uppercase; letter-spacing:.4px; display:flex; gap:5px; align-items:center}
   .dados .item .v{font-size:13px; margin-top:2px; font-weight:500}
 
-  ul.checklist{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:2px}
-  ul.checklist li{display:flex; gap:9px; align-items:flex-start; padding:6px 8px; border-radius:8px}
-  ul.checklist li:hover{background:var(--fundo)}
-  ul.checklist input{margin-top:2px; width:16px; height:16px; accent-color:var(--azul)}
-  ul.checklist label{font-size:13px}
-  ul.checklist li.done label{color:var(--textoSuave); text-decoration:line-through}
-
-  textarea.obs{width:100%; border:1px solid var(--bordaForte); border-radius:var(--raioSm); padding:9px 11px;
-    background:var(--fundo); font-size:13px; resize:vertical; min-height:60px}
-  textarea.obs:focus{outline:2px solid color-mix(in srgb,var(--azul) 40%,transparent); border-color:var(--azul)}
+  textarea.obs, input.val{width:100%; border:1px solid var(--bordaForte); border-radius:var(--raioSm); padding:9px 11px;
+    background:var(--fundo); font-size:13px}
+  textarea.obs{resize:vertical; min-height:60px}
+  textarea.obs:focus, input.val:focus{outline:2px solid color-mix(in srgb,var(--azul) 40%,transparent); border-color:var(--azul)}
+  .checkbig{display:flex; gap:10px; align-items:center; background:var(--fundo); border:1px solid var(--bordaForte);
+    border-radius:var(--raioSm); padding:11px 13px; font-size:13.5px}
+  .checkbig input{width:18px; height:18px; accent-color:var(--azul)}
 
   .evid-row{display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--borda);
     border-radius:var(--raioSm); background:var(--fundo); font-size:12.5px}
@@ -186,10 +183,8 @@
   ol.timeline li:last-child::after{display:none}
   ol.timeline .tl-h{font-size:12.5px; font-weight:500}
   ol.timeline .tl-m{font-size:11px; color:var(--textoSuave); font-variant-numeric:tabular-nums}
-  ol.timeline .tl-c{font-size:12px; color:var(--texto); margin-top:3px; background:var(--fundo);
-    border-radius:8px; padding:6px 9px}
+  ol.timeline .tl-c{font-size:12px; color:var(--texto); margin-top:3px; background:var(--fundo); border-radius:8px; padding:6px 9px}
 
-  /* drawer */
   .drawer{position:fixed; top:0; right:0; bottom:0; z-index:55; width:min(400px,92vw); background:var(--cartao);
     border-left:1px solid var(--borda); box-shadow:var(--sombraModal); display:flex; flex-direction:column;
     transform:translateX(100%); transition:transform .22s ease}
@@ -205,25 +200,51 @@
   .notif .nd{font-size:11px; color:var(--textoSuave); margin-top:3px; font-variant-numeric:tabular-nums}
   .notif .u{width:8px; height:8px; border-radius:50%; background:var(--rosa); margin-top:5px; flex-shrink:0}
 
-  /* forms in wizard */
+  /* ----- escolha (etapa 1) ----- */
+  .choice{display:flex; flex-direction:column; gap:8px}
+  .tmpl-row{display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--borda);
+    border-radius:var(--raioSm); background:var(--fundo)}
+  .tmpl-row .ti{width:34px; height:34px; border-radius:9px; background:var(--azulGelo); display:grid; place-items:center; font-size:16px}
+  .tmpl-row .tn{flex:1; min-width:0}
+  .tmpl-row .tn b{font-size:13.5px; font-weight:600}
+  .tmpl-row .tn span{display:block; font-size:11.5px; color:var(--textoSuave)}
+  .divider{display:flex; align-items:center; gap:12px; color:var(--textoSuave); font-size:11.5px;
+    text-transform:uppercase; letter-spacing:.6px; margin:4px 0}
+  .divider::before,.divider::after{content:""; height:1px; background:var(--borda); flex:1}
+
+  /* ----- builder ----- */
   .form-row{display:flex; flex-direction:column; gap:5px}
   .form-row label{font-size:11.5px; color:var(--textoSuave); text-transform:uppercase; letter-spacing:.5px}
   .form-row input.field, .form-row select.field{width:100%; min-width:auto}
   input.field{background:var(--cartao); border:1px solid var(--bordaForte); color:var(--texto);
     border-radius:var(--raioSm); padding:8px 10px; font-size:13px}
-  input.field:focus, select.field:focus, textarea.obs:focus{outline:2px solid color-mix(in srgb,var(--azul) 35%,transparent)}
+  input.field:focus, select.field:focus{outline:2px solid color-mix(in srgb,var(--azul) 35%,transparent)}
   .grid2{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
-  .acao-prev{border:1px solid var(--borda); border-radius:var(--raioSm); padding:10px 12px; background:var(--fundo)}
-  .acao-prev .an{font-size:13px; font-weight:500}
-  .acao-prev .am{font-size:11.5px; color:var(--textoSuave); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap}
+  .grid3{display:grid; grid-template-columns:1.4fr .9fr 1fr; gap:10px}
+  .switch{display:inline-flex; align-items:center; gap:9px; font-size:13px; cursor:pointer}
+  .switch input{width:0; height:0; opacity:0; position:absolute}
+  .switch .track{width:38px; height:22px; border-radius:20px; background:var(--bordaForte); position:relative; transition:background .15s}
+  .switch .track::after{content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%;
+    background:#fff; transition:transform .15s; box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .switch input:checked + .track{background:var(--azul)}
+  .switch input:checked + .track::after{transform:translateX(16px)}
+  .switch input:focus-visible + .track{outline:2px solid var(--azul); outline-offset:2px}
 
-  .sol-row{display:flex; align-items:center; gap:10px; padding:9px 10px; border:1px solid var(--borda);
-    border-radius:var(--raioSm); background:var(--fundo)}
-  .sol-row.inactive{opacity:.5}
-  .sol-row .avatar{width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-size:12px;
-    font-weight:600; color:#fff; background:var(--azul); flex-shrink:0}
-  .sol-row .sn{flex:1; font-size:13px; font-weight:500}
-  .sol-row .sf{font-size:11.5px; color:var(--textoSuave); font-weight:400}
+  .fld{border:1px solid var(--borda); border-radius:var(--raioSm); background:var(--fundo); padding:11px 12px;
+    display:flex; flex-direction:column; gap:10px}
+  .fld .fld-top{display:flex; gap:10px; align-items:flex-start}
+  .fld .handle{display:flex; flex-direction:column; gap:2px; padding-top:3px}
+  .fld .handle button{width:22px; height:20px; border:1px solid var(--borda); background:var(--cartao); border-radius:6px;
+    font-size:10px; color:var(--textoSuave); line-height:1; display:grid; place-items:center}
+  .fld .handle button:hover{border-color:var(--azul); color:var(--azul)}
+  .fld .fld-main{flex:1; min-width:0}
+  .fld .fld-adv{display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding-top:9px; border-top:1px dashed var(--borda)}
+  .fld .chk{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; color:var(--texto)}
+  .fld .chk input{width:16px; height:16px; accent-color:var(--azul)}
+  .fld .rmv{background:none; border:none; color:var(--textoSuave); font-size:18px; width:30px; height:30px; border-radius:8px}
+  .fld .rmv:hover{background:color-mix(in srgb,var(--st-rejeitada) 16%,var(--cartao)); color:var(--st-rejeitada)}
+  .fld .mini{font-size:11px; color:var(--textoSuave); display:inline-flex; align-items:center; gap:5px}
+  .fld select.field, .fld input.field{padding:7px 9px; font-size:12.5px}
 
   .toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); z-index:80;
     background:var(--texto); color:var(--fundo); padding:10px 18px; border-radius:20px; font-size:13px;
@@ -232,13 +253,12 @@
 
   .foot{max-width:1400px; margin:8px auto 30px; padding:0 clamp(16px,3vw,26px); color:var(--textoSuave);
     font-size:11.5px; display:flex; gap:14px; flex-wrap:wrap; align-items:center}
-  .foot a{color:var(--azul)}
   .banner-proto{max-width:1400px; margin:14px auto 0; padding:9px clamp(16px,3vw,26px);}
   .banner-proto .inner{background:color-mix(in srgb,var(--rosaPo) 60%,var(--cartao)); border:1px solid color-mix(in srgb,var(--rosa) 35%,transparent);
     border-radius:var(--raioSm); padding:9px 13px; font-size:12.5px; color:var(--texto); display:flex; gap:9px; align-items:center}
 
-  @media (max-width:560px){
-    .metagrid,.dados,.grid2{grid-template-columns:1fr}
+  @media (max-width:600px){
+    .metagrid,.dados,.grid2,.grid3{grid-template-columns:1fr}
     .brand .sub{display:none}
     select.field{min-width:150px}
   }
@@ -265,14 +285,14 @@
 
 <div class="banner-proto"><div class="inner">
   <span>✦</span>
-  <span><strong>Esboço funcional</strong> — protótipo navegável para validar o fluxo antes de construir no Power Apps. Os dados ficam só neste navegador. Troque o <em>Acesso</em> no topo para ver as visões de Gestor, Criador e Solucionador.</span>
+  <span><strong>Esboço funcional</strong> — nada vem pronto: toda tarefa é criada por você. Em “Nova tarefa”, reutilize um modelo recorrente ou monte do zero. Dados ficam só neste navegador; troque o <em>Acesso</em> para ver Gestor, Criador e Solucionador.</span>
 </div></div>
 
 <main>
   <div class="board-head">
     <div>
       <h2 id="boardTitle">Painel geral</h2>
-      <p id="boardSub">Linhas = processos · Colunas = solucionadores · Cada célula é a ação atribuída.</p>
+      <p id="boardSub">Linhas = tarefas · Colunas = solucionadores · Cada célula é um campo/etapa atribuído.</p>
     </div>
     <div class="legend" id="legend"></div>
   </div>
@@ -283,27 +303,23 @@
 
 <div class="foot">
   <span>Protótipo de referência — a implementação real usa SharePoint + Power Automate.</span>
-  <button class="btn subtle" id="resetBtn">↺ Reiniciar dados de exemplo</button>
+  <button class="btn subtle" id="resetBtn">↺ Limpar tudo</button>
 </div>
 
 <div id="root"></div>
 <div class="toast" id="toast"></div>
 
 <script>
-/* =========================================================================
-   Painel Cora — esboço funcional (JS puro, sem dependências)
-   Modelo de dados espelha as listas do SharePoint (ver ../docs/02).
-   ========================================================================= */
 "use strict";
 const $ = (s,r=document)=>r.querySelector(s);
 const el = (t,c,txt)=>{const e=document.createElement(t); if(c)e.className=c; if(txt!=null)e.textContent=txt; return e;};
 const uid = (p="id")=>p+"_"+Math.random().toString(36).slice(2,9);
-const KEY = "painelCora_v1";
+const KEY = "painelCora_v2";
 
-/* ---- máquina de estados ---- */
+/* ---- máquina de estados (itens com responsável) ---- */
 const S = {
   WAIT:"Aguardando dependência", LIB:"Liberada", EXEC:"Em execução",
-  VAL:"Enviada para validação", ENC:"Encerrada", REJ:"Rejeitada"
+  VAL:"Enviada para validação", ENC:"Encerrada", REJ:"Rejeitada", DADO:"Dado"
 };
 const STMETA = {
   [S.WAIT]:{emoji:"⚪", v:"--st-wait",  short:"Aguardando"},
@@ -312,646 +328,687 @@ const STMETA = {
   [S.VAL] :{emoji:"🟣", v:"--st-validacao", short:"Em validação"},
   [S.ENC] :{emoji:"🟢", v:"--st-encerrada", short:"Encerrada"},
   [S.REJ] :{emoji:"🔴", v:"--st-rejeitada", short:"Rejeitada"},
+  [S.DADO]:{emoji:"▫️", v:"--st-wait", short:"Dado"},
 };
+
+/* ---- tipos de campo ---- */
+const TIPOS = ["Texto","Número","Data","Check","Observações","Evidência"];
+const TIPOICON = {"Texto":"🔤","Número":"🔢","Data":"📅","Check":"☑️","Observações":"📝","Evidência":"📎"};
+const tipoPrecisaValor = t=> ["Texto","Número","Data","Observações"].includes(t);
 
 /* ---- datas ---- */
 const today = ()=>{const d=new Date(); d.setHours(0,0,0,0); return d;};
 const addDays = (d,n)=>{const x=new Date(d); x.setDate(x.getDate()+n); return x;};
 const iso = d=> (d instanceof Date? d : new Date(d)).toISOString();
+const fmtISOdate = d=>{ const x=new Date(d); const p=n=>String(n).padStart(2,"0");
+  return x.getFullYear()+"-"+p(x.getMonth()+1)+"-"+p(x.getDate()); };
 const fmtD = d=>{ if(!d) return "—"; const x=new Date(d);
   return x.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"2-digit"}); };
 const fmtDT = d=>{ const x=new Date(d);
   return x.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+" "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); };
-const initials = n=> n.split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 
 /* =========================================================================
-   SEED — dados de exemplo (modelos Admissão/Desligamento + tarefas em curso)
+   SEED — apenas equipe (Gestor/Criador/Solucionadores). Sem tarefas/modelos.
    ========================================================================= */
 function seed(){
   const sol = [
-    {id:"u_sofia", nome:"Sofia Prado",   funcao:"Gestora de DP",       perfil:"Gestor",        coluna:false, ativo:true},
-    {id:"u_paulo", nome:"Paulo Nunes",   funcao:"Coordenador (Criador)",perfil:"Criador",      coluna:false, ativo:true},
-    {id:"u_ana",   nome:"Ana Lima",      funcao:"Analista de DP",      perfil:"Solucionador",  coluna:true,  ativo:true},
-    {id:"u_bruno", nome:"Bruno Alves",   funcao:"Analista de Folha",   perfil:"Solucionador",  coluna:true,  ativo:true},
-    {id:"u_carla", nome:"Carla Dias",    funcao:"Analista de Benefícios",perfil:"Solucionador",coluna:true,  ativo:true},
-    {id:"u_diego", nome:"Diego Rocha",   funcao:"TI / Acessos",        perfil:"Solucionador",  coluna:true,  ativo:true},
-    {id:"u_elena", nome:"Elena Souza",   funcao:"Business Partner",    perfil:"Solucionador",  coluna:true,  ativo:true},
+    {id:"u_sofia", nome:"Sofia Prado", funcao:"Gestora de DP",        perfil:"Gestor",       coluna:false, ativo:true},
+    {id:"u_paulo", nome:"Paulo Nunes", funcao:"Coordenador (Criador)", perfil:"Criador",     coluna:false, ativo:true},
+    {id:"u_ana",   nome:"Ana Lima",    funcao:"Analista de DP",       perfil:"Solucionador", coluna:true,  ativo:true},
+    {id:"u_bruno", nome:"Bruno Alves", funcao:"Analista de Folha",    perfil:"Solucionador", coluna:true,  ativo:true},
+    {id:"u_carla", nome:"Carla Dias",  funcao:"Analista de Benefícios",perfil:"Solucionador",coluna:true,  ativo:true},
+    {id:"u_diego", nome:"Diego Rocha", funcao:"TI / Acessos",         perfil:"Solucionador", coluna:true,  ativo:true},
+    {id:"u_elena", nome:"Elena Souza", funcao:"Business Partner",     perfil:"Solucionador", coluna:true,  ativo:true},
   ];
-  const t0 = today();
-  const modelos = [
-    {id:"m_adm", nome:"Admissão", recorrente:true,
-     campos:[
-       {nome:"Nome completo",tipo:"Texto"},{nome:"CPF",tipo:"Texto"},
-       {nome:"Data de admissão",tipo:"Data"},{nome:"Cargo",tipo:"Texto"},
-       {nome:"Salário",tipo:"Numero"},{nome:"Centro de custo",tipo:"Texto"}],
-     acoes:[
-       {ordem:1,nome:"Coletar documentos do admitido",sug:"u_ana",  prazo:-3,dep:null,evid:true, modo:"AposValidacaoGestor",cl:["RG e CPF","Comprovante de residência","Carteira/eSocial","Exame admissional","Dados bancários"]},
-       {ordem:2,nome:"Registrar admissão no sistema", sug:"u_ana",  prazo:0, dep:1,   evid:true, modo:"AposValidacaoGestor",cl:["Cadastro no sistema","Contrato gerado","Registro eSocial"]},
-       {ordem:3,nome:"Configurar ponto e acessos",    sug:"u_diego",prazo:0, dep:2,   evid:false,modo:"AposValidacaoGestor",cl:["Crachá","Login de rede","Cadastro no ponto"]},
-       {ordem:4,nome:"Inclusão em benefícios",        sug:"u_carla",prazo:1, dep:2,   evid:true, modo:"AposValidacaoGestor",cl:["Vale-transporte","Vale-refeição","Plano de saúde"]},
-       {ordem:5,nome:"Comunicar gestor e equipe",     sug:"u_elena",prazo:1, dep:3,   evid:false,modo:"AposEvidencia",     cl:["E-mail de boas-vindas","Apresentação à equipe"]},
-     ]},
-    {id:"m_des", nome:"Desligamento", recorrente:true,
-     campos:[
-       {nome:"Nome completo",tipo:"Texto"},{nome:"CPF",tipo:"Texto"},
-       {nome:"Data do desligamento",tipo:"Data"},{nome:"Motivo",tipo:"Texto"},
-       {nome:"Aviso prévio (dias)",tipo:"Numero"}],
-     acoes:[
-       {ordem:1,nome:"Registrar dados do desligamento",sug:"u_ana",  prazo:0,dep:null,evid:true, modo:"AposValidacaoGestor",cl:["Motivo registrado","Data confirmada","Aviso prévio definido"]},
-       {ordem:2,nome:"Calcular rescisão",             sug:"u_bruno",prazo:1,dep:1,   evid:true, modo:"AposValidacaoGestor",cl:["Saldo de salário","Férias + 1/3","13º proporcional","FGTS/multa"]},
-       {ordem:3,nome:"Agendar exame demissional",     sug:"u_ana",  prazo:0,dep:1,   evid:false,modo:"AposEvidencia",     cl:["Clínica agendada","Colaborador avisado"]},
-       {ordem:4,nome:"Revogar acessos e recolher ativos",sug:"u_diego",prazo:0,dep:1,evid:false,modo:"AposValidacaoGestor",cl:["Login desativado","Crachá recolhido","Equipamentos"]},
-       {ordem:5,nome:"Homologação e pagamento",       sug:"u_elena",prazo:2,dep:2,   evid:true, modo:"AposValidacaoGestor",cl:["Documentos assinados","Pagamento efetuado"]},
-     ]},
-  ];
-
-  const tarefas=[], dados=[], acoes=[], hist=[], notifs=[];
-  function instancia(modelo, nome, refDate, valores, gestor, criador, avanco){
-    const tId = uid("t");
-    tarefas.push({id:tId, nome, modeloId:modelo.id, dataRef:iso(refDate), criador, gestor, statusGeral:"Em andamento"});
-    modelo.campos.forEach(c=> dados.push({tarefaId:tId, campo:c.nome, tipo:c.tipo, valor:valores[c.nome] ?? ""}));
-    const mapa={};
-    modelo.acoes.forEach(a=>{
-      const aId=uid("a"); mapa[a.ordem]=aId;
-      acoes.push({id:aId, tarefaId:tId, nome:a.nome, soluId:a.sug,
-        prazo:iso(addDays(refDate,a.prazo)), status: a.dep? S.WAIT : S.LIB,
-        depId:null, depOrdem:a.dep, ordem:a.ordem, evidObrig:a.evid, modo:a.modo,
-        checklist:a.cl.map(i=>({item:i,ok:false})), obs:"", evidencias:[], just:"",
-        enviadoEm:null, decididoPor:null});
-    });
-    acoes.filter(a=>a.tarefaId===tId).forEach(a=>{ if(a.depOrdem) a.depId=mapa[a.depOrdem]; });
-    // avanço de status para dar vida ao exemplo
-    (avanco||[]).forEach(([ordem,st,extra])=>{
-      const a=acoes.find(x=>x.tarefaId===tId && x.ordem===ordem); if(!a) return;
-      a.status=st; Object.assign(a, extra||{});
-    });
-    return {tId, mapa};
-  }
-
-  // Tarefa 1 — Admissão em curso (algumas etapas já andaram)
-  const adm = instancia(modelos[0], "Admissão de João Silva", addDays(t0,-2),
-    {"Nome completo":"João Pedro da Silva","CPF":"123.456.789-00","Data de admissão":fmtD(addDays(t0,3)),
-     "Cargo":"Assistente Administrativo","Salário":"2.850,00","Centro de custo":"CC-014 Matriz"},
-    "u_sofia","u_paulo",
-    [[1,S.ENC,{decididoPor:"u_sofia"}], [2,S.LIB]]);
-  // marca checklist da ação 1 como concluído e evidência
-  (()=>{ const a=acoes.find(x=>x.tarefaId===adm.tId && x.ordem===1);
-    a.checklist.forEach(c=>c.ok=true); a.evidencias.push({nome:"documentos_joao.pdf",tipo:"Comprovante",data:iso(addDays(t0,-1))});
-  })();
-
-  // Tarefa 2 — Desligamento (etapa A enviada para validação, B aguardando)
-  const des = instancia(modelos[1], "Desligamento de Maria Souza", addDays(t0,-1),
-    {"Nome completo":"Maria Souza","CPF":"987.654.321-00","Data do desligamento":fmtD(addDays(t0,2)),
-     "Motivo":"Pedido de demissão","Aviso prévio (dias)":"30"},
-    "u_sofia","u_paulo",
-    [[1,S.VAL,{enviadoEm:iso(addDays(t0,0))}]]);
-  (()=>{ const a=acoes.find(x=>x.tarefaId===des.tId && x.ordem===1);
-    a.checklist.forEach(c=>c.ok=true); a.evidencias.push({nome:"registro_desligamento.pdf",tipo:"Termo",data:iso(t0)});
-  })();
-
-  // histórico inicial mínimo
-  acoes.forEach(a=>{
-    hist.push({acaoId:a.id, usuario:"sistema", dataHora:iso(addDays(t0,-2)),
-      de:"—", para:a.depOrdem? S.WAIT : S.LIB, comentario:"Ação distribuída na criação da tarefa"});
-  });
-
-  return {sol, modelos, tarefas, dados, acoes, hist, notifs,
-    ui:{userId:"u_sofia"}, seq:{notif:1}};
+  return {sol, modelos:[], tarefas:[], itens:[], hist:[], notifs:[], ui:{userId:"u_sofia"}};
 }
 
-/* =========================================================================
-   Estado / persistência
-   ========================================================================= */
+/* ---- estado / persistência ---- */
 let db;
-function load(){ try{ const r=localStorage.getItem(KEY); db = r? JSON.parse(r) : seed(); }
-  catch(e){ db = seed(); } }
+function load(){ try{ const r=localStorage.getItem(KEY); db = r? JSON.parse(r) : seed(); }catch(e){ db=seed(); }
+  if(!db.modelos) db.modelos=[]; if(!db.itens) db.itens=[]; }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} }
-function reset(){ db = seed(); save(); render(); toast("Dados de exemplo reiniciados"); }
+function reset(){ db=seed(); save(); closeAll(); render(); toast("Tudo limpo — comece criando uma tarefa"); }
 
 const me = ()=> db.sol.find(s=>s.id===db.ui.userId);
 const solById = id=> db.sol.find(s=>s.id===id) || {nome:"—",id};
 const tarById = id=> db.tarefas.find(t=>t.id===id);
-const acaoById = id=> db.acoes.find(a=>a.id===id);
+const itemById = id=> db.itens.find(a=>a.id===id);
 const isGestor = ()=> me().perfil==="Gestor";
 const isCriador = ()=> me().perfil==="Criador" || isGestor();
+const itensDaTarefa = tid=> db.itens.filter(a=>a.tarefaId===tid).sort((x,y)=>x.ordem-y.ordem);
 
 /* =========================================================================
-   Transições (com guardas) + histórico + notificação + dependências
+   Transições
    ========================================================================= */
 function logHist(a, de, para, comentario){
   db.hist.push({acaoId:a.id, usuario:db.ui.userId, dataHora:iso(new Date()), de, para, comentario:comentario||""});
 }
 function notify(destId, acaoId, tipo, msg){
+  if(!destId) return;
   db.notifs.push({id:uid("n"), destId, acaoId, tipo, msg, lida:false, dataHora:iso(new Date())});
 }
-function setStatus(a, novo, comentario, notif){
-  const de=a.status; a.status=novo; logHist(a, de, novo, comentario);
-  if(notif) notify(notif.dest, a.id, notif.tipo, notif.msg);
-}
-function liberarDependentes(a, gatilho){
-  // gatilho: "ENC" (validação do gestor) ou "EVID" (evidência no envio)
-  db.acoes.filter(x=>x.depId===a.id && x.status===S.WAIT).forEach(dep=>{
-    const ok = (dep.modo==="AposValidacaoGestor" && gatilho==="ENC") ||
-               (dep.modo==="AposEvidencia" && gatilho==="EVID");
-    if(ok){
-      setStatus(dep, S.LIB, "Liberada — etapa anterior "+(gatilho==="ENC"?"validada":"com evidência entregue"));
-      notify(dep.soluId, dep.id, "Liberada", `Sua ação "${dep.nome}" foi liberada.`);
-    }
+function setStatus(a, novo, comentario){ const de=a.status; a.status=novo; logHist(a, de, novo, comentario); }
+function liberarDependentes(a){
+  db.itens.filter(x=>x.depId===a.id && x.status===S.WAIT).forEach(dep=>{
+    setStatus(dep, S.LIB, "Liberada — etapa anterior concluída");
+    notify(dep.responsavel, dep.id, "Liberada", `Sua etapa "${dep.rotulo}" foi liberada.`);
   });
 }
-function recalcTarefa(tarefaId){
-  const as=db.acoes.filter(a=>a.tarefaId===tarefaId);
-  const t=tarById(tarefaId);
-  if(as.length && as.every(a=>a.status===S.ENC)) t.statusGeral="Concluída";
+function recalcTarefa(tid){
+  const t=tarById(tid); const exec=db.itens.filter(a=>a.tarefaId===tid && a.responsavel);
+  if(exec.length && exec.every(a=>a.status===S.ENC)) t.statusGeral="Concluída";
+  else if(!exec.length) t.statusGeral="Registro";
   else t.statusGeral="Em andamento";
 }
-
-function actIniciar(a){
-  setStatus(a, S.EXEC, "Iniciada pelo solucionador");
-  commit(); toast("Ação em execução");
+function faltaPreencher(a){
+  if(tipoPrecisaValor(a.tipo) && !String(a.valor||"").trim()) return "Preencha o valor do campo.";
+  if(a.tipo==="Check" && a.valor!==true) return "Marque a confirmação (Check).";
+  if((a.tipo==="Evidência" || a.exigeEvid) && a.evidencias.length===0) return "Anexe ao menos uma evidência.";
+  return null;
 }
-function actEnviar(a){
-  if(a.evidObrig && a.evidencias.length===0){ toast("Anexe ao menos uma evidência."); return; }
-  a.enviadoEm=iso(new Date());
-  setStatus(a, S.VAL, `Enviada para validação · evidências: ${a.evidencias.length}`);
-  notify(tarById(a.tarefaId).gestor, a.id, "Enviada p/ validação", `"${a.nome}" aguarda sua validação.`);
-  liberarDependentes(a, "EVID");
-  commit(); toast("Enviada para validação");
+function actIniciar(a){ setStatus(a,S.EXEC,"Iniciada pelo solucionador"); commit(); toast("Etapa em execução"); }
+function actConcluirOuEnviar(a){
+  const falta=faltaPreencher(a); if(falta){ toast(falta); return; }
+  if(a.exigeAprov){
+    a.enviadoEm=iso(new Date());
+    setStatus(a,S.VAL,"Enviada para validação do gestor");
+    notify(tarById(a.tarefaId).gestor, a.id, "Enviada p/ validação", `"${a.rotulo}" aguarda sua validação.`);
+    commit(); toast("Enviada para validação");
+  } else {
+    setStatus(a,S.ENC,"Concluída pelo solucionador (sem aprovação necessária)");
+    liberarDependentes(a); recalcTarefa(a.tarefaId);
+    notify(tarById(a.tarefaId).gestor, a.id, "Encerrada", `"${a.rotulo}" foi concluída.`);
+    commit(); toast("Etapa concluída");
+  }
 }
 function actValidar(a){
-  a.decididoPor=db.ui.userId;
-  setStatus(a, S.ENC, "Validada e encerrada pelo gestor");
-  notify(a.soluId, a.id, "Encerrada", `Sua ação "${a.nome}" foi validada e encerrada.`);
-  liberarDependentes(a, "ENC");
-  recalcTarefa(a.tarefaId);
-  commit(); toast("Ação encerrada");
+  a.decididoPor=db.ui.userId; setStatus(a,S.ENC,"Validada e encerrada pelo gestor");
+  notify(a.responsavel, a.id, "Encerrada", `Sua etapa "${a.rotulo}" foi validada e encerrada.`);
+  liberarDependentes(a); recalcTarefa(a.tarefaId);
+  commit(); toast("Etapa encerrada");
 }
 function actRejeitar(a, just){
   if(!just || !just.trim()){ toast("Justificativa obrigatória."); return; }
   a.decididoPor=db.ui.userId; a.just=just.trim();
-  setStatus(a, S.REJ, "Rejeitada: "+a.just);
-  notify(a.soluId, a.id, "Rejeitada", `"${a.nome}" foi devolvida. Motivo: ${a.just}`);
-  commit(); toast("Ação rejeitada e devolvida");
+  setStatus(a,S.REJ,"Rejeitada: "+a.just);
+  notify(a.responsavel, a.id, "Rejeitada", `"${a.rotulo}" foi devolvida. Motivo: ${a.just}`);
+  commit(); toast("Etapa rejeitada e devolvida");
 }
-function actReabrir(a){
-  setStatus(a, S.EXEC, "Reaberta para correção após rejeição");
-  commit(); toast("Ação reaberta");
-}
-function commit(){ save(); render(); if(openAcaoId) renderModalAcao(openAcaoId); refreshBell(); }
+function actReabrir(a){ setStatus(a,S.EXEC,"Reaberta para correção após rejeição"); commit(); toast("Etapa reaberta"); }
+function commit(){ save(); render(); if(openItemId) renderItem(openItemId); else if(openTaskId) renderTask(openTaskId); refreshBell(); }
 
 /* =========================================================================
    Render — topbar / matriz
    ========================================================================= */
-function render(){
-  renderUserSelect();
-  renderLegend();
-  renderMatrix();
-  refreshBell();
-}
+function render(){ renderUserSelect(); renderLegend(); renderMatrix(); refreshBell(); }
 function renderUserSelect(){
   const sel=$("#usersel"); sel.innerHTML="";
-  db.sol.filter(s=>s.ativo).forEach(s=>{
-    const o=el("option",null,`${s.nome} · ${s.perfil}`); o.value=s.id;
-    if(s.id===db.ui.userId) o.selected=true; sel.appendChild(o);
-  });
+  db.sol.filter(s=>s.ativo).forEach(s=>{ const o=el("option",null,`${s.nome} · ${s.perfil}`); o.value=s.id;
+    if(s.id===db.ui.userId) o.selected=true; sel.appendChild(o); });
 }
 function renderLegend(){
   const lg=$("#legend"); lg.innerHTML="";
-  Object.entries(STMETA).forEach(([st,m])=>{
-    const s=el("span"); s.append(document.createTextNode(m.emoji+" "), el("span",null,m.short)); lg.appendChild(s);
-  });
+  [S.WAIT,S.LIB,S.EXEC,S.VAL,S.ENC,S.REJ].forEach(st=>{ const m=STMETA[st];
+    const s=el("span"); s.append(document.createTextNode(m.emoji+" "), el("span",null,m.short)); lg.appendChild(s); });
 }
-function visibleColumns(){ return db.sol.filter(s=>s.coluna && s.ativo); }
+function visibleColumns(){ let c=db.sol.filter(s=>s.coluna && s.ativo); if(!isCriador()) c=c.filter(x=>x.id===db.ui.userId); return c; }
 function visibleTarefas(){
   if(isCriador()) return db.tarefas;
-  // solucionador: só tarefas onde ele tem ação
-  return db.tarefas.filter(t=> db.acoes.some(a=>a.tarefaId===t.id && a.soluId===db.ui.userId));
+  return db.tarefas.filter(t=> db.itens.some(a=>a.tarefaId===t.id && a.responsavel===db.ui.userId));
 }
 function renderMatrix(){
   const u=me();
-  $("#boardTitle").textContent = isCriador()? "Painel geral" : "Minhas ações";
+  $("#boardTitle").textContent = isCriador()? "Painel geral" : "Minhas etapas";
   $("#boardSub").textContent = isCriador()
-    ? "Linhas = processos · Colunas = solucionadores · Cada célula é a ação atribuída."
-    : `Você está como ${u.nome} — mostrando apenas as ações sob sua responsabilidade.`;
-
-  let cols = visibleColumns();
-  if(!isCriador()) cols = cols.filter(c=>c.id===db.ui.userId);
+    ? "Linhas = tarefas · Colunas = solucionadores · Cada célula é um campo/etapa atribuído."
+    : `Você está como ${u.nome} — mostrando apenas as etapas sob sua responsabilidade.`;
+  const cols = visibleColumns();
   const rows = visibleTarefas();
   const tb=$("#matrix"); tb.innerHTML="";
 
-  // head
   const thead=el("thead"); const htr=el("tr");
-  const corner=el("th","corner"); corner.append(el("div",null,"Processo"),
-    (()=>{const s=el("span"); s.style.cssText="font-size:11px;color:var(--textoSuave);font-weight:500;display:block";
-      s.textContent="tarefa × solucionador"; return s;})());
+  const corner=el("th","corner");
+  corner.append(el("div",null,"Tarefa"),(()=>{const s=el("span");s.style.cssText="font-size:11px;color:var(--textoSuave);font-weight:500;display:block";s.textContent="tarefa × solucionador";return s;})());
   htr.appendChild(corner);
-  cols.forEach(c=>{ const th=el("th"); th.append(el("div",null,c.nome));
-    const fx=el("span","fx",c.funcao); th.appendChild(fx); htr.appendChild(th); });
+  cols.forEach(c=>{ const th=el("th"); th.append(el("div",null,c.nome), el("span","fx",c.funcao)); htr.appendChild(th); });
   thead.appendChild(htr); tb.appendChild(thead);
 
   const tbody=el("tbody");
   if(rows.length===0){
-    const tr=el("tr"); const td=el("td"); td.colSpan=cols.length+1;
-    td.appendChild(el("div","empty-note","Nenhuma tarefa para exibir. Use “Nova tarefa”."));
-    tr.appendChild(td); tbody.appendChild(tr);
+    const tr=el("tr"); const td=el("td"); td.colSpan=Math.max(cols.length+1,2);
+    const wrap=el("div","empty-note");
+    wrap.append(el("h3",null,"Nenhuma tarefa ainda"));
+    wrap.append(el("p",null, isCriador()
+      ? "Crie a primeira tarefa do zero ou reutilize um modelo recorrente que você tenha criado."
+      : "Quando houver etapas atribuídas a você, elas aparecerão aqui."));
+    if(isCriador()){ const b=el("button","btn primary","＋ Nova tarefa"); b.onclick=openNova; wrap.appendChild(b); }
+    td.appendChild(wrap); tr.appendChild(td); tbody.appendChild(tr); tb.appendChild(tbody); return;
   }
   rows.forEach(t=>{
     const tr=el("tr");
     const rh=el("td","rowhead");
-    rh.append(el("div","tname",t.nome));
+    const rb=el("button","rowbtn");
+    rb.append(el("div","tname",t.nome));
     const meta=el("div","tmeta");
-    const modelo=db.modelos.find(m=>m.id===t.modeloId);
-    meta.append(el("span","pill", (modelo?modelo.nome:"Avulsa")));
+    if(t.recorrente) meta.appendChild(el("span","pill rec","↻ Recorrente"));
+    if(t.statusGeral==="Concluída") meta.appendChild(el("span","pill","✓ Concluída"));
     const ref=el("span",null,"D+0 "+fmtD(t.dataRef)); ref.style.cssText="font-variant-numeric:tabular-nums";
     meta.appendChild(ref);
-    if(t.statusGeral==="Concluída") meta.appendChild(el("span","pill","✓ Concluída"));
-    rh.appendChild(meta); tr.appendChild(rh);
+    rb.appendChild(meta); rb.onclick=()=>openTask(t.id); rh.appendChild(rb); tr.appendChild(rh);
 
     cols.forEach(c=>{
-      const acts=db.acoes.filter(a=>a.tarefaId===t.id && a.soluId===c.id).sort((x,y)=>x.ordem-y.ordem);
+      const acts=db.itens.filter(a=>a.tarefaId===t.id && a.responsavel===c.id).sort((x,y)=>x.ordem-y.ordem);
       const td=el("td","cell"+(acts.length?"":" empty"));
-      if(acts.length){
-        const stack=el("div","cardstack");
-        acts.forEach(a=> stack.appendChild(actionCard(a)));
-        td.appendChild(stack);
-      }
+      if(acts.length){ const stack=el("div","cardstack"); acts.forEach(a=>stack.appendChild(itemCard(a))); td.appendChild(stack); }
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
   tb.appendChild(tbody);
 }
-function actionCard(a){
-  const m=STMETA[a.status];
+function itemCard(a){
+  const m=STMETA[a.status]||STMETA[S.WAIT];
   const b=el("button","acard"+(isOverdue(a)?" overdue":""));
   b.style.setProperty("--st", `var(${m.v})`);
-  const top=el("div","top"); top.append(el("span","farol",m.emoji), el("span","st",m.short));
+  const top=el("div","top"); top.append(el("span","farol",m.emoji), el("span","st",m.short), el("span","tg",TIPOICON[a.tipo]||""));
   b.appendChild(top);
-  b.appendChild(el("div","nm",a.nome));
-  if(a.status===S.WAIT){
-    const dep=acaoById(a.depId);
-    b.appendChild(el("div","wait","⏳ Aguardando etapa anterior"+(dep?": "+dep.nome:"")));
-  } else {
-    const due=el("div","due"); due.append(document.createTextNode("🗓 "+fmtD(a.prazo)));
-    b.appendChild(due);
-  }
-  b.onclick=()=> openAcao(a.id);
+  b.appendChild(el("div","nm",a.rotulo));
+  if(a.status===S.WAIT){ const dep=itemById(a.depId);
+    b.appendChild(el("div","wait","⏳ Aguardando etapa anterior"+(dep?": "+dep.rotulo:""))); }
+  else { const due=el("div","due"); due.append(document.createTextNode("🗓 "+fmtD(a.prazo))); b.appendChild(due); }
+  b.onclick=()=>openItem(a.id);
   return b;
 }
-function isOverdue(a){
-  return [S.LIB,S.EXEC].includes(a.status) && new Date(a.prazo) < today();
+function isOverdue(a){ return [S.LIB,S.EXEC].includes(a.status) && a.prazo && new Date(a.prazo) < today(); }
+
+/* =========================================================================
+   Modais — controle
+   ========================================================================= */
+let openItemId=null, openTaskId=null;
+function closeAll(){ openItemId=null; openTaskId=null; $("#root").innerHTML=""; }
+function openItem(id){ openItemId=id; openTaskId=null; renderItem(id); }
+function openTask(id){ openTaskId=id; openItemId=null; renderTask(id); }
+function overlay(onClose){ const ov=el("div","overlay"); ov.onclick=e=>{ if(e.target===ov) onClose(); }; return ov; }
+
+/* ---- valor formatado ---- */
+function valorFmt(a){
+  if(a.tipo==="Check") return a.valor===true? "Sim":"Não";
+  if(a.tipo==="Data" && a.valor) return fmtD(a.valor);
+  if(a.tipo==="Evidência") return a.evidencias.length? a.evidencias.length+" arquivo(s)":"—";
+  return String(a.valor||"")||"—";
 }
 
 /* =========================================================================
-   Modal — detalhe da ação
+   Modal — visão geral da tarefa
    ========================================================================= */
-let openAcaoId=null;
-function openAcao(id){ openAcaoId=id; renderModalAcao(id); }
-function closeModal(){ openAcaoId=null; $("#root").innerHTML=""; }
-function renderModalAcao(id){
-  const a=acaoById(id); if(!a){ closeModal(); return; }
-  const t=tarById(a.tarefaId), m=STMETA[a.status], solu=solById(a.soluId);
-  const souOwner = a.soluId===db.ui.userId;
+function renderTask(id){
+  const t=tarById(id); if(!t){ closeAll(); return; }
   const root=$("#root"); root.innerHTML="";
-  const ov=el("div","overlay"); ov.onclick=e=>{ if(e.target===ov) closeModal(); };
-  const mod=el("div","modal");
-
-  // head
+  const ov=overlay(closeAll); const mod=el("div","modal wide");
   const head=el("div","modal-head");
-  const tw=el("div","titwrap");
-  tw.append(el("div","crumb",t.nome));
-  tw.append(el("h3",null,a.nome));
+  const tw=el("div","titwrap"); tw.append(el("div","crumb", t.recorrente?"Tarefa recorrente":"Tarefa avulsa"), el("h3",null,t.nome));
+  head.appendChild(tw);
+  const x=el("button","x","×"); x.onclick=closeAll; head.appendChild(x); mod.appendChild(head);
+
+  const body=el("div","modal-body");
+  const itens=itensDaTarefa(id);
+  const dados=itens.filter(a=>!a.responsavel);
+  const etapas=itens.filter(a=>a.responsavel);
+
+  // resumo
+  const s0=el("div","sec"); s0.appendChild(el("h4",null,"Informações"));
+  const mg=el("div","metagrid");
+  mg.append(kv("Data de referência (D+0)",fmtD(t.dataRef)),
+    kv("Situação", t.statusGeral||"Em andamento"),
+    kv("Criada por", solById(t.criador).nome),
+    kv("Gestor responsável", solById(t.gestor).nome));
+  s0.appendChild(mg); body.appendChild(s0);
+
+  // dados
+  if(dados.length){
+    const s1=el("div","sec"); s1.appendChild(el("h4",null,"Dados da tarefa"));
+    const grid=el("div","dados");
+    dados.forEach(d=>{ const it=el("div","item");
+      const k=el("div","k"); k.append(document.createTextNode((TIPOICON[d.tipo]||"")+" "), el("span",null,d.rotulo)); it.appendChild(k);
+      it.append(el("div","v", valorFmt(d))); grid.appendChild(it); });
+    s1.appendChild(grid); body.appendChild(s1);
+    if(isCriador()){ const e=el("button","btn subtle","✎ Editar dados"); e.onclick=()=>renderEditarDados(t.id); s1.appendChild(e); }
+  }
+
+  // etapas
+  const s2=el("div","sec"); s2.appendChild(el("h4",null,`Etapas / campos com responsável · ${etapas.length}`));
+  if(!etapas.length) s2.appendChild(el("div","et","Nenhuma etapa atribuída."));
+  etapas.forEach(a=>{
+    const m=STMETA[a.status]||STMETA[S.WAIT];
+    const r=el("button","tmpl-row"); r.style.width="100%"; r.style.cursor="pointer"; r.style.marginBottom="6px";
+    const ic=el("div","ti"); ic.textContent=m.emoji; ic.style.setProperty("background",`color-mix(in srgb,var(${m.v}) 20%,var(--cartao))`);
+    r.appendChild(ic);
+    const tn=el("div","tn"); tn.append((()=>{const b=document.createElement("b");b.textContent=a.rotulo;return b;})(),
+      el("span",null, `${solById(a.responsavel).nome} · ${m.short} · ${TIPOICON[a.tipo]} ${a.tipo}${a.exigeAprov?" · aprovação":""}`));
+    r.appendChild(tn);
+    r.appendChild(el("span","mini","🗓 "+fmtD(a.prazo)));
+    r.onclick=()=>openItem(a.id);
+    s2.appendChild(r);
+  });
+  body.appendChild(s2);
+  mod.appendChild(body);
+
+  const foot=el("div","modal-foot"); foot.appendChild(el("div","gap"));
+  if(isCriador() && t.recorrente){ const b=el("button","btn ghost","↻ Nova ocorrência deste modelo");
+    b.onclick=()=>{ const modelo=db.modelos.find(m=>m.id===t.modeloId) || modeloFromTarefa(t); openBuilder(modelo); }; foot.appendChild(b); }
+  const c=el("button","btn primary","Fechar"); c.onclick=closeAll; foot.appendChild(c);
+  mod.appendChild(foot);
+  ov.appendChild(mod); root.appendChild(ov);
+}
+function renderEditarDados(tid){
+  const t=tarById(tid); const root=$("#root");
+  const ov=el("div","overlay"); ov.style.zIndex=60;
+  const mod=el("div","modal"); const head=el("div","modal-head"); head.append(el("h3",null,"Editar dados da tarefa"));
+  const body=el("div","modal-body"); const dados=itensDaTarefa(tid).filter(a=>!a.responsavel);
+  dados.forEach(d=> body.appendChild(valorEditor(d, ()=>{})));
+  const foot=el("div","modal-foot"); foot.appendChild(el("div","gap"));
+  const ok=el("button","btn primary","Salvar"); ok.onclick=()=>{ save(); renderTask(tid); toast("Dados atualizados"); };
+  foot.appendChild(ok); mod.append(head,body,foot); ov.appendChild(mod); root.appendChild(ov);
+}
+function valorEditor(a, onChange){
+  const w=el("div","form-row"); w.append(el("label",null,(TIPOICON[a.tipo]||"")+" "+a.rotulo+" · "+a.tipo));
+  if(a.tipo==="Check"){
+    const l=el("label","checkbig"); const cb=el("input"); cb.type="checkbox"; cb.checked=a.valor===true;
+    cb.onchange=()=>{a.valor=cb.checked; onChange();}; l.append(cb, el("span",null,"Confirmado")); w.appendChild(l);
+  } else if(a.tipo==="Observações"){
+    const ta=el("textarea","obs"); ta.value=a.valor||""; ta.oninput=()=>{a.valor=ta.value; onChange();}; w.appendChild(ta);
+  } else if(a.tipo==="Evidência"){
+    w.appendChild(evidBlock(a, onChange, true));
+  } else {
+    const i=el("input","val"); i.type = a.tipo==="Data"?"date": a.tipo==="Número"?"number":"text";
+    i.value=a.valor||""; i.oninput=()=>{a.valor=i.value; onChange();}; w.appendChild(i);
+  }
+  return w;
+}
+function evidBlock(a, onChange, editable){
+  const box=el("div");
+  a.evidencias.forEach((ev,i)=>{
+    const r=el("div","evid-row"); r.append(el("div","fi","📄"));
+    const en=el("div"); en.style.flex="1"; en.append(el("div","en",ev.nome), el("div","et",ev.tipo+" · "+fmtD(ev.data))); r.appendChild(en);
+    if(editable){ const del=el("button","btn subtle","Remover"); del.onclick=()=>{a.evidencias.splice(i,1); onChange(); refreshOpen();}; r.appendChild(del); }
+    box.appendChild(r);
+  });
+  if(!a.evidencias.length) box.appendChild(el("div","et","Nenhuma evidência anexada."));
+  if(editable){
+    const add=el("div","evid-add");
+    const tsel=el("select","field sm"); ["Contrato","Comprovante","Termo","Outro"].forEach(o=>{const op=el("option",null,o);op.value=o;tsel.appendChild(op);});
+    const bt=el("button","btn ghost sm","＋ Anexar (simular)");
+    bt.onclick=()=>{ const n=a.evidencias.length+1; a.evidencias.push({nome:`evidencia_${n}.pdf`,tipo:tsel.value,data:iso(new Date())}); onChange(); refreshOpen(); toast("Evidência anexada (simulada)"); };
+    add.append(tsel,bt); box.appendChild(add);
+  }
+  return box;
+}
+function refreshOpen(){ save(); if(openItemId) renderItem(openItemId); else if(openTaskId) renderTask(openTaskId); }
+
+/* =========================================================================
+   Modal — detalhe do item/etapa
+   ========================================================================= */
+function renderItem(id){
+  const a=itemById(id); if(!a){ closeAll(); return; }
+  const t=tarById(a.tarefaId), m=STMETA[a.status]||STMETA[S.WAIT], solu=solById(a.responsavel);
+  const souOwner = a.responsavel===db.ui.userId;
+  const podeEditarValor = souOwner && [S.LIB,S.EXEC].includes(a.status);
+  const root=$("#root"); root.innerHTML="";
+  const ov=overlay(closeAll); const mod=el("div","modal");
+
+  const head=el("div","modal-head"); const tw=el("div","titwrap");
+  tw.append(el("div","crumb",t.nome), el("h3",null,a.rotulo));
   const chip=el("div","chip"); chip.style.setProperty("--st",`var(${m.v})`);
   chip.append(document.createTextNode(m.emoji+" "), el("span",null,a.status));
   tw.appendChild(chip);
-  const x=el("button","x","×"); x.onclick=closeModal;
-  head.append(tw,x); mod.appendChild(head);
+  const x=el("button","x","×"); x.onclick=closeAll; head.append(tw,x); mod.appendChild(head);
 
-  // body
   const body=el("div","modal-body");
 
-  if(a.status===S.WAIT){
-    const dep=acaoById(a.depId);
-    const ban=el("div","banner wait");
-    ban.append(el("span",null,"⏳"),
-      el("span",null,"Aguardando etapa anterior"+(dep?`: “${dep.nome}” (${STMETA[dep.status].short})`:"")+
-      ` · libera ${a.modo==="AposEvidencia"?"após evidência":"após validação do gestor"}.`));
-    body.appendChild(ban);
-  }
-  if(a.status===S.REJ){
-    const ban=el("div","banner rej");
-    ban.append(el("span",null,"🔴"), el("span",null,"Rejeitada. Motivo: "+(a.just||"—")));
-    body.appendChild(ban);
-  }
+  if(a.status===S.WAIT){ const dep=itemById(a.depId);
+    const ban=el("div","banner wait"); ban.append(el("span",null,"⏳"),
+      el("span",null,"Aguardando etapa anterior"+(dep?`: “${dep.rotulo}” (${(STMETA[dep.status]||{}).short||dep.status})`:"")+".")); body.appendChild(ban); }
+  if(a.status===S.REJ){ const ban=el("div","banner rej"); ban.append(el("span",null,"🔴"), el("span",null,"Rejeitada. Motivo: "+(a.just||"—"))); body.appendChild(ban); }
+  if(a.status===S.VAL){ const ban=el("div","banner info"); ban.append(el("span",null,"🟣"), el("span",null,"Enviada em "+fmtDT(a.enviadoEm)+" — aguardando o gestor.")); body.appendChild(ban); }
 
-  // meta
   const s1=el("div","sec"); s1.appendChild(el("h4",null,"Informações"));
   const mg=el("div","metagrid");
-  mg.append(kv("Responsável",solu.nome), kv("Prazo",fmtD(a.prazo)),
-    kv("Modo de liberação", a.modo==="AposEvidencia"?"Após evidência":"Após validação"),
-    kv("Evidência obrigatória", a.evidObrig?"Sim":"Não"));
+  mg.append(kv("Responsável",solu.nome), kv("Tipo",TIPOICON[a.tipo]+" "+a.tipo),
+    kv("Prazo",fmtD(a.prazo)), kv("Aprovação do gestor", a.exigeAprov?"Sim":"Não"),
+    kv("Evidência", (a.tipo==="Evidência"||a.exigeEvid)?"Obrigatória":"Não exigida"),
+    kv("Obrigatório", a.obrig?"Sim":"Não"));
   s1.appendChild(mg); body.appendChild(s1);
 
-  // dados da tarefa
-  const dd=db.dados.filter(d=>d.tarefaId===t.id);
-  if(dd.length){
-    const s2=el("div","sec"); s2.appendChild(el("h4",null,"Dados da tarefa"));
-    const grid=el("div","dados");
-    dd.forEach(d=>{ const it=el("div","item"); it.append(el("div","k",d.campo), el("div","v", d.valor||"—")); grid.appendChild(it); });
-    s2.appendChild(grid); body.appendChild(s2);
+  // valor / preenchimento
+  if(a.tipo!=="Evidência"){
+    const s2=el("div","sec"); s2.appendChild(el("h4",null,"Preenchimento"));
+    if(podeEditarValor){ s2.appendChild(valorEditor(a, ()=>save())); }
+    else {
+      const v=el("div","checkbig"); v.style.fontWeight="500"; v.textContent=valorFmt(a); s2.appendChild(v);
+    }
+    body.appendChild(s2);
   }
-
-  // checklist
-  if(a.checklist.length){
-    const s3=el("div","sec");
-    const done=a.checklist.filter(c=>c.ok).length;
-    s3.appendChild(el("h4",null,`Roteiro / checklist · ${done}/${a.checklist.length}`));
-    const ul=el("ul","checklist");
-    a.checklist.forEach((c,i)=>{
-      const li=el("li",c.ok?"done":""); const cb=el("input"); cb.type="checkbox"; cb.checked=c.ok;
-      cb.id="cl_"+id+"_"+i;
-      const editable = souOwner && [S.LIB,S.EXEC].includes(a.status);
-      cb.disabled=!editable;
-      cb.onchange=()=>{ c.ok=cb.checked; save(); renderModalAcao(id); };
-      const lb=el("label",null,c.item); lb.htmlFor=cb.id;
-      li.append(cb,lb); ul.appendChild(li);
-    });
-    s3.appendChild(ul); body.appendChild(s3);
-  }
-
-  // observação
-  const s4=el("div","sec"); s4.appendChild(el("h4",null,"Observações"));
-  const ta=el("textarea","obs"); ta.id="obs_"+id; ta.value=a.obs||"";
-  ta.placeholder = souOwner? "Anotações sobre a execução…" : "Sem observações.";
-  ta.readOnly = !souOwner;
-  ta.onchange=()=>{ a.obs=ta.value; save(); };
-  s4.appendChild(ta); body.appendChild(s4);
 
   // evidências
-  const s5=el("div","sec"); s5.appendChild(el("h4",null,`Evidências${a.evidObrig?" (obrigatória)":""}`));
-  if(a.evidencias.length){
-    a.evidencias.forEach((ev,i)=>{
-      const r=el("div","evid-row");
-      r.append(el("div","fi","📄"));
-      const en=el("div"); en.style.flex="1"; en.append(el("div","en",ev.nome), el("div","et",ev.tipo+" · "+fmtD(ev.data)));
-      r.appendChild(en);
-      if(souOwner && [S.LIB,S.EXEC].includes(a.status)){
-        const del=el("button","btn subtle","Remover"); del.onclick=()=>{ a.evidencias.splice(i,1); save(); renderModalAcao(id); };
-        r.appendChild(del);
-      }
-      s5.appendChild(r);
-    });
-  } else {
-    s5.appendChild(el("div","et","Nenhuma evidência anexada."));
+  if(a.tipo==="Evidência" || a.exigeEvid){
+    const s3=el("div","sec"); s3.appendChild(el("h4",null,"Evidências"+((a.tipo==="Evidência"||a.exigeEvid)?" (obrigatória)":"")));
+    s3.appendChild(evidBlock(a, ()=>save(), podeEditarValor));
+    if((a.tipo==="Evidência"||a.exigeEvid) && a.evidencias.length===0 && podeEditarValor)
+      s3.appendChild(el("div","req-note","Necessária para "+(a.exigeAprov?"enviar à validação":"concluir")+"."));
+    body.appendChild(s3);
   }
-  if(souOwner && [S.LIB,S.EXEC].includes(a.status)){
-    const add=el("div","evid-add");
-    const tsel=el("select","field sm"); ["Contrato","Comprovante","Termo","Outro"].forEach(o=>{const op=el("option",null,o);op.value=o;tsel.appendChild(op);});
-    const bt=el("button","btn ghost","＋ Anexar evidência (simular)");
-    bt.onclick=()=>{ const n=a.evidencias.length+1;
-      a.evidencias.push({nome:`evidencia_${n}.pdf`, tipo:tsel.value, data:iso(new Date())});
-      save(); renderModalAcao(id); toast("Evidência anexada (simulada)"); };
-    add.append(tsel,bt); s5.appendChild(add);
-    if(a.evidObrig && a.evidencias.length===0) s5.appendChild(el("div","req-note","Evidência obrigatória para enviar à validação."));
+
+  // dados da tarefa (contexto)
+  const dados=itensDaTarefa(a.tarefaId).filter(d=>!d.responsavel);
+  if(dados.length){
+    const s4=el("div","sec"); s4.appendChild(el("h4",null,"Dados da tarefa"));
+    const grid=el("div","dados");
+    dados.forEach(d=>{ const it=el("div","item");
+      const k=el("div","k"); k.append(document.createTextNode((TIPOICON[d.tipo]||"")+" "), el("span",null,d.rotulo)); it.appendChild(k);
+      it.append(el("div","v", valorFmt(d))); grid.appendChild(it); });
+    s4.appendChild(grid); body.appendChild(s4);
   }
-  body.appendChild(s5);
 
   // histórico
   const hs=db.hist.filter(h=>h.acaoId===id).sort((x,y)=> new Date(y.dataHora)-new Date(x.dataHora));
-  const s6=el("div","sec"); s6.appendChild(el("h4",null,"Histórico"));
+  const s5=el("div","sec"); s5.appendChild(el("h4",null,"Histórico"));
   const ol=el("ol","timeline");
-  hs.forEach(h=>{
-    const li=el("li");
-    const who = h.usuario==="sistema"?"Sistema":solById(h.usuario).nome;
-    li.append(el("div","tl-h", `${h.de} → ${h.para}`));
-    li.append(el("div","tl-m", `${who} · ${fmtDT(h.dataHora)}`));
-    if(h.comentario) li.append(el("div","tl-c", h.comentario));
-    ol.appendChild(li);
-  });
-  s6.appendChild(ol); body.appendChild(s6);
-
+  hs.forEach(h=>{ const li=el("li"); const who=h.usuario==="sistema"?"Sistema":solById(h.usuario).nome;
+    li.append(el("div","tl-h",`${h.de} → ${h.para}`), el("div","tl-m",`${who} · ${fmtDT(h.dataHora)}`));
+    if(h.comentario) li.append(el("div","tl-c",h.comentario)); ol.appendChild(li); });
+  if(!hs.length) ol.appendChild(el("li",null,"Sem registros."));
+  s5.appendChild(ol); body.appendChild(s5);
   mod.appendChild(body);
 
-  // footer — ações por perfil/status
-  const foot=el("div","modal-foot");
-  foot.appendChild(el("div","gap"));
-  const gestor=isGestor();
-
-  if(souOwner && a.status===S.LIB){
-    const b=el("button","btn primary","▶ Iniciar"); b.onclick=()=>actIniciar(a); foot.appendChild(b);
-  }
+  // rodapé — ações
+  const foot=el("div","modal-foot"); foot.appendChild(el("div","gap"));
+  if(souOwner && a.status===S.LIB){ const b=el("button","btn primary","▶ Iniciar"); b.onclick=()=>actIniciar(a); foot.appendChild(b); }
   if(souOwner && a.status===S.EXEC){
-    const b=el("button","btn primary","✓ Enviar para validação");
-    b.disabled = a.evidObrig && a.evidencias.length===0;
-    b.title = b.disabled? "Anexe uma evidência primeiro" : "";
-    b.onclick=()=>actEnviar(a); foot.appendChild(b);
+    const b=el("button","btn primary", a.exigeAprov?"✓ Enviar para validação":"✓ Concluir");
+    b.disabled = !!faltaPreencher(a); if(b.disabled) b.title=faltaPreencher(a);
+    b.onclick=()=>actConcluirOuEnviar(a); foot.appendChild(b);
   }
-  if(souOwner && a.status===S.REJ){
-    const b=el("button","btn primary","↻ Reabrir e corrigir"); b.onclick=()=>actReabrir(a); foot.appendChild(b);
-  }
-  if(gestor && a.status===S.VAL){
-    const rej=el("button","btn danger","✗ Rejeitar");
-    rej.onclick=()=> renderRejeitar(a);
-    const val=el("button","btn primary","✓ Validar e encerrar");
-    val.onclick=()=>actValidar(a);
+  if(souOwner && a.status===S.REJ){ const b=el("button","btn primary","↻ Reabrir e corrigir"); b.onclick=()=>actReabrir(a); foot.appendChild(b); }
+  if(isGestor() && a.status===S.VAL){
+    const rej=el("button","btn danger","✗ Rejeitar"); rej.onclick=()=>renderRejeitar(a);
+    const val=el("button","btn primary","✓ Validar e encerrar"); val.onclick=()=>actValidar(a);
     foot.append(rej,val);
   }
-  if(foot.children.length===1){ // só o gap
-    foot.appendChild(el("div","et", souOwner? "Sem ação disponível neste status." : "Somente leitura para o seu perfil."));
-  }
-  mod.appendChild(foot);
-
-  ov.appendChild(mod); root.appendChild(ov);
+  if(foot.children.length===1) foot.appendChild(el("div","et", souOwner?"Sem ação disponível neste status.":"Somente leitura para o seu perfil."));
+  mod.appendChild(foot); ov.appendChild(mod); root.appendChild(ov);
 }
 function kv(k,v){ const d=el("div"); d.append(el("div","k",k), el("div","v",v)); return d; }
-
 function renderRejeitar(a){
-  const root=$("#root");
-  const ov=el("div","overlay"); ov.style.zIndex=60;
+  const root=$("#root"); const ov=el("div","overlay"); ov.style.zIndex=60;
   const mod=el("div","modal"); mod.style.width="min(460px,100%)";
-  const head=el("div","modal-head"); head.append(el("h3",null,"Rejeitar ação"));
+  const head=el("div","modal-head"); head.append(el("h3",null,"Rejeitar etapa"));
   const body=el("div","modal-body");
   body.append(el("p",null,"Informe o motivo da devolução. A justificativa é obrigatória e as próximas etapas continuam bloqueadas."));
-  const ta=el("textarea","obs"); ta.placeholder="Motivo da rejeição…"; ta.style.minHeight="90px";
-  body.appendChild(ta);
-  const foot=el("div","modal-foot");
-  foot.appendChild(el("div","gap"));
-  const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=()=> renderModalAcao(a.id);
-  const ok=el("button","btn danger","Rejeitar"); ok.onclick=()=>{ if(!ta.value.trim()){toast("Justificativa obrigatória.");ta.focus();return;} actRejeitar(a, ta.value); };
-  foot.append(cancel,ok);
-  mod.append(head,body,foot); ov.appendChild(mod); root.appendChild(ov); ta.focus();
+  const ta=el("textarea","obs"); ta.placeholder="Motivo da rejeição…"; ta.style.minHeight="90px"; body.appendChild(ta);
+  const foot=el("div","modal-foot"); foot.appendChild(el("div","gap"));
+  const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=()=>renderItem(a.id);
+  const ok=el("button","btn danger","Rejeitar"); ok.onclick=()=>{ if(!ta.value.trim()){toast("Justificativa obrigatória.");ta.focus();return;} actRejeitar(a,ta.value); };
+  foot.append(cancel,ok); mod.append(head,body,foot); ov.appendChild(mod); root.appendChild(ov); ta.focus();
 }
 
 /* =========================================================================
-   Nova tarefa (wizard)
+   NOVA TAREFA — etapa 1: escolher modelo recorrente ou criar do zero
    ========================================================================= */
 function openNova(){
   if(!isCriador()){ toast("Apenas Gestor/Criador podem criar tarefas."); return; }
   const root=$("#root"); root.innerHTML="";
-  const state={modeloId:db.modelos[0].id, nome:"", dataRef:fmtISOdate(today()), valores:{}, acoes:[]};
-  const ov=el("div","overlay"); ov.onclick=e=>{ if(e.target===ov) root.innerHTML=""; };
-  const mod=el("div","modal wide");
+  const ov=overlay(()=>root.innerHTML=""); const mod=el("div","modal");
   const head=el("div","modal-head");
-  head.append((()=>{const w=el("div","titwrap"); w.append(el("div","crumb","Painel de criação"), el("h3",null,"Nova tarefa")); return w;})());
-  const x=el("button","x","×"); x.onclick=()=> root.innerHTML=""; head.appendChild(x);
+  head.append((()=>{const w=el("div","titwrap");w.append(el("div","crumb","Painel de criação"),el("h3",null,"Nova tarefa"));return w;})());
+  const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
+  const body=el("div","modal-body");
+
+  const s=el("div","sec"); s.appendChild(el("h4",null,"Usar um modelo recorrente"));
+  const choice=el("div","choice");
+  if(!db.modelos.length){
+    choice.appendChild(el("div","banner info","Você ainda não tem modelos recorrentes. Crie uma tarefa do zero e marque-a como recorrente para reutilizá-la aqui depois."));
+  } else {
+    db.modelos.forEach(mo=>{
+      const r=el("div","tmpl-row");
+      r.append(el("div","ti","↻"));
+      const tn=el("div","tn"); const b=document.createElement("b"); b.textContent=mo.nome;
+      tn.append(b, el("span",null, `${mo.itens.length} campo(s) · ${mo.itens.filter(i=>i.responsavel).length} etapa(s)`));
+      r.appendChild(tn);
+      const use=el("button","btn primary sm","Usar"); use.onclick=()=>openBuilder(mo);
+      const del=el("button","btn subtle sm","Excluir"); del.onclick=()=>{ if(confirm(`Excluir o modelo "${mo.nome}"?`)){ db.modelos=db.modelos.filter(m=>m.id!==mo.id); save(); openNova(); } };
+      r.append(use,del); choice.appendChild(r);
+    });
+  }
+  s.appendChild(choice); body.appendChild(s);
+
+  const div=el("div","divider","ou"); body.appendChild(div);
+
+  const s2=el("div","sec");
+  const b2=el("button","btn ghost","✎ Criar tarefa do zero"); b2.style.width="100%"; b2.style.justifyContent="center";
+  b2.onclick=()=>openBuilder(null); s2.appendChild(b2);
+  s2.appendChild(el("div","et")).textContent="Defina nome, recorrência e monte os campos (texto, número, data, check, observações, evidência), com evidência e aprovação do gestor por campo.";
+  body.appendChild(s2);
+
+  mod.append(head,body); ov.appendChild(mod); root.appendChild(ov);
+}
+
+/* =========================================================================
+   Construtor (do zero ou a partir de modelo)
+   ========================================================================= */
+function novoCampo(ordem){ return {ordem, rotulo:"", tipo:"Texto", responsavel:"", exigeAprov:false, obrig:false, exigeEvid:false, prazoRel:0, depOrdem:"", valorInicial:""}; }
+function modeloFromTarefa(t){
+  const itens=itensDaTarefa(t.id).map(a=>({ordem:a.ordem, rotulo:a.rotulo, tipo:a.tipo, responsavel:a.responsavel,
+    exigeAprov:a.exigeAprov, obrig:a.obrig, exigeEvid:a.exigeEvid, prazoRel:a.prazoRel||0, depOrdem:a.depOrdem||"", valorInicial:""}));
+  return {id:t.modeloId||null, nome:t.nome.replace(/\s+de\s+.*$/i,""), itens};
+}
+function openBuilder(modelo){
+  const root=$("#root"); root.innerHTML="";
+  const st = {
+    modeloId: modelo? modelo.id : null,
+    nome: "",
+    recorrente: !!modelo,
+    dataRef: fmtISOdate(today()),
+    campos: modelo ? modelo.itens.map((c,i)=>({...novoCampo(i+1), ...c, ordem:i+1, valorInicial:""}))
+                   : [ novoCampo(1) ]
+  };
+  const ov=overlay(()=>root.innerHTML=""); const mod=el("div","modal wide");
+  const head=el("div","modal-head");
+  head.append((()=>{const w=el("div","titwrap");w.append(el("div","crumb", modelo?`Modelo: ${modelo.nome}`:"Do zero"), el("h3",null, modelo?"Nova ocorrência":"Criar tarefa"));return w;})());
+  const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
   const body=el("div","modal-body");
   const foot=el("div","modal-foot");
+  mod.append(head,body,foot); ov.appendChild(mod); root.appendChild(ov);
 
-  function loadModelo(){
-    const modelo=db.modelos.find(m=>m.id===state.modeloId);
-    state.valores={}; modelo.campos.forEach(c=> state.valores[c.nome]="");
-    state.acoes=modelo.acoes.map(a=>({...a, resp:a.sug}));
+  function reordenar(){ st.campos.forEach((c,i)=>c.ordem=i+1); }
+  function depOptions(campo){
+    return st.campos.filter(c=>c.ordem<campo.ordem && c.responsavel);
   }
-  loadModelo();
+  function drawItens(container){
+    container.innerHTML="";
+    st.campos.forEach((c,idx)=>{
+      const box=el("div","fld");
+      const top=el("div","fld-top");
+      // reorder handle
+      const h=el("div","handle");
+      const up=el("button",null,"▲"); up.title="Subir"; up.disabled=idx===0; up.onclick=()=>{ if(idx>0){ [st.campos[idx-1],st.campos[idx]]=[st.campos[idx],st.campos[idx-1]]; reordenar(); drawItens(container);} };
+      const dn=el("button",null,"▼"); dn.title="Descer"; dn.disabled=idx===st.campos.length-1; dn.onclick=()=>{ if(idx<st.campos.length-1){ [st.campos[idx+1],st.campos[idx]]=[st.campos[idx],st.campos[idx+1]]; reordenar(); drawItens(container);} };
+      h.append(up,dn); top.appendChild(h);
+
+      const main=el("div","fld-main");
+      const g=el("div","grid3");
+      // rótulo
+      const rl=el("div","form-row"); rl.append(el("label",null,"Campo #"+c.ordem));
+      const ri=el("input","field"); ri.placeholder="Nome do campo"; ri.value=c.rotulo; ri.oninput=()=>c.rotulo=ri.value; rl.appendChild(ri); g.appendChild(rl);
+      // tipo
+      const tl=el("div","form-row"); tl.append(el("label",null,"Tipo"));
+      const ts=el("select","field"); TIPOS.forEach(tp=>{const o=el("option",null,TIPOICON[tp]+" "+tp);o.value=tp;if(tp===c.tipo)o.selected=true;ts.appendChild(o);});
+      ts.onchange=()=>{ c.tipo=ts.value; if(c.tipo==="Evidência") c.exigeEvid=true; drawItens(container); }; tl.appendChild(ts); g.appendChild(tl);
+      // responsável
+      const sl=el("div","form-row"); sl.append(el("label",null,"Responsável"));
+      const ss=el("select","field"); const on=el("option",null,"— Dado (sem responsável)"); on.value=""; ss.appendChild(on);
+      db.sol.filter(s=>s.coluna&&s.ativo).forEach(s=>{const o=el("option",null,s.nome);o.value=s.id;if(s.id===c.responsavel)o.selected=true;ss.appendChild(o);});
+      ss.value=c.responsavel; ss.onchange=()=>{ c.responsavel=ss.value; if(!c.responsavel){c.exigeAprov=false; c.depOrdem="";} drawItens(container); }; sl.appendChild(ss); g.appendChild(sl);
+      main.appendChild(g);
+
+      // valor inicial para dados
+      if(!c.responsavel && c.tipo!=="Evidência"){
+        const vw=el("div","form-row"); vw.style.marginTop="8px"; vw.append(el("label",null,"Valor (opcional)"));
+        if(c.tipo==="Check"){ const l=el("label","chk"); const cb=el("input");cb.type="checkbox";cb.checked=c.valorInicial===true;cb.onchange=()=>c.valorInicial=cb.checked; l.append(cb,el("span",null,"Confirmado")); vw.appendChild(l); }
+        else if(c.tipo==="Observações"){ const ta=el("textarea","obs");ta.value=c.valorInicial||"";ta.oninput=()=>c.valorInicial=ta.value; vw.appendChild(ta); }
+        else { const i=el("input","field");i.type=c.tipo==="Data"?"date":c.tipo==="Número"?"number":"text";i.value=c.valorInicial||"";i.oninput=()=>c.valorInicial=i.value; vw.appendChild(i); }
+        main.appendChild(vw);
+      }
+      top.appendChild(main);
+      const rm=el("button","rmv","×"); rm.title="Remover campo"; rm.onclick=()=>{ st.campos.splice(idx,1); if(!st.campos.length) st.campos.push(novoCampo(1)); reordenar(); drawItens(container); };
+      top.appendChild(rm);
+      box.appendChild(top);
+
+      // avançado
+      const adv=el("div","fld-adv");
+      adv.appendChild(chk("Obrigatório", c.obrig, v=>c.obrig=v));
+      if(c.tipo!=="Evidência") adv.appendChild(chk("Exige evidência", c.exigeEvid, v=>c.exigeEvid=v));
+      else { const s=el("span","mini","📎 Evidência é o próprio anexo"); adv.appendChild(s); }
+      if(c.responsavel){
+        adv.appendChild(chk("Aprovação do gestor", c.exigeAprov, v=>c.exigeAprov=v));
+        // prazo
+        const pw=el("span","mini"); pw.append(document.createTextNode("Prazo D"));
+        const pi=el("input","field"); pi.type="number"; pi.value=c.prazoRel; pi.style.width="62px"; pi.title="Dias relativos ao D+0 (ex.: -3, 0, 2)";
+        pi.oninput=()=>c.prazoRel=parseInt(pi.value||"0",10); pw.appendChild(pi); adv.appendChild(pw);
+        // dependência
+        const deps=depOptions(c);
+        if(deps.length){
+          const dw=el("span","mini"); dw.append(document.createTextNode("Depende de "));
+          const dsel=el("select","field"); const no=el("option",null,"— nenhuma");no.value="";dsel.appendChild(no);
+          deps.forEach(d=>{const o=el("option",null,`#${d.ordem} ${d.rotulo||"(sem nome)"}`);o.value=d.ordem;if(String(c.depOrdem)===String(d.ordem))o.selected=true;dsel.appendChild(o);});
+          dsel.value=c.depOrdem; dsel.onchange=()=>c.depOrdem=dsel.value?parseInt(dsel.value,10):""; dw.appendChild(dsel); adv.appendChild(dw);
+        }
+      }
+      box.appendChild(adv);
+      container.appendChild(box);
+    });
+  }
+  function chk(label, val, onset){
+    const l=el("label","chk"); const cb=el("input"); cb.type="checkbox"; cb.checked=!!val;
+    cb.onchange=()=>onset(cb.checked); l.append(cb, el("span",null,label)); return l;
+  }
 
   function draw(){
-    const modelo=db.modelos.find(m=>m.id===state.modeloId);
     body.innerHTML=""; foot.innerHTML="";
-
-    // seleção de modelo + nome + D+0
-    const s0=el("div","sec"); s0.appendChild(el("h4",null,"Origem"));
+    // cabeçalho da tarefa
+    const s0=el("div","sec"); s0.appendChild(el("h4",null,"Tarefa"));
+    s0.appendChild(field("Nome da tarefa",(()=>{const i=el("input","field");i.placeholder="Ex.: Admissão de Fulano de Tal";i.value=st.nome;i.oninput=()=>st.nome=i.value;return i;})()));
     const g=el("div","grid2");
-    g.appendChild(field("Modelo", (()=>{ const s=el("select","field"); db.modelos.forEach(m=>{const o=el("option",null,m.nome+(m.recorrente?" · recorrente":""));o.value=m.id;if(m.id===state.modeloId)o.selected=true;s.appendChild(o);});
-      s.onchange=()=>{state.modeloId=s.value; loadModelo(); draw();}; return s; })()));
-    g.appendChild(field("Data de referência (D+0)", (()=>{ const i=el("input","field"); i.type="date"; i.value=state.dataRef; i.onchange=()=>{state.dataRef=i.value; draw();}; return i; })()));
-    s0.appendChild(g);
-    s0.appendChild(field("Nome da tarefa", (()=>{ const i=el("input","field"); i.placeholder=`Ex.: ${modelo.nome} de Fulano de Tal`; i.value=state.nome; i.oninput=()=>state.nome=i.value; return i; })()));
+    g.appendChild(field("Data de referência (D+0)",(()=>{const i=el("input","field");i.type="date";i.value=st.dataRef;i.onchange=()=>st.dataRef=i.value;return i;})()));
+    const recWrap=el("div","form-row"); recWrap.append(el("label",null,"Recorrente"));
+    const sw=el("label","switch"); const si=el("input"); si.type="checkbox"; si.checked=st.recorrente; si.onchange=()=>st.recorrente=si.checked;
+    sw.append(si, el("span","track"), el("span",null,"Salvar como modelo reutilizável")); recWrap.appendChild(sw);
+    g.appendChild(recWrap); s0.appendChild(g);
     body.appendChild(s0);
 
-    // campos personalizados
-    const s1=el("div","sec"); s1.appendChild(el("h4",null,"Dados da ocorrência"));
-    const grid=el("div","grid2");
-    modelo.campos.forEach(c=>{
-      const inp=el("input","field");
-      inp.type = c.tipo==="Data"?"date": c.tipo==="Numero"?"text":"text";
-      inp.value=state.valores[c.nome]||""; inp.placeholder=c.tipo;
-      inp.oninput=()=> state.valores[c.nome]=inp.value;
-      grid.appendChild(field(c.nome+" · "+c.tipo, inp));
-    });
-    s1.appendChild(grid); body.appendChild(s1);
-
-    // ações (prazos calculados + responsável ajustável)
-    const s2=el("div","sec"); s2.appendChild(el("h4",null,"Ações e distribuição"));
-    const ref=new Date(state.dataRef+"T00:00:00");
-    state.acoes.forEach(a=>{
-      const box=el("div","acao-prev");
-      box.appendChild(el("div","an", a.ordem+". "+a.nome));
-      const m=el("div","am");
-      m.append(el("span",null,"🗓 "+fmtD(addDays(ref,a.prazo))+` (D${a.prazo>=0?"+":""}${a.prazo})`));
-      if(a.dep) m.append(el("span",null,"⛓ depende da etapa "+a.dep));
-      m.append(el("span",null, a.evid?"📎 evidência":"—"));
-      m.append(el("span",null, a.modo==="AposEvidencia"?"libera após evidência":"libera após validação"));
-      box.appendChild(m);
-      // responsável
-      const rs=el("select","field sm"); rs.style.marginTop="8px";
-      db.sol.filter(s=>s.coluna&&s.ativo).forEach(s=>{const o=el("option",null,s.nome);o.value=s.id;if(s.id===a.resp)o.selected=true;rs.appendChild(o);});
-      rs.onchange=()=> a.resp=rs.value;
-      const rl=el("label",null,"Responsável"); rl.style.cssText="font-size:11px;color:var(--textoSuave);display:block;margin-top:8px";
-      box.append(rl,rs);
-      s2.appendChild(box);
-    });
-    body.appendChild(s2);
+    // campos
+    const s1=el("div","sec");
+    const hh=el("div"); hh.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px";
+    hh.append(el("h4",null,"Campos e etapas"), (()=>{const b=el("button","btn ghost sm","＋ Adicionar campo");b.onclick=()=>{st.campos.push(novoCampo(st.campos.length+1));drawItens(itensBox);};return b;})());
+    s1.appendChild(hh);
+    s1.appendChild(el("div","et")).textContent="Campos sem responsável são “dados” compartilhados; com responsável viram etapas na matriz. Marque evidência/aprovação por campo.";
+    const itensBox=el("div"); itensBox.style.cssText="display:flex;flex-direction:column;gap:10px;margin-top:10px";
+    s1.appendChild(itensBox); body.appendChild(s1);
+    drawItens(itensBox);
 
     // footer
     foot.appendChild(el("div","gap"));
-    const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=()=> root.innerHTML="";
-    const create=el("button","btn primary","Criar e distribuir");
-    create.onclick=()=>{
-      if(!state.nome.trim()){ toast("Dê um nome à tarefa."); return; }
-      criarTarefa(state); root.innerHTML=""; render(); toast("Tarefa criada e ações distribuídas");
-    };
+    const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=()=>root.innerHTML="";
+    const create=el("button","btn primary", modelo?"Criar ocorrência":"Criar tarefa");
+    create.onclick=()=>criar(st);
     foot.append(cancel,create);
   }
   draw();
-  mod.append(head,body,foot); ov.appendChild(mod); root.appendChild(ov);
 }
-function field(label, control){
-  const w=el("div","form-row"); w.append(el("label",null,label), control); return w;
-}
-function fmtISOdate(d){ const x=new Date(d); return x.toISOString().slice(0,10); }
+function field(label, control){ const w=el("div","form-row"); w.append(el("label",null,label), control); return w; }
 
-function criarTarefa(state){
-  const modelo=db.modelos.find(m=>m.id===state.modeloId);
-  const ref=new Date(state.dataRef+"T00:00:00");
+function criar(st){
+  if(!st.nome.trim()){ toast("Dê um nome à tarefa."); return; }
+  const validos=st.campos.filter(c=>c.rotulo.trim());
+  if(!validos.length){ toast("Adicione ao menos um campo com nome."); return; }
+  const ref=new Date(st.dataRef+"T00:00:00");
   const tId=uid("t");
-  db.tarefas.push({id:tId, nome:state.nome.trim(), modeloId:modelo.id, dataRef:iso(ref),
-    criador:db.ui.userId, gestor: db.sol.find(s=>s.perfil==="Gestor")?.id || db.ui.userId, statusGeral:"Em andamento"});
-  modelo.campos.forEach(c=> db.dados.push({tarefaId:tId, campo:c.nome, tipo:c.tipo, valor:state.valores[c.nome]||""}));
+  const gestor = db.sol.find(s=>s.perfil==="Gestor")?.id || db.ui.userId;
+  db.tarefas.push({id:tId, nome:st.nome.trim(), recorrente:st.recorrente, modeloId:st.modeloId||null,
+    dataRef:iso(ref), criador:db.ui.userId, gestor, statusGeral:"Em andamento"});
+
   const mapa={};
-  state.acoes.forEach(a=>{
-    const aId=uid("a"); mapa[a.ordem]=aId;
-    db.acoes.push({id:aId, tarefaId:tId, nome:a.nome, soluId:a.resp,
-      prazo:iso(addDays(ref,a.prazo)), status: a.dep? S.WAIT : S.LIB, depId:null, depOrdem:a.dep,
-      ordem:a.ordem, evidObrig:a.evid, modo:a.modo,
-      checklist:(a.cl||[]).map(i=>({item:i,ok:false})), obs:"", evidencias:[], just:"", enviadoEm:null, decididoPor:null});
+  validos.forEach((c,i)=>{
+    const aId=uid("a"); const ord=i+1; mapa[c.ordem]=aId;
+    const exigeEvid = c.tipo==="Evidência" ? true : !!c.exigeEvid;
+    const temResp = !!c.responsavel;
+    db.itens.push({id:aId, tarefaId:tId, ordem:ord, rotulo:c.rotulo.trim(), tipo:c.tipo,
+      responsavel:c.responsavel||"", exigeAprov: temResp && !!c.exigeAprov, obrig:!!c.obrig, exigeEvid,
+      prazo: temResp? iso(addDays(ref, c.prazoRel||0)) : null, prazoRel:c.prazoRel||0,
+      depId:null, depOrdem: temResp? (c.depOrdem||"") : "",
+      status: temResp ? (c.depOrdem? S.WAIT : S.LIB) : S.DADO,
+      valor: temResp? (c.tipo==="Check"?false:"") : (c.tipo==="Check"? c.valorInicial===true : (c.valorInicial||"")),
+      evidencias:[], obs:"", just:"", enviadoEm:null, decididoPor:null});
   });
-  db.acoes.filter(a=>a.tarefaId===tId).forEach(a=>{
-    if(a.depOrdem) a.depId=mapa[a.depOrdem];
-    logHist(a, "—", a.status, "Ação distribuída na criação da tarefa");
-    if(a.status===S.LIB) notify(a.soluId, a.id, "Atribuída", `Nova ação: "${a.nome}" (prazo ${fmtD(a.prazo)}).`);
+  // amarra dependências e histórico/notif
+  db.itens.filter(a=>a.tarefaId===tId).forEach(a=>{
+    if(a.depOrdem && mapa[a.depOrdem]) a.depId=mapa[a.depOrdem];
+    if(a.responsavel){
+      logHist(a,"—",a.status,"Etapa distribuída na criação da tarefa");
+      if(a.status===S.LIB) notify(a.responsavel, a.id, "Atribuída", `Nova etapa: "${a.rotulo}" (prazo ${fmtD(a.prazo)}).`);
+    }
   });
-  save();
+  recalcTarefa(tId);
+
+  // salva/atualiza modelo recorrente
+  if(st.recorrente){
+    const estrut = validos.map((c,i)=>({ordem:i+1, rotulo:c.rotulo.trim(), tipo:c.tipo, responsavel:c.responsavel||"",
+      exigeAprov:!!c.exigeAprov, obrig:!!c.obrig, exigeEvid:(c.tipo==="Evidência"||!!c.exigeEvid), prazoRel:c.prazoRel||0, depOrdem:c.depOrdem||""}));
+    let mo = st.modeloId && db.modelos.find(m=>m.id===st.modeloId);
+    if(mo){ mo.itens=estrut; }
+    else { mo={id:uid("m"), nome: st.nome.replace(/\s+de\s+.*$/i,"").trim()||st.nome.trim(), itens:estrut}; db.modelos.push(mo);
+      db.tarefas.find(t=>t.id===tId).modeloId=mo.id; }
+  }
+
+  save(); $("#root").innerHTML=""; render(); toast("Tarefa criada e etapas distribuídas");
 }
 
 /* =========================================================================
-   Notificações (drawer)
+   Notificações
    ========================================================================= */
 function myNotifs(){ return db.notifs.filter(n=>n.destId===db.ui.userId).sort((a,b)=> new Date(b.dataHora)-new Date(a.dataHora)); }
-function refreshBell(){
-  const unread=myNotifs().filter(n=>!n.lida).length;
-  const dot=$("#belldot");
-  if(unread>0){ dot.hidden=false; dot.textContent=unread>9?"9+":unread; } else dot.hidden=true;
-}
+function refreshBell(){ const unread=myNotifs().filter(n=>!n.lida).length; const dot=$("#belldot");
+  if(unread>0){ dot.hidden=false; dot.textContent=unread>9?"9+":unread; } else dot.hidden=true; }
 function openDrawer(){
-  let dr=$("#drawer");
-  if(dr) dr.remove();
+  let dr=$("#drawer"); if(dr) dr.remove();
   dr=el("div","drawer"); dr.id="drawer";
-  const head=el("div","drawer-head");
-  head.append(el("h3",null,"Notificações"));
-  const mark=el("button","btn subtle","Marcar todas lidas");
-  mark.onclick=()=>{ myNotifs().forEach(n=>n.lida=true); save(); refreshBell(); openDrawer(); };
-  const cx=el("button","x","×"); cx.onclick=()=> dr.classList.remove("open");
-  head.append(mark,cx);
-  const body=el("div","drawer-body");
-  const list=myNotifs();
+  const head=el("div","drawer-head"); head.append(el("h3",null,"Notificações"));
+  const mark=el("button","btn subtle","Marcar todas lidas"); mark.onclick=()=>{ myNotifs().forEach(n=>n.lida=true); save(); refreshBell(); openDrawer(); };
+  const cx=el("button","x","×"); cx.onclick=()=>dr.classList.remove("open"); head.append(mark,cx);
+  const body=el("div","drawer-body"); const list=myNotifs();
   if(!list.length) body.appendChild(el("div","empty-note","Nenhuma notificação."));
-  list.forEach(n=>{
-    const c=el("div","notif"+(n.lida?"":" unread"));
+  list.forEach(n=>{ const c=el("div","notif"+(n.lida?"":" unread"));
     if(!n.lida) c.appendChild(el("div","u"));
-    const wrap=el("div"); wrap.style.flex="1";
-    wrap.append(el("div","nt",n.tipo), el("div","nm",n.msg), el("div","nd",fmtDT(n.dataHora)));
+    const wrap=el("div"); wrap.style.flex="1"; wrap.append(el("div","nt",n.tipo), el("div","nm",n.msg), el("div","nd",fmtDT(n.dataHora)));
     c.appendChild(wrap);
-    c.onclick=()=>{ n.lida=true; save(); refreshBell();
-      if(n.acaoId && acaoById(n.acaoId)){ dr.classList.remove("open"); openAcao(n.acaoId); } else openDrawer(); };
-    body.appendChild(c);
-  });
-  dr.append(head,body); document.body.appendChild(dr);
-  requestAnimationFrame(()=> dr.classList.add("open"));
+    c.onclick=()=>{ n.lida=true; save(); refreshBell(); if(n.acaoId && itemById(n.acaoId)){ dr.classList.remove("open"); openItem(n.acaoId); } else openDrawer(); };
+    body.appendChild(c); });
+  dr.append(head,body); document.body.appendChild(dr); requestAnimationFrame(()=>dr.classList.add("open"));
 }
 
-/* =========================================================================
-   Tema + toast + eventos
-   ========================================================================= */
-function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show");
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"), 2200); }
-function toggleTheme(){
-  const cur=document.documentElement.getAttribute("data-theme");
-  const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
-  let next;
-  if(cur==="dark") next="light"; else if(cur==="light") next="dark";
-  else next = prefersDark? "light":"dark";
-  document.documentElement.setAttribute("data-theme", next);
-  try{ localStorage.setItem("painelCora_theme", next); }catch(e){}
-}
+/* ---- tema / toast / eventos ---- */
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2200); }
+function toggleTheme(){ const cur=document.documentElement.getAttribute("data-theme");
+  const prefersDark=matchMedia("(prefers-color-scheme: dark)").matches; let next;
+  if(cur==="dark") next="light"; else if(cur==="light") next="dark"; else next=prefersDark?"light":"dark";
+  document.documentElement.setAttribute("data-theme",next); try{ localStorage.setItem("painelCora_theme",next); }catch(e){} }
 (function initTheme(){ try{ const s=localStorage.getItem("painelCora_theme"); if(s) document.documentElement.setAttribute("data-theme",s); }catch(e){} })();
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ if($("#root").innerHTML){ closeAll(); } const dr=$("#drawer"); if(dr) dr.classList.remove("open"); } });
 
-document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ if($("#root").innerHTML){ closeModal(); } const dr=$("#drawer"); if(dr) dr.classList.remove("open"); } });
-
-load();
-render();
-$("#usersel").onchange = e=>{ db.ui.userId=e.target.value; save(); if(openAcaoId) renderModalAcao(openAcaoId); render(); };
+load(); render();
+$("#usersel").onchange = e=>{ db.ui.userId=e.target.value; save(); closeAll(); render(); };
 $("#novaBtn").onclick = openNova;
 $("#bell").onclick = openDrawer;
 $("#themebtn").onclick = toggleTheme;
-$("#resetBtn").onclick = ()=>{ if(confirm("Reiniciar todos os dados de exemplo?")) reset(); };
+$("#resetBtn").onclick = ()=>{ if(confirm("Limpar todas as tarefas, modelos e notificações?")) reset(); };
 </script>
