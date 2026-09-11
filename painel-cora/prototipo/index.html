@@ -392,12 +392,28 @@ function avatarNode(s, px){
   if(a.startsWith("lib:")){ const src=avatarLibSrc(a.slice(4)); if(src){ const img=el("img"); img.src=src; img.alt=s.nome||""; img.style.cssText=`width:${px}px;height:${px}px;border-radius:50%;object-fit:cover;flex-shrink:0;display:block`; return img; } }
   const d=el("div","avatar", iniciais(s&&s.nome)); d.style.width=px+"px"; d.style.height=px+"px"; return d;
 }
+// Redimensiona a foto no próprio navegador (nunca guarda o arquivo original):
+// recorte quadrado central -> 200x200 -> JPEG com qualidade auto-ajustada para
+// ficar por volta de ~40 KB, evitando encher o armazenamento.
+const AV_MAX_PX = 200;      // lado do avatar (cobre telas retina em 36–64px)
+const AV_TARGET_BYTES = 42000;  // alvo aproximado por foto
 function fileToAvatar(file, cb){
   if(!file || !/^image\//.test(file.type)){ toast("Escolha um arquivo de imagem."); return; }
+  if(file.size > 25*1024*1024){ toast("Imagem muito grande (máx. 25 MB)."); return; }
   const r=new FileReader();
-  r.onload=()=>{ const img=new Image(); img.onload=()=>{ const S=160, c=document.createElement("canvas"); c.width=S; c.height=S;
-    const ctx=c.getContext("2d"); const scale=Math.max(S/img.width,S/img.height); const w=img.width*scale, h=img.height*scale;
-    ctx.drawImage(img,(S-w)/2,(S-h)/2,w,h); try{ cb(c.toDataURL("image/jpeg",0.85)); }catch(e){ toast("Não foi possível processar a imagem."); } };
+  r.onload=()=>{ const img=new Image(); img.onload=()=>{
+    try{
+      const S=AV_MAX_PX, c=document.createElement("canvas"); c.width=S; c.height=S;
+      const ctx=c.getContext("2d");
+      ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,S,S);             // fundo p/ fotos com transparência
+      const scale=Math.max(S/img.width, S/img.height);            // "cover" (preenche o quadrado)
+      const w=img.width*scale, h=img.height*scale;
+      ctx.drawImage(img,(S-w)/2,(S-h)/2,w,h);
+      let q=0.82, out=c.toDataURL("image/jpeg",q);
+      while(out.length*0.75 > AV_TARGET_BYTES && q>0.45){ q-=0.1; out=c.toDataURL("image/jpeg",q); }
+      cb(out);
+    }catch(e){ toast("Não foi possível processar a imagem."); }
+  };
     img.onerror=()=>toast("Imagem inválida."); img.src=r.result; };
   r.readAsDataURL(file);
 }
