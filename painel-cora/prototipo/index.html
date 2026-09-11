@@ -331,7 +331,10 @@
         <h2 id="boardTitle">Painel geral</h2>
         <p id="boardSub" hidden></p>
       </div>
-      <div class="legend" id="legend"></div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div class="legend" id="legend"></div>
+        <button class="btn ghost" id="expPainelBtn">⬇ Excel</button>
+      </div>
     </div>
     <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
   </section>
@@ -357,7 +360,7 @@
   </section>
 
   <section id="viewArquivo" class="view" hidden>
-    <div class="board-head"><div><h2>Arquivo</h2></div></div>
+    <div class="board-head"><div><h2>Arquivo</h2></div><button class="btn ghost" id="expArqBtn">⬇ Excel</button></div>
     <div class="sol-wrap" id="arqList"></div>
   </section>
 </main>
@@ -569,6 +572,8 @@ function render(){
   $("#viewArquivo").hidden = view!=="arquivo";
   $("#viewCadastro").hidden = view!=="cadastro";
   $("#novaBtn").hidden = !(view==="painel" && isCriador());
+  if($("#expPainelBtn")) $("#expPainelBtn").hidden = !isCriador();
+  if($("#expArqBtn")) $("#expArqBtn").hidden = !isCriador();
   if(view==="painel"){ renderLegend(); renderMatrix(); }
   else if(view==="sol"){ renderSolucionadores(); }
   else if(view==="cadastro"){ renderCadastro(); }
@@ -1220,6 +1225,47 @@ function salvarModelo(st){
   gCriar=null; db.ui.view="cadastro"; save(); $("#root").innerHTML=""; render(); toast(mo?"Cadastro atualizado":"Tarefa cadastrada");
 }
 
+/* ---- exportação para Excel (colável em TSV) ---- */
+function fmtDia(d){ if(!d) return ""; const x=new Date(d); const p=n=>String(n).padStart(2,"0"); return p(x.getDate())+"/"+p(x.getMonth()+1)+"/"+x.getFullYear(); }
+function concluidoEm(a){ const hs=db.hist.filter(x=>x.acaoId===a.id && x.para===S.ENC).sort((p,q)=>new Date(q.dataHora)-new Date(p.dataHora)); return hs.length? hs[0].dataHora : null; }
+function exportTSV(tasks){
+  const esc=s=> String(s==null?"":s).replace(/[\t\n\r]+/g," ").trim();
+  const cols=[], seen={};
+  tasks.forEach(t=> itensDaTarefa(t.id).filter(a=>a.responsavel).forEach(a=>{ const k=a.rotulo+"||"+a.responsavel; if(!seen[k]){ seen[k]=true; cols.push({rotulo:a.rotulo, soluId:a.responsavel}); } }));
+  const head=["Tarefa","Subtítulo","Situação","Data de referência", ...cols.map(c=> esc(c.rotulo+" — "+solById(c.soluId).nome))];
+  const rows=[head.join("\t")];
+  tasks.forEach(t=>{ const its=itensDaTarefa(t.id);
+    const line=[esc(t.nome), esc(t.subtitulo), esc(t.statusGeral||""), fmtDia(t.dataRef)];
+    cols.forEach(c=>{ const item=its.find(a=>a.responsavel===c.soluId && a.rotulo===c.rotulo); let v="";
+      if(item){ if(item.tipo==="Texto"||item.tipo==="Observações") v=esc(item.valor);
+        else if(item.status===S.ENC) v=fmtDia(concluidoEm(item)); }
+      line.push(v); });
+    rows.push(line.join("\t")); });
+  return rows.join("\n");
+}
+function exportModal(scope){
+  const tasks = scope==="arquivo"? arquivoTarefas() : visibleTarefas();
+  const root=$("#root"); root.innerHTML="";
+  const ov=overlay(()=>root.innerHTML=""), mod=el("div","modal wide"), head=el("div","modal-head");
+  head.append((()=>{const w=el("div","titwrap");w.append(el("div","crumb", scope==="arquivo"?"Arquivo":"Painel"),el("h3",null,"Exportar para Excel"));return w;})());
+  const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
+  const body=el("div","modal-body");
+  if(!tasks.length){ body.appendChild(el("div","banner info","Não há tarefas para exportar.")); mod.append(head,body); ov.appendChild(mod); root.appendChild(ov); return; }
+  const tsv=exportTSV(tasks);
+  body.appendChild(el("p",null,"Selecione tudo e cole no Excel (Ctrl+C, depois Ctrl+V). Cada linha é uma tarefa; cada coluna, uma ação com o solucionador. Campos de texto trazem o conteúdo; os demais, a data de conclusão (dd/mm/aaaa)."));
+  const ta=el("textarea","obs"); ta.readOnly=true; ta.value=tsv; ta.style.cssText="width:100%;min-height:240px;white-space:pre;overflow:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px";
+  body.appendChild(ta); mod.append(head,body);
+  const foot=el("div","modal-foot");
+  foot.append(el("span","et",tasks.length+" tarefa(s)"), el("div","gap"));
+  const cp=el("button","btn primary","Copiar");
+  cp.onclick=()=>{ ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+    const done=()=>toast("Copiado — cole no Excel (Ctrl+V)");
+    try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(ta.value).then(done,()=>{ try{document.execCommand("copy");done();}catch(e){toast("Selecione e copie manualmente");} }); } else { document.execCommand("copy"); done(); } }
+    catch(e){ toast("Selecione e copie manualmente"); } };
+  const c=el("button","btn ghost","Fechar"); c.onclick=()=>root.innerHTML="";
+  foot.append(cp,c); mod.appendChild(foot); ov.appendChild(mod); root.appendChild(ov);
+}
+
 /* ---- notificações ---- */
 function myNotifs(){ return db.notifs.filter(n=>n.destId===db.ui.userId).sort((a,b)=> new Date(b.dataHora)-new Date(a.dataHora)); }
 function refreshBell(){ const unread=myNotifs().filter(n=>!n.lida).length; const dot=$("#belldot"); if(unread>0){ dot.hidden=false; dot.textContent=unread>9?"9+":unread; } else dot.hidden=true; }
@@ -1255,4 +1301,6 @@ $("#bell").onclick=openDrawer;
 $("#themebtn").onclick=toggleTheme;
 $("#addSolBtn").onclick=()=>solForm(null);
 $("#addCadBtn").onclick=()=>startBuilder(null,"modelo");
+$("#expPainelBtn").onclick=()=>exportModal("painel");
+$("#expArqBtn").onclick=()=>exportModal("arquivo");
 </script>
