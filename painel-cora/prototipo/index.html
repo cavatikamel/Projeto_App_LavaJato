@@ -567,6 +567,7 @@ function render(){
   $("#viewCriar").hidden = view!=="criar";
   $("#viewArquivo").hidden = view!=="arquivo";
   $("#viewCadastro").hidden = view!=="cadastro";
+  $("#novaBtn").hidden = !(view==="painel" && isCriador());
   if(view==="painel"){ renderLegend(); renderMatrix(); }
   else if(view==="sol"){ renderSolucionadores(); }
   else if(view==="cadastro"){ renderCadastro(); }
@@ -579,7 +580,7 @@ function renderNav(){
   const mark=el("span"); mark.style.cssText="display:inline-flex;align-items:center;color:var(--textoSuave)"; mark.innerHTML=coraMark(19,true); nav.appendChild(mark);
   const group=el("div","navgroup");
   const items=[{k:"painel",ico:"▦",label:"Painel"}];
-  if(isCriador()) items.push({k:"cadastro",ico:"🗂",label:"Cadastro"});
+  if(isCriador()) items.push({k:"cadastro",ico:"🗂",label:"Tarefas"});
   items.push({k:"arquivo",ico:"🗄",label:"Arquivo"});
   if(isGestor()) items.push({k:"sol",ico:"👥",label:"Solucionadores"});
   const valid=["painel","arquivo"]; if(isCriador()) valid.push("cadastro"); if(isGestor()) valid.push("sol");
