@@ -7,17 +7,28 @@ Especificação dos *cloud flows*. Cada fluxo tem: **gatilho**, **entradas**,
 Notificar por **Teams** e/ou **e-mail (Outlook)** e **sempre** gravar um item em
 `Notificacoes` para a central interna do app.
 
+> **Modelo unificado (v2).** A lista operacional agora é **`ItensDaTarefa`**
+> (não mais `AcoesDaTarefa`); o status terminal de uma ação é **`Concluída`**
+> (não `Encerrada` — esse nome ficou só para a *tarefa*). Responsável agora é
+> **múltiplo** (`Responsaveis`, Person multi) + flag `Livre`; ao notificar,
+> percorra todos os responsáveis (exceto quando `Livre`). Ajuste as *trigger
+> conditions* e os nomes de coluna abaixo conforme docs/02.
+>
+> **Piloto:** com a segurança simplificada, **F6 fica desligado**. Já **F8**
+> (exportar Excel) entra no piloto.
+
 ## Visão geral dos fluxos
 
 | # | Fluxo | Gatilho | Para quê |
 |---|-------|---------|----------|
-| F1 | `Cora - Acao atribuida` | Item criado em `AcoesDaTarefa` | Avisar o solucionador |
-| F2 | `Cora - Dependente liberada` | Item modificado: `Status`→`Liberada` | Avisar próximo solucionador |
+| F1 | `Cora - Acao atribuida` | Item criado em `ItensDaTarefa` (com responsável) | Avisar os responsáveis |
+| F2 | `Cora - Dependente liberada` | Item modificado: `Status`→`Liberada` | Avisar próximos responsáveis |
 | F3 | `Cora - Enviada para validacao` | Item modificado: `Status`→`Enviada para validação` | Avisar o gestor |
-| F4 | `Cora - Decisao do gestor` | Item modificado: `Status`→`Encerrada`/`Rejeitada` | Avisar o solucionador |
+| F4 | `Cora - Decisao do gestor` | Item modificado: `Status`→`Concluída`/`Rejeitada` | Avisar os responsáveis |
 | F5 | `Cora - Vencimento e atraso` | Agendado (diário) | Avisar próximas do vencimento e atrasadas |
-| F6 | `Cora - Ajustar permissoes` | Item criado/modificado em `AcoesDaTarefa` e `Evidencias` | Quebra de herança (segurança) |
+| F6 | `Cora - Ajustar permissoes` | Item criado/modificado em `ItensDaTarefa` e `Evidencias` | Quebra de herança (segurança) — **pós-piloto** |
 | F7 | `Cora - Notificar (instantaneo)` | Chamado pelo Power Apps (`.Run`) | Notificação sob demanda a partir do app |
+| F8 | `Cora - Exportar Excel` | Chamado pelo Power Apps (`.Run`) | Gerar a planilha do painel/arquivo |
 
 ---
 
@@ -129,6 +140,35 @@ Ver docs/03 §4. Quebra a herança do item e concede acesso mínimo.
   (texto), `mensagem` (texto).
 - **Passos:** executa o padrão comum "Notificar destinatário".
 - **Chamada no app:** `CoraNotificar.Run(gblAcao.ID; "Atribuída"; email; "texto")`.
+
+---
+
+## F8 — `Cora - Exportar Excel`
+
+Reproduz a exportação do protótipo: uma **linha por tarefa**; **colunas = ação ×
+responsável**; células com a **data de conclusão** (dd/mm/aaaa), exceto campos de
+texto/observações (que trazem o próprio conteúdo). O usuário atua com filtro no
+Excel — por isso a planilha "mistura" tarefas diferentes numa grade única.
+
+- **Gatilho:** *PowerApps (V2)*.
+- **Entradas (do app):** `escopo` (texto: `painel` ou `arquivo`), `payload` (texto
+  JSON com as tarefas visíveis já filtradas no app — evita relê-las e respeita a
+  busca/filtro atual).
+- **Passos (opção recomendada — Office Script):**
+  1. `Get file content` de um **modelo .xlsx** vazio no SharePoint/OneDrive.
+  2. Ação **Excel Online (Business) → Run script**: um Office Script recebe o
+     `payload`, monta o cabeçalho dinâmico (Tarefa, Subtítulo, Situação, Data de
+     referência, + uma coluna por ação×responsável) e as linhas, e aplica
+     `AutoFilter`.
+  3. `Create file` numa pasta temporária e retornar o **link**/conteúdo ao app.
+- **Alternativa sem Office Script:** montar um **CSV** (concatenando strings) e
+  `Create file` `.csv`; abre no Excel, porém sem autofiltro pré-aplicado.
+- **Chamada no app:** `CoraExportar.Run("painel"; JSON(colTarefasFiltradas))` e
+  então abrir o link retornado com `Launch(...)`.
+
+> Como o Power Apps não baixa arquivos direto do cliente, a geração fica no fluxo
+> e o app só abre o arquivo resultante — diferente do protótipo, que usa uma
+> biblioteca JS no navegador.
 
 ---
 

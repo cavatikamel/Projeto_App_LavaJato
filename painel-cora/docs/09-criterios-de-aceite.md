@@ -1,5 +1,13 @@
 # 09 — Critérios de aceite
 
+> **Atualizado para o modelo v2 / piloto.** Some a estes critérios os cenários
+> novos do protótipo: **multi-responsável** (um inicia, outro conclui; vale para o
+> gestor), ação **Livre**, **dependência múltipla**, ciclo da **tarefa**
+> (Em andamento → Finalizada → Encerrada/Cancelada → Arquivo), **desativar
+> solucionador** libera as ações dele, e **exportar Excel via fluxo F8**. A lista
+> operacional é `ItensDaTarefa` e o status terminal da ação é `Concluída`. Ver o
+> roteiro completo em docs/08 (Fase 5).
+
 Cada critério do briefing mapeado para o artefato que o atende e como validar.
 
 | # | Critério | Onde é atendido | Como validar |

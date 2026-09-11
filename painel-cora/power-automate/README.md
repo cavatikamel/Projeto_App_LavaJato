@@ -6,6 +6,11 @@ Especificação narrada em [`../docs/06-power-automate-fluxos.md`](../docs/06-po
 Como o Power Automate não versiona bem em texto, aqui ficam as **expressões**,
 **trigger conditions** e **corpos de request** — as partes que valem copiar/colar.
 
+> **Modelo v2 / piloto.** A lista operacional é **`ItensDaTarefa`** (não
+> `AcoesDaTarefa`); responsável é **múltiplo** (`Responsaveis`) — ao notificar,
+> percorra todos (exceto quando `Livre`). No **piloto** a segurança é simplificada,
+> então **F6 fica desligado**; a exportação de Excel é o fluxo **F8** (docs/06).
+
 ---
 
 ## Trigger conditions (para não reprocessar)
@@ -19,8 +24,8 @@ Cole em *Settings → Trigger Conditions* do gatilho do SharePoint.
 # F3 — só quando virou "Enviada para validação"
 @equals(triggerBody()?['Status']?['Value'], 'Enviada para validação')
 
-# F4 — só quando virou "Encerrada" OU "Rejeitada"
-@or(equals(triggerBody()?['Status']?['Value'],'Encerrada'),equals(triggerBody()?['Status']?['Value'],'Rejeitada'))
+# F4 — só quando virou "Concluída" OU "Rejeitada"  (modelo v2: ação conclui em "Concluída")
+@or(equals(triggerBody()?['Status']?['Value'],'Concluída'),equals(triggerBody()?['Status']?['Value'],'Rejeitada'))
 ```
 
 > Para distinguir a **virada** do valor (e não qualquer edição), combine com a ação

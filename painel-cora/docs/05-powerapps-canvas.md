@@ -1,5 +1,18 @@
 # 05 — Power Apps Canvas (telas e Power Fx)
 
+> **Atualizado para o modelo v2.** A fonte operacional é **`ItensDaTarefa`**
+> (dados + ações). Pontos a refletir nas fórmulas:
+> - **Responsável múltiplo:** `Responsaveis` é *Person multi* — use `People Picker`
+>   com múltipla seleção e teste pertencimento com
+>   `User().Email in Responsaveis.Email` (ou a flag `Livre`).
+> - **Edição compartilhada:** habilite as ações de iniciar/concluir para
+>   `User().Email in Responsaveis.Email || Livre || perfilÉGestor`.
+> - **Foto:** `Office365Users.UserPhotoV2(email)` com *fallback* para
+>   `Solucionadores.Avatar` e, na ausência, **iniciais**.
+> - **Exportar Excel:** botão chama o fluxo **F8** (`CoraExportar.Run(...)`) e abre
+>   o arquivo retornado — não há download direto no cliente (docs/06 F8).
+> - **Status terminal da ação:** `Concluída` (tarefa usa `Encerrada`).
+
 Fórmulas de referência. Ajuste nomes de controles conforme a nomenclatura do seu
 app (prefixos: `scr` tela, `gal` galeria, `frm` formulário, `btn` botão, `lbl`
 rótulo, `pop` popup, `col` coleção, `var`/`gbl` variável).

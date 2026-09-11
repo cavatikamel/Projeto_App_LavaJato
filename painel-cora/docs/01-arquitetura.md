@@ -1,5 +1,12 @@
 # 01 — Arquitetura
 
+> **Atualizado para o modelo v2 (unificado).** O protótipo consolidou campos e
+> ações numa única lista ordenada de **itens** (dado = sem responsável; ação =
+> com responsável), com **múltiplos responsáveis** por ação e opção **Livre**.
+> A fonte de verdade do esquema é **docs/02**; o comportamento é o do protótipo
+> em `prototipo/`. Trechos deste documento que citam `AcoesDaTarefa`/`CamposDeModelo`
+> ou responsável único devem ser lidos sob esse modelo.
+
 ## 1. Objetivo
 
 Substituir as planilhas do Departamento Pessoal por uma aplicação que controla

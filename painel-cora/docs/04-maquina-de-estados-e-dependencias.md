@@ -1,6 +1,15 @@
 # 04 — Máquina de estados e dependências
 
-## 1. Ciclo de status (coluna `AcoesDaTarefa.Status`)
+> **Atualizado para o modelo v2.** A coluna de status agora é
+> **`ItensDaTarefa.Status`**. O estado terminal de uma **ação** passou a se chamar
+> **`Concluída`** (o nome `Encerrada` ficou reservado para a **tarefa**, após a
+> conferência do gestor). Uma ação pode ter **vários responsáveis**: **qualquer um
+> deles ou o gestor** pode iniciar e concluir, independentemente de quem começou;
+> ações **Livre** são executáveis por qualquer solucionador. Dependência é
+> **múltipla** — o item libera quando **todas** as predecessoras estão `Concluída`.
+> Itens sem responsável (*dados*) usam o status `Dado`.
+
+## 1. Ciclo de status (coluna `ItensDaTarefa.Status`)
 
 Escolhas (valores exatos da coluna `Choice`):
 

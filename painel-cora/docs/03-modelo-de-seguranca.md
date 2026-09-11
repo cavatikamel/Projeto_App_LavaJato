@@ -1,5 +1,12 @@
 # 03 — Modelo de segurança
 
+> **Piloto (decisão atual): segurança simplificada.** Todo o time do DP no piloto
+> tem acesso de **Contribuir** ao site e enxerga todas as tarefas/ações; a
+> distinção de perfis (Gestor/Criador/Solucionador) é feita **no app** por
+> `Solucionadores.Perfil`. A **quebra de herança por item** descrita abaixo
+> (fluxo F6) fica planejada para **depois do piloto**. Além disso, o modelo v2
+> unificou as listas (docs/02): onde se lê `AcoesDaTarefa`, considere `ItensDaTarefa`.
+
 > **Princípio:** o filtro do Power Apps **não** é controle de acesso. Um usuário
 > mal-intencionado pode contornar a UI e chamar o conector direto. A proteção real
 > vem das **permissões do SharePoint** e dos **grupos do Entra**. Por se tratar do
