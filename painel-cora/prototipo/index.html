@@ -348,6 +348,14 @@
 
   <section id="viewCriar" class="view" hidden></section>
 
+  <section id="viewCadastro" class="view" hidden>
+    <div class="board-head">
+      <div><h2>Cadastro de tarefas</h2></div>
+      <button class="btn primary" id="addCadBtn">＋ Nova tarefa</button>
+    </div>
+    <div class="sol-wrap" id="cadList"></div>
+  </section>
+
   <section id="viewArquivo" class="view" hidden>
     <div class="board-head"><div><h2>Arquivo</h2></div></div>
     <div class="sol-wrap" id="arqList"></div>
@@ -551,14 +559,17 @@ function render(){
   let view;
   if(gCriar) view="criar";
   else if(db.ui.view==="sol" && isGestor()) view="sol";
+  else if(db.ui.view==="cadastro" && isCriador()) view="cadastro";
   else if(db.ui.view==="arquivo") view="arquivo";
   else view="painel";
   $("#viewPainel").hidden = view!=="painel";
   $("#viewSol").hidden = view!=="sol";
   $("#viewCriar").hidden = view!=="criar";
   $("#viewArquivo").hidden = view!=="arquivo";
+  $("#viewCadastro").hidden = view!=="cadastro";
   if(view==="painel"){ renderLegend(); renderMatrix(); }
   else if(view==="sol"){ renderSolucionadores(); }
+  else if(view==="cadastro"){ renderCadastro(); }
   else if(view==="arquivo"){ renderArquivo(); }
   else { renderCriar(); }
   renderNav(); refreshBell();
@@ -567,9 +578,12 @@ function renderNav(){
   const nav=$("#bottomnav"); if(!nav) return; nav.innerHTML="";
   const mark=el("span"); mark.style.cssText="display:inline-flex;align-items:center;color:var(--textoSuave)"; mark.innerHTML=coraMark(19,true); nav.appendChild(mark);
   const group=el("div","navgroup");
-  const items=[{k:"painel",ico:"▦",label:"Painel"}, {k:"arquivo",ico:"🗄",label:"Arquivo"}];
+  const items=[{k:"painel",ico:"▦",label:"Painel"}];
+  if(isCriador()) items.push({k:"cadastro",ico:"🗂",label:"Cadastro"});
+  items.push({k:"arquivo",ico:"🗄",label:"Arquivo"});
   if(isGestor()) items.push({k:"sol",ico:"👥",label:"Solucionadores"});
-  const cur = gCriar ? "" : ((db.ui.view==="sol"&&isGestor())||db.ui.view==="arquivo" ? db.ui.view : "painel");
+  const valid=["painel","arquivo"]; if(isCriador()) valid.push("cadastro"); if(isGestor()) valid.push("sol");
+  const cur = gCriar ? "" : (valid.includes(db.ui.view)? db.ui.view : "painel");
   items.forEach(it=>{ const b=el("button","navbtn"+(it.k===cur?" active":""));
     b.innerHTML=`<span class="ico">${it.ico}</span><span>${it.label}</span>`;
     b.onclick=()=>{ db.ui.view=it.k; gCriar=null; save(); closeAll(); render(); }; group.appendChild(b); });
@@ -834,6 +848,19 @@ function cancelarTarefaModal(t){
   const ok=el("button","btn danger","Cancelar tarefa"); ok.onclick=()=>actCancelarTarefa(t, ta.value);
   foot.append(back,ok); mod.append(head,body,foot); ov.appendChild(mod); root.appendChild(ov);
 }
+function renderCadastro(){
+  const list=$("#cadList"); list.innerHTML="";
+  if(!db.modelos.length){ list.appendChild(el("div","empty-note","Nenhuma tarefa cadastrada ainda. Use “＋ Nova tarefa” para registrar um modelo reutilizável — ele não vai ao painel até você distribuir.")); return; }
+  db.modelos.slice().sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(mo=>{
+    const r=el("div","arq-row");
+    const an=el("div","an"); an.append(el("div","t",mo.nome), el("div","s", `${mo.itens.length} campo(s) · ${mo.itens.filter(i=>i.responsavel).length} ação(ões)`)); r.appendChild(an);
+    const acts=el("div"); acts.style.cssText="display:flex;gap:6px;flex-wrap:wrap;align-items:center";
+    const dist=el("button","btn primary sm","Distribuir"); dist.onclick=()=>headerPopup(mo);
+    const ed=el("button","btn ghost sm","Editar"); ed.onclick=()=>startBuilder(mo,"modelo");
+    const del=el("button","btn subtle","Excluir"); del.onclick=()=>{ if(confirm(`Excluir a tarefa "${mo.nome}" do cadastro?`)){ db.modelos=db.modelos.filter(m=>m.id!==mo.id); save(); render(); toast("Removida do cadastro"); } };
+    acts.append(dist,ed,del); r.appendChild(acts); list.appendChild(r);
+  });
+}
 function renderArquivo(){
   const list=$("#arqList"); list.innerHTML="";
   const arq=arquivoTarefas();
@@ -975,20 +1002,19 @@ function openNova(){
   head.append((()=>{const w=el("div","titwrap");w.append(el("div","crumb","Painel de criação"),el("h3",null,"Nova tarefa"));return w;})());
   const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
   const body=el("div","modal-body");
-  const s=el("div","sec"); s.appendChild(el("h4",null,"Usar um modelo recorrente"));
+  const s=el("div","sec"); s.appendChild(el("h4",null,"Distribuir uma tarefa do cadastro"));
   const choice=el("div","choice");
-  if(!db.modelos.length){ choice.appendChild(el("div","banner info","Você ainda não tem modelos recorrentes. Crie uma tarefa do zero e marque-a como recorrente para reutilizá-la aqui depois.")); }
-  else { db.modelos.forEach(mo=>{ const r=el("div","tmpl-row"); r.append(el("div","ti","↻"));
+  if(!db.modelos.length){ choice.appendChild(el("div","banner info","Nenhuma tarefa no cadastro ainda. Cadastre em “Cadastro” para reutilizar, ou crie uma avulsa abaixo.")); }
+  else { db.modelos.slice().sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(mo=>{ const r=el("div","tmpl-row"); r.append(el("div","ti","🗂"));
       const tn=el("div","tn"); const b=document.createElement("b"); b.textContent=mo.nome;
-      tn.append(b, el("span",null, `${mo.itens.length} campo(s) · ${mo.itens.filter(i=>i.responsavel).length} etapa(s)`)); r.appendChild(tn);
-      const use=el("button","btn primary sm","Usar"); use.onclick=()=>{ $("#root").innerHTML=""; headerPopup(mo); };
-      const del=el("button","btn subtle sm","Excluir"); del.onclick=()=>{ if(confirm(`Excluir o modelo "${mo.nome}"?`)){ db.modelos=db.modelos.filter(m=>m.id!==mo.id); save(); openNova(); } };
-      r.append(use,del); choice.appendChild(r); }); }
+      tn.append(b, el("span",null, `${mo.itens.length} campo(s) · ${mo.itens.filter(i=>i.responsavel).length} ação(ões)`)); r.appendChild(tn);
+      const use=el("button","btn primary sm","Distribuir"); use.onclick=()=>{ $("#root").innerHTML=""; headerPopup(mo); };
+      r.append(use); choice.appendChild(r); }); }
   s.appendChild(choice); body.appendChild(s);
   body.appendChild(el("div","divider","ou"));
-  const s2=el("div","sec"); const b2=el("button","btn ghost","✎ Criar tarefa do zero"); b2.style.width="100%"; b2.style.justifyContent="center";
-  b2.onclick=()=>{ $("#root").innerHTML=""; startBuilder(null); }; s2.appendChild(b2);
-  s2.appendChild(el("div","et")).textContent="Defina título, subtítulo, recorrência e monte os campos (texto, número, data, check, observações, evidência), com evidência, aprovação do gestor, visibilidade e dependências por campo.";
+  const s2=el("div","sec"); const b2=el("button","btn ghost","✎ Criar avulsa do zero"); b2.style.width="100%"; b2.style.justifyContent="center";
+  b2.onclick=()=>{ $("#root").innerHTML=""; startBuilder(null,"tarefa"); }; s2.appendChild(b2);
+  s2.appendChild(el("div","et")).textContent="Vai direto para o painel. Para guardar sem distribuir, use o menu “Cadastro”.";
   body.appendChild(s2);
   mod.append(head,body); ov.appendChild(mod); root.appendChild(ov);
 }
@@ -1001,24 +1027,28 @@ function modeloFromTarefa(t){
   return {id:t.modeloId||null, nome:t.nome, itens};
 }
 let gCriar=null;
-function startBuilder(modelo){
+function startBuilder(modelo, mode){
   if(!isCriador()){ toast("Apenas Gestor/Criador podem criar tarefas."); return; }
-  gCriar={ modeloId: modelo? modelo.id : null, origemNome: modelo? modelo.nome : null,
-    nome:"", subtitulo:"", recorrente:!!modelo, dataRef:fmtISOdate(today()),
+  mode = mode || "tarefa";
+  gCriar={ mode, modeloId: modelo? modelo.id : null, origemNome:(mode==="tarefa" && modelo)? modelo.nome : null,
+    nome:(mode==="modelo" && modelo)? modelo.nome : "", subtitulo:"", salvarCadastro:false, dataRef:fmtISOdate(today()),
     campos: modelo ? modelo.itens.map((c,i)=>({...novoCampo(i+1), ...c, ordem:i+1, depOrdens:(c.depOrdens||[]).slice(), valorInicial:""})) : [ novoCampo(1) ] };
   openItemId=null; openTaskId=null; $("#root").innerHTML=""; render();
 }
 function cancelBuilder(){ gCriar=null; render(); }
 function renderCriar(){
   const st=gCriar; const sec=$("#viewCriar"); sec.innerHTML=""; if(!st) return;
+  const isModelo = st.mode==="modelo";
 
   const head=el("div","board-head");
-  const left=el("div"); left.appendChild(el("h2",null, st.modeloId? "Nova ocorrência" : "Nova tarefa"));
-  if(st.origemNome){ const p=el("p"); p.style.cssText="color:var(--textoSuave);font-size:13px;margin-top:2px"; p.textContent="Baseada no modelo: "+st.origemNome; left.appendChild(p); }
+  const left=el("div");
+  left.appendChild(el("h2",null, isModelo? (st.modeloId?"Editar tarefa (cadastro)":"Nova tarefa (cadastro)") : (st.modeloId?"Nova ocorrência":"Nova tarefa avulsa")));
+  if(st.origemNome){ const p=el("p"); p.style.cssText="color:var(--textoSuave);font-size:13px;margin-top:2px"; p.textContent="Baseada no cadastro: "+st.origemNome; left.appendChild(p); }
   head.appendChild(left);
   const acts=el("div"); acts.style.cssText="display:flex;gap:8px";
   const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=cancelBuilder;
-  const create=el("button","btn primary", st.modeloId?"Criar ocorrência":"Criar tarefa"); create.onclick=()=>criar(st);
+  const create=el("button","btn primary", isModelo? (st.modeloId?"Salvar alterações":"Salvar no cadastro") : "Criar tarefa");
+  create.onclick=()=> isModelo? salvarModelo(st) : criar(st);
   acts.append(cancel,create); head.appendChild(acts); sec.appendChild(head);
 
   const wrap=el("div","criar-wrap"); sec.appendChild(wrap);
@@ -1079,15 +1109,18 @@ function renderCriar(){
     });
   }
 
-  // cabeçalho da tarefa
-  const s0=el("div","sec"); s0.appendChild(el("h4",null,"Cabeçalho da tarefa"));
+  // cabeçalho
+  const s0=el("div","sec"); s0.appendChild(el("h4",null, isModelo? "Tarefa (modelo)" : "Cabeçalho da tarefa"));
   const cg=el("div","criar-grid");
-  cg.appendChild(field("Título",(()=>{const i=el("input","field");i.placeholder="Ex.: Demissão";i.value=st.nome;i.oninput=()=>st.nome=i.value;return i;})()));
-  cg.appendChild(field("Subtítulo",(()=>{const i=el("input","field");i.placeholder="Ex.: Fulano de Tal";i.value=st.subtitulo;i.oninput=()=>st.subtitulo=i.value;return i;})()));
-  cg.appendChild(field("Data de referência (D+0)",(()=>{const i=el("input","field");i.type="date";i.value=st.dataRef;i.onchange=()=>st.dataRef=i.value;return i;})()));
-  const recWrap=el("div","form-row"); recWrap.append(el("label",null,"Recorrente"));
-  const sw=el("label","switch"); const si=el("input"); si.type="checkbox"; si.checked=st.recorrente; si.onchange=()=>st.recorrente=si.checked; sw.append(si, el("span","track"), el("span",null,"Salvar como modelo")); recWrap.appendChild(sw);
-  cg.appendChild(recWrap); s0.appendChild(cg); wrap.appendChild(s0);
+  cg.appendChild(field(isModelo?"Nome da tarefa":"Título",(()=>{const i=el("input","field");i.placeholder="Ex.: Demissão";i.value=st.nome;i.oninput=()=>st.nome=i.value;return i;})()));
+  if(!isModelo){
+    cg.appendChild(field("Subtítulo",(()=>{const i=el("input","field");i.placeholder="Ex.: Fulano de Tal";i.value=st.subtitulo;i.oninput=()=>st.subtitulo=i.value;return i;})()));
+    cg.appendChild(field("Data de referência (D+0)",(()=>{const i=el("input","field");i.type="date";i.value=st.dataRef;i.onchange=()=>st.dataRef=i.value;return i;})()));
+    const recWrap=el("div","form-row"); recWrap.append(el("label",null,"Cadastro"));
+    const sw=el("label","switch"); const si=el("input"); si.type="checkbox"; si.checked=st.salvarCadastro; si.onchange=()=>st.salvarCadastro=si.checked; sw.append(si, el("span","track"), el("span",null,"Salvar também no cadastro")); recWrap.appendChild(sw);
+    cg.appendChild(recWrap);
+  }
+  s0.appendChild(cg); wrap.appendChild(s0);
 
   // campos e etapas
   const s1=el("div","sec");
@@ -1136,7 +1169,7 @@ function criar(st){
   if(!validos.length){ toast("Adicione ao menos um campo com nome."); return; }
   const ref=new Date(st.dataRef+"T00:00:00"), tId=uid("t");
   const gestor=db.sol.find(s=>s.perfil==="Gestor")?.id || db.ui.userId;
-  db.tarefas.push({id:tId, nome:st.nome.trim(), subtitulo:(st.subtitulo||"").trim(), recorrente:st.recorrente, modeloId:st.modeloId||null,
+  db.tarefas.push({id:tId, nome:st.nome.trim(), subtitulo:(st.subtitulo||"").trim(), recorrente:false, modeloId:st.modeloId||null,
     dataRef:iso(ref), criador:db.ui.userId, gestor, statusGeral:"Em andamento"});
 
   // ordem final (1..n) por posição
@@ -1161,15 +1194,28 @@ function criar(st){
   });
   recalcTarefa(tId);
 
-  if(st.recorrente){
+  if(st.salvarCadastro && !st.modeloId){
     const estrut=validosOrd.map(c=>({ordem:c.ordemFinal, rotulo:c.rotulo.trim(), tipo:c.tipo, responsavel:c.responsavel||"",
       exigeAprov:!!c.exigeAprov, obrig:!!c.obrig, exigeEvid:(c.tipo==="Evidência"||!!c.exigeEvid), visivelTodos:!!c.visivelTodos, prazoRel:c.prazoRel||0,
       depOrdens:(c.depOrdens||[]).map(o=>origToFinal[o]).filter(Boolean)}));
-    let mo=st.modeloId && db.modelos.find(m=>m.id===st.modeloId);
-    if(mo){ mo.itens=estrut; mo.nome=st.nome.trim(); }
-    else { mo={id:uid("m"), nome:st.nome.trim(), itens:estrut}; db.modelos.push(mo); db.tarefas.find(t=>t.id===tId).modeloId=mo.id; }
+    const mo={id:uid("m"), nome:st.nome.trim(), itens:estrut}; db.modelos.push(mo); db.tarefas.find(t=>t.id===tId).modeloId=mo.id;
   }
   gCriar=null; save(); $("#root").innerHTML=""; render(); toast("Tarefa criada e etapas distribuídas");
+}
+
+// Salva/atualiza uma tarefa no CADASTRO (modelo reutilizável) — não vai para o painel.
+function salvarModelo(st){
+  if(!st.nome.trim()){ toast("Informe o nome da tarefa."); return; }
+  const validos=st.campos.filter(c=>c.rotulo.trim());
+  if(!validos.length){ toast("Adicione ao menos um campo com nome."); return; }
+  const validosOrd=validos.map((c,i)=>({...c, ordemFinal:i+1, ordemOrig:c.ordem}));
+  const origToFinal={}; validosOrd.forEach(c=> origToFinal[c.ordemOrig]=c.ordemFinal);
+  const estrut=validosOrd.map(c=>({ordem:c.ordemFinal, rotulo:c.rotulo.trim(), tipo:c.tipo, responsavel:c.responsavel||"",
+    exigeAprov:!!c.exigeAprov, obrig:!!c.obrig, exigeEvid:(c.tipo==="Evidência"||!!c.exigeEvid), visivelTodos:!!c.visivelTodos, prazoRel:c.prazoRel||0,
+    depOrdens:(c.depOrdens||[]).map(o=>origToFinal[o]).filter(Boolean)}));
+  const mo = st.modeloId && db.modelos.find(m=>m.id===st.modeloId);
+  if(mo){ mo.itens=estrut; mo.nome=st.nome.trim(); } else { db.modelos.push({id:uid("m"), nome:st.nome.trim(), itens:estrut}); }
+  gCriar=null; db.ui.view="cadastro"; save(); $("#root").innerHTML=""; render(); toast(mo?"Cadastro atualizado":"Tarefa cadastrada");
 }
 
 /* ---- notificações ---- */
@@ -1203,4 +1249,5 @@ $("#novaBtn").onclick=openNova;
 $("#bell").onclick=openDrawer;
 $("#themebtn").onclick=toggleTheme;
 $("#addSolBtn").onclick=()=>solForm(null);
+$("#addCadBtn").onclick=()=>startBuilder(null,"modelo");
 </script>
