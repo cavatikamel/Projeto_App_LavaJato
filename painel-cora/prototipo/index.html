@@ -257,7 +257,32 @@
   .banner-proto{max-width:1400px; margin:14px auto 0; padding:9px clamp(16px,3vw,26px);}
   .banner-proto .inner{background:color-mix(in srgb,var(--rosaPo) 60%,var(--cartao)); border:1px solid color-mix(in srgb,var(--rosa) 35%,transparent); border-radius:var(--raioSm); padding:9px 13px; font-size:12.5px; color:var(--texto); display:flex; gap:9px; align-items:center}
 
-  @media (max-width:600px){ .metagrid,.dados,.grid2,.grid3{grid-template-columns:1fr} .brand .sub{display:none} select.field{min-width:150px} }
+  /* views + navegação inferior + solucionadores */
+  .view{flex:1; min-height:0; display:flex; flex-direction:column}
+  .sol-wrap{flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:8px;
+    border:1px solid var(--borda); border-radius:var(--raio); background:var(--cartao); padding:12px; box-shadow:var(--sombra)}
+  .sol-row{display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--borda); border-radius:var(--raioSm); background:var(--fundo); flex-wrap:wrap}
+  .sol-row.inactive{opacity:.55}
+  .sol-row .who{flex:1; min-width:160px}
+  .sol-row .who .nm{font-size:13.5px; font-weight:600}
+  .sol-row .who .em{font-size:12px; color:var(--textoSuave)}
+  .sol-row .chips{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
+  .sol-row .acts{display:flex; gap:6px; align-items:center}
+  .avatar{width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-size:12.5px; font-weight:700; color:#fff; background:var(--azul); flex-shrink:0}
+  .pill.gestor{background:color-mix(in srgb,var(--azul) 16%,var(--cartao)); color:var(--azul)}
+  .pill.criador{background:color-mix(in srgb,var(--st-validacao) 18%,var(--cartao)); color:var(--st-validacao)}
+
+  .bottomnav{display:flex; align-items:center; gap:8px; padding:5px clamp(10px,3vw,18px);
+    border-top:1px solid var(--borda); background:var(--cartao)}
+  .navgroup{display:flex; gap:6px}
+  .navbtn{display:inline-flex; align-items:center; gap:8px; padding:7px 15px; border-radius:10px;
+    color:var(--textoSuave); font-size:12.5px; font-weight:600; border:1px solid transparent; background:transparent}
+  .navbtn:hover{color:var(--azul)}
+  .navbtn.active{color:var(--azul); background:var(--azulGelo)}
+  .navbtn .ico{font-size:15px; line-height:1}
+
+  @media (max-width:600px){ .metagrid,.dados,.grid2,.grid3{grid-template-columns:1fr} .brand .sub{display:none} select.field{min-width:150px}
+    .navbtn span:not(.ico){display:none} .navbtn{padding:8px 14px} }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
   :focus-visible{outline:2px solid var(--azul); outline-offset:2px}
 </style>
@@ -274,21 +299,29 @@
 </div>
 
 <main>
-  <div class="board-head">
-    <div>
-      <h2 id="boardTitle">Painel geral</h2>
-      <p id="boardSub" hidden></p>
+  <section id="viewPainel" class="view">
+    <div class="board-head">
+      <div>
+        <h2 id="boardTitle">Painel geral</h2>
+        <p id="boardSub" hidden></p>
+      </div>
+      <div class="legend" id="legend"></div>
     </div>
-    <div class="legend" id="legend"></div>
-  </div>
-  <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
+    <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
+  </section>
+
+  <section id="viewSol" class="view" hidden>
+    <div class="board-head">
+      <div>
+        <h2>Solucionadores</h2>
+      </div>
+      <button class="btn primary" id="addSolBtn">＋ Cadastrar solucionador</button>
+    </div>
+    <div class="sol-wrap" id="solList"></div>
+  </section>
 </main>
 
-<div class="foot">
-  <span id="footLogo" style="display:inline-flex;align-items:center;gap:7px;color:var(--textoSuave)"></span>
-  <span class="gap" style="flex:1"></span>
-  <button class="btn subtle" id="resetBtn">↺ Limpar tudo</button>
-</div>
+<nav class="bottomnav" id="bottomnav"></nav>
 
 <div id="root"></div>
 <div class="toast" id="toast"></div>
@@ -298,7 +331,7 @@
 const $ = (s,r=document)=>r.querySelector(s);
 const el = (t,c,txt)=>{const e=document.createElement(t); if(c)e.className=c; if(txt!=null)e.textContent=txt; return e;};
 const uid = (p="id")=>p+"_"+Math.random().toString(36).slice(2,9);
-const KEY = "painelCora_v3";
+const KEY = "painelCora_v4";
 
 const S = { WAIT:"Aguardando dependência", LIB:"Liberada", EXEC:"Em execução",
   VAL:"Enviada para validação", ENC:"Encerrada", REJ:"Rejeitada", DADO:"Dado" };
@@ -323,6 +356,7 @@ const fmtISOdate = d=>{ const x=new Date(d); const p=n=>String(n).padStart(2,"0"
 const fmtD = d=>{ if(!d) return "—"; const x=new Date(d); return x.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"2-digit"}); };
 const fmtDT = d=>{ const x=new Date(d); return x.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+" "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); };
 const autogrow = ta=>{ ta.style.height="auto"; ta.style.height=(ta.scrollHeight+2)+"px"; };
+const iniciais = n=> (n||"").trim().split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase() || "?";
 
 /* ---- logo Cora (SVG oficial vetorizado; adapta ao tema via tokens --cora-*) ---- */
 const CORA_SYMBOL='<path d="M 583.0,371.0 L 563.0,365.0 L 543.0,362.0 L 518.0,363.0 L 494.0,368.0 L 477.0,374.0 L 451.0,388.0 L 437.0,399.0 L 421.0,416.0 L 419.0,423.0 L 420.0,429.0 L 422.0,433.0 L 429.0,438.0 L 439.0,438.0 L 455.0,434.0 L 469.0,434.0 L 486.0,438.0 L 498.0,444.0 L 512.0,456.0 L 521.0,469.0 L 528.0,493.0 L 528.0,506.0 L 524.0,529.0 L 515.0,553.0 L 505.0,573.0 L 479.0,614.0 L 453.0,648.0 L 434.0,676.0 L 424.0,695.0 L 422.0,703.0 L 424.0,715.0 L 429.0,721.0 L 436.0,725.0 L 449.0,724.0 L 474.0,710.0 L 527.0,672.0 L 563.0,641.0 L 586.0,618.0 L 615.0,584.0 L 641.0,544.0 L 651.0,522.0 L 660.0,489.0 L 660.0,463.0 L 653.0,438.0 L 642.0,417.0 L 619.0,392.0 L 605.0,382.0 Z"/><path d="M 234.0,371.0 L 217.0,379.0 L 198.0,392.0 L 179.0,412.0 L 166.0,434.0 L 161.0,447.0 L 158.0,461.0 L 157.0,487.0 L 162.0,512.0 L 168.0,528.0 L 182.0,556.0 L 202.0,585.0 L 225.0,612.0 L 258.0,645.0 L 309.0,688.0 L 353.0,719.0 L 365.0,725.0 L 377.0,724.0 L 381.0,722.0 L 387.0,714.0 L 388.0,702.0 L 386.0,694.0 L 372.0,669.0 L 347.0,632.0 L 340.0,624.0 L 335.0,614.0 L 331.0,610.0 L 301.0,558.0 L 300.0,553.0 L 295.0,544.0 L 288.0,521.0 L 287.0,492.0 L 289.0,482.0 L 296.0,465.0 L 302.0,457.0 L 316.0,445.0 L 335.0,436.0 L 345.0,434.0 L 366.0,434.0 L 385.0,438.0 L 394.0,433.0 L 397.0,426.0 L 397.0,419.0 L 391.0,409.0 L 372.0,391.0 L 358.0,382.0 L 332.0,370.0 L 301.0,363.0 L 275.0,362.0 L 254.0,365.0 Z"/><path d="M 530.0,236.0 L 518.0,239.0 L 507.0,244.0 L 497.0,252.0 L 488.0,262.0 L 478.0,284.0 L 477.0,307.0 L 484.0,328.0 L 498.0,344.0 L 518.0,354.0 L 528.0,356.0 L 542.0,356.0 L 553.0,354.0 L 565.0,349.0 L 577.0,341.0 L 584.0,334.0 L 596.0,313.0 L 599.0,291.0 L 594.0,270.0 L 586.0,257.0 L 578.0,249.0 L 571.0,244.0 L 557.0,238.0 L 548.0,236.0 Z"/><path d="M 277.0,236.0 L 262.0,240.0 L 254.0,244.0 L 236.0,260.0 L 225.0,280.0 L 223.0,289.0 L 223.0,309.0 L 228.0,324.0 L 235.0,335.0 L 242.0,342.0 L 249.0,347.0 L 264.0,354.0 L 274.0,356.0 L 288.0,356.0 L 299.0,354.0 L 311.0,349.0 L 320.0,343.0 L 332.0,331.0 L 342.0,311.0 L 344.0,301.0 L 344.0,285.0 L 342.0,275.0 L 336.0,262.0 L 319.0,245.0 L 309.0,240.0 L 296.0,236.0 Z"/>';
@@ -352,20 +386,23 @@ function injectLogos(){
 
 /* ---- seed: apenas equipe ---- */
 function seed(){
+  const D="@grupocoroa.com.br";
+  const gid=()=>"a1b2"+Math.random().toString(16).slice(2,6)+"-"+Math.random().toString(16).slice(2,6)+"-4f9c";
   const sol = [
-    {id:"u_sofia", nome:"Sofia Prado", funcao:"Gestora de DP",         perfil:"Gestor",       coluna:false, ativo:true},
-    {id:"u_paulo", nome:"Paulo Nunes", funcao:"Coordenador (Criador)",  perfil:"Criador",      coluna:false, ativo:true},
-    {id:"u_ana",   nome:"Ana Lima",    funcao:"Analista de DP",         perfil:"Solucionador", coluna:true,  ativo:true},
-    {id:"u_bruno", nome:"Bruno Alves", funcao:"Analista de Folha",      perfil:"Solucionador", coluna:true,  ativo:true},
-    {id:"u_carla", nome:"Carla Dias",  funcao:"Analista de Benefícios", perfil:"Solucionador", coluna:true,  ativo:true},
-    {id:"u_diego", nome:"Diego Rocha", funcao:"TI / Acessos",           perfil:"Solucionador", coluna:true,  ativo:true},
-    {id:"u_elena", nome:"Elena Souza", funcao:"Business Partner",       perfil:"Solucionador", coluna:true,  ativo:true},
+    {id:"u_sofia", nome:"Sofia Prado", email:"sofia.prado"+D, funcao:"Gestora de DP",         perfil:"Gestor",       coluna:false, ativo:true, entraId:gid()},
+    {id:"u_paulo", nome:"Paulo Nunes", email:"paulo.nunes"+D, funcao:"Coordenador (Criador)",  perfil:"Criador",      coluna:false, ativo:true, entraId:gid()},
+    {id:"u_ana",   nome:"Ana Lima",    email:"ana.lima"+D,    funcao:"Analista de DP",         perfil:"Solucionador", coluna:true,  ativo:true, entraId:gid()},
+    {id:"u_bruno", nome:"Bruno Alves", email:"bruno.alves"+D, funcao:"Analista de Folha",      perfil:"Solucionador", coluna:true,  ativo:true, entraId:gid()},
+    {id:"u_carla", nome:"Carla Dias",  email:"carla.dias"+D,  funcao:"Analista de Benefícios", perfil:"Solucionador", coluna:true,  ativo:true, entraId:gid()},
+    {id:"u_diego", nome:"Diego Rocha", email:"diego.rocha"+D, funcao:"TI / Acessos",           perfil:"Solucionador", coluna:true,  ativo:true, entraId:gid()},
+    {id:"u_elena", nome:"Elena Souza", email:"elena.souza"+D, funcao:"Business Partner",       perfil:"Solucionador", coluna:true,  ativo:true, entraId:gid()},
   ];
-  return {sol, modelos:[], tarefas:[], itens:[], hist:[], notifs:[], ui:{userId:"u_sofia"}};
+  return {sol, modelos:[], tarefas:[], itens:[], hist:[], notifs:[], ui:{userId:"u_sofia", view:"painel"}};
 }
 let db;
 function load(){ try{ const r=localStorage.getItem(KEY); db=r?JSON.parse(r):seed(); }catch(e){ db=seed(); }
-  ["modelos","tarefas","itens","hist","notifs"].forEach(k=>{ if(!db[k]) db[k]=[]; }); }
+  ["modelos","tarefas","itens","hist","notifs"].forEach(k=>{ if(!db[k]) db[k]=[]; });
+  if(!db.ui) db.ui={userId:db.sol[0]&&db.sol[0].id}; if(!db.ui.view) db.ui.view="painel"; }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} }
 function reset(){ db=seed(); save(); closeAll(); render(); toast("Tudo limpo — comece criando uma tarefa"); }
 
@@ -426,7 +463,118 @@ function actReabrir(a){ setStatus(a,S.EXEC,"Reaberta para correção após rejei
 function commit(){ save(); render(); if(openItemId) renderItem(openItemId); else if(openTaskId) renderTask(openTaskId); refreshBell(); }
 
 /* ---- render topo/matriz ---- */
-function render(){ renderUserSelect(); renderLegend(); renderMatrix(); refreshBell(); }
+function render(){
+  renderUserSelect();
+  const view = (db.ui.view==="sol" && isGestor()) ? "sol" : "painel";
+  $("#viewPainel").hidden = view!=="painel";
+  $("#viewSol").hidden = view!=="sol";
+  if(view==="painel"){ renderLegend(); renderMatrix(); }
+  else { renderSolucionadores(); }
+  renderNav(); refreshBell();
+}
+function renderNav(){
+  const nav=$("#bottomnav"); if(!nav) return; nav.innerHTML="";
+  const mark=el("span"); mark.style.cssText="display:inline-flex;align-items:center;color:var(--textoSuave)"; mark.innerHTML=coraMark(19,true); nav.appendChild(mark);
+  const group=el("div","navgroup");
+  const items=[{k:"painel",ico:"▦",label:"Painel"}];
+  if(isGestor()) items.push({k:"sol",ico:"👥",label:"Solucionadores"});
+  const cur=(db.ui.view==="sol"&&isGestor())?"sol":"painel";
+  items.forEach(it=>{ const b=el("button","navbtn"+(it.k===cur?" active":""));
+    b.innerHTML=`<span class="ico">${it.ico}</span><span>${it.label}</span>`;
+    b.onclick=()=>{ db.ui.view=it.k; save(); closeAll(); render(); }; group.appendChild(b); });
+  nav.appendChild(group);
+  const sp=el("span"); sp.style.flex="1"; nav.appendChild(sp);
+  const rb=el("button","btn subtle","↺ Limpar"); rb.title="Limpar todos os dados de exemplo";
+  rb.onclick=()=>{ if(confirm("Limpar todas as tarefas, modelos, solucionadores personalizados e notificações?")) reset(); };
+  nav.appendChild(rb);
+}
+
+/* ---- Solucionadores (gestão pelo Gestor) ---- */
+function renderSolucionadores(){
+  const list=$("#solList"); list.innerHTML="";
+  const info=el("div","banner info");
+  info.innerHTML="👤 Os usuários acessam com a <strong>conta corporativa Microsoft (Entra ID)</strong>. No Power Apps, o cadastro usa um seletor de pessoas do diretório da empresa; o <em>Object ID</em> é vinculado automaticamente no primeiro acesso. Aqui o gestor define o perfil de permissão, ativa/desativa e organiza quem aparece no painel.";
+  list.appendChild(info);
+  db.sol.slice().sort((a,b)=>(b.ativo-a.ativo)||a.nome.localeCompare(b.nome)).forEach(s=> list.appendChild(solRow(s)));
+}
+function perfilPill(p){ const c=p==="Gestor"?"gestor":p==="Criador"?"criador":""; return el("span","pill "+c, p); }
+function solRow(s){
+  const r=el("div","sol-row"+(s.ativo?"":" inactive"));
+  r.appendChild(el("div","avatar", iniciais(s.nome)));
+  const who=el("div","who"); who.append(el("div","nm", s.nome), el("div","em", (s.email||"—")+" · "+(s.funcao||"—"))); r.appendChild(who);
+  const chips=el("div","chips");
+  chips.appendChild(perfilPill(s.perfil));
+  if(s.coluna) chips.appendChild(el("span","pill","no painel"));
+  if(s.id===db.ui.userId) chips.appendChild(el("span","pill","você"));
+  if(!s.ativo) chips.appendChild(el("span","pill","inativo"));
+  r.appendChild(chips);
+  const acts=el("div","acts");
+  const ed=el("button","btn ghost sm","Editar"); ed.onclick=()=>solForm(s);
+  const tg=el("button","btn subtle", s.ativo?"Desativar":"Ativar");
+  tg.onclick=()=>{ if(s.id===db.ui.userId && s.ativo){ toast("Você não pode desativar o próprio acesso."); return; }
+    s.ativo=!s.ativo; save(); render(); toast(s.ativo?"Solucionador ativado":"Solucionador desativado"); };
+  acts.append(ed,tg); r.appendChild(acts);
+  return r;
+}
+function solForm(s){
+  const editing=!!s;
+  const st = s ? {...s} : {id:null, nome:"", email:"", funcao:"", perfil:"Solucionador", coluna:true, ativo:true, entraId:""};
+  const root=$("#root"); root.innerHTML="";
+  const ov=overlay(()=>root.innerHTML=""), mod=el("div","modal"), head=el("div","modal-head");
+  head.append((()=>{const w=el("div","titwrap"); w.append(el("div","crumb", editing?"Editar solucionador":"Cadastrar solucionador"), el("h3",null, editing? st.nome||"Solucionador":"Novo solucionador")); return w;})());
+  const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
+  const body=el("div","modal-body");
+
+  body.appendChild((()=>{const b=el("div","banner info"); b.innerHTML="No Power Apps este cadastro usa o <strong>seletor de pessoas (Office365Users)</strong> — você busca a pessoa no diretório corporativo. Aqui, simule informando o e-mail corporativo."; return b;})());
+
+  body.appendChild(field("Nome", (()=>{const i=el("input","field"); i.value=st.nome; i.placeholder="Nome e sobrenome"; i.oninput=()=>st.nome=i.value; return i;})()));
+  body.appendChild(field("E-mail corporativo (conta Microsoft)", (()=>{const i=el("input","field"); i.type="email"; i.value=st.email; i.placeholder="nome.sobrenome@grupocoroa.com.br"; i.oninput=()=>st.email=i.value.trim().toLowerCase(); return i;})()));
+  body.appendChild(field("Função / cargo", (()=>{const i=el("input","field"); i.value=st.funcao; i.placeholder="Ex.: Analista de DP"; i.oninput=()=>st.funcao=i.value; return i;})()));
+
+  const gp=el("div","grid2");
+  gp.appendChild(field("Perfil de permissão", (()=>{const sel=el("select","field"); [["Gestor","Gestor — vê tudo, valida e gerencia"],["Criador","Criador — cria tarefas e distribui"],["Solucionador","Solucionador — executa suas etapas"]].forEach(([v,l])=>{const o=el("option",null,l);o.value=v;if(v===st.perfil)o.selected=true;sel.appendChild(o);});
+    sel.onchange=()=>{ st.perfil=sel.value; if(st.perfil==="Solucionador" && !editing) st.coluna=true; drawToggles(); }; return sel;})()));
+  const togWrap=el("div","form-row"); togWrap.append(el("label",null,"Opções"));
+  const togs=el("div"); togs.style.cssText="display:flex;flex-direction:column;gap:10px;padding-top:4px"; togWrap.appendChild(togs);
+  gp.appendChild(togWrap); body.appendChild(gp);
+
+  function switchRow(label, val, onset){
+    const sw=el("label","switch"); const si=el("input"); si.type="checkbox"; si.checked=!!val; si.onchange=()=>onset(si.checked);
+    sw.append(si, el("span","track"), el("span",null,label)); return sw;
+  }
+  function drawToggles(){ togs.innerHTML="";
+    togs.appendChild(switchRow("Aparece como coluna no painel", st.coluna, v=>st.coluna=v));
+    togs.appendChild(switchRow("Ativo (pode acessar a ferramenta)", st.ativo, v=>st.ativo=v));
+  }
+  drawToggles();
+
+  const eid=el("div","form-row"); eid.append(el("label",null,"Entra Object ID"));
+  const eidv=el("div","valread"); eidv.textContent = st.entraId || "— vinculado automaticamente no primeiro acesso —"; eid.appendChild(eidv); body.appendChild(eid);
+
+  mod.appendChild(body);
+  const foot=el("div","modal-foot");
+  if(editing){ const del=el("button","btn danger","Excluir"); del.onclick=()=>excluirSol(st); foot.appendChild(del); }
+  foot.appendChild(el("div","gap"));
+  const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=()=>root.innerHTML="";
+  const ok=el("button","btn primary", editing?"Salvar":"Cadastrar");
+  ok.onclick=()=>{
+    if(!st.nome.trim()){ toast("Informe o nome."); return; }
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(st.email||"")){ toast("Informe um e-mail corporativo válido."); return; }
+    if(db.sol.some(o=>o.id!==st.id && (o.email||"").toLowerCase()===st.email)){ toast("Já existe um solucionador com esse e-mail."); return; }
+    if(editing){ const o=db.sol.find(x=>x.id===st.id); Object.assign(o, {nome:st.nome.trim(), email:st.email, funcao:st.funcao.trim(), perfil:st.perfil, coluna:!!st.coluna, ativo:!!st.ativo}); }
+    else { db.sol.push({id:uid("u"), nome:st.nome.trim(), email:st.email, funcao:st.funcao.trim(), perfil:st.perfil, coluna:!!st.coluna, ativo:!!st.ativo, entraId:""}); }
+    save(); root.innerHTML=""; render(); toast(editing?"Solucionador atualizado":"Solucionador cadastrado");
+  };
+  foot.append(cancel,ok); mod.appendChild(foot);
+  ov.appendChild(mod); root.appendChild(ov);
+}
+function excluirSol(st){
+  if(st.id===db.ui.userId){ toast("Você não pode excluir o próprio acesso."); return; }
+  const temItens = db.itens.some(a=>a.responsavel===st.id);
+  if(temItens){ toast("Este solucionador tem etapas atribuídas. Desative-o para preservar o histórico, em vez de excluir."); return; }
+  if(!confirm(`Excluir "${st.nome}"? Esta ação não pode ser desfeita.`)) return;
+  db.sol=db.sol.filter(x=>x.id!==st.id); save(); $("#root").innerHTML=""; render(); toast("Solucionador excluído");
+}
 function renderUserSelect(){ const sel=$("#usersel"); sel.innerHTML="";
   db.sol.filter(s=>s.ativo).forEach(s=>{ const o=el("option",null,`${s.nome} · ${s.perfil}`); o.value=s.id; if(s.id===db.ui.userId)o.selected=true; sel.appendChild(o); }); }
 function renderLegend(){ const lg=$("#legend"); lg.innerHTML="";
@@ -869,5 +1017,5 @@ $("#usersel").onchange=e=>{ db.ui.userId=e.target.value; save(); closeAll(); ren
 $("#novaBtn").onclick=openNova;
 $("#bell").onclick=openDrawer;
 $("#themebtn").onclick=toggleTheme;
-$("#resetBtn").onclick=()=>{ if(confirm("Limpar todas as tarefas, modelos e notificações?")) reset(); };
+$("#addSolBtn").onclick=()=>solForm(null);
 </script>
