@@ -1232,10 +1232,11 @@ function concluidoEm(a){ const hs=db.hist.filter(x=>x.acaoId===a.id && x.para===
 function exportAOA(tasks){
   const cols=[], seen={};
   tasks.forEach(t=> itensDaTarefa(t.id).filter(a=>a.responsavel).forEach(a=>{ const k=a.rotulo+"||"+a.responsavel; if(!seen[k]){ seen[k]=true; cols.push({rotulo:a.rotulo, soluId:a.responsavel}); } }));
-  const head=["Tarefa","Subtítulo","Situação","Data de referência", ...cols.map(c=> c.rotulo+" — "+solById(c.soluId).nome)];
+  const head=["Tarefa","Subtítulo","Modelo","Situação","Data de referência", ...cols.map(c=> c.rotulo+" — "+solById(c.soluId).nome)];
   const aoa=[head];
   tasks.forEach(t=>{ const its=itensDaTarefa(t.id);
-    const line=[t.nome||"", t.subtitulo||"", t.statusGeral||"", fmtDia(t.dataRef)];
+    const modelo=(db.modelos.find(m=>m.id===t.modeloId)||{}).nome||"";
+    const line=[t.nome||"", t.subtitulo||"", modelo, t.statusGeral||"", fmtDia(t.dataRef)];
     cols.forEach(c=>{ const item=its.find(a=>a.responsavel===c.soluId && a.rotulo===c.rotulo); let v="";
       if(item){ if(item.tipo==="Texto"||item.tipo==="Observações") v=String(item.valor||"");
         else if(item.status===S.ENC) v=fmtDia(concluidoEm(item)); }
@@ -1251,7 +1252,8 @@ function exportXlsx(scope){
   const label = scope==="arquivo"?"Arquivo":"Painel";
   const {aoa, head}=exportAOA(tasks);
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws["!cols"]=head.map((h,i)=> ({wch: (i<4? [28,22,16,16][i] : Math.min(42, Math.max(14, String(h).length+2))) }));
+  ws["!cols"]=head.map((h,i)=> ({wch: (i<5? [26,20,20,16,16][i] : Math.min(42, Math.max(14, String(h).length+2))) }));
+  ws["!autofilter"]={ ref: XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:aoa.length-1, c:head.length-1}}) };
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, label);
   const p=n=>String(n).padStart(2,"0"); const d=new Date(); const stamp=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
   try{ XLSX.writeFile(wb, `PainelCora_${label}_${stamp}.xlsx`); toast("Baixando Excel…"); }
