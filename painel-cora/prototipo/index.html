@@ -97,6 +97,7 @@
   table.matrix thead th{position:sticky; top:0; z-index:5; background:var(--azulGelo); color:var(--texto);
     padding:11px 12px; font-size:12.5px; font-weight:600}
   table.matrix thead th .fx{font-size:11px; color:var(--textoSuave); font-weight:500; display:block}
+  table.matrix thead th .colhead{display:flex; align-items:center; gap:9px}
   th.corner, td.rowhead{position:sticky; left:0; z-index:6; background:var(--cartao); min-width:190px; max-width:230px}
   thead th.corner{z-index:8; background:var(--azulGelo)}
   td.rowhead{padding:0; box-shadow:1px 0 0 var(--borda)}
@@ -654,7 +655,10 @@ function renderMatrix(){
   const corner=el("th","corner");
   corner.append(el("div",null,"Tarefa"),(()=>{const s=el("span");s.style.cssText="font-size:11px;color:var(--textoSuave);font-weight:500;display:block";s.textContent="tarefa × solucionador";return s;})());
   htr.appendChild(corner);
-  cols.forEach(c=>{ const th=el("th"); th.append(el("div",null,c.nome), el("span","fx",c.funcao)); htr.appendChild(th); });
+  cols.forEach(c=>{ const th=el("th");
+    const wrap=el("div","colhead"); wrap.appendChild(avatarNode(c,30));
+    const txt=el("div"); txt.style.minWidth="0"; txt.append(el("div",null,c.nome), el("span","fx",c.funcao));
+    wrap.appendChild(txt); th.appendChild(wrap); htr.appendChild(th); });
   thead.appendChild(htr); tb.appendChild(thead);
 
   const tbody=el("tbody");
