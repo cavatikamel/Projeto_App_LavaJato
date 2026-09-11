@@ -273,7 +273,7 @@
   <div class="board-head">
     <div>
       <h2 id="boardTitle">Painel geral</h2>
-      <p id="boardSub">Linhas = tarefas · Colunas = solucionadores · Cada célula é um campo/etapa atribuído.</p>
+      <p id="boardSub" hidden></p>
     </div>
     <div class="legend" id="legend"></div>
   </div>
@@ -433,9 +433,6 @@ function visibleTarefas(){ if(isCriador()) return db.tarefas;
 function renderMatrix(){
   const u=me();
   $("#boardTitle").textContent = isCriador()? "Painel geral" : "Minhas etapas";
-  $("#boardSub").textContent = isCriador()
-    ? "Linhas = tarefas · Colunas = solucionadores · Cada célula é um campo/etapa atribuído."
-    : `Você está como ${u.nome} — mostrando as etapas sob sua responsabilidade.`;
   const cols=visibleColumns(), rows=visibleTarefas();
   const tb=$("#matrix"); tb.innerHTML="";
   const thead=el("thead"), htr=el("tr");
