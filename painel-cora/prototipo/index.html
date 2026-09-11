@@ -269,6 +269,12 @@
   .sol-row .chips{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
   .sol-row .acts{display:flex; gap:6px; align-items:center}
   .avatar{width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-size:12.5px; font-weight:700; color:#fff; background:var(--azul); flex-shrink:0}
+  .avpick{display:flex; gap:14px; align-items:center; flex-wrap:wrap}
+  .avpick .prev{flex-shrink:0}
+  .avgrid{display:flex; flex-wrap:wrap; gap:8px}
+  .avgrid button{border:2px solid transparent; border-radius:50%; padding:0; background:none; cursor:pointer; line-height:0}
+  .avgrid button:hover{border-color:var(--bordaForte)}
+  .avgrid button.sel{border-color:var(--azul)}
   .pill.gestor{background:color-mix(in srgb,var(--azul) 16%,var(--cartao)); color:var(--azul)}
   .pill.criador{background:color-mix(in srgb,var(--st-validacao) 18%,var(--cartao)); color:var(--st-validacao)}
 
@@ -357,6 +363,34 @@ const fmtD = d=>{ if(!d) return "—"; const x=new Date(d); return x.toLocaleDat
 const fmtDT = d=>{ const x=new Date(d); return x.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+" "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); };
 const autogrow = ta=>{ ta.style.height="auto"; ta.style.height=(ta.scrollHeight+2)+"px"; };
 const iniciais = n=> (n||"").trim().split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase() || "?";
+
+/* ---- avatares (foto enviada ou biblioteca) ---- */
+const AV_LIB = {
+  av0:"#2E9A72", av1:"#E09E0A", av2:"#6E9E8F", av3:"#4E86A6",
+  av4:"#8E6FB3", av5:"#C46A57", av6:"#64786D", av7:"#7A9A4E"
+};
+function libAvatarSVG(id){
+  const c = AV_LIB[id] || "#64786D";
+  return `<svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true">`
+    + `<rect width="64" height="64" fill="${c}"/>`
+    + `<circle cx="32" cy="26" r="11" fill="#ffffff"/>`
+    + `<path d="M12 58 C12 45 20 39 32 39 C44 39 52 45 52 58 Z" fill="#ffffff"/></svg>`;
+}
+function avatarNode(s, px){
+  const a = (s && s.avatar) || "";
+  if(a.startsWith("data:")){ const img=el("img"); img.src=a; img.alt=s.nome||""; img.style.cssText=`width:${px}px;height:${px}px;border-radius:50%;object-fit:cover;flex-shrink:0;display:block`; return img; }
+  if(a.startsWith("lib:")){ const w=el("span"); w.style.cssText=`width:${px}px;height:${px}px;border-radius:50%;overflow:hidden;flex-shrink:0;display:inline-block;line-height:0`; w.innerHTML=libAvatarSVG(a.slice(4)); return w; }
+  const d=el("div","avatar", iniciais(s&&s.nome)); d.style.width=px+"px"; d.style.height=px+"px"; return d;
+}
+function fileToAvatar(file, cb){
+  if(!file || !/^image\//.test(file.type)){ toast("Escolha um arquivo de imagem."); return; }
+  const r=new FileReader();
+  r.onload=()=>{ const img=new Image(); img.onload=()=>{ const S=160, c=document.createElement("canvas"); c.width=S; c.height=S;
+    const ctx=c.getContext("2d"); const scale=Math.max(S/img.width,S/img.height); const w=img.width*scale, h=img.height*scale;
+    ctx.drawImage(img,(S-w)/2,(S-h)/2,w,h); try{ cb(c.toDataURL("image/jpeg",0.85)); }catch(e){ toast("Não foi possível processar a imagem."); } };
+    img.onerror=()=>toast("Imagem inválida."); img.src=r.result; };
+  r.readAsDataURL(file);
+}
 
 /* ---- logo Cora (SVG oficial vetorizado; adapta ao tema via tokens --cora-*) ---- */
 const CORA_SYMBOL='<path d="M 583.0,371.0 L 563.0,365.0 L 543.0,362.0 L 518.0,363.0 L 494.0,368.0 L 477.0,374.0 L 451.0,388.0 L 437.0,399.0 L 421.0,416.0 L 419.0,423.0 L 420.0,429.0 L 422.0,433.0 L 429.0,438.0 L 439.0,438.0 L 455.0,434.0 L 469.0,434.0 L 486.0,438.0 L 498.0,444.0 L 512.0,456.0 L 521.0,469.0 L 528.0,493.0 L 528.0,506.0 L 524.0,529.0 L 515.0,553.0 L 505.0,573.0 L 479.0,614.0 L 453.0,648.0 L 434.0,676.0 L 424.0,695.0 L 422.0,703.0 L 424.0,715.0 L 429.0,721.0 L 436.0,725.0 L 449.0,724.0 L 474.0,710.0 L 527.0,672.0 L 563.0,641.0 L 586.0,618.0 L 615.0,584.0 L 641.0,544.0 L 651.0,522.0 L 660.0,489.0 L 660.0,463.0 L 653.0,438.0 L 642.0,417.0 L 619.0,392.0 L 605.0,382.0 Z"/><path d="M 234.0,371.0 L 217.0,379.0 L 198.0,392.0 L 179.0,412.0 L 166.0,434.0 L 161.0,447.0 L 158.0,461.0 L 157.0,487.0 L 162.0,512.0 L 168.0,528.0 L 182.0,556.0 L 202.0,585.0 L 225.0,612.0 L 258.0,645.0 L 309.0,688.0 L 353.0,719.0 L 365.0,725.0 L 377.0,724.0 L 381.0,722.0 L 387.0,714.0 L 388.0,702.0 L 386.0,694.0 L 372.0,669.0 L 347.0,632.0 L 340.0,624.0 L 335.0,614.0 L 331.0,610.0 L 301.0,558.0 L 300.0,553.0 L 295.0,544.0 L 288.0,521.0 L 287.0,492.0 L 289.0,482.0 L 296.0,465.0 L 302.0,457.0 L 316.0,445.0 L 335.0,436.0 L 345.0,434.0 L 366.0,434.0 L 385.0,438.0 L 394.0,433.0 L 397.0,426.0 L 397.0,419.0 L 391.0,409.0 L 372.0,391.0 L 358.0,382.0 L 332.0,370.0 L 301.0,363.0 L 275.0,362.0 L 254.0,365.0 Z"/><path d="M 530.0,236.0 L 518.0,239.0 L 507.0,244.0 L 497.0,252.0 L 488.0,262.0 L 478.0,284.0 L 477.0,307.0 L 484.0,328.0 L 498.0,344.0 L 518.0,354.0 L 528.0,356.0 L 542.0,356.0 L 553.0,354.0 L 565.0,349.0 L 577.0,341.0 L 584.0,334.0 L 596.0,313.0 L 599.0,291.0 L 594.0,270.0 L 586.0,257.0 L 578.0,249.0 L 571.0,244.0 L 557.0,238.0 L 548.0,236.0 Z"/><path d="M 277.0,236.0 L 262.0,240.0 L 254.0,244.0 L 236.0,260.0 L 225.0,280.0 L 223.0,289.0 L 223.0,309.0 L 228.0,324.0 L 235.0,335.0 L 242.0,342.0 L 249.0,347.0 L 264.0,354.0 L 274.0,356.0 L 288.0,356.0 L 299.0,354.0 L 311.0,349.0 L 320.0,343.0 L 332.0,331.0 L 342.0,311.0 L 344.0,301.0 L 344.0,285.0 L 342.0,275.0 L 336.0,262.0 L 319.0,245.0 L 309.0,240.0 L 296.0,236.0 Z"/>';
@@ -497,7 +531,7 @@ function renderSolucionadores(){
 function perfilPill(p){ const c=p==="Gestor"?"gestor":p==="Criador"?"criador":""; return el("span","pill "+c, p); }
 function solRow(s){
   const r=el("div","sol-row"+(s.ativo?"":" inactive"));
-  r.appendChild(el("div","avatar", iniciais(s.nome)));
+  r.appendChild(avatarNode(s,36));
   const who=el("div","who"); who.append(el("div","nm", s.nome), el("div","em", (s.email||"—")+" · "+(s.funcao||"—"))); r.appendChild(who);
   const chips=el("div","chips");
   chips.appendChild(perfilPill(s.perfil));
@@ -521,6 +555,31 @@ function solForm(s){
   head.append((()=>{const w=el("div","titwrap"); w.append(el("div","crumb", editing?"Editar solucionador":"Cadastrar solucionador"), el("h3",null, editing? st.nome||"Solucionador":"Novo solucionador")); return w;})());
   const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
   const body=el("div","modal-body");
+
+  // foto / avatar
+  st.avatar = st.avatar || "";
+  const avSec=el("div","sec"); avSec.appendChild(el("h4",null,"Foto / avatar"));
+  const avpick=el("div","avpick");
+  const prev=el("span","prev");
+  const controls=el("div"); controls.style.cssText="display:flex;flex-direction:column;gap:8px;flex:1;min-width:180px";
+  const btnRow=el("div"); btnRow.style.cssText="display:flex;gap:8px;flex-wrap:wrap";
+  const fileInput=el("input"); fileInput.type="file"; fileInput.accept="image/*"; fileInput.style.display="none";
+  const bFoto=el("button","btn ghost sm","📷 Enviar foto");
+  const bLib=el("button","btn ghost sm","🎨 Escolher avatar");
+  const bIni=el("button","btn subtle","Usar iniciais");
+  btnRow.append(bFoto,bLib,bIni);
+  const grid=el("div","avgrid"); grid.hidden=true;
+  controls.append(btnRow, grid);
+  avpick.append(prev, controls); avSec.append(avpick, fileInput); body.appendChild(avSec);
+  function drawPrev(){ prev.innerHTML=""; prev.appendChild(avatarNode(st,64)); }
+  function drawGrid(){ grid.innerHTML=""; Object.keys(AV_LIB).forEach(id=>{ const b=el("button"); if(st.avatar==="lib:"+id) b.className="sel";
+    b.innerHTML=`<span style="display:inline-block;width:44px;height:44px;border-radius:50%;overflow:hidden;line-height:0">${libAvatarSVG(id)}</span>`;
+    b.onclick=()=>{ st.avatar="lib:"+id; drawPrev(); drawGrid(); }; grid.appendChild(b); }); }
+  bFoto.onclick=()=>fileInput.click();
+  fileInput.onchange=()=>{ const f=fileInput.files&&fileInput.files[0]; if(f) fileToAvatar(f, d=>{ st.avatar=d; grid.hidden=true; drawPrev(); }); };
+  bLib.onclick=()=>{ grid.hidden=!grid.hidden; if(!grid.hidden) drawGrid(); };
+  bIni.onclick=()=>{ st.avatar=""; grid.hidden=true; drawPrev(); };
+  drawPrev();
 
   body.appendChild(field("Nome", (()=>{const i=el("input","field"); i.value=st.nome; i.placeholder="Nome e sobrenome"; i.oninput=()=>st.nome=i.value; return i;})()));
   body.appendChild(field("E-mail corporativo (conta Microsoft)", (()=>{const i=el("input","field"); i.type="email"; i.value=st.email; i.placeholder="nome.sobrenome@grupocoroa.com.br"; i.oninput=()=>st.email=i.value.trim().toLowerCase(); return i;})()));
@@ -556,8 +615,8 @@ function solForm(s){
     if(!st.nome.trim()){ toast("Informe o nome."); return; }
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(st.email||"")){ toast("Informe um e-mail corporativo válido."); return; }
     if(db.sol.some(o=>o.id!==st.id && (o.email||"").toLowerCase()===st.email)){ toast("Já existe um solucionador com esse e-mail."); return; }
-    if(editing){ const o=db.sol.find(x=>x.id===st.id); Object.assign(o, {nome:st.nome.trim(), email:st.email, funcao:st.funcao.trim(), perfil:st.perfil, coluna:!!st.coluna, ativo:!!st.ativo}); }
-    else { db.sol.push({id:uid("u"), nome:st.nome.trim(), email:st.email, funcao:st.funcao.trim(), perfil:st.perfil, coluna:!!st.coluna, ativo:!!st.ativo, entraId:""}); }
+    if(editing){ const o=db.sol.find(x=>x.id===st.id); Object.assign(o, {nome:st.nome.trim(), email:st.email, funcao:st.funcao.trim(), perfil:st.perfil, coluna:!!st.coluna, ativo:!!st.ativo, avatar:st.avatar||""}); }
+    else { db.sol.push({id:uid("u"), nome:st.nome.trim(), email:st.email, funcao:st.funcao.trim(), perfil:st.perfil, coluna:!!st.coluna, ativo:!!st.ativo, entraId:"", avatar:st.avatar||""}); }
     save(); root.innerHTML=""; render(); toast(editing?"Solucionador atualizado":"Solucionador cadastrado");
   };
   foot.append(cancel,ok); mod.appendChild(foot);
