@@ -53,8 +53,9 @@
   .topbar{position:sticky; top:0; z-index:20; background:color-mix(in srgb,var(--cartao) 88%, transparent);
     backdrop-filter:saturate(1.4) blur(8px); border-bottom:1px solid var(--borda);
     padding:6px clamp(16px,4vw,28px); display:flex; align-items:center; gap:16px; flex-wrap:wrap}
-  .brand{display:flex; flex-direction:column; align-items:flex-start; gap:2px; margin-right:auto}
-  .brand .sub{font-size:11.5px; color:var(--textoSuave); letter-spacing:.3px}
+  .brand{display:flex; flex-direction:row; align-items:center; gap:12px; margin-right:auto; min-width:0}
+  .brand .sub{font-size:12px; color:var(--textoSuave); letter-spacing:.3px; line-height:1.25;
+    padding-left:12px; border-left:1px solid var(--borda)}
   .cora-mark, .cora-lockup{display:block; flex-shrink:0}
   .ctl{display:flex; align-items:center; gap:8px}
   .ctl label{font-size:11px; color:var(--textoSuave); text-transform:uppercase; letter-spacing:.6px}
@@ -344,7 +345,7 @@ function coraLockup(h, mono){
 function injectLogos(){
   const bb=$("#brandBox");
   if(bb) bb.innerHTML = coraLockup(64)
-    + `<div class="brand-txt"><div class="sub">Departamento Pessoal · Grupo Coroa</div></div>`;
+    + `<span class="sub">Departamento Pessoal · Grupo Coroa</span>`;
   const fl=$("#footLogo");
   if(fl) fl.innerHTML = coraMark(15, true) + `<span style="font-weight:600">Cora</span>`;
 }
