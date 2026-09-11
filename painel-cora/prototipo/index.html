@@ -266,6 +266,8 @@
     border:1px solid var(--borda); border-radius:var(--raio); background:var(--cartao); padding:16px clamp(14px,2.5vw,22px); box-shadow:var(--sombra)}
   .criar-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; align-items:end}
   .criar-fields{display:flex; flex-direction:column; gap:12px}
+  .fieldsbar{position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--cartao); padding:10px 0 9px; margin-bottom:2px; border-bottom:1px solid var(--borda)}
   @media (min-width:900px){ .criar-fields.two{display:grid; grid-template-columns:repeat(2,1fr); gap:12px} }
   .sol-row{display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--borda); border-radius:var(--raioSm); background:var(--fundo); flex-wrap:wrap}
   .sol-row.inactive{opacity:.55}
@@ -1001,8 +1003,10 @@ function renderCriar(){
 
   // campos e etapas
   const s1=el("div","sec");
-  const hh=el("div"); hh.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px";
-  hh.append(el("h4",null,"Campos e etapas"), (()=>{const b=el("button","btn ghost sm","＋ Adicionar campo");b.onclick=()=>{st.campos.push(novoCampo(st.campos.length+1));drawItens(itensBox);};return b;})());
+  const hh=el("div","fieldsbar");
+  hh.append(el("h4",null,"Campos e etapas"), (()=>{const b=el("button","btn ghost sm","＋ Adicionar campo");
+    b.onclick=()=>{ st.campos.push(novoCampo(st.campos.length+1)); drawItens(itensBox); const last=itensBox.lastElementChild; if(last) last.scrollIntoView({block:"nearest",behavior:"smooth"}); };
+    return b;})());
   s1.appendChild(hh);
   const itensBox=el("div"); itensBox.style.cssText="display:flex;flex-direction:column;gap:10px"; s1.appendChild(itensBox); wrap.appendChild(s1);
   drawItens(itensBox);
