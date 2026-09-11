@@ -262,6 +262,11 @@
   .view{flex:1; min-height:0; display:flex; flex-direction:column}
   .sol-wrap{flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:8px;
     border:1px solid var(--borda); border-radius:var(--raio); background:var(--cartao); padding:12px; box-shadow:var(--sombra)}
+  .criar-wrap{flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:18px;
+    border:1px solid var(--borda); border-radius:var(--raio); background:var(--cartao); padding:16px clamp(14px,2.5vw,22px); box-shadow:var(--sombra)}
+  .criar-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; align-items:end}
+  .criar-fields{display:flex; flex-direction:column; gap:12px}
+  @media (min-width:900px){ .criar-fields.two{display:grid; grid-template-columns:repeat(2,1fr); gap:12px} }
   .sol-row{display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--borda); border-radius:var(--raioSm); background:var(--fundo); flex-wrap:wrap}
   .sol-row.inactive{opacity:.55}
   .sol-row .who{flex:1; min-width:160px}
@@ -328,6 +333,8 @@
     </div>
     <div class="sol-wrap" id="solList"></div>
   </section>
+
+  <section id="viewCriar" class="view" hidden></section>
 </main>
 
 <nav class="bottomnav" id="bottomnav"></nav>
@@ -503,11 +510,14 @@ function commit(){ save(); render(); if(openItemId) renderItem(openItemId); else
 /* ---- render topo/matriz ---- */
 function render(){
   renderUserSelect();
-  const view = (db.ui.view==="sol" && isGestor()) ? "sol" : "painel";
+  if(gCriar && !isCriador()) gCriar=null;
+  const view = gCriar ? "criar" : ((db.ui.view==="sol" && isGestor()) ? "sol" : "painel");
   $("#viewPainel").hidden = view!=="painel";
   $("#viewSol").hidden = view!=="sol";
+  $("#viewCriar").hidden = view!=="criar";
   if(view==="painel"){ renderLegend(); renderMatrix(); }
-  else { renderSolucionadores(); }
+  else if(view==="sol"){ renderSolucionadores(); }
+  else { renderCriar(); }
   renderNav(); refreshBell();
 }
 function renderNav(){
@@ -519,7 +529,7 @@ function renderNav(){
   const cur=(db.ui.view==="sol"&&isGestor())?"sol":"painel";
   items.forEach(it=>{ const b=el("button","navbtn"+(it.k===cur?" active":""));
     b.innerHTML=`<span class="ico">${it.ico}</span><span>${it.label}</span>`;
-    b.onclick=()=>{ db.ui.view=it.k; save(); closeAll(); render(); }; group.appendChild(b); });
+    b.onclick=()=>{ db.ui.view=it.k; gCriar=null; save(); closeAll(); render(); }; group.appendChild(b); });
   nav.appendChild(group);
   const sp=el("span"); sp.style.flex="1"; nav.appendChild(sp);
   const rb=el("button","btn subtle","↺ Limpar"); rb.title="Limpar todos os dados de exemplo";
@@ -742,8 +752,8 @@ function renderTask(id){
   body.appendChild(s2); mod.appendChild(body);
 
   const foot=el("div","modal-foot"); foot.appendChild(el("div","gap"));
-  if(isCriador() && t.recorrente){ const b=el("button","btn ghost","↻ Nova ocorrência deste modelo");
-    b.onclick=()=>{ const modelo=db.modelos.find(m=>m.id===t.modeloId) || modeloFromTarefa(t); openBuilder(modelo); }; foot.appendChild(b); }
+  if(isCriador() && (t.recorrente || t.modeloId)){ const b=el("button","btn ghost","↻ Nova ocorrência deste modelo");
+    b.onclick=()=>{ const modelo=db.modelos.find(m=>m.id===t.modeloId) || modeloFromTarefa(t); closeAll(); headerPopup(modelo); }; foot.appendChild(b); }
   const c=el("button","btn primary","Fechar"); c.onclick=closeAll; foot.appendChild(c); mod.appendChild(foot);
   ov.appendChild(mod); root.appendChild(ov);
 }
@@ -881,13 +891,13 @@ function openNova(){
   else { db.modelos.forEach(mo=>{ const r=el("div","tmpl-row"); r.append(el("div","ti","↻"));
       const tn=el("div","tn"); const b=document.createElement("b"); b.textContent=mo.nome;
       tn.append(b, el("span",null, `${mo.itens.length} campo(s) · ${mo.itens.filter(i=>i.responsavel).length} etapa(s)`)); r.appendChild(tn);
-      const use=el("button","btn primary sm","Usar"); use.onclick=()=>openBuilder(mo);
+      const use=el("button","btn primary sm","Usar"); use.onclick=()=>{ $("#root").innerHTML=""; headerPopup(mo); };
       const del=el("button","btn subtle sm","Excluir"); del.onclick=()=>{ if(confirm(`Excluir o modelo "${mo.nome}"?`)){ db.modelos=db.modelos.filter(m=>m.id!==mo.id); save(); openNova(); } };
       r.append(use,del); choice.appendChild(r); }); }
   s.appendChild(choice); body.appendChild(s);
   body.appendChild(el("div","divider","ou"));
   const s2=el("div","sec"); const b2=el("button","btn ghost","✎ Criar tarefa do zero"); b2.style.width="100%"; b2.style.justifyContent="center";
-  b2.onclick=()=>openBuilder(null); s2.appendChild(b2);
+  b2.onclick=()=>{ $("#root").innerHTML=""; startBuilder(null); }; s2.appendChild(b2);
   s2.appendChild(el("div","et")).textContent="Defina título, subtítulo, recorrência e monte os campos (texto, número, data, check, observações, evidência), com evidência, aprovação do gestor, visibilidade e dependências por campo.";
   body.appendChild(s2);
   mod.append(head,body); ov.appendChild(mod); root.appendChild(ov);
@@ -900,37 +910,44 @@ function modeloFromTarefa(t){
     exigeAprov:a.exigeAprov, obrig:a.obrig, exigeEvid:a.exigeEvid, visivelTodos:!!a.visivelTodos, prazoRel:a.prazoRel||0, depOrdens:(a.depOrdens||[]).slice(), valorInicial:""}));
   return {id:t.modeloId||null, nome:t.nome, itens};
 }
-function openBuilder(modelo){
-  const root=$("#root"); root.innerHTML="";
-  const st={ modeloId: modelo? modelo.id : null, nome:"", subtitulo:"", recorrente:!!modelo, dataRef:fmtISOdate(today()),
+let gCriar=null;
+function startBuilder(modelo){
+  if(!isCriador()){ toast("Apenas Gestor/Criador podem criar tarefas."); return; }
+  gCriar={ modeloId: modelo? modelo.id : null, origemNome: modelo? modelo.nome : null,
+    nome:"", subtitulo:"", recorrente:!!modelo, dataRef:fmtISOdate(today()),
     campos: modelo ? modelo.itens.map((c,i)=>({...novoCampo(i+1), ...c, ordem:i+1, depOrdens:(c.depOrdens||[]).slice(), valorInicial:""})) : [ novoCampo(1) ] };
-  const ov=overlay(()=>root.innerHTML=""), mod=el("div","modal wide"), head=el("div","modal-head");
-  head.append((()=>{const w=el("div","titwrap");w.append(el("div","crumb", modelo?`Modelo: ${modelo.nome}`:"Do zero"), el("h3",null, modelo?"Nova ocorrência":"Criar tarefa"));return w;})());
-  const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
-  const body=el("div","modal-body"), foot=el("div","modal-foot");
-  mod.append(head,body,foot); ov.appendChild(mod); root.appendChild(ov);
+  openItemId=null; openTaskId=null; $("#root").innerHTML=""; render();
+}
+function cancelBuilder(){ gCriar=null; render(); }
+function renderCriar(){
+  const st=gCriar; const sec=$("#viewCriar"); sec.innerHTML=""; if(!st) return;
+
+  const head=el("div","board-head");
+  const left=el("div"); left.appendChild(el("h2",null, st.modeloId? "Nova ocorrência" : "Nova tarefa"));
+  if(st.origemNome){ const p=el("p"); p.style.cssText="color:var(--textoSuave);font-size:13px;margin-top:2px"; p.textContent="Baseada no modelo: "+st.origemNome; left.appendChild(p); }
+  head.appendChild(left);
+  const acts=el("div"); acts.style.cssText="display:flex;gap:8px";
+  const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=cancelBuilder;
+  const create=el("button","btn primary", st.modeloId?"Criar ocorrência":"Criar tarefa"); create.onclick=()=>criar(st);
+  acts.append(cancel,create); head.appendChild(acts); sec.appendChild(head);
+
+  const wrap=el("div","criar-wrap"); sec.appendChild(wrap);
 
   function reordenar(){ st.campos.forEach((c,i)=>c.ordem=i+1); }
   function sanitizeDeps(){ const validas=new Set(); st.campos.forEach(c=>{ if(c.responsavel && c.rotulo.trim()) validas.add(c.ordem); });
     st.campos.forEach(c=>{ c.depOrdens=(c.depOrdens||[]).filter(o=> o<c.ordem && validas.has(o)); }); }
-
   function chk(label,val,onset){ const l=el("label","chk"); const cb=el("input"); cb.type="checkbox"; cb.checked=!!val; cb.onchange=()=>onset(cb.checked); l.append(cb, el("span",null,label)); return l; }
-
   function depControl(campo){
     const cand=st.campos.filter(c=>c.ordem<campo.ordem && c.responsavel && c.rotulo.trim());
     if(!cand.length) return null;
-    const wrap=el("div"); wrap.style.width="100%";
-    const btn=el("button","btn ghost sm");
-    const label=()=> "⛓ Depende de: "+(campo.depOrdens.length? campo.depOrdens.length+" selecionada(s)":"nenhuma");
-    btn.textContent=label();
+    const w=el("div"); w.style.width="100%"; const btn=el("button","btn ghost sm");
+    const label=()=> "⛓ Depende de: "+(campo.depOrdens.length? campo.depOrdens.length+" selecionada(s)":"nenhuma"); btn.textContent=label();
     const panel=el("div","depbox"); panel.hidden=true;
     cand.forEach(d=>{ const l=el("label","chk"); const cb=el("input"); cb.type="checkbox"; cb.checked=campo.depOrdens.includes(d.ordem);
       cb.onchange=()=>{ if(cb.checked){ if(!campo.depOrdens.includes(d.ordem)) campo.depOrdens.push(d.ordem); } else campo.depOrdens=campo.depOrdens.filter(o=>o!==d.ordem); btn.textContent=label(); };
       l.append(cb, el("span",null,`#${d.ordem} ${d.rotulo||"(sem nome)"}`)); panel.appendChild(l); });
-    btn.onclick=e=>{ e.preventDefault(); panel.hidden=!panel.hidden; };
-    wrap.append(btn,panel); return wrap;
+    btn.onclick=e=>{ e.preventDefault(); panel.hidden=!panel.hidden; }; w.append(btn,panel); return w;
   }
-
   function drawItens(container){
     sanitizeDeps(); container.innerHTML="";
     st.campos.forEach((c,idx)=>{
@@ -972,33 +989,52 @@ function openBuilder(modelo){
     });
   }
 
-  function draw(){
-    body.innerHTML=""; foot.innerHTML="";
-    const s0=el("div","sec"); s0.appendChild(el("h4",null,"Tarefa"));
-    const gt=el("div","grid2");
-    gt.appendChild(field("Título",(()=>{const i=el("input","field");i.placeholder="Ex.: Demissão";i.value=st.nome;i.oninput=()=>st.nome=i.value;return i;})()));
-    gt.appendChild(field("Subtítulo",(()=>{const i=el("input","field");i.placeholder="Ex.: Fulano de Tal";i.value=st.subtitulo;i.oninput=()=>st.subtitulo=i.value;return i;})()));
-    s0.appendChild(gt);
-    const g=el("div","grid2");
-    g.appendChild(field("Data de referência (D+0)",(()=>{const i=el("input","field");i.type="date";i.value=st.dataRef;i.onchange=()=>st.dataRef=i.value;return i;})()));
-    const recWrap=el("div","form-row"); recWrap.append(el("label",null,"Recorrente"));
-    const sw=el("label","switch"); const si=el("input"); si.type="checkbox"; si.checked=st.recorrente; si.onchange=()=>st.recorrente=si.checked; sw.append(si, el("span","track"), el("span",null,"Salvar como modelo reutilizável")); recWrap.appendChild(sw);
-    g.appendChild(recWrap); s0.appendChild(g); body.appendChild(s0);
+  // cabeçalho da tarefa
+  const s0=el("div","sec"); s0.appendChild(el("h4",null,"Cabeçalho da tarefa"));
+  const cg=el("div","criar-grid");
+  cg.appendChild(field("Título",(()=>{const i=el("input","field");i.placeholder="Ex.: Demissão";i.value=st.nome;i.oninput=()=>st.nome=i.value;return i;})()));
+  cg.appendChild(field("Subtítulo",(()=>{const i=el("input","field");i.placeholder="Ex.: Fulano de Tal";i.value=st.subtitulo;i.oninput=()=>st.subtitulo=i.value;return i;})()));
+  cg.appendChild(field("Data de referência (D+0)",(()=>{const i=el("input","field");i.type="date";i.value=st.dataRef;i.onchange=()=>st.dataRef=i.value;return i;})()));
+  const recWrap=el("div","form-row"); recWrap.append(el("label",null,"Recorrente"));
+  const sw=el("label","switch"); const si=el("input"); si.type="checkbox"; si.checked=st.recorrente; si.onchange=()=>st.recorrente=si.checked; sw.append(si, el("span","track"), el("span",null,"Salvar como modelo")); recWrap.appendChild(sw);
+  cg.appendChild(recWrap); s0.appendChild(cg); wrap.appendChild(s0);
 
-    const s1=el("div","sec");
-    const hh=el("div"); hh.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px";
-    hh.append(el("h4",null,"Campos e etapas"), (()=>{const b=el("button","btn ghost sm","＋ Adicionar campo");b.onclick=()=>{st.campos.push(novoCampo(st.campos.length+1));drawItens(itensBox);};return b;})());
-    s1.appendChild(hh);
-    s1.appendChild(el("div","et")).textContent="Campos sem responsável são “dados” compartilhados. Com responsável viram etapas na matriz (o gestor é sempre coeditor). Marque evidência, aprovação, visibilidade e dependências por campo.";
-    const itensBox=el("div"); itensBox.style.cssText="display:flex;flex-direction:column;gap:10px;margin-top:10px"; s1.appendChild(itensBox); body.appendChild(s1);
-    drawItens(itensBox);
+  // campos e etapas
+  const s1=el("div","sec");
+  const hh=el("div"); hh.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px";
+  hh.append(el("h4",null,"Campos e etapas"), (()=>{const b=el("button","btn ghost sm","＋ Adicionar campo");b.onclick=()=>{st.campos.push(novoCampo(st.campos.length+1));drawItens(itensBox);};return b;})());
+  s1.appendChild(hh);
+  const itensBox=el("div"); itensBox.style.cssText="display:flex;flex-direction:column;gap:10px"; s1.appendChild(itensBox); wrap.appendChild(s1);
+  drawItens(itensBox);
+}
 
-    foot.appendChild(el("div","gap"));
-    const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=()=>root.innerHTML="";
-    const create=el("button","btn primary", modelo?"Criar ocorrência":"Criar tarefa"); create.onclick=()=>criar(st);
-    foot.append(cancel,create);
-  }
-  draw();
+// Popup de reuso de modelo recorrente: edita só o cabeçalho e cria a ocorrência.
+function headerPopup(modelo){
+  if(!modelo){ startBuilder(null); return; }
+  const root=$("#root"); root.innerHTML="";
+  const st={ nome:modelo.nome||"", subtitulo:"", dataRef:fmtISOdate(today()) };
+  const ov=overlay(()=>root.innerHTML=""), mod=el("div","modal"), head=el("div","modal-head");
+  head.append((()=>{const w=el("div","titwrap");w.append(el("div","crumb","Nova ocorrência · "+modelo.nome),el("h3",null,"Dados da tarefa"));return w;})());
+  const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
+  const body=el("div","modal-body");
+  body.appendChild(field("Título",(()=>{const i=el("input","field");i.value=st.nome;i.placeholder="Ex.: Admissão";i.oninput=()=>st.nome=i.value;return i;})()));
+  body.appendChild(field("Subtítulo",(()=>{const i=el("input","field");i.placeholder="Ex.: Fulano de Tal";i.oninput=()=>st.subtitulo=i.value;return i;})()));
+  body.appendChild(field("Data de referência (D+0)",(()=>{const i=el("input","field");i.type="date";i.value=st.dataRef;i.onchange=()=>st.dataRef=i.value;return i;})()));
+  const resumo=el("div","sec"); resumo.appendChild(el("h4",null,`Estrutura do modelo · ${modelo.itens.length} campo(s)`));
+  const ul=el("div"); ul.style.cssText="display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--textoSuave)";
+  modelo.itens.forEach(it=>{ const line=el("div"); line.textContent=`${TIPOICON[it.tipo]||""} ${it.rotulo}`+(it.responsavel? " · "+solById(it.responsavel).nome : " · (dado)"); ul.appendChild(line); });
+  resumo.appendChild(ul); body.appendChild(resumo);
+  mod.appendChild(body);
+  const foot=el("div","modal-foot");
+  const editar=el("button","btn ghost","Editar campos…"); editar.onclick=()=>{ root.innerHTML=""; startBuilder(modelo); };
+  foot.append(editar, el("div","gap"));
+  const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=()=>root.innerHTML="";
+  const ok=el("button","btn primary","Criar ocorrência");
+  ok.onclick=()=>{ if(!(st.nome||"").trim()){ toast("Informe o título."); return; }
+    const state={ modeloId:modelo.id||null, origemNome:modelo.nome, nome:st.nome, subtitulo:st.subtitulo, recorrente:false, dataRef:st.dataRef,
+      campos: modelo.itens.map((c,i)=>({...novoCampo(i+1), ...c, ordem:i+1, depOrdens:(c.depOrdens||[]).slice(), valorInicial:""})) };
+    criar(state); };
+  foot.append(cancel,ok); mod.appendChild(foot); ov.appendChild(mod); root.appendChild(ov);
 }
 function field(label,control){ const w=el("div","form-row"); w.append(el("label",null,label), control); return w; }
 
@@ -1041,7 +1077,7 @@ function criar(st){
     if(mo){ mo.itens=estrut; mo.nome=st.nome.trim(); }
     else { mo={id:uid("m"), nome:st.nome.trim(), itens:estrut}; db.modelos.push(mo); db.tarefas.find(t=>t.id===tId).modeloId=mo.id; }
   }
-  save(); $("#root").innerHTML=""; render(); toast("Tarefa criada e etapas distribuídas");
+  gCriar=null; save(); $("#root").innerHTML=""; render(); toast("Tarefa criada e etapas distribuídas");
 }
 
 /* ---- notificações ---- */
