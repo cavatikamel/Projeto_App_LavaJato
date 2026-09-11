@@ -372,7 +372,7 @@
 const $ = (s,r=document)=>r.querySelector(s);
 const el = (t,c,txt)=>{const e=document.createElement(t); if(c)e.className=c; if(txt!=null)e.textContent=txt; return e;};
 const uid = (p="id")=>p+"_"+Math.random().toString(36).slice(2,9);
-const KEY = "painelCora_v5";
+const KEY = "painelCora_v6";
 
 const S = { WAIT:"Aguardando dependência", LIB:"Liberada", EXEC:"Em execução",
   VAL:"Enviada para validação", ENC:"Concluída", REJ:"Rejeitada", DADO:"Dado" };
@@ -460,7 +460,7 @@ function seed(){
   const gid=()=>"a1b2"+Math.random().toString(16).slice(2,6)+"-"+Math.random().toString(16).slice(2,6)+"-4f9c";
   const sol = [
     {id:"u_sofia", nome:"Sofia Prado", email:"sofia.prado"+D, funcao:"Gestora de DP",         perfil:"Gestor",       coluna:false, ativo:true, entraId:gid()},
-    {id:"u_paulo", nome:"Paulo Nunes", email:"paulo.nunes"+D, funcao:"Coordenador (Criador)",  perfil:"Criador",      coluna:false, ativo:true, entraId:gid()},
+    {id:"u_paulo", nome:"Paulo Nunes", email:"paulo.nunes"+D, funcao:"Coordenador (Criador)",  perfil:"Criador",      coluna:true,  ativo:true, entraId:gid()},
     {id:"u_ana",   nome:"Ana Lima",    email:"ana.lima"+D,    funcao:"Analista de DP",         perfil:"Solucionador", coluna:true,  ativo:true, entraId:gid()},
     {id:"u_bruno", nome:"Bruno Alves", email:"bruno.alves"+D, funcao:"Analista de Folha",      perfil:"Solucionador", coluna:true,  ativo:true, entraId:gid()},
     {id:"u_carla", nome:"Carla Dias",  email:"carla.dias"+D,  funcao:"Analista de Benefícios", perfil:"Solucionador", coluna:true,  ativo:true, entraId:gid()},
@@ -654,7 +654,7 @@ function solForm(s){
 
   const gp=el("div","grid2");
   gp.appendChild(field("Perfil de permissão", (()=>{const sel=el("select","field"); [["Gestor","Gestor — vê tudo, valida e gerencia"],["Criador","Criador — cria tarefas e distribui"],["Solucionador","Solucionador — executa suas etapas"]].forEach(([v,l])=>{const o=el("option",null,l);o.value=v;if(v===st.perfil)o.selected=true;sel.appendChild(o);});
-    sel.onchange=()=>{ st.perfil=sel.value; if(st.perfil==="Solucionador" && !editing) st.coluna=true; drawToggles(); }; return sel;})()));
+    sel.onchange=()=>{ st.perfil=sel.value; if((st.perfil==="Solucionador"||st.perfil==="Criador") && !editing) st.coluna=true; drawToggles(); }; return sel;})()));
   const togWrap=el("div","form-row"); togWrap.append(el("label",null,"Opções"));
   const togs=el("div"); togs.style.cssText="display:flex;flex-direction:column;gap:10px;padding-top:4px"; togWrap.appendChild(togs);
   gp.appendChild(togWrap); body.appendChild(gp);
