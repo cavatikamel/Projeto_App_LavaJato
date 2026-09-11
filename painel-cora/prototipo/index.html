@@ -64,6 +64,9 @@
   .iconbtn{position:relative; background:var(--cartao); border:1px solid var(--bordaForte);
     border-radius:var(--raioSm); width:38px; height:38px; font-size:16px; display:grid; place-items:center; color:var(--texto)}
   .iconbtn:hover{border-color:var(--azul)}
+  .mebtn{width:38px; height:38px; border-radius:50%; padding:0; border:1px solid var(--bordaForte); background:var(--cartao); overflow:hidden; display:grid; place-items:center; flex-shrink:0}
+  .mebtn:hover{border-color:var(--azul)}
+  .mebtn img, .mebtn .cora-mark, .mebtn .avatar, .mebtn span{border-radius:50%}
   .dot{position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; padding:0 5px;
     background:var(--azul); color:#fff; border-radius:9px; font-size:11px; font-weight:600;
     display:grid; place-items:center; box-shadow:0 0 0 2px var(--fundo)}
@@ -324,6 +327,7 @@
   </div>
   <button class="iconbtn" id="bell" title="Notificações">🔔<span class="dot" id="belldot" hidden>0</span></button>
   <button class="iconbtn" id="themebtn" title="Alternar tema">◐</button>
+  <button class="mebtn" id="meBtn" title="Meu cadastro"></button>
   <button class="btn primary" id="novaBtn">＋ Nova tarefa</button>
 </div>
 
@@ -588,6 +592,7 @@ function render(){
   $("#viewArquivo").hidden = view!=="arquivo";
   $("#viewCadastro").hidden = view!=="cadastro";
   $("#novaBtn").hidden = !(view==="painel" && isCriador());
+  const mb=$("#meBtn"); if(mb){ mb.innerHTML=""; mb.appendChild(avatarNode(me(),34)); mb.title="Meu cadastro — "+me().nome; }
   if($("#expPainelBtn")) $("#expPainelBtn").hidden = !isCriador();
   if($("#expArqBtn")) $("#expArqBtn").hidden = !isCriador();
   if(view==="painel"){ renderLegend(); renderMatrix(); }
@@ -646,11 +651,13 @@ function solRow(s){
   return r;
 }
 function solForm(s){
+  const basico = !isGestor();                       // não-gestor edita só o próprio cadastro básico
+  if(basico && (!s || s.id!==db.ui.userId)){ toast("Acesso restrito ao gestor."); return; }
   const editing=!!s;
   const st = s ? {...s} : {id:null, nome:"", email:"", funcao:"", perfil:"Solucionador", coluna:true, ativo:true, entraId:""};
   const root=$("#root"); root.innerHTML="";
   const ov=overlay(()=>root.innerHTML=""), mod=el("div","modal"), head=el("div","modal-head");
-  head.append((()=>{const w=el("div","titwrap"); w.append(el("div","crumb", editing?"Editar solucionador":"Cadastrar solucionador"), el("h3",null, editing? st.nome||"Solucionador":"Novo solucionador")); return w;})());
+  head.append((()=>{const w=el("div","titwrap"); w.append(el("div","crumb", basico?"Meu cadastro":(editing?"Editar solucionador":"Cadastrar solucionador")), el("h3",null, basico?"Meu cadastro":(editing? st.nome||"Solucionador":"Novo solucionador"))); return w;})());
   const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
   const body=el("div","modal-body");
 
@@ -679,29 +686,32 @@ function solForm(s){
   body.appendChild(field("E-mail corporativo (conta Microsoft)", (()=>{const i=el("input","field"); i.type="email"; i.value=st.email; i.placeholder="nome.sobrenome@grupocoroa.com.br"; i.oninput=()=>st.email=i.value.trim().toLowerCase(); return i;})()));
   body.appendChild(field("Função / cargo", (()=>{const i=el("input","field"); i.value=st.funcao; i.placeholder="Ex.: Analista de DP"; i.oninput=()=>st.funcao=i.value; return i;})()));
 
-  const gp=el("div","grid2");
-  gp.appendChild(field("Perfil de permissão", (()=>{const sel=el("select","field"); [["Gestor","Gestor — vê tudo, valida e gerencia"],["Criador","Criador — cria tarefas e distribui"],["Solucionador","Solucionador — executa suas etapas"]].forEach(([v,l])=>{const o=el("option",null,l);o.value=v;if(v===st.perfil)o.selected=true;sel.appendChild(o);});
-    sel.onchange=()=>{ st.perfil=sel.value; if((st.perfil==="Solucionador"||st.perfil==="Criador") && !editing) st.coluna=true; drawToggles(); }; return sel;})()));
-  const togWrap=el("div","form-row"); togWrap.append(el("label",null,"Opções"));
-  const togs=el("div"); togs.style.cssText="display:flex;flex-direction:column;gap:10px;padding-top:4px"; togWrap.appendChild(togs);
-  gp.appendChild(togWrap); body.appendChild(gp);
-
-  function switchRow(label, val, onset){
-    const sw=el("label","switch"); const si=el("input"); si.type="checkbox"; si.checked=!!val; si.onchange=()=>onset(si.checked);
-    sw.append(si, el("span","track"), el("span",null,label)); return sw;
+  if(basico){
+    const sec=el("div","sec"); sec.appendChild(el("h4",null,"Definido pelo gestor (somente leitura)"));
+    const mg=el("div","metagrid");
+    mg.append(kv("Perfil de permissão", st.perfil), kv("Aparece no painel", st.coluna?"Sim":"Não"), kv("Ativo", st.ativo?"Sim":"Não"));
+    sec.appendChild(mg); body.appendChild(sec);
+  } else {
+    const gp=el("div","grid2");
+    gp.appendChild(field("Perfil de permissão", (()=>{const sel=el("select","field"); [["Gestor","Gestor — vê tudo, valida e gerencia"],["Criador","Criador — cria tarefas e distribui"],["Solucionador","Solucionador — executa suas etapas"]].forEach(([v,l])=>{const o=el("option",null,l);o.value=v;if(v===st.perfil)o.selected=true;sel.appendChild(o);});
+      sel.onchange=()=>{ st.perfil=sel.value; if((st.perfil==="Solucionador"||st.perfil==="Criador") && !editing) st.coluna=true; drawToggles(); }; return sel;})()));
+    const togWrap=el("div","form-row"); togWrap.append(el("label",null,"Opções"));
+    const togs=el("div"); togs.style.cssText="display:flex;flex-direction:column;gap:10px;padding-top:4px"; togWrap.appendChild(togs);
+    gp.appendChild(togWrap); body.appendChild(gp);
+    function switchRow(label, val, onset){ const sw=el("label","switch"); const si=el("input"); si.type="checkbox"; si.checked=!!val; si.onchange=()=>onset(si.checked); sw.append(si, el("span","track"), el("span",null,label)); return sw; }
+    function drawToggles(){ togs.innerHTML="";
+      togs.appendChild(switchRow("Aparece como coluna no painel", st.coluna, v=>st.coluna=v));
+      togs.appendChild(switchRow("Ativo (pode acessar a ferramenta)", st.ativo, v=>st.ativo=v));
+    }
+    drawToggles();
   }
-  function drawToggles(){ togs.innerHTML="";
-    togs.appendChild(switchRow("Aparece como coluna no painel", st.coluna, v=>st.coluna=v));
-    togs.appendChild(switchRow("Ativo (pode acessar a ferramenta)", st.ativo, v=>st.ativo=v));
-  }
-  drawToggles();
 
   const eid=el("div","form-row"); eid.append(el("label",null,"Entra Object ID"));
   const eidv=el("div","valread"); eidv.textContent = st.entraId || "— vinculado automaticamente no primeiro acesso —"; eid.appendChild(eidv); body.appendChild(eid);
 
   mod.appendChild(body);
   const foot=el("div","modal-foot");
-  if(editing){ const del=el("button","btn danger","Excluir"); del.onclick=()=>excluirSol(st); foot.appendChild(del); }
+  if(editing && !basico){ const del=el("button","btn danger","Excluir"); del.onclick=()=>excluirSol(st); foot.appendChild(del); }
   foot.appendChild(el("div","gap"));
   const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=()=>root.innerHTML="";
   const ok=el("button","btn primary", editing?"Salvar":"Cadastrar");
@@ -709,9 +719,10 @@ function solForm(s){
     if(!st.nome.trim()){ toast("Informe o nome."); return; }
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(st.email||"")){ toast("Informe um e-mail corporativo válido."); return; }
     if(db.sol.some(o=>o.id!==st.id && (o.email||"").toLowerCase()===st.email)){ toast("Já existe um solucionador com esse e-mail."); return; }
-    if(editing){ const o=db.sol.find(x=>x.id===st.id); Object.assign(o, {nome:st.nome.trim(), email:st.email, funcao:st.funcao.trim(), perfil:st.perfil, coluna:!!st.coluna, ativo:!!st.ativo, avatar:st.avatar||""}); }
+    if(basico){ const o=db.sol.find(x=>x.id===st.id); Object.assign(o, {nome:st.nome.trim(), email:st.email, funcao:st.funcao.trim(), avatar:st.avatar||""}); }
+    else if(editing){ const o=db.sol.find(x=>x.id===st.id); Object.assign(o, {nome:st.nome.trim(), email:st.email, funcao:st.funcao.trim(), perfil:st.perfil, coluna:!!st.coluna, ativo:!!st.ativo, avatar:st.avatar||""}); }
     else { db.sol.push({id:uid("u"), nome:st.nome.trim(), email:st.email, funcao:st.funcao.trim(), perfil:st.perfil, coluna:!!st.coluna, ativo:!!st.ativo, entraId:"", avatar:st.avatar||""}); }
-    save(); root.innerHTML=""; render(); toast(editing?"Solucionador atualizado":"Solucionador cadastrado");
+    save(); root.innerHTML=""; render(); toast(basico?"Cadastro atualizado":(editing?"Solucionador atualizado":"Solucionador cadastrado"));
   };
   foot.append(cancel,ok); mod.appendChild(foot);
   ov.appendChild(mod); root.appendChild(ov);
@@ -1325,6 +1336,7 @@ $("#novaBtn").onclick=openNova;
 $("#bell").onclick=openDrawer;
 $("#themebtn").onclick=toggleTheme;
 $("#addSolBtn").onclick=()=>solForm(null);
+$("#meBtn").onclick=()=>solForm(me());
 $("#addCadBtn").onclick=()=>startBuilder(null,"modelo");
 $("#expPainelBtn").onclick=()=>exportXlsx("painel");
 $("#expArqBtn").onclick=()=>exportXlsx("arquivo");
