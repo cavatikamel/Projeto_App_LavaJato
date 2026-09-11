@@ -364,16 +364,16 @@
 const $ = (s,r=document)=>r.querySelector(s);
 const el = (t,c,txt)=>{const e=document.createElement(t); if(c)e.className=c; if(txt!=null)e.textContent=txt; return e;};
 const uid = (p="id")=>p+"_"+Math.random().toString(36).slice(2,9);
-const KEY = "painelCora_v4";
+const KEY = "painelCora_v5";
 
 const S = { WAIT:"Aguardando dependência", LIB:"Liberada", EXEC:"Em execução",
-  VAL:"Enviada para validação", ENC:"Encerrada", REJ:"Rejeitada", DADO:"Dado" };
+  VAL:"Enviada para validação", ENC:"Concluída", REJ:"Rejeitada", DADO:"Dado" };
 const STMETA = {
   [S.WAIT]:{emoji:"⚪", v:"--st-wait", short:"Aguardando"},
   [S.LIB] :{emoji:"🔵", v:"--st-liberada", short:"Liberada"},
   [S.EXEC]:{emoji:"🟡", v:"--st-exec", short:"Em execução"},
   [S.VAL] :{emoji:"🟣", v:"--st-validacao", short:"Em validação"},
-  [S.ENC] :{emoji:"🟢", v:"--st-encerrada", short:"Encerrada"},
+  [S.ENC] :{emoji:"🟢", v:"--st-encerrada", short:"Concluída"},
   [S.REJ] :{emoji:"🔴", v:"--st-rejeitada", short:"Rejeitada"},
   [S.DADO]:{emoji:"▫️", v:"--st-wait", short:"Dado"},
 };
@@ -516,11 +516,11 @@ function actConcluirOuEnviar(a){
     notify(tarById(a.tarefaId).gestor, a.id, "Enviada p/ validação", `"${a.rotulo}" aguarda validação.`);
     commit(); toast("Enviada para validação");
   } else { setStatus(a,S.ENC,"Concluída (sem aprovação necessária)"); reavaliarLiberacoes(); recalcTarefa(a.tarefaId);
-    notify(tarById(a.tarefaId).gestor, a.id, "Encerrada", `"${a.rotulo}" foi concluída.`); commit(); toast("Etapa concluída"); }
+    notify(tarById(a.tarefaId).gestor, a.id, "Concluída", `"${a.rotulo}" foi concluída.`); commit(); toast("Ação concluída"); }
 }
-function actValidar(a){ a.decididoPor=db.ui.userId; setStatus(a,S.ENC,"Validada e encerrada pelo gestor");
-  notify(a.responsavel, a.id, "Encerrada", `Sua etapa "${a.rotulo}" foi validada e encerrada.`);
-  reavaliarLiberacoes(); recalcTarefa(a.tarefaId); commit(); toast("Etapa encerrada"); }
+function actValidar(a){ a.decididoPor=db.ui.userId; setStatus(a,S.ENC,"Aprovada pelo gestor");
+  notify(a.responsavel, a.id, "Concluída", `Sua ação "${a.rotulo}" foi aprovada.`);
+  reavaliarLiberacoes(); recalcTarefa(a.tarefaId); commit(); toast("Ação aprovada"); }
 function actRejeitar(a,just){ if(!just||!just.trim()){ toast("Justificativa obrigatória."); return; }
   a.decididoPor=db.ui.userId; a.just=just.trim(); setStatus(a,S.REJ,"Reprovada: "+a.just);
   notify(a.responsavel, a.id, "Reprovada", `"${a.rotulo}" foi devolvida para refazer. Motivo: ${a.just}`);
@@ -531,7 +531,7 @@ function actReabrir(a){ setStatus(a,S.EXEC,"Reaberta para correção após repro
 function actEncerrarTarefa(t){
   db.itens.filter(a=>a.tarefaId===t.id && a.responsavel && a.status===S.VAL).forEach(a=>{
     a.decididoPor=db.ui.userId; setStatus(a,S.ENC,"Aprovada na conferência da tarefa");
-    notify(a.responsavel,a.id,"Encerrada",`Sua etapa "${a.rotulo}" foi validada.`); });
+    notify(a.responsavel,a.id,"Concluída",`Sua ação "${a.rotulo}" foi aprovada.`); });
   reavaliarLiberacoes();
   t.statusGeral="Encerrada"; t.encerradaEm=iso(new Date()); t.encerradaPor=db.ui.userId;
   [...new Set(db.itens.filter(a=>a.tarefaId===t.id && a.responsavel).map(a=>a.responsavel))]
