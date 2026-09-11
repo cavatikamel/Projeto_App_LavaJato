@@ -109,6 +109,15 @@
   .pill{display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:2px 8px; border-radius:20px;
     background:var(--azulGelo); color:var(--texto); white-space:nowrap}
   .pill.rec{background:color-mix(in srgb,var(--ambar) 20%,var(--cartao)); color:var(--ambarEsc)}
+  .pill.fin{background:color-mix(in srgb,var(--st-validacao) 20%,var(--cartao)); color:color-mix(in srgb,var(--st-validacao) 60%,var(--texto))}
+  .pill.enc{background:color-mix(in srgb,var(--st-encerrada) 20%,var(--cartao)); color:color-mix(in srgb,var(--st-encerrada) 62%,var(--texto))}
+  .pill.can{background:color-mix(in srgb,var(--st-rejeitada) 18%,var(--cartao)); color:color-mix(in srgb,var(--st-rejeitada) 62%,var(--texto))}
+  .arq-row{display:flex; align-items:center; gap:12px; padding:11px 12px; border:1px solid var(--borda); border-radius:var(--raioSm); background:var(--fundo); cursor:pointer; flex-wrap:wrap}
+  .arq-row:hover{border-color:var(--bordaForte)}
+  .arq-row .an{flex:1; min-width:180px}
+  .arq-row .an .t{font-size:13.5px; font-weight:600}
+  .arq-row .an .s{font-size:12px; color:var(--textoSuave)}
+  .arq-row .meta{font-size:11.5px; color:var(--textoSuave); font-variant-numeric:tabular-nums}
   td.cell{padding:8px; min-width:150px}
   td.cell.empty{background:repeating-linear-gradient(135deg,transparent,transparent 9px,color-mix(in srgb,var(--borda) 40%,transparent) 9px,color-mix(in srgb,var(--borda) 40%,transparent) 10px)}
   .cardstack{display:flex; flex-direction:column; gap:7px}
@@ -338,6 +347,11 @@
   </section>
 
   <section id="viewCriar" class="view" hidden></section>
+
+  <section id="viewArquivo" class="view" hidden>
+    <div class="board-head"><div><h2>Arquivo</h2></div></div>
+    <div class="sol-wrap" id="arqList"></div>
+  </section>
 </main>
 
 <nav class="bottomnav" id="bottomnav"></nav>
@@ -483,9 +497,12 @@ function reavaliarLiberacoes(){
     }
   });
 }
-function recalcTarefa(tid){ const t=tarById(tid); const exec=db.itens.filter(a=>a.tarefaId===tid && a.responsavel);
-  if(exec.length && exec.every(a=>a.status===S.ENC)) t.statusGeral="Concluída";
-  else if(!exec.length) t.statusGeral="Registro"; else t.statusGeral="Em andamento"; }
+function taskTerminal(t){ return t && (t.statusGeral==="Encerrada" || t.statusGeral==="Cancelada"); }
+function recalcTarefa(tid){ const t=tarById(tid); if(!t || taskTerminal(t)) return;
+  const exec=db.itens.filter(a=>a.tarefaId===tid && a.responsavel);
+  // "Finalizada": todos os designados cumpriram (concluído ou enviado p/ validação)
+  if(exec.length && exec.every(a=> a.status===S.ENC || a.status===S.VAL)) t.statusGeral="Finalizada";
+  else t.statusGeral="Em andamento"; }
 function faltaPreencher(a){
   if(tipoPrecisaValor(a.tipo) && !String(a.valor||"").trim()) return "Preencha o valor do campo.";
   if(a.tipo==="Check" && a.valor!==true) return "Marque a confirmação (Check).";
@@ -505,21 +522,44 @@ function actValidar(a){ a.decididoPor=db.ui.userId; setStatus(a,S.ENC,"Validada 
   notify(a.responsavel, a.id, "Encerrada", `Sua etapa "${a.rotulo}" foi validada e encerrada.`);
   reavaliarLiberacoes(); recalcTarefa(a.tarefaId); commit(); toast("Etapa encerrada"); }
 function actRejeitar(a,just){ if(!just||!just.trim()){ toast("Justificativa obrigatória."); return; }
-  a.decididoPor=db.ui.userId; a.just=just.trim(); setStatus(a,S.REJ,"Rejeitada: "+a.just);
-  notify(a.responsavel, a.id, "Rejeitada", `"${a.rotulo}" foi devolvida. Motivo: ${a.just}`); commit(); toast("Etapa rejeitada e devolvida"); }
-function actReabrir(a){ setStatus(a,S.EXEC,"Reaberta para correção após rejeição"); commit(); toast("Etapa reaberta"); }
+  a.decididoPor=db.ui.userId; a.just=just.trim(); setStatus(a,S.REJ,"Reprovada: "+a.just);
+  notify(a.responsavel, a.id, "Reprovada", `"${a.rotulo}" foi devolvida para refazer. Motivo: ${a.just}`);
+  recalcTarefa(a.tarefaId); commit(); toast("Etapa devolvida ao solucionador"); }
+function actReabrir(a){ setStatus(a,S.EXEC,"Reaberta para correção após reprovação"); commit(); toast("Etapa reaberta"); }
+
+// Conferência da tarefa pelo gestor: aprova pendências e encerra.
+function actEncerrarTarefa(t){
+  db.itens.filter(a=>a.tarefaId===t.id && a.responsavel && a.status===S.VAL).forEach(a=>{
+    a.decididoPor=db.ui.userId; setStatus(a,S.ENC,"Aprovada na conferência da tarefa");
+    notify(a.responsavel,a.id,"Encerrada",`Sua etapa "${a.rotulo}" foi validada.`); });
+  reavaliarLiberacoes();
+  t.statusGeral="Encerrada"; t.encerradaEm=iso(new Date()); t.encerradaPor=db.ui.userId;
+  [...new Set(db.itens.filter(a=>a.tarefaId===t.id && a.responsavel).map(a=>a.responsavel))]
+    .forEach(p=> notify(p,null,"Encerrada",`A tarefa "${tLabel(t)}" foi conferida e encerrada.`));
+  openTaskId=null; commit(); toast("Tarefa encerrada e arquivada"); }
+function actCancelarTarefa(t,just){
+  t.statusGeral="Cancelada"; t.canceladaEm=iso(new Date()); t.canceladaPor=db.ui.userId; t.cancelJust=(just||"").trim();
+  [...new Set(db.itens.filter(a=>a.tarefaId===t.id && a.responsavel).map(a=>a.responsavel))]
+    .forEach(p=> notify(p,null,"Cancelada",`A tarefa "${tLabel(t)}" foi cancelada${just?": "+just.trim():""}.`));
+  openTaskId=null; commit(); toast("Tarefa cancelada e arquivada"); }
 function commit(){ save(); render(); if(openItemId) renderItem(openItemId); else if(openTaskId) renderTask(openTaskId); refreshBell(); }
 
 /* ---- render topo/matriz ---- */
 function render(){
   renderUserSelect();
   if(gCriar && !isCriador()) gCriar=null;
-  const view = gCriar ? "criar" : ((db.ui.view==="sol" && isGestor()) ? "sol" : "painel");
+  let view;
+  if(gCriar) view="criar";
+  else if(db.ui.view==="sol" && isGestor()) view="sol";
+  else if(db.ui.view==="arquivo") view="arquivo";
+  else view="painel";
   $("#viewPainel").hidden = view!=="painel";
   $("#viewSol").hidden = view!=="sol";
   $("#viewCriar").hidden = view!=="criar";
+  $("#viewArquivo").hidden = view!=="arquivo";
   if(view==="painel"){ renderLegend(); renderMatrix(); }
   else if(view==="sol"){ renderSolucionadores(); }
+  else if(view==="arquivo"){ renderArquivo(); }
   else { renderCriar(); }
   renderNav(); refreshBell();
 }
@@ -527,9 +567,9 @@ function renderNav(){
   const nav=$("#bottomnav"); if(!nav) return; nav.innerHTML="";
   const mark=el("span"); mark.style.cssText="display:inline-flex;align-items:center;color:var(--textoSuave)"; mark.innerHTML=coraMark(19,true); nav.appendChild(mark);
   const group=el("div","navgroup");
-  const items=[{k:"painel",ico:"▦",label:"Painel"}];
+  const items=[{k:"painel",ico:"▦",label:"Painel"}, {k:"arquivo",ico:"🗄",label:"Arquivo"}];
   if(isGestor()) items.push({k:"sol",ico:"👥",label:"Solucionadores"});
-  const cur=(db.ui.view==="sol"&&isGestor())?"sol":"painel";
+  const cur = gCriar ? "" : ((db.ui.view==="sol"&&isGestor())||db.ui.view==="arquivo" ? db.ui.view : "painel");
   items.forEach(it=>{ const b=el("button","navbtn"+(it.k===cur?" active":""));
     b.innerHTML=`<span class="ico">${it.ico}</span><span>${it.label}</span>`;
     b.onclick=()=>{ db.ui.view=it.k; gCriar=null; save(); closeAll(); render(); }; group.appendChild(b); });
@@ -647,8 +687,13 @@ function renderUserSelect(){ const sel=$("#usersel"); sel.innerHTML="";
 function renderLegend(){ const lg=$("#legend"); lg.innerHTML="";
   [S.WAIT,S.LIB,S.EXEC,S.VAL,S.ENC,S.REJ].forEach(st=>{ const m=STMETA[st]; const s=el("span"); s.append(document.createTextNode(m.emoji+" "), el("span",null,m.short)); lg.appendChild(s); }); }
 function visibleColumns(){ let c=db.sol.filter(s=>s.coluna&&s.ativo); if(!isCriador()) c=c.filter(x=>x.id===db.ui.userId); return c; }
-function visibleTarefas(){ if(isCriador()) return db.tarefas;
-  return db.tarefas.filter(t=> db.itens.some(a=>a.tarefaId===t.id && a.responsavel===db.ui.userId)); }
+function visibleTarefas(){ const act=db.tarefas.filter(t=> !taskTerminal(t));
+  if(isCriador()) return act;
+  return act.filter(t=> db.itens.some(a=>a.tarefaId===t.id && a.responsavel===db.ui.userId)); }
+function arquivoTarefas(){ const arq=db.tarefas.filter(t=> taskTerminal(t))
+    .sort((a,b)=> new Date(b.encerradaEm||b.canceladaEm||0)-new Date(a.encerradaEm||a.canceladaEm||0));
+  if(isCriador()) return arq;
+  return arq.filter(t=> db.itens.some(a=>a.tarefaId===t.id && a.responsavel===db.ui.userId)); }
 function renderMatrix(){
   const u=me();
   $("#boardTitle").textContent = isCriador()? "Painel geral" : "Minhas etapas";
@@ -681,7 +726,7 @@ function renderMatrix(){
     if(t.subtitulo) rb.append(el("div","tsub",t.subtitulo));
     const meta=el("div","tmeta");
     if(t.recorrente) meta.appendChild(el("span","pill rec","↻ Recorrente"));
-    if(t.statusGeral==="Concluída") meta.appendChild(el("span","pill","✓ Concluída"));
+    if(t.statusGeral==="Finalizada") meta.appendChild(el("span","pill fin","✓ Finalizada — conferir"));
     const ref=el("span",null,"D+0 "+fmtD(t.dataRef)); ref.style.cssText="font-variant-numeric:tabular-nums"; meta.appendChild(ref);
     rb.appendChild(meta); rb.onclick=()=>openTask(t.id); rh.appendChild(rb); tr.appendChild(rh);
     cols.forEach(c=>{ const acts=db.itens.filter(a=>a.tarefaId===t.id && a.responsavel===c.id).sort((x,y)=>x.ordem-y.ordem);
@@ -734,6 +779,10 @@ function renderTask(id){
     kv("Criada por", solById(t.criador).nome), kv("Gestor responsável", solById(t.gestor).nome));
   s0.appendChild(mg); body.appendChild(s0);
 
+  if(t.statusGeral==="Finalizada"){ const bn=el("div","banner info"); bn.append(el("span",null,"✓"), el("span",null,"Todos os designados finalizaram. Confira as etapas e encerre a tarefa.")); body.appendChild(bn); }
+  if(t.statusGeral==="Encerrada"){ const bn=el("div","banner"); bn.style.background="color-mix(in srgb,var(--st-encerrada) 14%,var(--cartao))"; bn.append(el("span",null,"🟢"), el("span",null,"Encerrada em "+fmtDT(t.encerradaEm)+" por "+solById(t.encerradaPor).nome+".")); body.appendChild(bn); }
+  if(t.statusGeral==="Cancelada"){ const bn=el("div","banner rej"); bn.append(el("span",null,"⛔"), el("span",null,"Cancelada em "+fmtDT(t.canceladaEm)+" por "+solById(t.canceladaPor).nome+(t.cancelJust?". Motivo: "+t.cancelJust:"")+".")); body.appendChild(bn); }
+
   if(dados.length){
     const s1=el("div","sec"); s1.appendChild(el("h4",null,"Dados da tarefa"));
     const grid=el("div","dados");
@@ -742,23 +791,60 @@ function renderTask(id){
     if(isCriador()){ const e=el("button","btn subtle","✎ Editar dados"); e.onclick=()=>renderEditarDados(t.id); s1.appendChild(e); }
   }
 
+  const term=taskTerminal(t);
   const s2=el("div","sec"); s2.appendChild(el("h4",null,`Etapas / campos com responsável · ${etapas.length}`));
   if(!etapas.length) s2.appendChild(el("div","et","Nenhuma etapa atribuída."));
   etapas.forEach(a=>{ const m=STMETA[a.status]||STMETA[S.WAIT];
-    const r=el("button","tmpl-row"); r.style.width="100%"; r.style.cursor="pointer"; r.style.marginBottom="6px";
-    const ic=el("div","ti"); ic.textContent=m.emoji; ic.style.setProperty("background",`color-mix(in srgb,var(${m.v}) 20%,var(--cartao))`); r.appendChild(ic);
+    const r=el("div","tmpl-row"); r.style.width="100%"; r.style.marginBottom="6px";
+    const clk=el("div"); clk.style.cssText="display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer";
+    const ic=el("div","ti"); ic.textContent=m.emoji; ic.style.setProperty("background",`color-mix(in srgb,var(${m.v}) 20%,var(--cartao))`); clk.appendChild(ic);
     const tn=el("div","tn"); const b=document.createElement("b"); b.textContent=a.rotulo;
-    const tags=[solById(a.responsavel).nome, m.short, `${TIPOICON[a.tipo]} ${a.tipo}`];
+    const tags=[solById(a.responsavel).nome, m.short];
     if(a.exigeAprov) tags.push("aprovação"); if(a.visivelTodos) tags.push("👁 visível a todos");
-    tn.append(b, el("span",null, tags.join(" · "))); r.appendChild(tn);
-    r.appendChild(el("span","mini","🗓 "+fmtD(a.prazo))); r.onclick=()=>openItem(a.id); s2.appendChild(r); });
+    tn.append(b, el("span",null, tags.join(" · "))); clk.appendChild(tn);
+    clk.onclick=()=>openItem(a.id); r.appendChild(clk);
+    if(isGestor() && !term){
+      const acts=el("div"); acts.style.cssText="display:flex;gap:6px;align-items:center";
+      if(a.status===S.VAL){ const ap=el("button","btn ghost sm","Aprovar"); ap.onclick=e=>{e.stopPropagation(); actValidar(a);}; acts.appendChild(ap); }
+      if([S.VAL,S.ENC].includes(a.status)){ const rp=el("button","btn subtle","Reprovar"); rp.style.color="var(--st-rejeitada)"; rp.onclick=e=>{e.stopPropagation(); renderRejeitar(a);}; acts.appendChild(rp); }
+      if(acts.children.length) r.appendChild(acts); else r.appendChild(el("span","mini","🗓 "+fmtD(a.prazo)));
+    } else { r.appendChild(el("span","mini","🗓 "+fmtD(a.prazo))); }
+    s2.appendChild(r); });
   body.appendChild(s2); mod.appendChild(body);
 
-  const foot=el("div","modal-foot"); foot.appendChild(el("div","gap"));
-  if(isCriador() && (t.recorrente || t.modeloId)){ const b=el("button","btn ghost","↻ Nova ocorrência deste modelo");
+  const foot=el("div","modal-foot");
+  if(isGestor() && !term){ const canc=el("button","btn danger","⛔ Cancelar tarefa"); canc.onclick=()=>cancelarTarefaModal(t); foot.appendChild(canc); }
+  foot.appendChild(el("div","gap"));
+  if(isCriador() && (t.recorrente || t.modeloId)){ const b=el("button","btn ghost","↻ Nova ocorrência");
     b.onclick=()=>{ const modelo=db.modelos.find(m=>m.id===t.modeloId) || modeloFromTarefa(t); closeAll(); headerPopup(modelo); }; foot.appendChild(b); }
-  const c=el("button","btn primary","Fechar"); c.onclick=closeAll; foot.appendChild(c); mod.appendChild(foot);
+  if(isGestor() && !term && (t.statusGeral==="Finalizada" || etapas.length===0)){
+    const enc=el("button","btn primary","✓ Conferir e encerrar"); enc.onclick=()=>actEncerrarTarefa(t); foot.appendChild(enc);
+  } else { const c=el("button","btn ghost","Fechar"); c.onclick=closeAll; foot.appendChild(c); }
+  mod.appendChild(foot);
   ov.appendChild(mod); root.appendChild(ov);
+}
+function cancelarTarefaModal(t){
+  const root=$("#root"); const ov=el("div","overlay"); ov.style.zIndex=60;
+  const mod=el("div","modal"); mod.style.width="min(460px,100%)";
+  const head=el("div","modal-head"); head.append(el("h3",null,"Cancelar tarefa"));
+  const body=el("div","modal-body"); body.append(el("p",null,`Cancelar “${tLabel(t)}”? A tarefa vai para o Arquivo. Informe um motivo (opcional).`));
+  const ta=el("textarea","obs"); ta.placeholder="Motivo do cancelamento (opcional)…"; ta.style.minHeight="80px"; body.appendChild(ta);
+  const foot=el("div","modal-foot"); foot.appendChild(el("div","gap"));
+  const back=el("button","btn ghost","Voltar"); back.onclick=()=>renderTask(t.id);
+  const ok=el("button","btn danger","Cancelar tarefa"); ok.onclick=()=>actCancelarTarefa(t, ta.value);
+  foot.append(back,ok); mod.append(head,body,foot); ov.appendChild(mod); root.appendChild(ov);
+}
+function renderArquivo(){
+  const list=$("#arqList"); list.innerHTML="";
+  const arq=arquivoTarefas();
+  if(!arq.length){ list.appendChild(el("div","empty-note","Nada arquivado ainda. Tarefas encerradas ou canceladas aparecem aqui.")); return; }
+  arq.forEach(t=>{ const enc=t.statusGeral==="Encerrada";
+    const r=el("div","arq-row");
+    const an=el("div","an"); an.append(el("div","t",t.nome)); if(t.subtitulo) an.append(el("div","s",t.subtitulo)); r.appendChild(an);
+    r.appendChild(el("span","pill "+(enc?"enc":"can"), enc?"🟢 Encerrada":"⛔ Cancelada"));
+    const when=enc?t.encerradaEm:t.canceladaEm, by=enc?t.encerradaPor:t.canceladaPor;
+    r.appendChild(el("div","meta", (when?fmtDT(when):"")+(by?" · "+solById(by).nome:"")));
+    r.onclick=()=>openTask(t.id); list.appendChild(r); });
 }
 function renderEditarDados(tid){
   const root=$("#root"); const ov=el("div","overlay"); ov.style.zIndex=60;
@@ -860,8 +946,9 @@ function renderItem(id){
   if(editor && a.status===S.EXEC){ const b=el("button","btn primary", a.exigeAprov?"✓ Enviar para validação":"✓ Concluir");
     b.disabled=!!faltaPreencher(a); if(b.disabled) b.title=faltaPreencher(a); b.onclick=()=>actConcluirOuEnviar(a); foot.appendChild(b); }
   if(editor && a.status===S.REJ){ const b=el("button","btn primary","↻ Reabrir e corrigir"); b.onclick=()=>actReabrir(a); foot.appendChild(b); }
-  if(isGestor() && a.status===S.VAL){ const rej=el("button","btn danger","✗ Rejeitar"); rej.onclick=()=>renderRejeitar(a);
-    const val=el("button","btn primary","✓ Validar e encerrar"); val.onclick=()=>actValidar(a); foot.append(rej,val); }
+  if(isGestor() && a.status===S.VAL){ const rej=el("button","btn danger","✗ Reprovar"); rej.onclick=()=>renderRejeitar(a);
+    const val=el("button","btn primary","✓ Aprovar"); val.onclick=()=>actValidar(a); foot.append(rej,val); }
+  if(isGestor() && a.status===S.ENC && !taskTerminal(t)){ const rej=el("button","btn danger","✗ Reprovar e devolver"); rej.onclick=()=>renderRejeitar(a); foot.appendChild(rej); }
   if(foot.children.length===1) foot.appendChild(el("div","et", editor?"Sem ação disponível neste status.":"Somente leitura para o seu perfil."));
   mod.appendChild(foot); ov.appendChild(mod); root.appendChild(ov);
 }
@@ -869,12 +956,12 @@ function kv(k,v){ const d=el("div"); d.append(el("div","k",k), el("div","v",v));
 function renderRejeitar(a){
   const root=$("#root"); const ov=el("div","overlay"); ov.style.zIndex=60;
   const mod=el("div","modal"); mod.style.width="min(460px,100%)";
-  const head=el("div","modal-head"); head.append(el("h3",null,"Rejeitar etapa"));
-  const body=el("div","modal-body"); body.append(el("p",null,"Informe o motivo da devolução. A justificativa é obrigatória e as próximas etapas continuam bloqueadas."));
-  const ta=el("textarea","obs"); ta.placeholder="Motivo da rejeição…"; ta.style.minHeight="90px"; body.appendChild(ta);
+  const head=el("div","modal-head"); head.append(el("h3",null,"Reprovar etapa"));
+  const body=el("div","modal-body"); body.append(el("p",null,"A etapa volta para o solucionador refazer e finalizar. A justificativa é obrigatória; as demais etapas não são afetadas."));
+  const ta=el("textarea","obs"); ta.placeholder="Motivo da reprovação…"; ta.style.minHeight="90px"; body.appendChild(ta);
   const foot=el("div","modal-foot"); foot.appendChild(el("div","gap"));
   const cancel=el("button","btn ghost","Cancelar"); cancel.onclick=()=>renderItem(a.id);
-  const ok=el("button","btn danger","Rejeitar"); ok.onclick=()=>{ if(!ta.value.trim()){toast("Justificativa obrigatória.");ta.focus();return;} actRejeitar(a,ta.value); };
+  const ok=el("button","btn danger","Reprovar"); ok.onclick=()=>{ if(!ta.value.trim()){toast("Justificativa obrigatória.");ta.focus();return;} actRejeitar(a,ta.value); };
   foot.append(cancel,ok); mod.append(head,body,foot); ov.appendChild(mod); root.appendChild(ov); ta.focus();
 }
 
