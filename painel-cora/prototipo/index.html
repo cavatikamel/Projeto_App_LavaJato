@@ -520,10 +520,11 @@ function faltaPreencher(a){
 function actIniciar(a){ setStatus(a,S.EXEC,"Iniciada"); commit(); toast("Etapa em execução"); }
 function actConcluirOuEnviar(a){
   const f=faltaPreencher(a); if(f){ toast(f); return; }
-  if(a.exigeAprov){ a.enviadoEm=iso(new Date()); setStatus(a,S.VAL,"Enviada para validação do gestor");
+  if(a.exigeAprov && !isGestor()){ a.enviadoEm=iso(new Date()); setStatus(a,S.VAL,"Enviada para validação do gestor");
     notify(tarById(a.tarefaId).gestor, a.id, "Enviada p/ validação", `Ação “${a.rotulo}” aguarda validação — Tarefa: ${tLabel(tarById(a.tarefaId))}.`);
     commit(); toast("Enviada para validação");
-  } else { setStatus(a,S.ENC,"Concluída (sem aprovação necessária)"); reavaliarLiberacoes(); recalcTarefa(a.tarefaId);
+  } else { if(isGestor()) a.decididoPor=db.ui.userId;
+    setStatus(a,S.ENC, isGestor()&&a.exigeAprov? "Concluída pelo gestor":"Concluída (sem aprovação necessária)"); reavaliarLiberacoes(); recalcTarefa(a.tarefaId);
     notify(tarById(a.tarefaId).gestor, a.id, "Concluída", `Ação concluída: “${a.rotulo}” — Tarefa: ${tLabel(tarById(a.tarefaId))}.`); commit(); toast("Ação concluída"); }
 }
 function actValidar(a){ a.decididoPor=db.ui.userId; setStatus(a,S.ENC,"Aprovada pelo gestor");
@@ -971,7 +972,7 @@ function renderItem(id){
   const foot=el("div","modal-foot"); foot.appendChild(el("div","gap"));
   const editor=ehEditorItem(a);
   if(editor && a.status===S.LIB){ const b=el("button","btn primary","▶ Iniciar"); b.onclick=()=>actIniciar(a); foot.appendChild(b); }
-  if(editor && a.status===S.EXEC){ const b=el("button","btn primary", a.exigeAprov?"✓ Enviar para validação":"✓ Concluir");
+  if(editor && a.status===S.EXEC){ const b=el("button","btn primary", (a.exigeAprov && !isGestor())?"✓ Enviar para validação":"✓ Concluir");
     b.disabled=!!faltaPreencher(a); if(b.disabled) b.title=faltaPreencher(a); b.onclick=()=>actConcluirOuEnviar(a); foot.appendChild(b); }
   if(editor && a.status===S.REJ){ const b=el("button","btn primary","↻ Reabrir e corrigir"); b.onclick=()=>actReabrir(a); foot.appendChild(b); }
   if(isGestor() && a.status===S.VAL){ const rej=el("button","btn danger","✗ Reprovar"); rej.onclick=()=>renderRejeitar(a);
