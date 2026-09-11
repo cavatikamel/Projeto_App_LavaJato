@@ -370,6 +370,7 @@
 <div id="root"></div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 "use strict";
 const $ = (s,r=document)=>r.querySelector(s);
@@ -1225,45 +1226,36 @@ function salvarModelo(st){
   gCriar=null; db.ui.view="cadastro"; save(); $("#root").innerHTML=""; render(); toast(mo?"Cadastro atualizado":"Tarefa cadastrada");
 }
 
-/* ---- exportação para Excel (colável em TSV) ---- */
+/* ---- exportação para Excel (.xlsx) ---- */
 function fmtDia(d){ if(!d) return ""; const x=new Date(d); const p=n=>String(n).padStart(2,"0"); return p(x.getDate())+"/"+p(x.getMonth()+1)+"/"+x.getFullYear(); }
 function concluidoEm(a){ const hs=db.hist.filter(x=>x.acaoId===a.id && x.para===S.ENC).sort((p,q)=>new Date(q.dataHora)-new Date(p.dataHora)); return hs.length? hs[0].dataHora : null; }
-function exportTSV(tasks){
-  const esc=s=> String(s==null?"":s).replace(/[\t\n\r]+/g," ").trim();
+function exportAOA(tasks){
   const cols=[], seen={};
   tasks.forEach(t=> itensDaTarefa(t.id).filter(a=>a.responsavel).forEach(a=>{ const k=a.rotulo+"||"+a.responsavel; if(!seen[k]){ seen[k]=true; cols.push({rotulo:a.rotulo, soluId:a.responsavel}); } }));
-  const head=["Tarefa","Subtítulo","Situação","Data de referência", ...cols.map(c=> esc(c.rotulo+" — "+solById(c.soluId).nome))];
-  const rows=[head.join("\t")];
+  const head=["Tarefa","Subtítulo","Situação","Data de referência", ...cols.map(c=> c.rotulo+" — "+solById(c.soluId).nome)];
+  const aoa=[head];
   tasks.forEach(t=>{ const its=itensDaTarefa(t.id);
-    const line=[esc(t.nome), esc(t.subtitulo), esc(t.statusGeral||""), fmtDia(t.dataRef)];
+    const line=[t.nome||"", t.subtitulo||"", t.statusGeral||"", fmtDia(t.dataRef)];
     cols.forEach(c=>{ const item=its.find(a=>a.responsavel===c.soluId && a.rotulo===c.rotulo); let v="";
-      if(item){ if(item.tipo==="Texto"||item.tipo==="Observações") v=esc(item.valor);
+      if(item){ if(item.tipo==="Texto"||item.tipo==="Observações") v=String(item.valor||"");
         else if(item.status===S.ENC) v=fmtDia(concluidoEm(item)); }
       line.push(v); });
-    rows.push(line.join("\t")); });
-  return rows.join("\n");
+    aoa.push(line); });
+  return {aoa, head};
 }
-function exportModal(scope){
+function exportXlsx(scope){
+  if(!isCriador()) return;
   const tasks = scope==="arquivo"? arquivoTarefas() : visibleTarefas();
-  const root=$("#root"); root.innerHTML="";
-  const ov=overlay(()=>root.innerHTML=""), mod=el("div","modal wide"), head=el("div","modal-head");
-  head.append((()=>{const w=el("div","titwrap");w.append(el("div","crumb", scope==="arquivo"?"Arquivo":"Painel"),el("h3",null,"Exportar para Excel"));return w;})());
-  const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
-  const body=el("div","modal-body");
-  if(!tasks.length){ body.appendChild(el("div","banner info","Não há tarefas para exportar.")); mod.append(head,body); ov.appendChild(mod); root.appendChild(ov); return; }
-  const tsv=exportTSV(tasks);
-  body.appendChild(el("p",null,"Selecione tudo e cole no Excel (Ctrl+C, depois Ctrl+V). Cada linha é uma tarefa; cada coluna, uma ação com o solucionador. Campos de texto trazem o conteúdo; os demais, a data de conclusão (dd/mm/aaaa)."));
-  const ta=el("textarea","obs"); ta.readOnly=true; ta.value=tsv; ta.style.cssText="width:100%;min-height:240px;white-space:pre;overflow:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px";
-  body.appendChild(ta); mod.append(head,body);
-  const foot=el("div","modal-foot");
-  foot.append(el("span","et",tasks.length+" tarefa(s)"), el("div","gap"));
-  const cp=el("button","btn primary","Copiar");
-  cp.onclick=()=>{ ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
-    const done=()=>toast("Copiado — cole no Excel (Ctrl+V)");
-    try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(ta.value).then(done,()=>{ try{document.execCommand("copy");done();}catch(e){toast("Selecione e copie manualmente");} }); } else { document.execCommand("copy"); done(); } }
-    catch(e){ toast("Selecione e copie manualmente"); } };
-  const c=el("button","btn ghost","Fechar"); c.onclick=()=>root.innerHTML="";
-  foot.append(cp,c); mod.appendChild(foot); ov.appendChild(mod); root.appendChild(ov);
+  if(!tasks.length){ toast("Não há tarefas para exportar."); return; }
+  if(typeof XLSX==="undefined"){ toast("Componente de exportação ainda carregando — tente de novo."); return; }
+  const label = scope==="arquivo"?"Arquivo":"Painel";
+  const {aoa, head}=exportAOA(tasks);
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"]=head.map((h,i)=> ({wch: (i<4? [28,22,16,16][i] : Math.min(42, Math.max(14, String(h).length+2))) }));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, label);
+  const p=n=>String(n).padStart(2,"0"); const d=new Date(); const stamp=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  try{ XLSX.writeFile(wb, `PainelCora_${label}_${stamp}.xlsx`); toast("Baixando Excel…"); }
+  catch(e){ toast("Não foi possível iniciar o download aqui."); }
 }
 
 /* ---- notificações ---- */
@@ -1301,6 +1293,6 @@ $("#bell").onclick=openDrawer;
 $("#themebtn").onclick=toggleTheme;
 $("#addSolBtn").onclick=()=>solForm(null);
 $("#addCadBtn").onclick=()=>startBuilder(null,"modelo");
-$("#expPainelBtn").onclick=()=>exportModal("painel");
-$("#expArqBtn").onclick=()=>exportModal("arquivo");
+$("#expPainelBtn").onclick=()=>exportXlsx("painel");
+$("#expArqBtn").onclick=()=>exportXlsx("arquivo");
 </script>
