@@ -394,7 +394,7 @@
 const $ = (s,r=document)=>r.querySelector(s);
 const el = (t,c,txt)=>{const e=document.createElement(t); if(c)e.className=c; if(txt!=null)e.textContent=txt; return e;};
 const uid = (p="id")=>p+"_"+Math.random().toString(36).slice(2,9);
-const KEY = "painelCora_v6";
+const KEY = "painelCora_v8";
 
 const S = { WAIT:"Aguardando dependência", LIB:"Liberada", EXEC:"Em execução",
   VAL:"Enviada para validação", ENC:"Concluída", REJ:"Rejeitada", DADO:"Dado" };
@@ -511,28 +511,37 @@ const itensDaTarefa = tid=> db.itens.filter(a=>a.tarefaId===tid).sort((x,y)=>x.o
 const tLabel = t=> t.subtitulo? `${t.nome} · ${t.subtitulo}` : t.nome;
 
 /* ---- permissões (UI) ---- */
-function ehEditorItem(a){ if(!a.responsavel) return false; if(a.responsavel===LIVRE) return true; return (a.responsavel===db.ui.userId || isGestor()); }
+// Uma ação pode ter vários responsáveis. respArr normaliza; livre = qualquer um.
+function respArr(a){ return Array.isArray(a.responsaveis)? a.responsaveis : (a.responsavel? [a.responsavel] : []); }
+function ehLivre(a){ return respArr(a).includes(LIVRE); }
+function temResp(a){ return respArr(a).length>0; }
+function respInclui(a,uid){ return respArr(a).includes(uid); }
+function respDest(a){ return respArr(a).filter(x=>x!==LIVRE); }
+function respNomes(a){ const r=respArr(a); if(!r.length) return "—"; if(r.includes(LIVRE)) return "Livre — qualquer solucionador"; return r.map(id=>solById(id).nome).join(", "); }
+function ehEditorItem(a){ if(!temResp(a)) return false; if(ehLivre(a)) return true; return (respInclui(a,db.ui.userId) || isGestor()); }
 function podeEditarValor(a){ return ehEditorItem(a) && [S.LIB,S.EXEC].includes(a.status); }
-function podeVerItem(a){ if(!a.responsavel) return true; if(a.responsavel===LIVRE) return true; if(isGestor()||isCriador()) return true;
-  if(a.responsavel===db.ui.userId) return true; return !!a.visivelTodos; }
+function podeVerItem(a){ if(!temResp(a)) return true; if(ehLivre(a)) return true; if(isGestor()||isCriador()) return true;
+  if(respInclui(a,db.ui.userId)) return true; return !!a.visivelTodos; }
 
 /* ---- transições ---- */
 function logHist(a,de,para,c){ db.hist.push({acaoId:a.id, usuario:db.ui.userId, dataHora:iso(new Date()), de, para, comentario:c||""}); }
 function notify(destId,acaoId,tipo,msg){ if(!destId) return; db.notifs.push({id:uid("n"), destId, acaoId, tipo, msg, lida:false, dataHora:iso(new Date())}); }
+function notifResp(a,tipo,msg){ respDest(a).forEach(d=> notify(d,a.id,tipo,msg)); }
+function participantes(tid){ return [...new Set(db.itens.filter(a=>a.tarefaId===tid && temResp(a)).flatMap(a=>respDest(a)))]; }
 function setStatus(a,novo,c){ const de=a.status; a.status=novo; logHist(a,de,novo,c); }
 function depsDe(a){ return (a.depIds||[]).map(itemById).filter(Boolean); }
 function reavaliarLiberacoes(){
-  db.itens.filter(x=>x.responsavel && x.status===S.WAIT).forEach(x=>{
+  db.itens.filter(x=>temResp(x) && x.status===S.WAIT).forEach(x=>{
     const deps=depsDe(x);
     if(deps.length && deps.every(d=>d.status===S.ENC)){
       setStatus(x,S.LIB,"Liberada — todas as etapas anteriores concluídas");
-      notify(x.responsavel, x.id, "Liberada", `Ação liberada: “${x.rotulo}” — Tarefa: ${tLabel(tarById(x.tarefaId))}. Prazo ${fmtD(x.prazo)}.`);
+      notifResp(x, "Liberada", `Ação liberada: “${x.rotulo}” — Tarefa: ${tLabel(tarById(x.tarefaId))}. Prazo ${fmtD(x.prazo)}.`);
     }
   });
 }
 function taskTerminal(t){ return t && (t.statusGeral==="Encerrada" || t.statusGeral==="Cancelada"); }
 function recalcTarefa(tid){ const t=tarById(tid); if(!t || taskTerminal(t)) return;
-  const exec=db.itens.filter(a=>a.tarefaId===tid && a.responsavel);
+  const exec=db.itens.filter(a=>a.tarefaId===tid && temResp(a));
   // "Finalizada": todos os designados cumpriram (concluído ou enviado p/ validação)
   if(exec.length && exec.every(a=> a.status===S.ENC || a.status===S.VAL)) t.statusGeral="Finalizada";
   else t.statusGeral="Em andamento"; }
@@ -553,28 +562,26 @@ function actConcluirOuEnviar(a){
     notify(tarById(a.tarefaId).gestor, a.id, "Concluída", `Ação concluída: “${a.rotulo}” — Tarefa: ${tLabel(tarById(a.tarefaId))}.`); commit(); toast("Ação concluída"); }
 }
 function actValidar(a){ a.decididoPor=db.ui.userId; setStatus(a,S.ENC,"Aprovada pelo gestor");
-  notify(a.responsavel, a.id, "Concluída", `Sua ação “${a.rotulo}” foi aprovada — Tarefa: ${tLabel(tarById(a.tarefaId))}.`);
+  notifResp(a, "Concluída", `Sua ação “${a.rotulo}” foi aprovada — Tarefa: ${tLabel(tarById(a.tarefaId))}.`);
   reavaliarLiberacoes(); recalcTarefa(a.tarefaId); commit(); toast("Ação aprovada"); }
 function actRejeitar(a,just){ if(!just||!just.trim()){ toast("Justificativa obrigatória."); return; }
   a.decididoPor=db.ui.userId; a.just=just.trim(); setStatus(a,S.REJ,"Reprovada: "+a.just);
-  notify(a.responsavel, a.id, "Reprovada", `Ação “${a.rotulo}” devolvida para refazer — Tarefa: ${tLabel(tarById(a.tarefaId))}. Motivo: ${a.just}`);
+  notifResp(a, "Reprovada", `Ação “${a.rotulo}” devolvida para refazer — Tarefa: ${tLabel(tarById(a.tarefaId))}. Motivo: ${a.just}`);
   recalcTarefa(a.tarefaId); commit(); toast("Etapa devolvida ao solucionador"); }
 function actReabrir(a){ setStatus(a,S.EXEC,"Reaberta para correção após reprovação"); commit(); toast("Etapa reaberta"); }
 
 // Conferência da tarefa pelo gestor: aprova pendências e encerra.
 function actEncerrarTarefa(t){
-  db.itens.filter(a=>a.tarefaId===t.id && a.responsavel && a.status===S.VAL).forEach(a=>{
+  db.itens.filter(a=>a.tarefaId===t.id && temResp(a) && a.status===S.VAL).forEach(a=>{
     a.decididoPor=db.ui.userId; setStatus(a,S.ENC,"Aprovada na conferência da tarefa");
-    notify(a.responsavel,a.id,"Concluída",`Sua ação “${a.rotulo}” foi aprovada — Tarefa: ${tLabel(t)}.`); });
+    notifResp(a,"Concluída",`Sua ação “${a.rotulo}” foi aprovada — Tarefa: ${tLabel(t)}.`); });
   reavaliarLiberacoes();
   t.statusGeral="Encerrada"; t.encerradaEm=iso(new Date()); t.encerradaPor=db.ui.userId;
-  [...new Set(db.itens.filter(a=>a.tarefaId===t.id && a.responsavel).map(a=>a.responsavel))]
-    .forEach(p=> notify(p,null,"Encerrada",`A tarefa "${tLabel(t)}" foi conferida e encerrada.`));
+  participantes(t.id).forEach(p=> notify(p,null,"Encerrada",`A tarefa "${tLabel(t)}" foi conferida e encerrada.`));
   save(); closeAll(); render(); toast("Tarefa encerrada e arquivada"); }
 function actCancelarTarefa(t,just){
   t.statusGeral="Cancelada"; t.canceladaEm=iso(new Date()); t.canceladaPor=db.ui.userId; t.cancelJust=(just||"").trim();
-  [...new Set(db.itens.filter(a=>a.tarefaId===t.id && a.responsavel).map(a=>a.responsavel))]
-    .forEach(p=> notify(p,null,"Cancelada",`A tarefa "${tLabel(t)}" foi cancelada${just?": "+just.trim():""}.`));
+  participantes(t.id).forEach(p=> notify(p,null,"Cancelada",`A tarefa "${tLabel(t)}" foi cancelada${just?": "+just.trim():""}.`));
   save(); closeAll(); render(); toast("Tarefa cancelada e arquivada"); }
 function commit(){ save(); render(); if(openItemId) renderItem(openItemId); else if(openTaskId) renderTask(openTaskId); refreshBell(); }
 
@@ -732,8 +739,9 @@ function solForm(s){
 }
 function liberarItensDe(soluId){
   let n=0;
-  db.itens.forEach(a=>{ if(a.responsavel===soluId){ a.responsavel=LIVRE; logHist(a, a.status, a.status, "Ação liberada para todos (solucionador desativado/removido)"); n++; } });
-  db.modelos.forEach(m=> (m.itens||[]).forEach(a=>{ if(a.responsavel===soluId) a.responsavel=LIVRE; }));
+  db.itens.forEach(a=>{ const r=respArr(a); if(r.includes(soluId)){ let nr=r.filter(x=>x!==soluId); if(!nr.length) nr=[LIVRE]; a.responsaveis=nr;
+    logHist(a, a.status, a.status, nr.includes(LIVRE)?"Ação liberada para todos (solucionador desativado/removido)":"Responsável removido (solucionador desativado/removido)"); n++; } });
+  db.modelos.forEach(m=> (m.itens||[]).forEach(a=>{ const r=respArr(a); if(r.includes(soluId)){ let nr=r.filter(x=>x!==soluId); if(!nr.length) nr=[LIVRE]; a.responsaveis=nr; } }));
   return n;
 }
 function excluirSol(st){
@@ -761,23 +769,23 @@ function renderLegend(){ const lg=$("#legend"); lg.innerHTML="";
 function visibleColumns(){ let c=db.sol.filter(s=>s.coluna&&s.ativo); if(!isCriador()) c=c.filter(x=>x.id===db.ui.userId); return c; }
 function visibleTarefas(){ const act=db.tarefas.filter(t=> !taskTerminal(t));
   if(isCriador()) return act;
-  return act.filter(t=> db.itens.some(a=>a.tarefaId===t.id && (a.responsavel===db.ui.userId || a.responsavel===LIVRE))); }
+  return act.filter(t=> db.itens.some(a=>a.tarefaId===t.id && (respInclui(a,db.ui.userId) || ehLivre(a)))); }
 function matchTask(t,q){ if(!q) return true;
   if((t.nome||"").toLowerCase().includes(q) || (t.subtitulo||"").toLowerCase().includes(q)) return true;
-  return db.itens.some(a=>a.tarefaId===t.id && ((a.rotulo||"").toLowerCase().includes(q) || (a.responsavel && solById(a.responsavel).nome.toLowerCase().includes(q)))); }
+  return db.itens.some(a=>a.tarefaId===t.id && ((a.rotulo||"").toLowerCase().includes(q) || respDest(a).some(id=>solById(id).nome.toLowerCase().includes(q)))); }
 function arquivoTarefas(){ const arq=db.tarefas.filter(t=> taskTerminal(t))
     .sort((a,b)=> new Date(b.encerradaEm||b.canceladaEm||0)-new Date(a.encerradaEm||a.canceladaEm||0));
   if(isCriador()) return arq;
-  return arq.filter(t=> db.itens.some(a=>a.tarefaId===t.id && (a.responsavel===db.ui.userId || a.responsavel===LIVRE))); }
+  return arq.filter(t=> db.itens.some(a=>a.tarefaId===t.id && (respInclui(a,db.ui.userId) || ehLivre(a)))); }
 function renderMatrix(){
   const u=me();
   $("#boardTitle").textContent = isCriador()? "Painel geral" : "Minhas etapas";
   let cols=visibleColumns(), rows=visibleTarefas();
   const f=db.ui.fp||{}; const filtroAtivo=!!(f.q||f.sit||f.solu);
-  if(f.solu){ cols=cols.filter(c=>c.id===f.solu); rows=rows.filter(t=> db.itens.some(a=>a.tarefaId===t.id && a.responsavel===f.solu)); }
+  if(f.solu){ cols=cols.filter(c=>c.id===f.solu); rows=rows.filter(t=> db.itens.some(a=>a.tarefaId===t.id && respInclui(a,f.solu))); }
   if(f.sit){ rows=rows.filter(t=> (t.statusGeral||"Em andamento")===f.sit); }
   if(f.q){ const q=f.q.trim().toLowerCase(); rows=rows.filter(t=> matchTask(t,q)); }
-  if(!f.solu && rows.some(t=> db.itens.some(a=>a.tarefaId===t.id && a.responsavel===LIVRE)))
+  if(!f.solu && rows.some(t=> db.itens.some(a=>a.tarefaId===t.id && ehLivre(a))))
     cols=[...cols, {id:LIVRE, nome:"Livre", funcao:"qualquer solucionador", coluna:true, ativo:true}];
   const tb=$("#matrix"); tb.innerHTML="";
   const thead=el("thead"), htr=el("tr");
@@ -815,7 +823,7 @@ function renderMatrix(){
     if(t.statusGeral==="Finalizada") meta.appendChild(el("span","pill fin","✓ Finalizada — conferir"));
     const ref=el("span",null,"D+0 "+fmtD(t.dataRef)); ref.style.cssText="font-variant-numeric:tabular-nums"; meta.appendChild(ref);
     rb.appendChild(meta); rb.onclick=()=>openTask(t.id); rh.appendChild(rb); tr.appendChild(rh);
-    cols.forEach(c=>{ const acts=db.itens.filter(a=>a.tarefaId===t.id && a.responsavel===c.id).sort((x,y)=>x.ordem-y.ordem);
+    cols.forEach(c=>{ const acts=db.itens.filter(a=>a.tarefaId===t.id && respInclui(a,c.id)).sort((x,y)=>x.ordem-y.ordem);
       const td=el("td","cell"+(acts.length?"":" empty"));
       if(acts.length){ const stack=el("div","cardstack"); acts.forEach(a=>stack.appendChild(itemCard(a))); td.appendChild(stack); }
       tr.appendChild(td); });
@@ -858,7 +866,7 @@ function renderTask(id){
   head.appendChild(tw); const x=el("button","x","×"); x.onclick=closeAll; head.appendChild(x); mod.appendChild(head);
 
   const body=el("div","modal-body");
-  const itens=itensDaTarefa(id), dados=itens.filter(a=>!a.responsavel), etapas=itens.filter(a=>a.responsavel);
+  const itens=itensDaTarefa(id), dados=itens.filter(a=>!temResp(a)), etapas=itens.filter(a=>temResp(a));
   const s0=el("div","sec"); s0.appendChild(el("h4",null,"Informações"));
   const mg=el("div","metagrid");
   mg.append(kv("Data de referência (D+0)",fmtD(t.dataRef)), kv("Situação", t.statusGeral||"Em andamento"),
@@ -885,7 +893,7 @@ function renderTask(id){
     const clk=el("div"); clk.style.cssText="display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer";
     const ic=el("div","ti"); ic.textContent=m.emoji; ic.style.setProperty("background",`color-mix(in srgb,var(${m.v}) 20%,var(--cartao))`); clk.appendChild(ic);
     const tn=el("div","tn"); const b=document.createElement("b"); b.textContent=a.rotulo;
-    const tags=[solById(a.responsavel).nome, m.short];
+    const tags=[respNomes(a), m.short];
     if(a.exigeAprov) tags.push("aprovação"); if(a.visivelTodos) tags.push("👁 visível a todos");
     tn.append(b, el("span",null, tags.join(" · "))); clk.appendChild(tn);
     clk.onclick=()=>openItem(a.id); r.appendChild(clk);
@@ -925,7 +933,7 @@ function renderCadastro(){
   if(!db.modelos.length){ list.appendChild(el("div","empty-note","Nenhuma tarefa cadastrada ainda. Use “＋ Nova tarefa” para registrar um modelo reutilizável — ele não vai ao painel até você distribuir.")); return; }
   db.modelos.slice().sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(mo=>{
     const r=el("div","arq-row");
-    const an=el("div","an"); an.append(el("div","t",mo.nome), el("div","s", `${mo.itens.length} campo(s) · ${mo.itens.filter(i=>i.responsavel).length} ação(ões)`)); r.appendChild(an);
+    const an=el("div","an"); an.append(el("div","t",mo.nome), el("div","s", `${mo.itens.length} campo(s) · ${mo.itens.filter(i=>temResp(i)).length} ação(ões)`)); r.appendChild(an);
     const acts=el("div"); acts.style.cssText="display:flex;gap:6px;flex-wrap:wrap;align-items:center";
     const dist=el("button","btn primary sm","Distribuir"); dist.onclick=()=>headerPopup(mo);
     const ed=el("button","btn ghost sm","Editar"); ed.onclick=()=>startBuilder(mo,"modelo");
@@ -951,7 +959,7 @@ function renderArquivo(){
 function renderEditarDados(tid){
   const root=$("#root"); const ov=el("div","overlay"); ov.style.zIndex=60;
   const mod=el("div","modal"), head=el("div","modal-head"); head.append(el("h3",null,"Editar dados da tarefa"));
-  const body=el("div","modal-body"); itensDaTarefa(tid).filter(a=>!a.responsavel).forEach(d=> body.appendChild(valorEditor(d, ()=>save())));
+  const body=el("div","modal-body"); itensDaTarefa(tid).filter(a=>!temResp(a)).forEach(d=> body.appendChild(valorEditor(d, ()=>save())));
   const foot=el("div","modal-foot"); foot.appendChild(el("div","gap"));
   const ok=el("button","btn primary","Salvar"); ok.onclick=()=>{ save(); renderTask(tid); toast("Dados atualizados"); };
   foot.appendChild(ok); mod.append(head,body,foot); ov.appendChild(mod); root.appendChild(ov);
@@ -985,7 +993,7 @@ function refreshOpen(){ save(); if(openItemId) renderItem(openItemId); else if(o
 
 function renderItem(id){
   const a=itemById(id); if(!a){ closeAll(); return; }
-  const t=tarById(a.tarefaId), m=STMETA[a.status]||STMETA[S.WAIT], solu=solById(a.responsavel);
+  const t=tarById(a.tarefaId), m=STMETA[a.status]||STMETA[S.WAIT], solu={nome:respNomes(a)};
   const root=$("#root"); root.innerHTML="";
   const ov=overlay(closeAll), mod=el("div","modal"), head=el("div","modal-head"), tw=el("div","titwrap");
   tw.append(el("div","crumb", tLabel(t)), el("h3",null,a.rotulo));
@@ -1010,7 +1018,7 @@ function renderItem(id){
 
   const s1=el("div","sec"); s1.appendChild(el("h4",null,"Informações"));
   const mg=el("div","metagrid");
-  mg.append(kv("Responsável",solu.nome), kv("Tipo",TIPOICON[a.tipo]+" "+a.tipo), kv("Prazo",fmtD(a.prazo)),
+  mg.append(kv("Responsáveis",solu.nome), kv("Tipo",TIPOICON[a.tipo]+" "+a.tipo), kv("Prazo",fmtD(a.prazo)),
     kv("Aprovação do gestor", a.exigeAprov?"Sim":"Não"),
     kv("Evidência", (a.tipo==="Evidência"||a.exigeEvid)?"Obrigatória":"Não exigida"),
     kv("Visibilidade", a.visivelTodos?"Visível a todos":"Responsável e gestor"));
@@ -1029,7 +1037,7 @@ function renderItem(id){
     body.appendChild(s3);
   }
 
-  const dados=itensDaTarefa(a.tarefaId).filter(d=>!d.responsavel);
+  const dados=itensDaTarefa(a.tarefaId).filter(d=>!temResp(d));
   if(dados.length){ const s4=el("div","sec"); s4.appendChild(el("h4",null,"Dados da tarefa")); const grid=el("div","dados");
     dados.forEach(d=>{ const it=el("div","item"); const k=el("div","k"); k.append(document.createTextNode((TIPOICON[d.tipo]||"")+" "), el("span",null,d.rotulo)); it.appendChild(k); it.append(el("div","v", valorFmt(d))); grid.appendChild(it); });
     s4.appendChild(grid); body.appendChild(s4); }
@@ -1082,7 +1090,7 @@ function openNova(){
   if(!db.modelos.length){ choice.appendChild(el("div","banner info","Nenhuma tarefa no cadastro ainda. Cadastre em “Cadastro” para reutilizar, ou crie uma avulsa abaixo.")); }
   else { db.modelos.slice().sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(mo=>{ const r=el("div","tmpl-row"); r.append(el("div","ti","🗂"));
       const tn=el("div","tn"); const b=document.createElement("b"); b.textContent=mo.nome;
-      tn.append(b, el("span",null, `${mo.itens.length} campo(s) · ${mo.itens.filter(i=>i.responsavel).length} ação(ões)`)); r.appendChild(tn);
+      tn.append(b, el("span",null, `${mo.itens.length} campo(s) · ${mo.itens.filter(i=>temResp(i)).length} ação(ões)`)); r.appendChild(tn);
       const use=el("button","btn primary sm","Distribuir"); use.onclick=()=>{ $("#root").innerHTML=""; headerPopup(mo); };
       r.append(use); choice.appendChild(r); }); }
   s.appendChild(choice); body.appendChild(s);
@@ -1095,9 +1103,9 @@ function openNova(){
 }
 
 /* ---- construtor ---- */
-function novoCampo(ordem){ return {ordem, rotulo:"", tipo:"Texto", responsavel:"", exigeAprov:false, obrig:false, exigeEvid:false, visivelTodos:false, prazoRel:0, depOrdens:[], valorInicial:""}; }
+function novoCampo(ordem){ return {ordem, rotulo:"", tipo:"Texto", responsaveis:[], exigeAprov:false, obrig:false, exigeEvid:false, visivelTodos:false, prazoRel:0, depOrdens:[], valorInicial:""}; }
 function modeloFromTarefa(t){
-  const itens=itensDaTarefa(t.id).map(a=>({ordem:a.ordem, rotulo:a.rotulo, tipo:a.tipo, responsavel:a.responsavel,
+  const itens=itensDaTarefa(t.id).map(a=>({ordem:a.ordem, rotulo:a.rotulo, tipo:a.tipo, responsaveis:respArr(a).slice(),
     exigeAprov:a.exigeAprov, obrig:a.obrig, exigeEvid:a.exigeEvid, visivelTodos:!!a.visivelTodos, prazoRel:a.prazoRel||0, depOrdens:(a.depOrdens||[]).slice(), valorInicial:""}));
   return {id:t.modeloId||null, nome:t.nome, itens};
 }
@@ -1129,11 +1137,11 @@ function renderCriar(){
   const wrap=el("div","criar-wrap"); sec.appendChild(wrap);
 
   function reordenar(){ st.campos.forEach((c,i)=>c.ordem=i+1); }
-  function sanitizeDeps(){ const validas=new Set(); st.campos.forEach(c=>{ if(c.responsavel && c.rotulo.trim()) validas.add(c.ordem); });
+  function sanitizeDeps(){ const validas=new Set(); st.campos.forEach(c=>{ if(temResp(c) && c.rotulo.trim()) validas.add(c.ordem); });
     st.campos.forEach(c=>{ c.depOrdens=(c.depOrdens||[]).filter(o=> o<c.ordem && validas.has(o)); }); }
   function chk(label,val,onset){ const l=el("label","chk"); const cb=el("input"); cb.type="checkbox"; cb.checked=!!val; cb.onchange=()=>onset(cb.checked); l.append(cb, el("span",null,label)); return l; }
   function depControl(campo){
-    const cand=st.campos.filter(c=>c.ordem<campo.ordem && c.responsavel && c.rotulo.trim());
+    const cand=st.campos.filter(c=>c.ordem<campo.ordem && temResp(c) && c.rotulo.trim());
     if(!cand.length) return null;
     const w=el("div"); w.style.width="100%"; const btn=el("button","btn ghost sm");
     const label=()=> "⛓ Depende de: "+(campo.depOrdens.length? campo.depOrdens.length+" selecionada(s)":"nenhuma"); btn.textContent=label();
@@ -1154,13 +1162,23 @@ function renderCriar(){
       const main=el("div","fld-main"), g=el("div","grid3");
       const rl=el("div","form-row"); rl.append(el("label",null,"Campo #"+c.ordem)); const ri=el("input","field"); ri.placeholder="Nome do campo"; ri.value=c.rotulo; ri.oninput=()=>c.rotulo=ri.value; rl.appendChild(ri); g.appendChild(rl);
       const tl=el("div","form-row"); tl.append(el("label",null,"Tipo")); const ts=el("select","field"); TIPOS.forEach(tp=>{const o=el("option",null,TIPOICON[tp]+" "+tp);o.value=tp;if(tp===c.tipo)o.selected=true;ts.appendChild(o);}); ts.onchange=()=>{ c.tipo=ts.value; if(c.tipo==="Evidência") c.exigeEvid=true; drawItens(container); }; tl.appendChild(ts); g.appendChild(tl);
-      const sl=el("div","form-row"); sl.append(el("label",null,"Responsável")); const ss=el("select","field"); const on=el("option",null,"— Dado (sem responsável)"); on.value=""; ss.appendChild(on);
-      const ol=el("option",null,"🔓 Livre — qualquer solucionador"); ol.value=LIVRE; ss.appendChild(ol);
-      db.sol.filter(s=>s.coluna&&s.ativo).forEach(s=>{const o=el("option",null,s.nome);o.value=s.id;if(s.id===c.responsavel)o.selected=true;ss.appendChild(o);}); ss.value=c.responsavel;
-      ss.onchange=()=>{ c.responsavel=ss.value; if(!c.responsavel){ c.exigeAprov=false; c.visivelTodos=false; c.depOrdens=[]; } drawItens(container); }; sl.appendChild(ss); g.appendChild(sl);
+      const sl=el("div","form-row"); sl.append(el("label",null,"Responsável(is)"));
+      const rw=el("div"); rw.style.width="100%";
+      const rbtn=el("button","field"); rbtn.type="button"; rbtn.style.cssText="text-align:left;cursor:pointer;background:var(--cartao);width:100%";
+      const rpanel=el("div","depbox"); rpanel.hidden=true;
+      const resumoResp=()=>{ const r=c.responsaveis||[]; if(!r.length) return "— Dado (sem responsável)"; if(r.includes(LIVRE)) return "🔓 Livre — qualquer solucionador"; return r.map(id=>solById(id).nome).join(", "); };
+      rbtn.textContent=resumoResp();
+      function rebuildRespPanel(){ rpanel.innerHTML="";
+        const addChk=(label,checked,onToggle)=>{ const l=el("label","chk"); const cb=el("input"); cb.type="checkbox"; cb.checked=checked; cb.onchange=()=>onToggle(cb.checked); l.append(cb, el("span",null,label)); rpanel.appendChild(l); };
+        addChk("🔓 Livre — qualquer solucionador", (c.responsaveis||[]).includes(LIVRE), on=>{ const was=temResp(c); c.responsaveis= on?[LIVRE]:[]; if(!temResp(c)){ c.exigeAprov=false; c.visivelTodos=false; c.depOrdens=[]; } rbtn.textContent=resumoResp(); if(was!==temResp(c)) drawItens(container); else rebuildRespPanel(); });
+        db.sol.filter(s=>s.coluna&&s.ativo).forEach(s=> addChk(s.nome, (c.responsaveis||[]).includes(s.id), on=>{ const was=temResp(c); let r=(c.responsaveis||[]).filter(x=>x!==LIVRE); if(on){ if(!r.includes(s.id)) r.push(s.id); } else r=r.filter(x=>x!==s.id); c.responsaveis=r; if(!temResp(c)){ c.exigeAprov=false; c.visivelTodos=false; c.depOrdens=[]; } rbtn.textContent=resumoResp(); if(was!==temResp(c)) drawItens(container); else rebuildRespPanel(); }));
+      }
+      rebuildRespPanel();
+      rbtn.onclick=e=>{ e.preventDefault(); rpanel.hidden=!rpanel.hidden; };
+      rw.append(rbtn,rpanel); sl.appendChild(rw); g.appendChild(sl);
       main.appendChild(g);
 
-      if(!c.responsavel && c.tipo!=="Evidência"){
+      if(!temResp(c) && c.tipo!=="Evidência"){
         const vw=el("div","form-row"); vw.style.marginTop="8px"; vw.append(el("label",null,"Valor (opcional)"));
         if(c.tipo==="Check"){ const l=el("label","chk"); const cb=el("input"); cb.type="checkbox"; cb.checked=c.valorInicial===true; cb.onchange=()=>c.valorInicial=cb.checked; l.append(cb,el("span",null,"Confirmado")); vw.appendChild(l); }
         else if(tipoTextoLongo(c.tipo)){ const ta=el("textarea","obs"); ta.rows=2; ta.value=c.valorInicial||""; ta.oninput=()=>{c.valorInicial=ta.value; autogrow(ta);}; vw.appendChild(ta); setTimeout(()=>autogrow(ta),0); }
@@ -1175,7 +1193,7 @@ function renderCriar(){
       adv.appendChild(chk("Obrigatório", c.obrig, v=>c.obrig=v));
       if(c.tipo!=="Evidência") adv.appendChild(chk("Exige evidência", c.exigeEvid, v=>c.exigeEvid=v));
       else adv.appendChild(el("span","mini","📎 Evidência é o próprio anexo"));
-      if(c.responsavel){
+      if(temResp(c)){
         adv.appendChild(chk("Aprovação do gestor", c.exigeAprov, v=>c.exigeAprov=v));
         adv.appendChild(chk("👁 Visível a todos", c.visivelTodos, v=>c.visivelTodos=v));
         const pw=el("span","mini"); pw.append(document.createTextNode("Prazo D")); const pi=el("input","field"); pi.type="number"; pi.value=c.prazoRel; pi.style.width="62px"; pi.title="Dias relativos ao D+0 (ex.: -3, 0, 2)"; pi.oninput=()=>c.prazoRel=parseInt(pi.value||"0",10); pw.appendChild(pi); adv.appendChild(pw);
@@ -1223,7 +1241,7 @@ function headerPopup(modelo){
   body.appendChild(field("Data de referência (D+0)",(()=>{const i=el("input","field");i.type="date";i.value=st.dataRef;i.onchange=()=>st.dataRef=i.value;return i;})()));
   const resumo=el("div","sec"); resumo.appendChild(el("h4",null,`Estrutura do modelo · ${modelo.itens.length} campo(s)`));
   const ul=el("div"); ul.style.cssText="display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--textoSuave)";
-  modelo.itens.forEach(it=>{ const line=el("div"); line.textContent=`${TIPOICON[it.tipo]||""} ${it.rotulo}`+(it.responsavel? " · "+solById(it.responsavel).nome : " · (dado)"); ul.appendChild(line); });
+  modelo.itens.forEach(it=>{ const line=el("div"); line.textContent=`${TIPOICON[it.tipo]||""} ${it.rotulo}`+(temResp(it)? " · "+respNomes(it) : " · (dado)"); ul.appendChild(line); });
   resumo.appendChild(ul); body.appendChild(resumo);
   mod.appendChild(body);
   const foot=el("div","modal-foot");
@@ -1254,24 +1272,24 @@ function criar(st){
   const finalToId={};
   validosOrd.forEach(c=>{
     const aId=uid("a"); finalToId[c.ordemFinal]=aId;
-    const temResp=!!c.responsavel; const exigeEvid=c.tipo==="Evidência"?true:!!c.exigeEvid;
+    const resps=respArr(c).slice(); const ehAcao=resps.length>0; const exigeEvid=c.tipo==="Evidência"?true:!!c.exigeEvid;
     const depOrdensFinais=(c.depOrdens||[]).map(o=>origToFinal[o]).filter(o=>o && o<c.ordemFinal);
     db.itens.push({id:aId, tarefaId:tId, ordem:c.ordemFinal, rotulo:c.rotulo.trim(), tipo:c.tipo,
-      responsavel:c.responsavel||"", exigeAprov: temResp && !!c.exigeAprov, obrig:!!c.obrig, exigeEvid,
-      visivelTodos: temResp && !!c.visivelTodos, prazo: temResp? iso(addDays(ref,c.prazoRel||0)):null, prazoRel:c.prazoRel||0,
-      depIds:[], depOrdens:depOrdensFinais, status: temResp? (depOrdensFinais.length? S.WAIT : S.LIB) : S.DADO,
-      valor: temResp? (c.tipo==="Check"?false:"") : (c.tipo==="Check"? c.valorInicial===true : (c.valorInicial||"")),
+      responsaveis:resps, exigeAprov: ehAcao && !!c.exigeAprov, obrig:!!c.obrig, exigeEvid,
+      visivelTodos: ehAcao && !!c.visivelTodos, prazo: ehAcao? iso(addDays(ref,c.prazoRel||0)):null, prazoRel:c.prazoRel||0,
+      depIds:[], depOrdens:depOrdensFinais, status: ehAcao? (depOrdensFinais.length? S.WAIT : S.LIB) : S.DADO,
+      valor: ehAcao? (c.tipo==="Check"?false:"") : (c.tipo==="Check"? c.valorInicial===true : (c.valorInicial||"")),
       evidencias:[], obs:"", just:"", enviadoEm:null, decididoPor:null});
   });
   db.itens.filter(a=>a.tarefaId===tId).forEach(a=>{
     a.depIds=(a.depOrdens||[]).map(o=>finalToId[o]).filter(Boolean);
-    if(a.responsavel){ logHist(a,"—",a.status,"Etapa distribuída na criação da tarefa");
-      if(a.status===S.LIB) notify(a.responsavel, a.id, "Atribuída", `Nova ação: “${a.rotulo}” — Tarefa: ${tLabel(tarById(a.tarefaId))}. Prazo ${fmtD(a.prazo)}.`); }
+    if(temResp(a)){ logHist(a,"—",a.status,"Etapa distribuída na criação da tarefa");
+      if(a.status===S.LIB) notifResp(a, "Atribuída", `Nova ação: “${a.rotulo}” — Tarefa: ${tLabel(tarById(a.tarefaId))}. Prazo ${fmtD(a.prazo)}.`); }
   });
   recalcTarefa(tId);
 
   if(st.salvarCadastro && !st.modeloId){
-    const estrut=validosOrd.map(c=>({ordem:c.ordemFinal, rotulo:c.rotulo.trim(), tipo:c.tipo, responsavel:c.responsavel||"",
+    const estrut=validosOrd.map(c=>({ordem:c.ordemFinal, rotulo:c.rotulo.trim(), tipo:c.tipo, responsaveis:respArr(c).slice(),
       exigeAprov:!!c.exigeAprov, obrig:!!c.obrig, exigeEvid:(c.tipo==="Evidência"||!!c.exigeEvid), visivelTodos:!!c.visivelTodos, prazoRel:c.prazoRel||0,
       depOrdens:(c.depOrdens||[]).map(o=>origToFinal[o]).filter(Boolean)}));
     const mo={id:uid("m"), nome:st.nome.trim(), itens:estrut}; db.modelos.push(mo); db.tarefas.find(t=>t.id===tId).modeloId=mo.id;
@@ -1286,7 +1304,7 @@ function salvarModelo(st){
   if(!validos.length){ toast("Adicione ao menos um campo com nome."); return; }
   const validosOrd=validos.map((c,i)=>({...c, ordemFinal:i+1, ordemOrig:c.ordem}));
   const origToFinal={}; validosOrd.forEach(c=> origToFinal[c.ordemOrig]=c.ordemFinal);
-  const estrut=validosOrd.map(c=>({ordem:c.ordemFinal, rotulo:c.rotulo.trim(), tipo:c.tipo, responsavel:c.responsavel||"",
+  const estrut=validosOrd.map(c=>({ordem:c.ordemFinal, rotulo:c.rotulo.trim(), tipo:c.tipo, responsaveis:respArr(c).slice(),
     exigeAprov:!!c.exigeAprov, obrig:!!c.obrig, exigeEvid:(c.tipo==="Evidência"||!!c.exigeEvid), visivelTodos:!!c.visivelTodos, prazoRel:c.prazoRel||0,
     depOrdens:(c.depOrdens||[]).map(o=>origToFinal[o]).filter(Boolean)}));
   const mo = st.modeloId && db.modelos.find(m=>m.id===st.modeloId);
@@ -1297,14 +1315,15 @@ function salvarModelo(st){
 /* ---- exportação para Excel (.xlsx) ---- */
 function fmtDia(d){ if(!d) return ""; const x=new Date(d); const p=n=>String(n).padStart(2,"0"); return p(x.getDate())+"/"+p(x.getMonth()+1)+"/"+x.getFullYear(); }
 function concluidoEm(a){ const hs=db.hist.filter(x=>x.acaoId===a.id && x.para===S.ENC).sort((p,q)=>new Date(q.dataHora)-new Date(p.dataHora)); return hs.length? hs[0].dataHora : null; }
+function respKey(a){ return respArr(a).slice().sort().join(","); }
 function exportAOA(tasks){
   const cols=[], seen={};
-  tasks.forEach(t=> itensDaTarefa(t.id).filter(a=>a.responsavel).forEach(a=>{ const k=a.rotulo+"||"+a.responsavel; if(!seen[k]){ seen[k]=true; cols.push({rotulo:a.rotulo, soluId:a.responsavel}); } }));
-  const head=["Tarefa","Subtítulo","Situação","Data de referência", ...cols.map(c=> c.rotulo+" — "+solById(c.soluId).nome)];
+  tasks.forEach(t=> itensDaTarefa(t.id).filter(a=>temResp(a)).forEach(a=>{ const k=a.rotulo+"||"+respKey(a); if(!seen[k]){ seen[k]=true; cols.push({rotulo:a.rotulo, key:respKey(a), nomes:respNomes(a)}); } }));
+  const head=["Tarefa","Subtítulo","Situação","Data de referência", ...cols.map(c=> c.rotulo+" — "+c.nomes)];
   const aoa=[head];
   tasks.forEach(t=>{ const its=itensDaTarefa(t.id);
     const line=[t.nome||"", t.subtitulo||"", t.statusGeral||"", fmtDia(t.dataRef)];
-    cols.forEach(c=>{ const item=its.find(a=>a.responsavel===c.soluId && a.rotulo===c.rotulo); let v="";
+    cols.forEach(c=>{ const item=its.find(a=>respKey(a)===c.key && a.rotulo===c.rotulo); let v="";
       if(item){ if(item.tipo==="Texto"||item.tipo==="Observações") v=String(item.valor||"");
         else if(item.status===S.ENC) v=fmtDia(concluidoEm(item)); }
       line.push(v); });
