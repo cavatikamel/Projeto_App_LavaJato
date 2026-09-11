@@ -1,64 +1,58 @@
 # 05 — Power Apps Canvas (telas e Power Fx)
 
-> **Atualizado para o modelo v2.** A fonte operacional é **`ItensDaTarefa`**
-> (dados + ações). Pontos a refletir nas fórmulas:
-> - **Responsável múltiplo:** `Responsaveis` é *Person multi* — use `People Picker`
->   com múltipla seleção e teste pertencimento com
->   `User().Email in Responsaveis.Email` (ou a flag `Livre`).
-> - **Edição compartilhada:** habilite as ações de iniciar/concluir para
->   `User().Email in Responsaveis.Email || Livre || perfilÉGestor`.
-> - **Foto:** `Office365Users.UserPhotoV2(email)` com *fallback* para
->   `Solucionadores.Avatar` e, na ausência, **iniciais**.
-> - **Exportar Excel:** botão chama o fluxo **F8** (`CoraExportar.Run(...)`) e abre
->   o arquivo retornado — não há download direto no cliente (docs/06 F8).
-> - **Status terminal da ação:** `Concluída` (tarefa usa `Encerrada`).
+Fórmulas de referência para o modelo **v2 (unificado)**. Ajuste nomes de controles
+conforme a nomenclatura do seu app (prefixos: `scr` tela, `gal` galeria, `frm`
+formulário, `btn` botão, `lbl` rótulo, `pop` popup, `col` coleção, `var`/`gbl`
+variável).
 
-Fórmulas de referência. Ajuste nomes de controles conforme a nomenclatura do seu
-app (prefixos: `scr` tela, `gal` galeria, `frm` formulário, `btn` botão, `lbl`
-rótulo, `pop` popup, `col` coleção, `var`/`gbl` variável).
+Convenções deste modelo (docs/02):
+
+- A lista operacional é **`ItensDaTarefa`**: cada item é um *dado* (sem responsável)
+  ou uma *ação* (com `Responsaveis` ≥ 1, ou `Livre = Sim`).
+- **`Responsaveis`** é *Person múltiplo*; **`Dependencias`** é *Lookup múltiplo* (self).
+- Status terminal da **ação** é **`Concluída`** (a **tarefa** usa `Encerrada`).
+- Foto do usuário vem da conta Microsoft; avatar/iniciais são *fallback*.
 
 ## 0. Fontes de dados (conector SharePoint)
 
-Adicione todas as listas de docs/02 mais `Office365Users` (para Object ID) e o
-conector do fluxo de notificação, se for chamar por `.Run(...)`.
+Adicione as 8 listas de docs/02 (`Solucionadores`, `ModelosDeProcesso`,
+`ItensDeModelo`, `Tarefas`, `ItensDaTarefa`, `HistoricoDaAcao`, `Notificacoes`,
+`Evidencias`) + **`Office365Users`** (perfil/foto/Object ID) e os conectores dos
+fluxos que for chamar por `.Run(...)` (F7 notificar, F8 exportar).
 
 ---
 
-## 1. Identidade e contexto — `App.OnStart` / `scrLogin`
+## 1. Identidade e contexto — `App.OnStart`
 
 ```powerfx
-// App.OnStart
 Set(gblEmail; Lower(User().Email));
 
-// Object ID do Entra via Office365Users (Graph)
+// Perfil do Entra (foto, Object ID) via Graph
 Set(gblMe; Office365Users.MyProfileV2());
 Set(gblObjectId; gblMe.id);
 
-// Registro do solucionador (perfil funcional)
-Set(gblSolucionador;
-    LookUp(Solucionadores; Lower(Email) = gblEmail && Ativo = true)
-);
+// Registro funcional do solucionador
+Set(gblSolucionador; LookUp(Solucionadores; Lower(Email) = gblEmail && Ativo = true));
 Set(gblPerfil; Coalesce(gblSolucionador.Perfil.Value; "Solucionador"));
+Set(gblEhGestor;  gblPerfil = "Gestor");
+Set(gblEhCriador; gblPerfil = "Criador" || gblEhGestor);   // criador inclui gestor
 
-Set(gblEhGestor;   gblPerfil = "Gestor");
-Set(gblEhCriador;  gblPerfil = "Criador" || gblEhGestor);
+// Semeia o Object ID no cadastro se estiver vazio
+If(!IsBlank(gblSolucionador) && IsBlank(gblSolucionador.EntraObjectId);
+   Patch(Solucionadores; gblSolucionador; { EntraObjectId: gblObjectId }));
 ```
 
-> Se `EntraObjectId` estiver vazio no cadastro, gravar `gblObjectId` de volta:
-> `Patch(Solucionadores; gblSolucionador; { EntraObjectId: gblObjectId })`.
-
-Cores/tema em `App.OnStart` (ver docs/07):
+Tema Cora (paleta de docs/07 — verde-floresta e âmbar):
 
 ```powerfx
 Set(gblTema; {
-    fundo:      ColorValue("#F5F8FC"),  // branco azul-gelo
-    cartao:     ColorValue("#FFFFFF"),
-    azulGelo:   ColorValue("#DCE9F5"),
-    azul:       ColorValue("#4A78B0"),
-    rosaPo:     ColorValue("#F3DDE3"),
-    rosa:       ColorValue("#C98CA0"),
-    texto:      ColorValue("#33404F"),
-    textoSuave: ColorValue("#6B7A8D")
+    fundo:       ColorValue("#F4F7F5");
+    cartao:      ColorValue("#FFFFFF");
+    verde:       ColorValue("#005B4F");   // verde-floresta (primária)
+    verdeClaro:  ColorValue("#DCEBE6");
+    ambar:       ColorValue("#FFB51B");   // âmbar (destaque)
+    texto:       ColorValue("#1F2A28");
+    textoSuave:  ColorValue("#5B6B67")
 });
 ```
 
@@ -66,200 +60,154 @@ Set(gblTema; {
 
 ## 2. Painel matricial (`scrPainel`)
 
-Estrutura: **linhas = processos/tarefas**, **colunas = solucionadores**, célula =
-card da ação daquela pessoa naquela tarefa.
+Estrutura: **linhas = tarefas**, **colunas = solucionadores** (+ coluna 🔓 **Livre**
+quando houver ações livres). Uma célula pode conter **vários** cards, pois uma ação
+com múltiplos responsáveis aparece na coluna de **cada** um deles.
 
 ### 2.1 Coleções de eixos
 
 ```powerfx
 // scrPainel.OnVisible
 
-// Colunas: solucionadores ativos (editáveis em tela própria)
+// Colunas: solucionadores que aparecem no painel e estão ativos
 ClearCollect(colColunas;
-    SortByColumns(
-        Filter(Solucionadores; Ativo = true);
-        "Title"; SortOrder.Ascending
-    )
-);
+    SortByColumns(Filter(Solucionadores; Ativo = true); "Title"; SortOrder.Ascending));
 
-// Linhas: tarefas em andamento (ou filtro do gestor)
+// Linhas: tarefas em andamento / finalizadas (o Arquivo mostra as encerradas/canceladas)
 ClearCollect(colLinhas;
     SortByColumns(
-        Filter(Tarefas; StatusGeral.Value = "Em andamento");
-        "DataReferencia"; SortOrder.Descending
-    )
-);
+        Filter(Tarefas; StatusGeral.Value in ["Em andamento"; "Finalizada"]);
+        "DataReferencia"; SortOrder.Descending));
 
-// Ações visíveis conforme perfil (segurança real está no SharePoint - isto é UX)
+// Itens visíveis (segurança real está no SharePoint; aqui é UX)
+// Só ações entram na matriz (dados aparecem no popup da tarefa)
 ClearCollect(colAcoes;
-    If(gblEhGestor || gblEhCriador;
-        Filter(AcoesDaTarefa; Tarefa.Value in colLinhas.Title);
-        // solucionador vê só as próprias
-        Filter(AcoesDaTarefa; Solucionador.Email = gblEmail)
-    )
-);
+    If(gblEhCriador;
+        Filter(ItensDaTarefa; Tarefa.Value in colLinhas.Title
+               && (CountRows(Responsaveis) > 0 || Livre = true));
+        // solucionador: ações onde é responsável ou que são livres
+        Filter(ItensDaTarefa;
+               (gblEmail in Responsaveis.Email) || Livre = true)));
 ```
 
-> **Delegação:** `in` sobre coleção local e `Filter` por `Solucionador.Email` são
-> parcialmente delegáveis. Para volumes grandes, filtre por `Tarefa` (indexado) e
-> traga as ações da tarefa selecionada sob demanda, em vez do dataset inteiro.
+> **Delegação:** `in` sobre `Responsaveis.Email` (Person multi) **não delega**. Para
+> volumes reais, filtre por `Tarefa` (indexado) e traga as ações da tarefa
+> selecionada sob demanda; ou mantenha uma coluna de texto auxiliar
+> `ResponsaveisEmails` (e-mails concatenados) delegável para `Search`.
 
 ### 2.2 Grade
 
-Use uma **Galeria vertical** (`galLinhas`, `Items = colLinhas`) e, dentro, uma
-**Galeria horizontal** (`galCelulas`, `Items = colColunas`). A célula localiza a
-ação do cruzamento:
+Galeria vertical `galLinhas` (`Items = colLinhas`) e, dentro, galeria horizontal
+`galCelulas` (`Items = colColunas`). Guarde o ID da linha num rótulo oculto do
+template (`lblLinhaId.Text = ThisItem.ID`) para referenciá-lo na célula. A célula
+reúne **todas** as ações do cruzamento:
 
 ```powerfx
-// galCelulas: dentro de cada célula, a ação (linha × coluna)
-With(
-    { acao:
-        LookUp(colAcoes;
-            Tarefa.Id = ThisItem /* da galLinhas */.ID
-            && Solucionador.Email = ThisItem /* da galCelulas: coluna */.Email
-        )
-    };
-    /* usar 'acao' para pintar o card; se IsBlank(acao) mostrar célula vazia */
-)
+// galCelulas → galeria interna "galCards" com os cards da célula
+// galCards.Items:
+Filter(colAcoes;
+    Tarefa.Id = Value(lblLinhaId.Text)
+    && ( ThisItem /*coluna*/.ID = -1 && Livre = true   // coluna especial "Livre"
+         || gblEmailColuna in Responsaveis.Email ))
 ```
 
-Como o Power Fx não deixa referenciar duas `ThisItem` diretamente, exponha a linha
-via variável de contexto ao renderizar cada linha, ou use
-`galLinhas.Selected`/campos ocultos. Padrão recomendado:
-
-```powerfx
-// Em galLinhas.OnSelect (ou num rótulo oculto por linha) guarde o ID da linha:
-// lblLinhaId.Text = ThisItem.ID   (dentro de galLinhas)
-
-// Na célula (galCelulas dentro de galLinhas), a "linha" é o pai:
-With(
-    { idTarefa: galLinhas.AllItems /*...*/ }; // ou lblLinhaId.Text do template
-    LookUp(colAcoes;
-        Tarefa.Id = Value(lblLinhaId.Text) && Solucionador.Email = ThisItem.Email
-    )
-)
-```
+> Na coluna especial **Livre** (registro sintético `ID = -1`), mostre as ações com
+> `Livre = true`. Nas demais, as ações cujo `Responsaveis` contém o e-mail da coluna
+> (`gblEmailColuna` = `ThisItem.Email` da `galCelulas`).
 
 ### 2.3 Aparência do card (farol de status)
 
 ```powerfx
-// Cor de fundo do card conforme status (ver docs/07 §farol)
-Switch(varAcaoCelula.Status.Value;
-    "Aguardando dependência"; ColorValue("#E7EBF0");
-    "Liberada";               gblTema.azulGelo;
-    "Em execução";            ColorValue("#FBF3D6");
-    "Enviada para validação"; ColorValue("#ECE1F2");
-    "Encerrada";              ColorValue("#DCEEDD");
+// Cor de fundo por status
+Switch(ThisItem.Status.Value;
+    "Aguardando dependência"; ColorValue("#E7EBEA");
+    "Liberada";               gblTema.verdeClaro;
+    "Em execução";            ColorValue("#FFF3D6");
+    "Enviada para validação"; ColorValue("#EDE6F2");
+    "Concluída";              ColorValue("#DCEEDD");
     "Rejeitada";              ColorValue("#F6DADE");
-    gblTema.cartao
-)
+    gblTema.cartao)
 
-// Emoji/farol
-Switch(varAcaoCelula.Status.Value;
-    "Aguardando dependência"; "⚪";
-    "Liberada";               "🔵";
-    "Em execução";            "🟡";
-    "Enviada para validação"; "🟣";
-    "Encerrada";              "🟢";
-    "Rejeitada";              "🔴"; "•"
-)
+// Farol
+Switch(ThisItem.Status.Value;
+    "Aguardando dependência"; "⚪"; "Liberada"; "🔵"; "Em execução"; "🟡";
+    "Enviada para validação"; "🟣"; "Concluída"; "🟢"; "Rejeitada"; "🔴"; "•")
 
-// Texto de bloqueio
-If(varAcaoCelula.Status.Value = "Aguardando dependência";
-   "Aguardando etapa anterior"; varAcaoCelula.Title)
+// Texto de bloqueio (mostra as pendentes)
+If(ThisItem.Status.Value = "Aguardando dependência";
+   "Aguardando: " & Concat(Filter(ThisItem.Dependencias; true); Value & "; ");
+   ThisItem.Title)
 ```
 
-### 2.4 Editar solucionadores (colunas)
-
-Tela `scrSolucionadores` (só `gblEhGestor`):
+### 2.4 Avatar/foto na coluna e no card
 
 ```powerfx
-// Adicionar
-Patch(Solucionadores; Defaults(Solucionadores);
-    { Title: txtNome.Text; Email: Lower(txtEmail.Text);
-      Funcao: txtFuncao.Text; Ativo: true;
-      Perfil: { Value: ddPerfil.Selected.Value } }
-);
+// Imagem da pessoa: foto do M365, senão avatar, senão iniciais (rótulo)
+// imgPessoa.Image:
+Coalesce(
+    Office365Users.UserPhotoV2(ThisItem.Email);   // foto da conta Microsoft
+    ThisItem.Avatar                                // fallback: URL/id do avatar
+)
+// Se ambos vazios, exibir um círculo com as iniciais (lblIniciais.Text):
+Left(ThisItem.Title;1) & Mid(ThisItem.Title; Find(" "; ThisItem.Title & " ")+1; 1)
+```
 
-// Renomear
-Patch(Solucionadores; galSol.Selected; { Title: txtNome.Text });
+### 2.5 Busca e filtro
 
-// Desativar (nunca excluir com histórico)
-Patch(Solucionadores; galSol.Selected; { Ativo: false });
+```powerfx
+// Barra de filtro do painel: txtBusca, ddSituacao, ddSolucionador
+// Aplique sobre colLinhas/colAcoes:
+Filter(colLinhas;
+    (IsBlank(txtBusca.Text)
+        || txtBusca.Text in Title || txtBusca.Text in Subtitulo)
+    && (ddSituacao.Selected.Value = "(todas)" || StatusGeral.Value = ddSituacao.Selected.Value))
 ```
 
 ---
 
-## 3. Popup da ação (`popAcao`)
+## 3. Popup do item (`popItem`)
 
-Ao clicar num card: `Set(gblAcao; varAcaoCelula); UpdateContext({ popAberto: true })`.
+Ao clicar num card: `Set(gblAcao; ThisItem); UpdateContext({ popAberto: true })`.
 
-Conteúdo: nome, responsável, checklist/roteiro, prazo, observações, histórico,
-anexos/evidências e botões (concluir/enviar, rejeitar, validar).
+Conteúdo: título + subtítulo da tarefa, tipo do campo e seu valor, responsáveis,
+prazo, observação, histórico, evidências e botões (iniciar, concluir/enviar,
+validar, rejeitar, reabrir).
 
-### 3.1 Dados de contexto (campos personalizados da tarefa)
+### 3.1 Dados da tarefa (itens sem responsável)
 
 ```powerfx
-// Valores dos campos personalizados visíveis ao solucionador
+// Os "dados" da tarefa são itens de ItensDaTarefa sem responsável
 ClearCollect(colDadosTarefa;
     AddColumns(
-        Filter(DadosDaTarefa; Tarefa.Id = gblAcao.Tarefa.Id);
-        "Rotulo"; Campo.Value;
+        Filter(ItensDaTarefa; Tarefa.Id = gblAcao.Tarefa.Id
+               && CountRows(Responsaveis) = 0 && Livre = false);
         "Valor";
-            Switch(Campo.Value; // usa o tipo do campo p/ escolher a coluna
-                // fallback: mostra o que estiver preenchido
-                LookUp(CamposDeModelo; ID = Campo.Id).Tipo.Value;
-                "";
-                Coalesce(ValorTexto; Text(ValorNumero); Text(ValorData; "[$-pt-BR]dd/mm/yyyy"))
-            )
-    )
-);
+            Switch(Tipo.Value;
+                "Numero"; Text(ValorNumero);
+                "Data";   Text(ValorData; "[$-pt-BR]dd/mm/yyyy");
+                "Check";  If(ValorCheck; "Sim"; "Não");
+                Coalesce(ValorTexto; ""))));   // Texto / Observacoes
 ```
 
-Simplificação prática (sem `Switch` por tipo, exibe o valor não vazio):
+### 3.2 Valor do próprio item (edição pelo executor)
+
+O valor que o responsável preenche depende do `Tipo`:
 
 ```powerfx
-ClearCollect(colDadosTarefa;
-    AddColumns(
-        Filter(DadosDaTarefa; Tarefa.Id = gblAcao.Tarefa.Id);
-        "Rotulo"; Campo.Value;
-        "Valor"; Coalesce(ValorTexto; Text(ValorNumero); Text(ValorData; "[$-pt-BR]dd/mm/yyyy"))
-    )
-);
-```
+// Controle de entrada visível conforme o tipo:
+//  Texto/Observacoes -> txtValor (multi-linha p/ Observacoes)
+//  Numero            -> txtNumero
+//  Data              -> dpData
+//  Check             -> tglCheck
+//  Evidencia         -> anexos (§3.4)
 
-### 3.2 Checklist com estado em JSON
-
-`ChecklistEstado` guarda um JSON `[{ "i": "texto do item", "ok": true }, ...]`.
-
-```powerfx
-// Ao abrir o popup, montar a coleção editável do checklist
-ClearCollect(colChecklist;
-    ForAll(
-        Split(gblAcao.Checklist; Char(10)) As L;   // uma linha = um item
-        {
-            item: Trim(L.Value);
-            ok: CountIf(
-                    ForAll(Table(ParseJSON(Coalesce(gblAcao.ChecklistEstado; "[]")));
-                        { i: Text(ThisRecord.i); ok: Boolean(ThisRecord.ok) });
-                    i = Trim(L.Value) && ok
-                ) > 0
-        }
-    )
-);
-
-// Ao marcar/desmarcar um item (chkItem.OnCheck / OnUncheck)
-Patch(colChecklist; ThisItem; { ok: chkItem.Value });
-
-// Salvar de volta na ação
-Patch(AcoesDaTarefa; gblAcao;
-    { ChecklistEstado:
-        JSON(
-            ForAll(colChecklist As C; { i: C.item; ok: C.ok });
-            JSONFormat.Compact
-        )
-    }
-);
+// Ao salvar o valor (habilitado só se ehEditor — ver §4):
+Patch(ItensDaTarefa; gblAcao;
+    Switch(gblAcao.Tipo.Value;
+        "Numero"; { ValorNumero: Value(txtNumero.Text) };
+        "Data";   { ValorData: dpData.SelectedDate };
+        "Check";  { ValorCheck: tglCheck.Value };
+        { ValorTexto: txtValor.Text }));
 ```
 
 ### 3.3 Histórico
@@ -267,288 +215,358 @@ Patch(AcoesDaTarefa; gblAcao;
 ```powerfx
 ClearCollect(colHistorico;
     SortByColumns(
-        Filter(HistoricoDaAcao; AcaoDaTarefa.Id = gblAcao.ID);
-        "DataHora"; SortOrder.Descending
-    )
-);
+        Filter(HistoricoDaAcao; ItemDaTarefa.Id = gblAcao.ID);
+        "DataHora"; SortOrder.Descending));
 ```
 
 ### 3.4 Evidências (anexos)
 
 ```powerfx
-// Listar
-ClearCollect(colEvidencias;
-    Filter(Evidencias; AcaoDaTarefa.Id = gblAcao.ID)
-);
+ClearCollect(colEvidencias; Filter(Evidencias; ItemDaTarefa.Id = gblAcao.ID));
 Set(gblQtdEvidencias; CountRows(colEvidencias));
 ```
 
-Upload: use um controle **Attachments** ligado a um formulário sobre a biblioteca
-`Evidencias`, ou o conector para criar o arquivo. Sempre gravar `AcaoDaTarefa` e
-`TipoDocumento`. Após subir, recontar `gblQtdEvidencias`.
+Upload: controle **Attachments** sobre a biblioteca `Evidencias`, gravando sempre
+`ItemDaTarefa` e `TipoDocumento`. Após subir, recontar `gblQtdEvidencias`.
 
 ---
 
-## 4. Fórmula única de transição (helper)
+## 4. Permissão de edição e transições
 
-Centralize a gravação + histórico + notificação numa fórmula reutilizável
-(coloque em um botão ou componente):
+Fórmula central de "quem pode executar" (multi-responsável + gestor + livre):
 
 ```powerfx
-// RegistrarTransicao(acao, novoStatus, comentario)
-// Implementar como sequência (não há função nomeada; use With + Patch)
-
-With({ ant: gblAcao.Status.Value };
-    // 1) muda o status (+ carimbos conforme o caso)
-    Patch(AcoesDaTarefa; gblAcao;
-        {
-            Status: { Value: novoStatus };
-            EnviadoValidacaoEm: If(novoStatus = "Enviada para validação"; Now(); gblAcao.EnviadoValidacaoEm);
-            ValidadoRejeitadoPor: If(novoStatus in ["Encerrada";"Rejeitada"]; gblMe; gblAcao.ValidadoRejeitadoPor);
-            Justificativa: If(novoStatus = "Rejeitada"; txtJustificativa.Text; gblAcao.Justificativa)
-        }
-    );
-    // 2) trilha de auditoria
-    Patch(HistoricoDaAcao; Defaults(HistoricoDaAcao);
-        {
-            AcaoDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title };
-            Usuario: gblMe;
-            DataHora: Now();
-            StatusAnterior: ant;
-            StatusNovo: novoStatus;
-            Comentario:
-                If(novoStatus = "Rejeitada"; txtJustificativa.Text;
-                   gblQtdEvidencias > 0; "Evidências: " & gblQtdEvidencias; "")
-        }
-    )
-);
-// 3) notificação: chamar o fluxo (ver docs/06) — ex.:
-// CoraNotificar.Run(gblAcao.ID; tipoNotificacao; destinatarioEmail; mensagem)
+// gblEhEditor: recalcule ao abrir o popup (Set no OnSelect do card)
+Set(gblEhEditor;
+    gblAcao.Livre = true
+    || (gblEmail in gblAcao.Responsaveis.Email)
+    || gblEhGestor);
 ```
 
-### 4.1 Botão "Iniciar" (Liberada → Em execução)
+Regra de preenchimento (bloqueia concluir/enviar):
 
 ```powerfx
-// DisplayMode: gblAcao.Status.Value = "Liberada" && gblAcao.Solucionador.Email = gblEmail
-// OnSelect:
-Set(gblAcao; Patch(AcoesDaTarefa; gblAcao; { Status: { Value: "Em execução" } }));
+Set(gblFaltaPreencher;
+    // valor obrigatório do tipo
+    ( gblAcao.Tipo.Value in ["Texto";"Observacoes"] && IsBlank(txtValor.Text) )
+    || ( gblAcao.Tipo.Value = "Numero" && IsBlank(txtNumero.Text) )
+    || ( gblAcao.Tipo.Value = "Data" && IsBlank(dpData.SelectedDate) )
+    || ( gblAcao.Tipo.Value = "Check" && !tglCheck.Value )
+    // evidência
+    || ( (gblAcao.ExigeEvidencia || gblAcao.Tipo.Value = "Evidencia") && gblQtdEvidencias = 0 ));
+```
+
+### 4.1 Iniciar (Liberada → Em execução)
+
+```powerfx
+// Visible: gblAcao.Status.Value = "Liberada" && gblEhEditor
+Set(gblAcao; Patch(ItensDaTarefa; gblAcao; { Status: { Value: "Em execução" } }));
 Patch(HistoricoDaAcao; Defaults(HistoricoDaAcao);
-    { AcaoDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title }; Usuario: gblMe;
+    { ItemDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title }; Usuario: gblMe;
       DataHora: Now(); StatusAnterior: "Liberada"; StatusNovo: "Em execução" });
 ```
 
-### 4.2 Botão "Enviar para validação" (Em execução → Enviada)
+### 4.2 Concluir / Enviar (Em execução → Concluída | Enviada para validação)
 
 ```powerfx
-// Visible: gblAcao.Status.Value = "Em execução" && gblAcao.Solucionador.Email = gblEmail
-// DisplayMode: exige evidência quando obrigatória
-If(gblAcao.EvidenciaObrigatoria && gblQtdEvidencias = 0;
-   DisplayMode.Disabled; DisplayMode.Edit)
+// Visible: gblAcao.Status.Value = "Em execução" && gblEhEditor
+// DisplayMode: If(gblFaltaPreencher; DisplayMode.Disabled; DisplayMode.Edit)
+If(gblFaltaPreencher;
+    Notify("Preencha o valor e/ou anexe a evidência."; NotificationType.Error);
 
-// OnSelect:
-If(gblAcao.EvidenciaObrigatoria && gblQtdEvidencias = 0;
-    Notify("Anexe ao menos uma evidência antes de enviar."; NotificationType.Error);
-    // ...RegistrarTransicao(gblAcao; "Enviada para validação"; "")
-    Set(gblAcao; Patch(AcoesDaTarefa; gblAcao;
-        { Status: { Value: "Enviada para validação" }; EnviadoValidacaoEm: Now() }));
-    Patch(HistoricoDaAcao; Defaults(HistoricoDaAcao);
-        { AcaoDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title }; Usuario: gblMe;
-          DataHora: Now(); StatusAnterior: "Em execução"; StatusNovo: "Enviada para validação";
-          Comentario: "Evidências: " & gblQtdEvidencias });
-    // notificar gestor
-    Notify("Enviado para validação."; NotificationType.Success)
-)
+    // exige aprovação e não sou gestor -> vai para validação
+    If(gblAcao.ExigeAprovacao && !gblEhGestor;
+        Set(gblAcao; Patch(ItensDaTarefa; gblAcao;
+            { Status: { Value: "Enviada para validação" }; EnviadoValidacaoEm: Now() }));
+        Patch(HistoricoDaAcao; Defaults(HistoricoDaAcao);
+            { ItemDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title }; Usuario: gblMe;
+              DataHora: Now(); StatusAnterior: "Em execução"; StatusNovo: "Enviada para validação" });
+        // CoraNotificar.Run(...; "Enviada p/ validação"; gestorEmail; msg)
+        Notify("Enviado para validação."; NotificationType.Success);
+
+        // senão -> conclui direto (gestor é o aprovador quando conclui)
+        Set(gblAcao; Patch(ItensDaTarefa; gblAcao;
+            { Status: { Value: "Concluída" };
+              ValidadoRejeitadoPor: If(gblEhGestor; gblMe; Blank()) }));
+        Patch(HistoricoDaAcao; Defaults(HistoricoDaAcao);
+            { ItemDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title }; Usuario: gblMe;
+              DataHora: Now(); StatusAnterior: "Em execução"; StatusNovo: "Concluída" });
+        CoraLiberarDependentes(gblAcao.ID);   // §5
+        CoraRecalcularTarefa(gblAcao.Tarefa.Id);  // §6
+        Notify("Ação concluída."; NotificationType.Success)))
 ```
 
-### 4.3 Botão "Validar / Encerrar" (Gestor)
+### 4.3 Validar (Gestor: Enviada para validação → Concluída)
 
 ```powerfx
 // Visible: gblEhGestor && gblAcao.Status.Value = "Enviada para validação"
-// OnSelect: (releitura p/ evitar corrida entre gestores)
-With({ atual: LookUp(AcoesDaTarefa; ID = gblAcao.ID) };
+// Releitura p/ evitar corrida entre gestores:
+With({ atual: LookUp(ItensDaTarefa; ID = gblAcao.ID) };
     If(atual.Status.Value <> "Enviada para validação";
-        Notify("Esta ação já foi decidida por outro gestor."; NotificationType.Warning);
-        Set(gblAcao; Patch(AcoesDaTarefa; atual;
-            { Status: { Value: "Encerrada" }; ValidadoRejeitadoPor: gblMe }));
+        Notify("Esta ação já foi decidida."; NotificationType.Warning);
+        Set(gblAcao; Patch(ItensDaTarefa; atual;
+            { Status: { Value: "Concluída" }; ValidadoRejeitadoPor: gblMe }));
         Patch(HistoricoDaAcao; Defaults(HistoricoDaAcao);
-            { AcaoDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title }; Usuario: gblMe;
-              DataHora: Now(); StatusAnterior: "Enviada para validação"; StatusNovo: "Encerrada" });
-        // liberar dependentes:
-        CoraLiberarDependentes(gblAcao.ID)  // ver §5
-    )
-)
+            { ItemDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title }; Usuario: gblMe;
+              DataHora: Now(); StatusAnterior: "Enviada para validação"; StatusNovo: "Concluída" });
+        CoraLiberarDependentes(gblAcao.ID);
+        CoraRecalcularTarefa(gblAcao.Tarefa.Id)))
 ```
 
-### 4.4 Botão "Rejeitar" (Gestor, justificativa obrigatória)
+### 4.4 Rejeitar (Gestor, justificativa obrigatória)
 
 ```powerfx
 // Visible: gblEhGestor && gblAcao.Status.Value = "Enviada para validação"
 // DisplayMode: If(IsBlank(Trim(txtJustificativa.Text)); DisplayMode.Disabled; DisplayMode.Edit)
-Set(gblAcao; Patch(AcoesDaTarefa; gblAcao;
+Set(gblAcao; Patch(ItensDaTarefa; gblAcao;
     { Status: { Value: "Rejeitada" }; ValidadoRejeitadoPor: gblMe;
       Justificativa: txtJustificativa.Text }));
 Patch(HistoricoDaAcao; Defaults(HistoricoDaAcao);
-    { AcaoDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title }; Usuario: gblMe;
+    { ItemDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title }; Usuario: gblMe;
       DataHora: Now(); StatusAnterior: "Enviada para validação"; StatusNovo: "Rejeitada";
       Comentario: txtJustificativa.Text });
-Notify("Ação rejeitada e devolvida ao solucionador."; NotificationType.Warning);
+CoraRecalcularTarefa(gblAcao.Tarefa.Id);
+Notify("Ação devolvida ao responsável."; NotificationType.Warning);
+```
+
+### 4.5 Reabrir após rejeição (Rejeitada → Em execução)
+
+```powerfx
+// Visible: gblEhEditor && gblAcao.Status.Value = "Rejeitada"
+Set(gblAcao; Patch(ItensDaTarefa; gblAcao; { Status: { Value: "Em execução" } }));
+Patch(HistoricoDaAcao; Defaults(HistoricoDaAcao);
+    { ItemDaTarefa: { Id: gblAcao.ID; Value: gblAcao.Title }; Usuario: gblMe;
+      DataHora: Now(); StatusAnterior: "Rejeitada"; StatusNovo: "Em execução" });
 ```
 
 ---
 
-## 5. Liberação de dependentes (no app)
+## 5. Liberação de dependentes (`CoraLiberarDependentes`)
+
+Libera as ações que estão `Aguardando dependência` cujas predecessoras estejam
+**todas** `Concluída`. Como não há mais `ModoLiberacao`, a regra é única.
 
 ```powerfx
-// CoraLiberarDependentes(idAcao): libera quem depende de idAcao já encerrada
+// idAcao acabou de virar "Concluída"
 ForAll(
-    Filter(AcoesDaTarefa;
-        Dependencia.Id = idAcao && Status.Value = "Aguardando dependência") As Dep;
-    // padrão = AposValidacaoGestor (já encerramos); AposEvidencia é tratado no envio
-    Patch(AcoesDaTarefa; LookUp(AcoesDaTarefa; ID = Dep.ID);
-        { Status: { Value: "Liberada" } });
-    Patch(HistoricoDaAcao; Defaults(HistoricoDaAcao);
-        { AcaoDaTarefa: { Id: Dep.ID; Value: Dep.Title }; Usuario: gblMe;
-          DataHora: Now(); StatusAnterior: "Aguardando dependência"; StatusNovo: "Liberada";
-          Comentario: "Liberada após validação da etapa anterior" })
-    // + notificar Dep.Solucionador (fluxo)
-);
+    Filter(ItensDaTarefa;
+        Status.Value = "Aguardando dependência"
+        && idAcao in Dependencias.Id) As Y;
+    If( CountRows(Filter(Y.Dependencias As D;
+            LookUp(ItensDaTarefa; ID = D.Id).Status.Value <> "Concluída")) = 0;
+        Patch(ItensDaTarefa; LookUp(ItensDaTarefa; ID = Y.ID);
+            { Status: { Value: "Liberada" } });
+        Patch(HistoricoDaAcao; Defaults(HistoricoDaAcao);
+            { ItemDaTarefa: { Id: Y.ID; Value: Y.Title }; Usuario: gblMe;
+              DataHora: Now(); StatusAnterior: "Aguardando dependência"; StatusNovo: "Liberada";
+              Comentario: "Liberada — predecessoras concluídas" })
+        // + notificar todos os Responsaveis(Y) (fluxo F7), exceto se Livre
+    ));
 ```
-
-> Para `AposEvidencia`, replicar essa lógica no botão "Enviar para validação",
-> avaliando dependentes com `ModoLiberacao = "AposEvidencia"` quando há evidência.
-> Como reforço, um fluxo agendado (docs/06) reconcilia liberações pendentes.
 
 ---
 
-## 6. Criação de tarefa (`scrCriarTarefa`)
-
-Somente `gblEhCriador`. Fluxo: escolher modelo (ou do zero) → preencher campos →
-definir D+0 → confirmar → materializar.
-
-### 6.1 Carregar o modelo
+## 6. Status geral da tarefa (`CoraRecalcularTarefa`)
 
 ```powerfx
-// Ao escolher ddModelo:
-Set(gblModelo; ddModelo.Selected);
-ClearCollect(colCamposModelo;
-    SortByColumns(Filter(CamposDeModelo; Modelo.Id = gblModelo.ID); "Ordem"));
-ClearCollect(colAcoesModelo;
-    SortByColumns(Filter(AcoesDeModelo; Modelo.Id = gblModelo.ID); "Ordem"));
-
-// Coleção editável de campos (valor em branco p/ o criador preencher)
-ClearCollect(colFormCampos;
-    ForAll(colCamposModelo As C;
-        { campoId: C.ID; rotulo: C.Title; tipo: C.Tipo.Value;
-          obrig: C.Obrigatorio; valorTexto: ""; valorNumero: Blank(); valorData: Blank() }));
-
-// Coleção editável de ações (responsável/prazo/dependência ajustáveis)
-ClearCollect(colFormAcoes;
-    ForAll(colAcoesModelo As A;
-        { ordem: A.Ordem; nome: A.Title;
-          responsavelEmail: A.ResponsavelSugerido.Email;
-          prazoRel: A.PrazoRelativo; dependenciaOrdem: A.DependenciaOrdem;
-          checklist: A.Checklist; evidObrig: A.EvidenciaObrigatoria;
-          modo: Coalesce(A.ModoLiberacao.Value; "AposValidacaoGestor") }));
+// idTarefa: recalcular após concluir/validar/rejeitar uma ação
+With({ acoes: Filter(ItensDaTarefa; Tarefa.Id = idTarefa
+                     && (CountRows(Responsaveis) > 0 || Livre = true)) };
+    Patch(Tarefas; LookUp(Tarefas; ID = idTarefa);
+        { StatusGeral: { Value:
+            If(CountRows(acoes) > 0
+               && CountRows(Filter(acoes;
+                    !(Status.Value in ["Concluída"; "Enviada para validação"]))) = 0;
+               "Finalizada"; "Em andamento") } }));
 ```
 
-### 6.2 Confirmar e materializar
+### 6.1 Encerrar a tarefa (conferência do gestor)
+
+```powerfx
+// Visible: gblEhGestor && gblTarefa.StatusGeral.Value = "Finalizada"
+// Aprova as pendentes em validação e encerra:
+ForAll(Filter(ItensDaTarefa; Tarefa.Id = gblTarefa.ID
+              && Status.Value = "Enviada para validação") As A;
+    Patch(ItensDaTarefa; A; { Status: { Value: "Concluída" }; ValidadoRejeitadoPor: gblMe }));
+Patch(Tarefas; gblTarefa;
+    { StatusGeral: { Value: "Encerrada" }; FechadaEm: Now() });
+// notificar participantes (fluxo); a tarefa sai do painel e vai ao Arquivo
+```
+
+### 6.2 Cancelar a tarefa
+
+```powerfx
+// Visible: gblEhGestor && gblTarefa.StatusGeral.Value in ["Em andamento";"Finalizada"]
+Patch(Tarefas; gblTarefa;
+    { StatusGeral: { Value: "Cancelada" }; FechadaEm: Now();
+      CancelJustificativa: txtCancelJust.Text });
+```
+
+---
+
+## 7. Criar tarefa (`scrCriarTarefa`)
+
+Somente `gblEhCriador`. Fluxo: escolher modelo (recorrente, vazio) **ou** criar do
+zero → preencher dados → definir D+0 → confirmar → materializar.
+
+### 7.1 Carregar o modelo
+
+```powerfx
+Set(gblModelo; galModelos.Selected);
+ClearCollect(colItensModelo;
+    SortByColumns(Filter(ItensDeModelo; Modelo.Id = gblModelo.ID); "Ordem"));
+
+// Coleção editável (dados e ações juntos, na ordem)
+ClearCollect(colForm;
+    ForAll(colItensModelo As C;
+        { ordem: C.Ordem; rotulo: C.Title; tipo: C.Tipo.Value;
+          responsaveis: C.ResponsaveisSugeridos;   // Person multi (Table)
+          livre: C.Livre;
+          prazoRel: C.PrazoRelativo; depOrdens: C.DependenciaOrdens;
+          exigeAprov: C.ExigeAprovacao; obrig: C.Obrigatorio;
+          exigeEvid: C.ExigeEvidencia; visivelTodos: C.VisivelTodos;
+          // valores em branco para dados; o criador preenche
+          valorTexto: ""; valorNumero: Blank(); valorData: Blank(); valorCheck: false }));
+```
+
+### 7.2 Confirmar e materializar
 
 ```powerfx
 // btnConfirmar.OnSelect
-// 0) validar obrigatórios
-If(CountRows(Filter(colFormCampos; obrig && IsBlank(valorTexto) && IsBlank(valorNumero) && IsBlank(valorData))) > 0;
-    Notify("Preencha os campos obrigatórios."; NotificationType.Error);
+// 0) validar dados obrigatórios (itens sem responsável e sem valor)
+If(CountRows(Filter(colForm;
+        obrig && CountRows(responsaveis) = 0 && !livre
+        && IsBlank(valorTexto) && IsBlank(valorNumero) && IsBlank(valorData) && !valorCheck)) > 0;
+    Notify("Preencha os dados obrigatórios."; NotificationType.Error);
 
     // 1) criar a Tarefa
     Set(gblNovaTarefa;
         Patch(Tarefas; Defaults(Tarefas);
-            { Title: txtNomeTarefa.Text;
+            { Title: txtNomeTarefa.Text; Subtitulo: txtSubtitulo.Text;
               ModeloOrigem: { Id: gblModelo.ID; Value: gblModelo.Title };
+              Recorrente: tglRecorrente.Value;
               DataReferencia: dpReferencia.SelectedDate;
-              Criador: gblMe;
-              StatusGeral: { Value: "Em andamento" };
-              GestorResponsavel: pkGestor.Selected }));
+              Criador: gblMe; GestorResponsavel: pkGestor.Selected;
+              StatusGeral: { Value: "Em andamento" } }));
 
-    // 2) gravar os DADOS da tarefa
-    ForAll(colFormCampos As F;
-        Patch(DadosDaTarefa; Defaults(DadosDaTarefa);
-            { Tarefa: { Id: gblNovaTarefa.ID; Value: gblNovaTarefa.Title };
-              Campo: { Id: F.campoId; Value: F.rotulo };
-              ValorTexto: F.valorTexto; ValorNumero: F.valorNumero; ValorData: F.valorData }));
-
-    // 3) materializar AÇÕES (1ª passada: cria; guarda mapa ordem→ID)
-    ClearCollect(colMapaAcoes;
-        ForAll(colFormAcoes As A;
-            With({ dataCalc: DateAdd(gblNovaTarefa.DataReferencia; A.prazoRel; TimeUnit.Days);
-                   solu: LookUp(Office365Users.SearchUserV2({searchTerm: A.responsavelEmail}).value; true) };
+    // 2) materializar todos os itens (1ª passada) e guardar mapa ordem→ID
+    ClearCollect(colMapa;
+        ForAll(colForm As A;
+            With({ ehAcao: (CountRows(A.responsaveis) > 0) || A.livre;
+                   dataCalc: DateAdd(gblNovaTarefa.DataReferencia; Coalesce(A.prazoRel;0); TimeUnit.Days) };
                 With({ nova:
-                    Patch(AcoesDaTarefa; Defaults(AcoesDaTarefa);
+                    Patch(ItensDaTarefa; Defaults(ItensDaTarefa);
                         { Tarefa: { Id: gblNovaTarefa.ID; Value: gblNovaTarefa.Title };
-                          Title: A.nome;
-                          Solucionador: { Claims: "i:0#.f|membership|" & A.responsavelEmail;
-                                          DisplayName: A.responsavelEmail; Email: A.responsavelEmail;
-                                          Department: ""; JobTitle: ""; Picture: "" };
-                          PrazoCalculado: dataCalc;
-                          Checklist: A.checklist; ChecklistEstado: "[]";
-                          EvidenciaObrigatoria: A.evidObrig;
-                          ModoLiberacao: { Value: A.modo };
+                          Title: A.rotulo; Tipo: { Value: A.tipo };
+                          Responsaveis: A.responsaveis;   // grava Person multi direto
+                          Livre: A.livre;
+                          PrazoCalculado: If(ehAcao; dataCalc; Blank());
+                          ExigeAprovacao: A.exigeAprov; Obrigatorio: A.obrig;
+                          ExigeEvidencia: A.exigeEvid; VisivelTodos: A.visivelTodos;
                           Ordem: A.ordem;
-                          // status provisório; ajustado na 2ª passada
-                          Status: { Value: If(IsBlank(A.dependenciaOrdem); "Liberada"; "Aguardando dependência") } }) };
-                    { ordem: A.ordem; id: nova.ID; dependenciaOrdem: A.dependenciaOrdem }))));
+                          ValorTexto: A.valorTexto; ValorNumero: A.valorNumero;
+                          ValorData: A.valorData; ValorCheck: A.valorCheck;
+                          Status: { Value:
+                              If(!ehAcao; "Dado";
+                                 IsBlank(A.depOrdens); "Liberada"; "Aguardando dependência") } }) };
+                    { ordem: A.ordem; id: nova.ID; depOrdens: A.depOrdens }))));
 
-    // 4) 2ª passada: amarrar Dependencia (ordem → ID real)
-    ForAll(Filter(colMapaAcoes; !IsBlank(dependenciaOrdem)) As M;
-        Patch(AcoesDaTarefa; LookUp(AcoesDaTarefa; ID = M.id);
-            { Dependencia:
-                { Id: LookUp(colMapaAcoes; ordem = M.dependenciaOrdem).id;
-                  Value: LookUp(AcoesDaTarefa; ID = LookUp(colMapaAcoes; ordem = M.dependenciaOrdem).id).Title } }));
+    // 3) 2ª passada: amarrar Dependencias (ordens → IDs reais). depOrdens = "5,7"
+    ForAll(Filter(colMapa; !IsBlank(depOrdens)) As M;
+        Patch(ItensDaTarefa; LookUp(ItensDaTarefa; ID = M.id);
+            { Dependencias:
+                ForAll(Split(M.depOrdens; ",") As O;
+                    With({ alvo: LookUp(colMapa; ordem = Value(Trim(O.Value))) };
+                        { Id: alvo.id;
+                          Value: LookUp(ItensDaTarefa; ID = alvo.id).Title })) }));
 
-    // 5) notificar responsáveis das ações já "Liberada"
-    //    (chamar fluxo CoraNotificar por ação liberada)
+    // 4) notificar responsáveis das ações já "Liberada" (fluxo F7, por responsável)
 
-    Notify("Tarefa criada e ações distribuídas."; NotificationType.Success);
-    Navigate(scrPainel)
-)
+    Notify("Tarefa criada e etapas distribuídas."; NotificationType.Success);
+    Navigate(scrPainel))
 ```
 
-> **Nota sobre `Solucionador` (Person):** para gravar a coluna de pessoa a partir de
-> um e-mail, o registro precisa dos claims. Se preferir, troque `AcoesDaTarefa.Solucionador`
-> por um **Lookup → `Solucionadores`** (mais simples de gravar e filtrar) e derive o
-> e-mail para notificação. Escolha uma abordagem e mantenha-a consistente com docs/03.
+> **Gravar `Responsaveis` (Person multi):** passe uma **Table de registros de
+> pessoa** (a mesma forma retornada pelo People Picker de seleção múltipla). Ao vir
+> do modelo, `ResponsaveisSugeridos` já é dessa forma. Para "Livre", deixe
+> `Responsaveis` vazio e `Livre = true`.
 
-### 6.3 Criar do zero (sem modelo)
+### 7.3 Criar do zero (sem modelo)
 
-Mesma tela, com `colFormCampos`/`colFormAcoes` iniciando vazias e botões
-"Adicionar campo" / "Adicionar ação" que dão `Collect(...)` de um registro em
-branco. Tipos de campo: `Texto`, `Numero`, `Data` (dropdown).
+Mesma tela com `colForm` iniciando vazia e botões "Adicionar item":
+`Collect(colForm; { ordem: CountRows(colForm)+1; rotulo: ""; tipo: "Texto"; responsaveis: Table(); livre: false; ... })`.
+Por item, o criador escolhe o **tipo** (Texto/Número/Data/Check/Observações/Evidência),
+os **responsáveis** (People Picker múltiplo) ou **Livre**, prazo, dependências
+(ordens anteriores), e as flags (aprovação, evidência, obrigatório, visível a todos).
+Se não escolher nenhum responsável e não marcar Livre, o item é um **dado**.
+
+### 7.4 Cadastro de modelos (`scrTarefas`)
+
+A tela **Tarefas** cadastra/edita/duplica/desativa modelos em `ModelosDeProcesso` +
+`ItensDeModelo`, com a **mesma** UI de itens da §7.3. Cadastrar um modelo **não** o
+coloca no painel — ele só vira ocorrência quando instanciado em "Criar tarefa".
+Nesta tela, o botão "＋ Nova tarefa" do cabeçalho fica oculto.
 
 ---
 
-## 7. Notificações no app (`scrNotificacoes`)
+## 8. Notificações no app (`scrNotificacoes`)
 
 ```powerfx
-// OnVisible
 ClearCollect(colMinhasNotif;
-    SortByColumns(
-        Filter(Notificacoes; Destinatario.Email = gblEmail);
+    SortByColumns(Filter(Notificacoes; Destinatario.Email = gblEmail);
         "DataHora"; SortOrder.Descending));
 Set(gblNaoLidas; CountRows(Filter(colMinhasNotif; Lida = false)));
-
-// Marcar como lida (galNotif item)
-Patch(Notificacoes; ThisItem; { Lida: true });
+// Marcar como lida: Patch(Notificacoes; ThisItem; { Lida: true });
 ```
 
-Badge no menu: `If(gblNaoLidas > 0; gblNaoLidas & "")`.
+A mensagem deve trazer **título e subtítulo da tarefa** e a **etapa** (rótulo da
+ação). Badge no menu: `If(gblNaoLidas > 0; gblNaoLidas & "")`.
 
 ---
 
-## 8. Delegação — lista de atenção
+## 9. Exportar Excel (fluxo F8)
 
-- Prefira filtrar por colunas **indexadas** (`Tarefa`, `Solucionador`, `Status`,
-  `PrazoCalculado`).
-- `Search`, `in` sobre coluna do SharePoint e algumas comparações de `Choice` não
-  delegam bem — restrinja o conjunto por `Tarefa` primeiro.
-- Evite trazer `AcoesDaTarefa` inteira: carregue por tarefa selecionada no painel.
-- Ajuste o **limite de linhas não delegáveis** (Configurações → 2000) apenas como
-  paliativo; a solução correta é filtro delegável.
+O Power Apps não baixa arquivos no cliente; a planilha é gerada pelo fluxo **F8**
+(docs/06) e o app abre o link retornado.
+
+```powerfx
+// btnExportarPainel.OnSelect (Visible: gblEhCriador)
+Set(gblArquivo;
+    CoraExportar.Run("painel";
+        JSON(colLinhas; JSONFormat.IncludeBinaryData)));  // tarefas já filtradas
+Launch(gblArquivo.url);
+```
+
+Formato: uma linha por tarefa; colunas = ação × responsável; células com a **data de
+conclusão** (dd/mm/aaaa), exceto Texto/Observações (conteúdo). Como "mistura"
+tarefas diferentes numa grade única, o usuário atua com o **filtro do Excel**.
+
+---
+
+## 10. Cadastro próprio (`scrMeuCadastro`)
+
+O solucionador edita **nome, e-mail, cargo e avatar**; o resto (perfil, aparece no
+painel, ativo) é somente leitura — só o gestor altera na tela de Solucionadores.
+
+```powerfx
+// Salvar (o próprio usuário):
+Patch(Solucionadores; gblSolucionador;
+    { Title: txtNome.Text; Email: Lower(txtEmail.Text);
+      Funcao: txtFuncao.Text; Avatar: galAvatares.Selected.Id });
+```
+
+Tela de Solucionadores (só `gblEhGestor`): adicionar, renomear, trocar perfil,
+definir se aparece no painel e **desativar** (nunca excluir com histórico). Ao
+desativar, as ações do solucionador ficam **livres** (`Livre = true`,
+`Responsaveis` esvaziado) — ver docs/04 §2.
+
+---
+
+## 11. Delegação — lista de atenção
+
+- Filtre por colunas **indexadas** (`Tarefa`, `Status`).
+- `in` sobre **Person multi** (`Responsaveis.Email`) **não delega**: restrinja antes
+  por `Tarefa`, ou mantenha uma coluna texto `ResponsaveisEmails` para `Search`.
+- Evite trazer `ItensDaTarefa` inteira: carregue por tarefa selecionada.
+- O limite de linhas não delegáveis (Configurações → 2000) é paliativo; a solução
+  correta é filtro delegável.

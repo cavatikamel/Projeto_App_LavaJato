@@ -1,167 +1,203 @@
 # 04 — Máquina de estados e dependências
 
-> **Atualizado para o modelo v2.** A coluna de status agora é
-> **`ItensDaTarefa.Status`**. O estado terminal de uma **ação** passou a se chamar
-> **`Concluída`** (o nome `Encerrada` ficou reservado para a **tarefa**, após a
-> conferência do gestor). Uma ação pode ter **vários responsáveis**: **qualquer um
-> deles ou o gestor** pode iniciar e concluir, independentemente de quem começou;
-> ações **Livre** são executáveis por qualquer solucionador. Dependência é
-> **múltipla** — o item libera quando **todas** as predecessoras estão `Concluída`.
-> Itens sem responsável (*dados*) usam o status `Dado`.
+Modelo v2 (unificado). A lista operacional é **`ItensDaTarefa`**: cada item é um
+*dado* (sem responsável) ou uma *ação* (com um ou mais responsáveis, ou `Livre`).
+Só **ações** percorrem a máquina de estados; *dados* ficam no status `Dado`.
 
 ## 1. Ciclo de status (coluna `ItensDaTarefa.Status`)
 
 Escolhas (valores exatos da coluna `Choice`):
 
-| # | Valor | Farol | Significado |
-|---|-------|-------|-------------|
-| 1 | `Aguardando dependência` | ⚪ / cinza | Etapa anterior ainda não liberou |
-| 2 | `Liberada` | 🔵 / azul | Pode ser iniciada |
-| 3 | `Em execução` | 🟡 / amarelo | Solucionador trabalhando |
-| 4 | `Enviada para validação` | 🟣 / roxo | Aguardando decisão do gestor |
-| 5 | `Encerrada` | 🟢 / verde | Validada e concluída |
-| 6 | `Rejeitada` | 🔴 / vermelho | Devolvida com justificativa (impedida) |
+| # | Valor | Farol | Aplica a | Significado |
+|---|-------|-------|----------|-------------|
+| 0 | `Dado` | — | dado | Item informativo, sem execução (não é ação) |
+| 1 | `Aguardando dependência` | ⚪ / cinza | ação | Predecessora(s) ainda não concluída(s) |
+| 2 | `Liberada` | 🔵 / azul | ação | Pode ser iniciada |
+| 3 | `Em execução` | 🟡 / amarelo | ação | Alguém trabalhando |
+| 4 | `Enviada para validação` | 🟣 / roxo | ação | Aguardando decisão do gestor |
+| 5 | `Concluída` | 🟢 / verde | ação | Finalizada (com ou sem validação) |
+| 6 | `Rejeitada` | 🔴 / vermelho | ação | Devolvida com justificativa |
 
-## 2. Diagrama de transições
+> **`Concluída`** é o estado terminal da **ação**. Não confundir com **`Encerrada`**,
+> que é status da **tarefa** (§5), atribuído pelo gestor na conferência final.
+
+## 2. Quem pode executar (multi-responsável)
+
+Uma ação tem `Responsaveis` (Person **múltiplo**) e/ou a flag `Livre`. É **editor**
+da ação (pode iniciar, preencher, enviar e concluir) quem satisfaz:
+
+```
+ehEditor(ação) =
+      ação.Livre = Sim                       (qualquer solucionador)
+   OU User().Email ∈ ação.Responsaveis.Email  (é um dos responsáveis)
+   OU Perfil = Gestor                          (gestor executa qualquer ação)
+```
+
+- **Compartilhado:** se **um** responsável inicia, **qualquer outro** responsável —
+  ou o **gestor** — pode continuar e concluir. Não há trava por "quem começou".
+- **Criador** executa as ações em que é responsável (aparece como coluna no painel);
+  além disso cria tarefas. O **Gestor** executa e valida qualquer ação.
+- **Visibilidade:** ver docs/03. Resumindo: dado e `Livre` são visíveis a todos;
+  ação atribuída é visível ao(s) responsável(is), ao gestor/criador, e a todos se
+  `VisivelTodos = Sim` (mas, nesse caso, **editável** só pelos responsáveis/gestor).
+
+## 3. Diagrama de transições (ação)
 
 ```
                         (materialização)
                                │
-              ┌────────────────┴────────────────┐
-       tem dependência?                    sem dependência
-              │                                  │
-              ▼                                  ▼
-   ┌───────────────────────┐              ┌───────────┐
-   │ Aguardando dependência│──libera─────►│  Liberada │
-   └───────────────────────┘              └─────┬─────┘
-                                                 │ solucionador inicia
-                                                 ▼
-                                          ┌──────────────┐
-                                          │ Em execução  │
-                                          └──────┬───────┘
-                                     envia p/ validação (evidência ok)
-                                                 ▼
-                                    ┌───────────────────────────┐
-                          ┌────────►│ Enviada para validação    │
-                          │         └──────────┬────────────────┘
-                          │            gestor decide
-                          │          ┌─────────┴──────────┐
-                          │      valida                rejeita
-                          │          ▼                    ▼
-                          │   ┌────────────┐        ┌───────────┐
-                          │   │  Encerrada │        │ Rejeitada │
-                          │   └─────┬──────┘        └─────┬─────┘
-                          │         │ libera dependentes  │ devolve p/ correção
-                          │         ▼                     │
-                          │   (próximas ações)            └──► volta p/ Em execução
-                          │                                     (reenvio) 
-                          └─────────────────────────────────────┘
+        tem dependência? ──sim──► ┌───────────────────────┐
+               │                  │ Aguardando dependência│
+               │não               └───────────┬───────────┘
+               │       todas as predecessoras Concluída
+               ▼                              ▼
+          ┌───────────┐   iniciar     ┌──────────────┐
+          │  Liberada │──────────────►│  Em execução │
+          └───────────┘               └──────┬───────┘
+                                              │ concluir / enviar
+                          ExigeAprovacao? ────┴──────────┐
+                       sim (e não é gestor)          não  │  (ou concluído pelo gestor)
+                              ▼                            ▼
+                 ┌───────────────────────┐          ┌────────────┐
+                 │ Enviada para validação│          │  Concluída │
+                 └───────────┬───────────┘          └─────┬──────┘
+                   gestor decide                          │ libera dependentes
+                  ┌──────────┴──────────┐                 ▼
+              valida                rejeita          (reavaliar ações
+                  ▼                    ▼              "Aguardando dependência")
+            ┌───────────┐       ┌───────────┐
+            │ Concluída │       │ Rejeitada │
+            └───────────┘       └─────┬─────┘
+                                      │ reabrir
+                                      └──► Em execução (reenvio)
 ```
 
-## 3. Transições permitidas (tabela)
+## 4. Transições permitidas (tabela)
 
 | De | Para | Ator | Pré-condição |
 |----|------|------|--------------|
-| — | `Aguardando dependência` | Sistema | Ação materializada **com** dependência não encerrada |
+| — | `Dado` | Sistema | Item **sem** responsável (não é ação) |
+| — | `Aguardando dependência` | Sistema | Ação materializada **com** dependência(s) não concluída(s) |
 | — | `Liberada` | Sistema | Ação materializada **sem** dependência |
-| `Aguardando dependência` | `Liberada` | Sistema | Dependência atingiu o gatilho do modo de liberação |
-| `Liberada` | `Em execução` | Solucionador | É o responsável |
-| `Em execução` | `Enviada para validação` | Solucionador | Evidência anexada **se** `EvidenciaObrigatoria` |
-| `Enviada para validação` | `Encerrada` | Gestor | — |
+| `Aguardando dependência` | `Liberada` | Sistema | **Todas** as predecessoras chegaram a `Concluída` |
+| `Liberada` | `Em execução` | Editor | É responsável, `Livre`, ou gestor |
+| `Em execução` | `Enviada para validação` | Editor | `ExigeAprovacao = Sim` **e** ator ≠ Gestor; valor preenchido; evidência anexada se exigida |
+| `Em execução` | `Concluída` | Editor | `ExigeAprovacao = Não` **ou** ator = Gestor; valor preenchido; evidência anexada se exigida |
+| `Enviada para validação` | `Concluída` | Gestor | — (validação/aprovação) |
 | `Enviada para validação` | `Rejeitada` | Gestor | `Justificativa` preenchida |
-| `Rejeitada` | `Em execução` | Solucionador | Reabre para correção e reenvio |
+| `Rejeitada` | `Em execução` | Editor | Reabre para correção e reenvio |
 | qualquer | (sem mudança) | — | Transições não listadas são **bloqueadas** |
 
 Regras invariantes:
 
-- **O solucionador nunca encerra** definitivamente. O máximo que faz é
-  `Enviada para validação`.
-- **Encerrar** e **Rejeitar** são exclusivos do **Gestor**.
+- **Só o Gestor valida ou rejeita** um item enviado para validação.
+- Uma ação `ExigeAprovacao = Sim` concluída **pelo próprio gestor** vai direto a
+  `Concluída` (o gestor é o aprovador — não há autovalidação em duas etapas).
 - **Rejeitar exige `Justificativa`** (não vazia).
-- **Enviar exige evidência** quando `EvidenciaObrigatoria = Sim` (contagem de itens
-  em `Evidencias` para a ação > 0).
+- **Concluir/Enviar exige preenchimento**: valor obrigatório do tipo (Texto, Número,
+  Data, Check marcado) e, se `ExigeEvidencia = Sim` (ou `Tipo = Evidencia`), ao menos
+  um arquivo em `Evidencias`.
 - Toda transição grava um item em `HistoricoDaAcao` (usuário, data/hora, status
-  anterior, novo, comentário) e pode disparar notificação.
+  anterior, novo, comentário) e pode disparar notificação a **todos** os
+  responsáveis (exceto na coluna `Livre`) e/ou ao gestor.
 
-## 4. Dependências
+## 5. Dependências (múltiplas)
 
-Uma ação (`AcoesDaTarefa.Dependencia`) aponta para outra ação da **mesma tarefa**.
+Uma ação (`ItensDaTarefa.Dependencias`, **lookup múltiplo**) aponta para uma ou mais
+ações da **mesma tarefa**.
 
-- Enquanto a dependência não estiver satisfeita, a ação fica
-  `Aguardando dependência` e a UI exibe **"Aguardando etapa anterior"**.
-- Cadeias A→B→C são suportadas (cada ação aponta para a imediatamente anterior).
+- Enquanto **qualquer** predecessora não estiver `Concluída`, a ação fica
+  `Aguardando dependência` e a UI mostra **"Aguardando: <nomes das pendentes>"**.
+- A ação libera **somente quando todas** as predecessoras estão `Concluída`.
+- Cadeias e leques (A,B → C) são suportados. A dependência é definida no modelo por
+  **`Ordem`** (`DependenciaOrdens`, ex.: "5,7") e vira ID(s) real(is) ao materializar.
 
-### 4.1 Modos de liberação (`ModoLiberacao`)
+> Não há mais o conceito de `ModoLiberacao`. Como uma predecessora com
+> `ExigeAprovacao = Sim` só chega a `Concluída` **após** a validação do gestor, o
+> efeito "só libera após o gestor" acontece naturalmente. Para liberar sem
+> validação, basta a predecessora ter `ExigeAprovacao = Não`.
 
-| Valor | Gatilho que libera a próxima ação |
-|-------|-----------------------------------|
-| `AposValidacaoGestor` (**padrão**) | A dependência chega a `Encerrada` (validada) |
-| `AposEvidencia` | A dependência chega a `Enviada para validação` **com** evidência anexada |
+### 5.1 Regra de propagação (app e/ou fluxo)
 
-> **Recomendação do projeto:** liberar **somente após validação do gestor**, salvo
-> processos urgentes explicitamente configurados como `AposEvidencia`.
-
-### 4.2 Regra de propagação (executada pelo app e/ou por fluxo)
-
-Ao uma ação **X** mudar de status, avaliar todas as ações **Y** cuja
-`Dependencia = X`:
+Quando **qualquer** ação muda de status, reavaliar as ações que estão
+`Aguardando dependência`:
 
 ```
-Para cada Y com Dependencia = X e Status = "Aguardando dependência":
-    Se Y.ModoLiberacao = "AposValidacaoGestor" e X.Status = "Encerrada":
-        Y.Status ← "Liberada"; notificar(Y.Solucionador, "Liberada")
-    Se Y.ModoLiberacao = "AposEvidencia"
-       e X.Status = "Enviada para validação"
-       e existe evidência de X:
-        Y.Status ← "Liberada"; notificar(Y.Solucionador, "Liberada")
+Para cada Y com Status = "Aguardando dependência":
+    Se todas as Dependencias(Y) têm Status = "Concluída":
+        Y.Status ← "Liberada"
+        notificar(todos os Responsaveis(Y) exceto Livre, "Liberada")
 ```
 
-### 4.3 Bloqueio por rejeição
+### 5.2 Bloqueio por rejeição
 
-Se **X** é rejeitada/impedida, as ações dependentes **permanecem**
-`Aguardando dependência` — nunca são liberadas enquanto X não for corrigida e
-atingir de novo o gatilho. Não reverter ações já liberadas por engano: preferir
-reavaliar apenas as que estão `Aguardando dependência`.
+Se uma predecessora **X** é rejeitada, as ações dependentes **permanecem**
+`Aguardando dependência` — só liberam quando X for corrigida e reenviada e voltar a
+`Concluída`. Não reverter ações já liberadas: reavaliar apenas as que estão
+`Aguardando dependência`.
 
-## 5. Status geral da tarefa (`Tarefas.StatusGeral`)
+## 6. Status geral da tarefa (`Tarefas.StatusGeral`)
 
-Derivado das ações:
+Derivado das ações da tarefa (itens **com** responsável):
 
 | Condição | `StatusGeral` |
 |----------|---------------|
-| Todas as ações `Encerrada` | `Concluída` |
-| Ao menos uma ação não encerrada e nenhuma rejeitada travando | `Em andamento` |
-| Tarefa interrompida manualmente pelo gestor | `Cancelada` |
+| Existe ação e **todas** estão `Concluída` **ou** `Enviada para validação` | `Finalizada` |
+| Há ação ainda em aberto (`Liberada`/`Em execução`/`Aguardando`/`Rejeitada`) | `Em andamento` |
+| Gestor conferiu e encerrou | `Encerrada` |
+| Gestor cancelou (a qualquer momento) | `Cancelada` |
 
-Recalcular ao encerrar cada ação (no app ao validar, ou por fluxo de retaguarda).
+- **Finalizada** = todos os designados cumpriram (concluído ou enviado); a tarefa
+  aguarda a **conferência** do gestor.
+- **Encerrar** (gestor): aprova as ações ainda em `Enviada para validação`, marca a
+  tarefa `Encerrada`, carimba `FechadaEm` e **arquiva** (some do painel principal).
+- **Cancelar** (gestor): marca `Cancelada` (com justificativa opcional) mesmo que a
+  tarefa não tenha sido iniciada ou esteja parcialmente concluída; também vai ao
+  Arquivo.
+- Recalcular ao concluir/validar cada ação (no app, ou por fluxo de retaguarda).
 
-## 6. Pseudocódigo das ações do usuário
+## 7. Pseudocódigo das ações do usuário
 
 ```
 AÇÃO: Iniciar (Liberada → Em execução)
-  guarda: usuárioAtual = Solucionador
+  guarda: ehEditor(ação)
   efeito: Status ← "Em execução"; historico(...)
 
-AÇÃO: Enviar para validação (Em execução → Enviada para validação)
-  guarda: usuárioAtual = Solucionador
-  guarda: se EvidenciaObrigatoria então contarEvidencias(ação) > 0
-  efeito: Status ← "Enviada para validação"; EnviadoValidacaoEm ← Agora
-          historico(...); notificar(Gestor, "Enviada p/ validação")
+AÇÃO: Concluir/Enviar (Em execução → Concluída | Enviada para validação)
+  guarda: ehEditor(ação); valor preenchido; evidência se exigida
+  se ExigeAprovacao e ator ≠ Gestor:
+      Status ← "Enviada para validação"; EnviadoValidacaoEm ← Agora
+      historico(...); notificar(Gestor, "Enviada p/ validação")
+  senão:
+      Status ← "Concluída"; se ator = Gestor: ValidadoRejeitadoPor ← ator
+      historico(...); propagarDependencias(ação)
+      notificar(Gestor, "Concluída"); recalcularStatusGeral(Tarefa)
 
-AÇÃO: Validar (Enviada para validação → Encerrada)
+AÇÃO: Validar (Enviada para validação → Concluída)
   guarda: Perfil = Gestor
-  efeito: Status ← "Encerrada"; ValidadoRejeitadoPor ← usuárioAtual
+  efeito: Status ← "Concluída"; ValidadoRejeitadoPor ← ator
           historico(...); propagarDependencias(ação)
-          notificar(Solucionador, "Encerrada"); recalcularStatusGeral(Tarefa)
+          notificar(Responsaveis, "Concluída"); recalcularStatusGeral(Tarefa)
 
 AÇÃO: Rejeitar (Enviada para validação → Rejeitada)
-  guarda: Perfil = Gestor
-  guarda: Justificativa não vazia
-  efeito: Status ← "Rejeitada"; ValidadoRejeitadoPor ← usuárioAtual
+  guarda: Perfil = Gestor; Justificativa não vazia
+  efeito: Status ← "Rejeitada"; ValidadoRejeitadoPor ← ator
           historico(..., comentário=Justificativa)
-          notificar(Solucionador, "Rejeitada")
+          notificar(Responsaveis, "Reprovada"); recalcularStatusGeral(Tarefa)
 
 AÇÃO: Reabrir após rejeição (Rejeitada → Em execução)
-  guarda: usuárioAtual = Solucionador
+  guarda: ehEditor(ação)
   efeito: Status ← "Em execução"; historico(...)
+
+AÇÃO: Encerrar tarefa (conferência do gestor)
+  guarda: Perfil = Gestor
+  efeito: aprova ações em "Enviada para validação" → "Concluída"
+          Tarefa.StatusGeral ← "Encerrada"; FechadaEm ← Agora
+          notificar(participantes, "Encerrada"); arquiva
+
+AÇÃO: Cancelar tarefa
+  guarda: Perfil = Gestor
+  efeito: Tarefa.StatusGeral ← "Cancelada"; FechadaEm ← Agora
+          CancelJustificativa ← texto (opcional)
+          notificar(participantes, "Cancelada"); arquiva
 ```
