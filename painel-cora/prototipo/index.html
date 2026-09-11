@@ -492,9 +492,6 @@ function renderNav(){
 /* ---- Solucionadores (gestão pelo Gestor) ---- */
 function renderSolucionadores(){
   const list=$("#solList"); list.innerHTML="";
-  const info=el("div","banner info");
-  info.innerHTML="👤 Os usuários acessam com a <strong>conta corporativa Microsoft (Entra ID)</strong>. No Power Apps, o cadastro usa um seletor de pessoas do diretório da empresa; o <em>Object ID</em> é vinculado automaticamente no primeiro acesso. Aqui o gestor define o perfil de permissão, ativa/desativa e organiza quem aparece no painel.";
-  list.appendChild(info);
   db.sol.slice().sort((a,b)=>(b.ativo-a.ativo)||a.nome.localeCompare(b.nome)).forEach(s=> list.appendChild(solRow(s)));
 }
 function perfilPill(p){ const c=p==="Gestor"?"gestor":p==="Criador"?"criador":""; return el("span","pill "+c, p); }
@@ -524,8 +521,6 @@ function solForm(s){
   head.append((()=>{const w=el("div","titwrap"); w.append(el("div","crumb", editing?"Editar solucionador":"Cadastrar solucionador"), el("h3",null, editing? st.nome||"Solucionador":"Novo solucionador")); return w;})());
   const x=el("button","x","×"); x.onclick=()=>root.innerHTML=""; head.appendChild(x);
   const body=el("div","modal-body");
-
-  body.appendChild((()=>{const b=el("div","banner info"); b.innerHTML="No Power Apps este cadastro usa o <strong>seletor de pessoas (Office365Users)</strong> — você busca a pessoa no diretório corporativo. Aqui, simule informando o e-mail corporativo."; return b;})());
 
   body.appendChild(field("Nome", (()=>{const i=el("input","field"); i.value=st.nome; i.placeholder="Nome e sobrenome"; i.oninput=()=>st.nome=i.value; return i;})()));
   body.appendChild(field("E-mail corporativo (conta Microsoft)", (()=>{const i=el("input","field"); i.type="email"; i.value=st.email; i.placeholder="nome.sobrenome@grupocoroa.com.br"; i.oninput=()=>st.email=i.value.trim().toLowerCase(); return i;})()));
