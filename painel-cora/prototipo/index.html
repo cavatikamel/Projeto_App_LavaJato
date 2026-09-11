@@ -536,12 +536,12 @@ function actEncerrarTarefa(t){
   t.statusGeral="Encerrada"; t.encerradaEm=iso(new Date()); t.encerradaPor=db.ui.userId;
   [...new Set(db.itens.filter(a=>a.tarefaId===t.id && a.responsavel).map(a=>a.responsavel))]
     .forEach(p=> notify(p,null,"Encerrada",`A tarefa "${tLabel(t)}" foi conferida e encerrada.`));
-  openTaskId=null; commit(); toast("Tarefa encerrada e arquivada"); }
+  save(); closeAll(); render(); toast("Tarefa encerrada e arquivada"); }
 function actCancelarTarefa(t,just){
   t.statusGeral="Cancelada"; t.canceladaEm=iso(new Date()); t.canceladaPor=db.ui.userId; t.cancelJust=(just||"").trim();
   [...new Set(db.itens.filter(a=>a.tarefaId===t.id && a.responsavel).map(a=>a.responsavel))]
     .forEach(p=> notify(p,null,"Cancelada",`A tarefa "${tLabel(t)}" foi cancelada${just?": "+just.trim():""}.`));
-  openTaskId=null; commit(); toast("Tarefa cancelada e arquivada"); }
+  save(); closeAll(); render(); toast("Tarefa cancelada e arquivada"); }
 function commit(){ save(); render(); if(openItemId) renderItem(openItemId); else if(openTaskId) renderTask(openTaskId); refreshBell(); }
 
 /* ---- render topo/matriz ---- */
