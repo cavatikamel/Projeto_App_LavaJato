@@ -276,6 +276,9 @@
   .criar-wrap > .sec:first-child{padding-top:14px}
   .criar-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; align-items:end}
   .criar-fields{display:flex; flex-direction:column; gap:12px}
+  .filterbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px}
+  .filterbar input.field{flex:1 1 200px; min-width:160px}
+  .filterbar select.field{min-width:150px}
   .fieldsbar{position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:10px;
     background:var(--cartao); padding:10px 0 9px; margin-bottom:2px; border-bottom:1px solid var(--borda)}
   @media (min-width:900px){ .criar-fields.two{display:grid; grid-template-columns:repeat(2,1fr); gap:12px} }
@@ -336,6 +339,12 @@
         <button class="btn ghost" id="expPainelBtn">⬇ Excel</button>
       </div>
     </div>
+    <div class="filterbar">
+      <input id="fpQ" class="field" type="search" placeholder="Buscar tarefa, ação ou pessoa…">
+      <select id="fpSit" class="field"><option value="">Todas as situações</option><option value="Em andamento">Em andamento</option><option value="Finalizada">Finalizada</option></select>
+      <select id="fpSolu" class="field"><option value="">Todos os solucionadores</option></select>
+      <button id="fpClear" class="btn subtle">Limpar</button>
+    </div>
     <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
   </section>
 
@@ -361,6 +370,11 @@
 
   <section id="viewArquivo" class="view" hidden>
     <div class="board-head"><div><h2>Arquivo</h2></div><button class="btn ghost" id="expArqBtn">⬇ Excel</button></div>
+    <div class="filterbar">
+      <input id="faQ" class="field" type="search" placeholder="Buscar no arquivo…">
+      <select id="faSt" class="field"><option value="">Encerradas e canceladas</option><option value="Encerrada">Só encerradas</option><option value="Cancelada">Só canceladas</option></select>
+      <button id="faClear" class="btn subtle">Limpar</button>
+    </div>
     <div class="sol-wrap" id="arqList"></div>
   </section>
 </main>
@@ -476,7 +490,8 @@ function seed(){
 let db;
 function load(){ try{ const r=localStorage.getItem(KEY); db=r?JSON.parse(r):seed(); }catch(e){ db=seed(); }
   ["modelos","tarefas","itens","hist","notifs"].forEach(k=>{ if(!db[k]) db[k]=[]; });
-  if(!db.ui) db.ui={userId:db.sol[0]&&db.sol[0].id}; if(!db.ui.view) db.ui.view="painel"; }
+  if(!db.ui) db.ui={userId:db.sol[0]&&db.sol[0].id}; if(!db.ui.view) db.ui.view="painel";
+  if(!db.ui.fp) db.ui.fp={q:"",sit:"",solu:""}; if(!db.ui.fa) db.ui.fa={q:"",st:""}; }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} }
 function reset(){ db=seed(); save(); closeAll(); render(); toast("Tudo limpo — comece criando uma tarefa"); }
 
@@ -580,8 +595,12 @@ function render(){
   else if(view==="cadastro"){ renderCadastro(); }
   else if(view==="arquivo"){ renderArquivo(); }
   else { renderCriar(); }
-  renderNav(); refreshBell();
+  fillSoluFilter(); renderNav(); refreshBell();
 }
+function fillSoluFilter(){ const sel=$("#fpSolu"); if(!sel) return; const cur=(db.ui.fp&&db.ui.fp.solu)||"";
+  sel.innerHTML=""; const o0=el("option",null,"Todos os solucionadores"); o0.value=""; sel.appendChild(o0);
+  db.sol.filter(s=>s.coluna&&s.ativo).forEach(s=>{ const o=el("option",null,s.nome); o.value=s.id; sel.appendChild(o); });
+  sel.value=cur; }
 function renderNav(){
   const nav=$("#bottomnav"); if(!nav) return; nav.innerHTML="";
   const mark=el("span"); mark.style.cssText="display:inline-flex;align-items:center;color:var(--textoSuave)"; mark.innerHTML=coraMark(19,true); nav.appendChild(mark);
@@ -712,6 +731,9 @@ function visibleColumns(){ let c=db.sol.filter(s=>s.coluna&&s.ativo); if(!isCria
 function visibleTarefas(){ const act=db.tarefas.filter(t=> !taskTerminal(t));
   if(isCriador()) return act;
   return act.filter(t=> db.itens.some(a=>a.tarefaId===t.id && a.responsavel===db.ui.userId)); }
+function matchTask(t,q){ if(!q) return true;
+  if((t.nome||"").toLowerCase().includes(q) || (t.subtitulo||"").toLowerCase().includes(q)) return true;
+  return db.itens.some(a=>a.tarefaId===t.id && ((a.rotulo||"").toLowerCase().includes(q) || (a.responsavel && solById(a.responsavel).nome.toLowerCase().includes(q)))); }
 function arquivoTarefas(){ const arq=db.tarefas.filter(t=> taskTerminal(t))
     .sort((a,b)=> new Date(b.encerradaEm||b.canceladaEm||0)-new Date(a.encerradaEm||a.canceladaEm||0));
   if(isCriador()) return arq;
@@ -719,7 +741,11 @@ function arquivoTarefas(){ const arq=db.tarefas.filter(t=> taskTerminal(t))
 function renderMatrix(){
   const u=me();
   $("#boardTitle").textContent = isCriador()? "Painel geral" : "Minhas etapas";
-  const cols=visibleColumns(), rows=visibleTarefas();
+  let cols=visibleColumns(), rows=visibleTarefas();
+  const f=db.ui.fp||{}; const filtroAtivo=!!(f.q||f.sit||f.solu);
+  if(f.solu){ cols=cols.filter(c=>c.id===f.solu); rows=rows.filter(t=> db.itens.some(a=>a.tarefaId===t.id && a.responsavel===f.solu)); }
+  if(f.sit){ rows=rows.filter(t=> (t.statusGeral||"Em andamento")===f.sit); }
+  if(f.q){ const q=f.q.trim().toLowerCase(); rows=rows.filter(t=> matchTask(t,q)); }
   const tb=$("#matrix"); tb.innerHTML="";
   const thead=el("thead"), htr=el("tr");
   const corner=el("th","corner");
@@ -735,11 +761,14 @@ function renderMatrix(){
   if(rows.length===0){
     const tr=el("tr"), td=el("td"); td.colSpan=Math.max(cols.length+1,2);
     const wrap=el("div","empty-note");
-    const lg=el("div"); lg.style.cssText="display:flex;justify-content:center;margin-bottom:14px"; lg.innerHTML=coraMark(56); wrap.appendChild(lg);
-    wrap.append(el("h3",null,"Nenhuma tarefa ainda"));
-    wrap.append(el("p",null, isCriador()? "Crie a primeira tarefa do zero ou reutilize um modelo recorrente."
-      : "Quando houver etapas atribuídas a você, elas aparecerão aqui."));
-    if(isCriador()){ const b=el("button","btn primary","＋ Nova tarefa"); b.onclick=openNova; wrap.appendChild(b); }
+    if(filtroAtivo){ wrap.append(el("h3",null,"Nada encontrado"), el("p",null,"Nenhuma tarefa corresponde à busca/filtro. Ajuste os termos ou limpe o filtro.")); }
+    else {
+      const lg=el("div"); lg.style.cssText="display:flex;justify-content:center;margin-bottom:14px"; lg.innerHTML=coraMark(56); wrap.appendChild(lg);
+      wrap.append(el("h3",null,"Nenhuma tarefa ainda"));
+      wrap.append(el("p",null, isCriador()? "Crie a primeira tarefa do zero ou reutilize um modelo recorrente."
+        : "Quando houver etapas atribuídas a você, elas aparecerão aqui."));
+      if(isCriador()){ const b=el("button","btn primary","＋ Nova tarefa"); b.onclick=openNova; wrap.appendChild(b); }
+    }
     td.appendChild(wrap); tr.appendChild(td); tbody.appendChild(tr); tb.appendChild(tbody); return;
   }
   rows.forEach(t=>{
@@ -871,8 +900,11 @@ function renderCadastro(){
 }
 function renderArquivo(){
   const list=$("#arqList"); list.innerHTML="";
-  const arq=arquivoTarefas();
-  if(!arq.length){ list.appendChild(el("div","empty-note","Nada arquivado ainda. Tarefas encerradas ou canceladas aparecem aqui.")); return; }
+  let arq=arquivoTarefas();
+  const f=db.ui.fa||{}; const filtroAtivo=!!(f.q||f.st);
+  if(f.st) arq=arq.filter(t=> t.statusGeral===f.st);
+  if(f.q){ const q=f.q.trim().toLowerCase(); arq=arq.filter(t=> matchTask(t,q)); }
+  if(!arq.length){ list.appendChild(el("div","empty-note", filtroAtivo? "Nada encontrado para a busca/filtro." : "Nada arquivado ainda. Tarefas encerradas ou canceladas aparecem aqui.")); return; }
   arq.forEach(t=>{ const enc=t.statusGeral==="Encerrada";
     const r=el("div","arq-row");
     const an=el("div","an"); an.append(el("div","t",t.nome)); if(t.subtitulo) an.append(el("div","s",t.subtitulo)); r.appendChild(an);
@@ -1296,4 +1328,11 @@ $("#addSolBtn").onclick=()=>solForm(null);
 $("#addCadBtn").onclick=()=>startBuilder(null,"modelo");
 $("#expPainelBtn").onclick=()=>exportXlsx("painel");
 $("#expArqBtn").onclick=()=>exportXlsx("arquivo");
+$("#fpQ").oninput=e=>{ db.ui.fp.q=e.target.value; renderMatrix(); };
+$("#fpSit").onchange=e=>{ db.ui.fp.sit=e.target.value; renderMatrix(); };
+$("#fpSolu").onchange=e=>{ db.ui.fp.solu=e.target.value; renderMatrix(); };
+$("#fpClear").onclick=()=>{ db.ui.fp={q:"",sit:"",solu:""}; $("#fpQ").value=""; $("#fpSit").value=""; $("#fpSolu").value=""; renderMatrix(); };
+$("#faQ").oninput=e=>{ db.ui.fa.q=e.target.value; renderArquivo(); };
+$("#faSt").onchange=e=>{ db.ui.fa.st=e.target.value; renderArquivo(); };
+$("#faClear").onclick=()=>{ db.ui.fa={q:"",st:""}; $("#faQ").value=""; $("#faSt").value=""; renderArquivo(); };
 </script>
